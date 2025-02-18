@@ -186,7 +186,7 @@ static void SV_Map_f( void ) {
 		// may not set sv_maxclients directly, always set latched
 		Cvar_SetLatched( "sv_maxclients", "8" );
 		cmd += 2;
-		if (!Q_stricmp( cmd, "devmap" ) ) {
+		if (!Q_stricmp( cmd, "map" ) ) {
 			cheat = qtrue;
 		} else {
 			cheat = qfalse;
@@ -194,7 +194,7 @@ static void SV_Map_f( void ) {
 		killBots = qtrue;
 	}
 	else {
-		if ( !Q_stricmp( cmd, "devmap" ) ) {
+		if ( !Q_stricmp( cmd, "map" ) ) { // its a quite annoying feature that theres 2 map commands serving the same purpose except one allows cheats which players can use just like devs do.
 			cheat = qtrue;
 		} else {
 			cheat = qfalse;
@@ -215,9 +215,6 @@ static void SV_Map_f( void ) {
 	SV_SpawnServer( mapname, killBots );
 
 	// set the cheat value
-	// if the level was started with "map <levelname>", then
-	// cheats will not be allowed.  If started with "devmap <levelname>"
-	// then cheats will be allowed
 	if ( cheat ) {
 		Cvar_Set( "sv_cheats", "1" );
 	} else {
