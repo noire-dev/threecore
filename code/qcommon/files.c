@@ -3750,7 +3750,7 @@ static int FS_GetModList( char *listbuf, int bufsize ) {
 				if ( FS_IsExt( pDirs[k], va(".%s",cl_selectedmod->string), strlen( pDirs[k] ) ) ) {
 					nPakDirs++;
 				}
-				if(!cl_changemod->integer){
+				if(cl_changemod->integer){
 					if ( FS_IsExt( pDirs[k], va(".%s",cl_changemod->string), strlen( pDirs[k] ) ) ) {
 						nPakDirs++;
 					}
@@ -4239,7 +4239,7 @@ static void FS_AddGameDirectory( const char *path, const char *dir ) {
 				pakdirsi++;
 				continue;
 			}
-			if(!cl_changemod->integer){
+			if(cl_changemod->integer){
 				if (!FS_IsExt(pakdirs[pakdirsi], va(".%s",cl_changemod->string), len)) {
 					// This isn't a .pk3dir! Next!
 					pakdirsi++;
