@@ -509,6 +509,7 @@ static void CL_ParseGamestate( msg_t *msg ) {
 	char			reconnectArgs[ MAX_CVAR_VALUE_STRING ];
 	qboolean		gamedirModified;
 	const char 		*info, *mapname;	//for client switching
+	qboolean 		*m_restart, *q_restart;	//for client switching
 
 	Con_Close();
 
@@ -593,11 +594,6 @@ static void CL_ParseGamestate( msg_t *msg ) {
 	// parse useful values out of CS_SERVERINFO
 	CL_ParseServerInfo();
 
-	info = cl.gameState.stringData + cl.gameState.stringOffsets[ CS_SERVERINFO ];
-	mapname = Info_ValueForKey( info, "mapname" );
-	Cbuf_AddText( "exec maps/default.cfg \n" );				//load default map script on client
-	Cbuf_AddText( va("exec maps/%s.cfg \n", mapname) );		//load map script on client
-
 	// parse serverId and other cvars
 	CL_SystemInfoChanged( qtrue );
 
@@ -608,27 +604,34 @@ static void CL_ParseGamestate( msg_t *msg ) {
 		}
 	}
 
-	gamedirModified = ( Cvar_Flags( "fs_game" ) & CVAR_MODIFIED ) ? qtrue : qfalse;
+	info = cl.gameState.stringData + cl.gameState.stringOffsets[ CS_SERVERINFO ];
+	mapname = Info_ValueForKey( info, "mapname" );
+	Cbuf_AddText( va("exec maps/%s.cfg \n", mapname) );		//load map script on client
 
-	if ( !cl_oldGameSet && gamedirModified ) {
+	gamedirModified = ( Cvar_Flags( "fs_game" ) & CVAR_MODIFIED ) ? qtrue : qfalse;
+	
+	m_restart = ( Cvar_Flags( "cl_changemod" ) & CVAR_MODIFIED ) ? qtrue : qfalse;
+	q_restart = ( Cvar_Flags( "cl_changeqvm" ) & CVAR_MODIFIED ) ? qtrue : qfalse;
+
+	if ( !cl_oldGameSet && (gamedirModified || m_restart || q_restart) ) {
 		cl_oldGameSet = qtrue;
 		Q_strncpyz( cl_oldGame, oldGame, sizeof( cl_oldGame ) );
 	}
 
 	// try to keep gamestate and connection state during game switch
-	cls.gameSwitch = gamedirModified;
+	cls.gameSwitch = (gamedirModified || m_restart || q_restart);
 
 	// preserve \cl_reconnectAgrs between online game directory changes
 	// so after mod switch \reconnect will not restore old value from config but use new one
-	if ( gamedirModified ) {
+	if ( (gamedirModified || m_restart || q_restart) ) {
 		Cvar_VariableStringBuffer( "cl_reconnectArgs", reconnectArgs, sizeof( reconnectArgs ) );
 	}
 
 	// reinitialize the filesystem if the game directory has changed
-	FS_ConditionalRestart( clc.checksumFeed, gamedirModified );
+	FS_ConditionalRestart( clc.checksumFeed, (gamedirModified || m_restart || q_restart) );
 
 	// restore \cl_reconnectAgrs
-	if ( gamedirModified ) {
+	if ( (gamedirModified || m_restart || q_restart) ) {
 		Cvar_Set( "cl_reconnectArgs", reconnectArgs );
 	}
 

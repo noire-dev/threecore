@@ -2007,7 +2007,7 @@ static void CL_DownloadsComplete( void ) {
 #endif
 
 	// if we downloaded files we need to restart the file system
-	if ( clc.downloadRestart || cl_changemod->modified || cl_changeqvm->modified ) {
+	if ( clc.downloadRestart  ) {
 		clc.downloadRestart = qfalse;
 
 		FS_Restart(clc.checksumFeed); // We possibly downloaded a pak, restart the file system to load it

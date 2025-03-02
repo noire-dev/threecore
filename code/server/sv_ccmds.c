@@ -176,7 +176,6 @@ static void SV_Map_f( void ) {
 		return;
 	}
 
-	Cbuf_AddText( "exec maps/default.cfg \n" );			//load default map script on server
 	Cbuf_AddText( va("exec maps/%s.cfg \n", map) );		//load map script on server
 
 	// force latched values to get set
