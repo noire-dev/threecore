@@ -1496,6 +1496,7 @@ CL_Disconnect_f
 void CL_Disconnect_f( void ) {
 	SCR_StopCinematic();
 	Cvar_Set( "ui_singlePlayerActive", "0" );
+	Cvar_Set( "cl_changeqvm", "0" );
 	if ( cls.state != CA_DISCONNECTED && cls.state != CA_CINEMATIC ) {
 		if ( (uivm && uivm->callLevel) || (cgvm && cgvm->callLevel) ) {
 			Com_Error( ERR_DISCONNECT, "Disconnected from server" );
