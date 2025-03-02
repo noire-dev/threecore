@@ -3747,11 +3747,10 @@ static int FS_GetModList( char *listbuf, int bufsize ) {
 			pDirs = Sys_ListFiles( path, "/", NULL, &nDirs, qfalse );
 			for ( k = 0; k < nDirs; k++ ) {
 				// we only want to count directories ending with ".pk3dir"
+				if ( FS_IsExt( pDirs[k], va(".%s",cl_selectedmod->string), strlen( pDirs[k] ) ) ) {
+					nPakDirs++;
+				}
 				if(!cl_changemod->integer){
-					if ( FS_IsExt( pDirs[k], va(".%s",cl_selectedmod->string), strlen( pDirs[k] ) ) ) {
-						nPakDirs++;
-					}
-				} else {
 					if ( FS_IsExt( pDirs[k], va(".%s",cl_changemod->string), strlen( pDirs[k] ) ) ) {
 						nPakDirs++;
 					}
@@ -4235,13 +4234,12 @@ static void FS_AddGameDirectory( const char *path, const char *dir ) {
 
 			// The next .pk3dir is before the next .pk3 file
 			// But wait, this could be any directory, we're filtering to only ending with ".pk3dir" here.
+			if (!FS_IsExt(pakdirs[pakdirsi], va(".%s",cl_selectedmod->string), len)) {
+				// This isn't a .pk3dir! Next!
+				pakdirsi++;
+				continue;
+			}
 			if(!cl_changemod->integer){
-				if (!FS_IsExt(pakdirs[pakdirsi], va(".%s",cl_selectedmod->string), len)) {
-					// This isn't a .pk3dir! Next!
-					pakdirsi++;
-					continue;
-				}
-			} else {
 				if (!FS_IsExt(pakdirs[pakdirsi], va(".%s",cl_changemod->string), len)) {
 					// This isn't a .pk3dir! Next!
 					pakdirsi++;

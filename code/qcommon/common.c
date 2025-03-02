@@ -107,7 +107,6 @@ cvar_t  *sv_packetdelay;
 cvar_t	*com_sv_running;
 cvar_t	*cl_selectedmod;
 cvar_t	*cl_changemod;
-cvar_t	*cl_changeqvm;
 cvar_t	*os_32bit;
 cvar_t	*os_linux;
 cvar_t	*os_windows;
@@ -3844,7 +3843,6 @@ void Com_Init( char *commandLine ) {
 	
 	cl_selectedmod = Cvar_Get("cl_selectedmod", "default", CVAR_ARCHIVE | CVAR_SERVERINFO);
 	cl_changemod = Cvar_Get("cl_changemod", "0", CVAR_SERVERINFO);
-	cl_changeqvm = Cvar_Get("cl_changeqvm", "qvm", CVAR_SERVERINFO);
 	#if defined(__i386__)
 	os_32bit = Cvar_Get("os_32bit", "1", CVAR_ARCHIVE);
 	#else

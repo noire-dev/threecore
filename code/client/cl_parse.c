@@ -605,8 +605,9 @@ static void CL_ParseGamestate( msg_t *msg ) {
 
 	info = cl.gameState.stringData + cl.gameState.stringOffsets[ CS_SERVERINFO ];
 	mapname = Info_ValueForKey( info, "mapname" );
-	Cbuf_InsertText( "exec maps/default.cfg \n" );				//load default map script on client
-	Cbuf_InsertText( va("exec maps/%s.cfg \n", mapname) );		//load map script on client
+	Cbuf_AddText( "exec maps/default.cfg \n" );				//load default map script on client
+	Cbuf_AddText( va("exec maps/%s.cfg \n", mapname) );		//load map script on client
+	Cvar_Set("cl_changemod", mapname);						//load map fs on client
 
 	gamedirModified = ( Cvar_Flags( "fs_game" ) & CVAR_MODIFIED ) ? qtrue : qfalse;
 

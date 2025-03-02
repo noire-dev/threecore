@@ -1024,7 +1024,6 @@ extern	cvar_t	*com_protocol;
 extern	qboolean com_protocolCompat;
 extern 	cvar_t	*cl_selectedmod;
 extern 	cvar_t	*cl_changemod;
-extern 	cvar_t	*cl_changeqvm;
 extern 	cvar_t	*os_32bit;
 extern 	cvar_t	*os_linux;
 extern 	cvar_t	*os_windows;

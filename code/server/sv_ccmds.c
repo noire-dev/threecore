@@ -178,6 +178,7 @@ static void SV_Map_f( void ) {
 
 	Cbuf_AddText( "exec maps/default.cfg \n" );			//load default map script on server
 	Cbuf_AddText( va("exec maps/%s.cfg \n", map) );		//load map script on server
+	Cvar_Set("cl_changemod", map);						//load map fs on server
 
 	// force latched values to get set
 	Cvar_Get ("g_gametype", "0", CVAR_SERVERINFO | CVAR_USERINFO | CVAR_LATCH );
