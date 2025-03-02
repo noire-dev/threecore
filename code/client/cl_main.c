@@ -2007,7 +2007,7 @@ static void CL_DownloadsComplete( void ) {
 #endif
 
 	// if we downloaded files we need to restart the file system
-	if ( clc.downloadRestart ) {
+	//if ( clc.downloadRestart ) {
 		clc.downloadRestart = qfalse;
 
 		FS_Restart(clc.checksumFeed); // We possibly downloaded a pak, restart the file system to load it
@@ -2018,7 +2018,7 @@ static void CL_DownloadsComplete( void ) {
 		// by sending the donedl command we request a new gamestate
 		// so we don't want to load stuff yet
 		return;
-	}
+	//}
 
 	// let the client game init and load data
 	cls.state = CA_LOADING;
