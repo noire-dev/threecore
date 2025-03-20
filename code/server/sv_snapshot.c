@@ -465,8 +465,10 @@ static void SV_AddEntitiesVisibleFromPoint( const vec3_t origin, clientSnapshot_
 					}
 				}
 			}
-			if(!visible && ent->s.eType != ET_MOVER && ent->s.eType != ET_BEAM){
-				continue;	//Entity blocked
+			if(!visible){	//if object not visible
+				if(ent->s.eType != ET_MOVER && ent->s.eType != ET_BEAM){	//hide if it not mover or beam
+					continue;	//Entity blocked
+				}
 			}
 		}
 
