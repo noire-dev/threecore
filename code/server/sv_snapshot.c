@@ -473,7 +473,7 @@ static void SV_AddEntitiesVisibleFromPoint( const vec3_t origin, clientSnapshot_
 			} else {
 				visible = qtrue;
 			}
-			if(!visible){
+			if(!visible && ent->s.eType == ET_PLAYER){
 				for (k = 0; k < 8; k++) {
 					SV_Trace(&trace, origin, NULL, NULL, corners[k], frame->ps.clientNum, CONTENTS_SOLID, qfalse);
 					if (trace.fraction < 1.0f && trace.entityNum != ent->s.number) {
