@@ -453,13 +453,21 @@ static void SV_AddEntitiesVisibleFromPoint( const vec3_t origin, clientSnapshot_
 			corners[7][0] = ent->r.currentOrigin[0] + ent->r.maxs[0]; corners[7][1] = ent->r.currentOrigin[1] + ent->r.maxs[1]; corners[7][2] = ent->r.currentOrigin[2] + ent->r.maxs[2];  // Max по X, Max по Y, Max по Z
 
 			SV_Trace(&trace, origin, NULL, NULL, ent->r.currentOrigin, frame->ps.clientNum, CONTENTS_SOLID, qfalse);
-			if (trace.fraction >= 1.0f && (trace.contents & CONTENTS_TRANSLUCENT)) {
+			if (trace.fraction < 1.0f && trace.entityNum != ent->s.number) {
+				if(trace.contents & CONTENTS_TRANSLUCENT){
+					visible = qtrue;
+				}
+			} else {
 				visible = qtrue;
 			}
 			if(!visible){
 				for (k = 0; k < 8; k++) {
 					SV_Trace(&trace, origin, NULL, NULL, corners[k], frame->ps.clientNum, CONTENTS_SOLID, qfalse);
-					if (trace.fraction >= 1.0f && (trace.contents & CONTENTS_TRANSLUCENT)) {
+					if (trace.fraction < 1.0f && trace.entityNum != ent->s.number) {
+						if(trace.contents & CONTENTS_TRANSLUCENT){
+							visible = qtrue;
+						}
+					} else {	
 						visible = qtrue;
 						break;
 					}
