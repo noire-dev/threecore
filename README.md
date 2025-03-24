@@ -23,24 +23,27 @@ This is a modern engine created for OpenSandbox.
 **SourceTech features**:
 
 * Brush limit up to 524288
-* Entity limit up to 4096
+* Entity limit up to 4096-16384 (4096 by default)
 * Model limit up to 4096
 * Sound limit up to 4096
 * Brush model limit up to 4096
 * Cvar limit up to 16384
-* Players and bots limit up to 256
-* New weapon system with limit up to 8192
+* Players and bots limit up to 64-512 (99 by default)
+* New weapon system with limit up to 65535
 * Up to 80000000 polygons per scene
 * Up to 1000000 polygons per model
 * New addon system
 * Simple physics (QVM-side)
-* Map in UI background
-* Seamless change of QVM
+* Map in UI background (for single player games)
+* Per map QVMs
 * Improved lighting (high resolution lightmaps and post-processing)
 * Render distance for entity (server-side)
-* MGui interface system with QVM and map integration
+* NSGui interface system with QVM and map integration
 * Vehicles and additional properties of the entity
 * Support huge size maps up to 4GB
+* PostFX (bunch a ARB shaders)
+* BSP collision files for visible models
+* Anticheat engine (anti wallhack)
 
 ## Vulkan renderer
 
