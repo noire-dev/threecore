@@ -243,7 +243,7 @@ SV_BoundMaxClients
 */
 static int SV_BoundMaxClients( int minimum ) {
 	// get the current maxclients value
-	Cvar_Get( "sv_maxclients", "128", 0 );
+	Cvar_Get( "sv_maxclients", XSTRING(MAX_CLIENTS), 0 );
 
 	if ( sv_maxclients->integer < minimum ) {
 		Cvar_SetIntegerValue( "sv_maxclients", minimum );
@@ -684,7 +684,9 @@ void SV_SpawnServer( const char *mapname, qboolean killBots ) {
 	// suppress hitch warning
 	Com_FrameInit();
 
-	sv_maxclients->modified = qfalse;
+	if(sv_maxclients->integer == MAX_CLIENTS){
+		sv_maxclients->modified = qfalse;
+	}
 }
 
 
@@ -718,7 +720,7 @@ void SV_Init( void )
 	Cvar_SetDescription( sv_privateClients, "The number of spots, out of sv_maxclients, reserved for players with the server password (sv_privatePassword)." );
 	sv_hostname = Cvar_Get ("sv_hostname", "noname", CVAR_SERVERINFO | CVAR_ARCHIVE );
 	Cvar_SetDescription( sv_hostname, "Sets the name of the server." );
-	sv_maxclients = Cvar_Get ("sv_maxclients", "128", CVAR_SERVERINFO | CVAR_LATCH);
+	sv_maxclients = Cvar_Get ("sv_maxclients", XSTRING(MAX_CLIENTS), CVAR_SERVERINFO | CVAR_LATCH);
 	Cvar_CheckRange( sv_maxclients, "1", XSTRING(MAX_CLIENTS), CV_INTEGER );
 	Cvar_SetDescription( sv_maxclients, "Maximum number of people allowed to join the server dedicated server memory optimizations." );
 
