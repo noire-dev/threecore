@@ -3836,13 +3836,13 @@ void Com_Init( char *commandLine ) {
 
 	Cvar_CheckRange( com_protocol, "0", NULL, CV_INTEGER );
 	com_protocol->flags &= ~CVAR_USER_CREATED;
-	com_protocol->flags |= CVAR_SERVERINFO | CVAR_ROM;
+	com_protocol->flags |= CVAR_ROM;
 
 	// done early so bind command exists
 	Com_InitKeyCommands();
 	
 	cl_selectedmod = Cvar_Get("cl_selectedmod", "default", CVAR_ARCHIVE | CVAR_SERVERINFO);
-	cl_changeqvm = Cvar_Get("cl_changeqvm", "0", CVAR_SERVERINFO);
+	cl_changeqvm = Cvar_Get("cl_changeqvm", "0", 0);
 	#if defined(__i386__)
 	os_32bit = Cvar_Get("os_32bit", "1", CVAR_ARCHIVE);
 	#else

@@ -3985,8 +3985,8 @@ void CL_Init( void ) {
 	Cvar_Get ("headmodel", "beret/default", CVAR_USERINFO | CVAR_ARCHIVE_ND );
  	Cvar_Get ("team_model", "beret/default", CVAR_USERINFO | CVAR_ARCHIVE_ND );
 	Cvar_Get ("team_headmodel", "beret/default", CVAR_USERINFO | CVAR_ARCHIVE_ND );
-//	Cvar_Get ("g_redTeam", "Stroggs", CVAR_SERVERINFO | CVAR_ARCHIVE);
-//	Cvar_Get ("g_blueTeam", "Pagans", CVAR_SERVERINFO | CVAR_ARCHIVE);
+//	Cvar_Get ("g_redTeam", "Stroggs", CVAR_ARCHIVE);
+//	Cvar_Get ("g_blueTeam", "Pagans", CVAR_ARCHIVE);
 	Cvar_Get ("color1", "1", CVAR_USERINFO | CVAR_ARCHIVE );
 	Cvar_Get ("color2", "1", CVAR_USERINFO | CVAR_ARCHIVE );
 	Cvar_Get ("handicap", "100", CVAR_USERINFO | CVAR_ARCHIVE_ND );
