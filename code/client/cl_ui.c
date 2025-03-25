@@ -1262,10 +1262,12 @@ void CL_InitUI( void ) {
 			FS_PureServerSetLoadedPaks( "", "" );
 			uivm = VM_Create( VM_UI, CL_UISystemCalls, UI_DllSyscall, interpret );
 			if ( !uivm ) {
-				Com_Error( ERR_DROP, "VM_Create on UI failed" );
+				Cvar_Set("cl_selectedmod", "default");
+				Com_Error( ERR_DROP, "VM_Create on UI failed, default mod restored" );
 			}
 		} else {
-			Com_Error( ERR_DROP, "VM_Create on UI failed" );
+			Cvar_Set("cl_selectedmod", "default");
+			Com_Error( ERR_DROP, "VM_Create on UI failed, default mod restored" );
 		}
 	}
 

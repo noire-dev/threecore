@@ -683,6 +683,8 @@ void SV_SpawnServer( const char *mapname, qboolean killBots ) {
 
 	// suppress hitch warning
 	Com_FrameInit();
+
+	sv_maxclients->modified = qfalse;
 }
 
 
