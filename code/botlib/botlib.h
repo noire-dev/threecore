@@ -444,8 +444,8 @@ name:						default:			module(s):			description:
 "homedir"					""					be_interface.c		home directory
 
 "log"						"0"					l_log.c				enable/disable creating a log file
-"maxclients"				"128"					be_interface.c		maximum number of clients
-"maxentities"				"4096"				be_interface.c		maximum number of entities
+"maxclients"				"MAX_CLIENTS"					be_interface.c		maximum number of clients
+"maxentities"				"MAX_GENTITIES"				be_interface.c		maximum number of entities
 "bot_developer"				"0"					be_interface.c		bot developer mode (it's "botDeveloper" in C to prevent symbol clash).
 
 "phys_friction"				"6"					be_aas_move.c		ground friction
