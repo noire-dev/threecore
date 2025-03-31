@@ -577,6 +577,36 @@ static void SV_ClipMoveToEntities( moveclip_t *clip ) {
 	}
 }
 
+void RotatePointWithAngles(float point[3], float matrix[3][3]) {
+    float x = point[0];
+    float y = point[1];
+    float z = point[2];
+
+    point[0] = matrix[0][0] * x + matrix[0][1] * y + matrix[0][2] * z;
+    point[1] = matrix[1][0] * x + matrix[1][1] * y + matrix[1][2] * z;
+    point[2] = matrix[2][0] * x + matrix[2][1] * y + matrix[2][2] * z;
+}
+
+void CreateRotationMatrix(float angles[3], float matrix[3][3]) {
+    float cosX = cosf(angles[0]);
+    float sinX = sinf(angles[0]);
+    float cosY = cosf(angles[1]);
+    float sinY = sinf(angles[1]);
+    float cosZ = cosf(angles[2]);
+    float sinZ = sinf(angles[2]);
+
+    matrix[0][0] = cosY * cosZ;
+    matrix[0][1] = -cosY * sinZ;
+    matrix[0][2] = sinY;
+
+    matrix[1][0] = sinX * sinY * cosZ + cosX * sinZ;
+    matrix[1][1] = -sinX * sinY * sinZ + cosX * cosZ;
+    matrix[1][2] = -sinX * cosY;
+
+    matrix[2][0] = -cosX * sinY * cosZ + sinX * sinZ;
+    matrix[2][1] = cosX * sinY * sinZ + sinX * cosZ;
+    matrix[2][2] = cosX * cosY;
+}
 
 /*
 ==================
@@ -636,7 +666,60 @@ void SV_Trace( trace_t *results, const vec3_t start, const vec3_t mins, const ve
 	*results = clip.trace;
 }
 
+void SV_Trace_SourceTech( trace_t *results, const vec3_t start, const vec3_t mins, const vec3_t maxs, const vec3_t end, int passEntityNum, int contentmask, qboolean capsule, const vec3_t angles ) {
+	moveclip_t	clip;
+	int			i;
+    vec3_t 		rotated_start = {start[0], start[1], start[2]};
+    vec3_t 		rotated_end = {end[0], end[1], end[2]};
 
+	if ( !mins ) {
+		mins = vec3_origin;
+	}
+	if ( !maxs ) {
+		maxs = vec3_origin;
+	}
+
+	Com_Memset ( &clip, 0, sizeof ( clip ) );
+
+	CreateRotationMatrix(angles, matrix);
+    RotatePointWithAngles(rotated_start, matrix);
+    RotatePointWithAngles(rotated_end, matrix);
+
+	// clip to world
+	CM_BoxTrace( &clip.trace, rotated_start, rotated_end, mins, maxs, 0, contentmask, capsule );
+	clip.trace.entityNum = clip.trace.fraction != 1.0 ? ENTITYNUM_WORLD : ENTITYNUM_NONE;
+	if ( clip.trace.fraction == 0 ) {
+		*results = clip.trace;
+		return;		// blocked immediately by the world
+	}
+
+	clip.contentmask = contentmask;
+	clip.start = start;
+	VectorCopy( rotated_end, clip.end );
+	clip.mins = mins;
+	clip.maxs = maxs;
+	clip.passEntityNum = passEntityNum;
+	clip.capsule = capsule;
+
+	// create the bounding box of the entire move
+	// we can limit it to the part of the move not
+	// already clipped off by the world, which can be
+	// a significant savings for line of sight and shot traces
+	for ( i=0 ; i<3 ; i++ ) {
+		if ( rotated_end[i] > rotated_start[i] ) {
+			clip.boxmins[i] = clip.start[i] + clip.mins[i] - 1;
+			clip.boxmaxs[i] = clip.end[i] + clip.maxs[i] + 1;
+		} else {
+			clip.boxmins[i] = clip.end[i] + clip.mins[i] - 1;
+			clip.boxmaxs[i] = clip.start[i] + clip.maxs[i] + 1;
+		}
+	}
+
+	// clip to other solid entities
+	SV_ClipMoveToEntities ( &clip );
+
+	*results = clip.trace;
+}
 
 /*
 =============
