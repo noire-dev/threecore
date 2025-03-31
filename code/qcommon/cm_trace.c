@@ -1422,7 +1422,6 @@ void CM_TransformedBoxTrace( trace_t *results, const vec3_t start, const vec3_t 
 				}
 			}
 		}
-
 #endif
 	// adjust so that mins and maxs are always symmetric, which
 	// avoids some complications with plane expanding of rotated
@@ -1492,6 +1491,129 @@ void CM_TransformedBoxTrace( trace_t *results, const vec3_t start, const vec3_t 
 	trace.endpos[0] = start[0] + trace.fraction * (end[0] - start[0]);
 	trace.endpos[1] = start[1] + trace.fraction * (end[1] - start[1]);
 	trace.endpos[2] = start[2] + trace.fraction * (end[2] - start[2]);
+
+	*results = trace;
+#ifdef USE_BSP_COLMODELS
+	cmi = 0;
+#endif
+}
+
+void CM_TransformedBoxTrace_SourceTech( trace_t *results, const vec3_t start, const vec3_t end,
+						const vec3_t mins, const vec3_t maxs,
+						clipHandle_t model, int brushmask,
+						const vec3_t origin, const vec3_t angles, qboolean capsule ) {
+	trace_t		trace;
+	vec3_t		start_l, end_l;
+	qboolean	rotated;
+	vec3_t		offset;
+	vec3_t		symetricSize[2];
+	vec3_t		matrix[3], transpose[3];
+	int			i;
+	float		halfwidth;
+	float		halfheight;
+	float		t;
+	sphere_t	sphere;
+
+	if ( !mins ) {
+		mins = vec3_origin;
+	}
+	if ( !maxs ) {
+		maxs = vec3_origin;
+	}
+
+#ifdef USE_BSP_COLMODELS
+		int j, numInlines, indexAdjusted;
+
+		// set the right map before entering trace
+		cmi = 0;
+		if(model < CM_NumInlineModels() || model == BOX_MODEL_HANDLE) {
+			indexAdjusted = model;
+		} else {
+			// might intersect, so do an exact clip
+			indexAdjusted = CM_InlineModel (model);
+
+			for(j = 0; j < 64; j++) {
+				cmi = j;
+				numInlines = CM_NumInlineModels();
+				if(numInlines == 0) {
+					continue;
+				}
+				if(indexAdjusted >= numInlines) {
+					indexAdjusted -= numInlines;
+				} else {
+					break;
+				}
+			}
+		}
+#endif
+	// adjust so that mins and maxs are always symmetric, which
+	// avoids some complications with plane expanding of rotated
+	// bmodels
+	for ( i = 0 ; i < 3 ; i++ ) {
+		offset[i] = ( mins[i] + maxs[i] ) * 0.5;
+		symetricSize[0][i] = mins[i] - offset[i];
+		symetricSize[1][i] = maxs[i] - offset[i];
+		start_l[i] = start[i] + offset[i];
+		end_l[i] = end[i] + offset[i];
+	}
+
+	// subtract origin offset
+	VectorSubtract( start_l, origin, start_l );
+	VectorSubtract( end_l, origin, end_l );
+
+	// rotate start and end into the models frame of reference
+	if ( angles[0] || angles[1] || angles[2] ) {
+		rotated = qtrue;
+	} else {
+		rotated = qfalse;
+	}
+
+	halfwidth = symetricSize[ 1 ][ 0 ];
+	halfheight = symetricSize[ 1 ][ 2 ];
+
+	sphere.use = capsule;
+	sphere.radius = ( halfwidth > halfheight ) ? halfheight : halfwidth;
+	sphere.halfheight = halfheight;
+	t = halfheight - sphere.radius;
+
+	if (rotated) {
+		// rotation on trace line (start-end) instead of rotating the bmodel
+		// NOTE: This is still incorrect for bounding boxes because the actual bounding
+		//		 box that is swept through the model is not rotated. We cannot rotate
+		//		 the bounding box or the bmodel because that would make all the brush
+		//		 bevels invalid.
+		//		 However this is correct for capsules since a capsule itself is rotated too.
+		CreateRotationMatrix(angles, matrix);
+		RotatePoint(start_l, matrix);
+		RotatePoint(end_l, matrix);
+		// rotated sphere offset for capsule
+		sphere.offset[0] = matrix[0][ 2 ] * t;
+		sphere.offset[1] = -matrix[1][ 2 ] * t;
+		sphere.offset[2] = matrix[2][ 2 ] * t;
+	}
+	else {
+		VectorSet( sphere.offset, 0, 0, t );
+	}
+
+	// sweep the box through the model
+#ifdef USE_BSP_COLMODELS
+	CM_Trace( &trace, start_l, end_l, symetricSize[0], symetricSize[1], indexAdjusted, origin, brushmask, capsule, &sphere );
+#else
+	CM_Trace( &trace, start_l, end_l, symetricSize[0], symetricSize[1], model, origin, brushmask, capsule, &sphere );
+#endif
+
+	// if the bmodel was rotated and there was a collision
+	if ( rotated && trace.fraction != 1.0 ) {
+		// rotation of bmodel collision plane
+		TransposeMatrix(matrix, transpose);
+		RotatePoint(trace.plane.normal, transpose);
+	}
+
+	// re-calculate the end position of the trace because the trace.endpos
+	// calculated by CM_Trace could be rotated and have an offset
+	//trace.endpos[0] = start[0] + trace.fraction * (end[0] - start[0]);
+	//trace.endpos[1] = start[1] + trace.fraction * (end[1] - start[1]);
+	//trace.endpos[2] = start[2] + trace.fraction * (end[2] - start[2]);
 
 	*results = trace;
 #ifdef USE_BSP_COLMODELS
