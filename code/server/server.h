@@ -473,6 +473,8 @@ int SV_PointContents( const vec3_t p, int passEntityNum );
 
 void SV_Trace( trace_t *results, const vec3_t start, const vec3_t mins, const vec3_t maxs, const vec3_t end, int passEntityNum, int contentmask, qboolean capsule );
 void SV_Trace_SourceTech( trace_t *results, const vec3_t start, const vec3_t mins, const vec3_t maxs, const vec3_t end, int passEntityNum, int contentmask, qboolean capsule, const vec3_t angles );
+void RotatePoint( vec3_t point, /*const*/ vec3_t matrix[3] );
+void CreateRotationMatrix( const vec3_t angles, vec3_t matrix[3] );
 // mins and maxs are relative
 
 // if the entire move stays in a solid volume, trace.allsolid will be set,

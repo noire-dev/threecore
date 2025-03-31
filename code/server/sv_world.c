@@ -671,7 +671,7 @@ void SV_Trace_SourceTech( trace_t *results, const vec3_t start, const vec3_t min
 	int			i;
     vec3_t 		rotated_start = {start[0], start[1], start[2]};
     vec3_t 		rotated_end = {end[0], end[1], end[2]};
-	float 		matrix[3][3];
+	vec3_t		matrix[3], transpose[3];
 
 	if ( !mins ) {
 		mins = vec3_origin;
@@ -683,8 +683,8 @@ void SV_Trace_SourceTech( trace_t *results, const vec3_t start, const vec3_t min
 	Com_Memset ( &clip, 0, sizeof ( clip ) );
 
 	CreateRotationMatrix(angles, matrix);
-    RotatePointWithAngles(rotated_start, matrix);
-    RotatePointWithAngles(rotated_end, matrix);
+	RotatePoint(rotated_start, matrix);
+	RotatePoint(rotated_end, matrix);
 
 	// clip to world
 	CM_BoxTrace( &clip.trace, rotated_start, rotated_end, mins, maxs, 0, contentmask, capsule );
@@ -715,6 +715,9 @@ void SV_Trace_SourceTech( trace_t *results, const vec3_t start, const vec3_t min
 			clip.boxmaxs[i] = clip.start[i] + clip.maxs[i] + 1;
 		}
 	}
+
+	TransposeMatrix(matrix, transpose);
+	RotatePoint(trace.plane.normal, transpose);
 
 	// clip to other solid entities
 	SV_ClipMoveToEntities ( &clip );
