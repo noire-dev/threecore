@@ -636,54 +636,6 @@ void SV_Trace( trace_t *results, const vec3_t start, const vec3_t mins, const ve
 	*results = clip.trace;
 }
 
-void VectorMin(const vec3_t v1, const vec3_t v2, vec3_t out) {
-    for (int i = 0; i < 3; i++) {
-        out[i] = (v1[i] < v2[i]) ? v1[i] : v2[i];
-    }
-}
-
-void VectorMax(const vec3_t v1, const vec3_t v2, vec3_t out) {
-    for (int i = 0; i < 3; i++) {
-        out[i] = (v1[i] > v2[i]) ? v1[i] : v2[i];
-    }
-}
-
-void RotateAABB(vec3_t start, vec3_t end, vec3_t angles, vec3_t mins, vec3_t maxs, moveclip_t *clip) {
-    float radPitch = angles[PITCH] * (M_PI / 180.0f);
-    float radYaw = angles[YAW] * (M_PI / 180.0f);
-    float radRoll = angles[ROLL] * (M_PI / 180.0f);
-
-    // Создание матрицы поворота (в стиле id Tech 3)
-    vec3_t forward, right, up;
-    AngleVectors(angles, forward, right, up);
-
-    vec3_t boxCorners[8];
-    vec3_t rotatedCorners[8];
-
-    // Определяем 8 углов AABB
-    for (int i = 0; i < 8; i++) {
-        boxCorners[i][0] = (i & 1) ? maxs[0] : mins[0];
-        boxCorners[i][1] = (i & 2) ? maxs[1] : mins[1];
-        boxCorners[i][2] = (i & 4) ? maxs[2] : mins[2];
-    }
-
-    // Поворот углов
-    for (int i = 0; i < 8; i++) {
-        rotatedCorners[i][0] = boxCorners[i][0] * forward[0] + boxCorners[i][1] * right[0] + boxCorners[i][2] * up[0];
-        rotatedCorners[i][1] = boxCorners[i][0] * forward[1] + boxCorners[i][1] * right[1] + boxCorners[i][2] * up[1];
-        rotatedCorners[i][2] = boxCorners[i][0] * forward[2] + boxCorners[i][1] * right[2] + boxCorners[i][2] * up[2];
-    }
-
-    // Находим новые границы AABB
-    VectorCopy(rotatedCorners[0], clip->boxmins);
-    VectorCopy(rotatedCorners[0], clip->boxmaxs);
-
-    for (int i = 1; i < 8; i++) {
-        VectorMin(clip->boxmins, rotatedCorners[i], clip->boxmins);
-        VectorMax(clip->boxmaxs, rotatedCorners[i], clip->boxmaxs);
-    }
-}
-
 void SV_Trace_SourceTech( trace_t *results, const vec3_t start, const vec3_t mins, const vec3_t maxs, const vec3_t end, int passEntityNum, int contentmask, qboolean capsule, const vec3_t angles ) {
 	moveclip_t	clip;
 	int			i;
@@ -698,7 +650,7 @@ void SV_Trace_SourceTech( trace_t *results, const vec3_t start, const vec3_t min
 	Com_Memset ( &clip, 0, sizeof ( clip ) );
 
 	// clip to world
-	CM_BoxTrace( &clip.trace, start, end, mins, maxs, 0, contentmask, capsule );
+	CM_BoxTrace_SourceTech( &clip.trace, start, end, mins, maxs, 0, contentmask, capsule, angles );
 	clip.trace.entityNum = clip.trace.fraction != 1.0 ? ENTITYNUM_WORLD : ENTITYNUM_NONE;
 	if ( clip.trace.fraction == 0 ) {
 		*results = clip.trace;
@@ -713,8 +665,6 @@ void SV_Trace_SourceTech( trace_t *results, const vec3_t start, const vec3_t min
 	clip.maxs = maxs;
 	clip.passEntityNum = passEntityNum;
 	clip.capsule = capsule;
-
-	RotateAABB(clip.start, clip.end, angles, clip.mins, clip.maxs, &clip);
 
 	// create the bounding box of the entire move
 	// we can limit it to the part of the move not

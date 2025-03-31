@@ -1354,6 +1354,254 @@ static void CM_Trace( trace_t *results, const vec3_t start, const vec3_t end, co
 	*results = tw.trace;
 }
 
+static void CM_Trace_SourceTech( trace_t *results, const vec3_t start, const vec3_t end, const vec3_t mins, const vec3_t maxs,
+						clipHandle_t model, const vec3_t origin, int brushmask, qboolean capsule, const sphere_t *sphere, const vec3_t angles ) {
+	int			i;
+	traceWork_t	tw;
+	vec3_t		offset;
+	cmodel_t	*cmod;
+	qboolean	rotated;
+	vec3_t		matrix[3], transpose[3];
+
+	cmod = CM_ClipHandleToModel( model );
+
+	cm.checkcount++;		// for multi-check avoidance
+
+	c_traces++;				// for statistics, may be zeroed
+
+	// fill in a default trace
+	Com_Memset( &tw, 0, sizeof(tw) );
+	tw.trace.fraction = 1;	// assume it goes the entire distance until shown otherwise
+	VectorCopy(origin, tw.modelOrigin);
+
+	if (!cm.numNodes) {
+		*results = tw.trace;
+
+		return;	// map not loaded, shouldn't happen
+	}
+
+	// allow NULL to be passed in for 0,0,0
+	if ( !mins ) {
+		mins = vec3_origin;
+	}
+	if ( !maxs ) {
+		maxs = vec3_origin;
+	}
+
+	// set basic parms
+	tw.contents = brushmask;
+
+	// adjust so that mins and maxs are always symmetric, which
+	// avoids some complications with plane expanding of rotated
+	// bmodels
+	for ( i = 0 ; i < 3 ; i++ ) {
+		offset[i] = ( mins[i] + maxs[i] ) * 0.5;
+		tw.size[0][i] = mins[i] - offset[i];
+		tw.size[1][i] = maxs[i] - offset[i];
+		tw.start[i] = start[i] + offset[i];
+		tw.end[i] = end[i] + offset[i];
+	}
+
+	// rotate start and end into the models frame of reference
+	if ( angles[0] || angles[1] || angles[2] ) {
+		rotated = qtrue;
+	} else {
+		rotated = qfalse;
+	}
+
+	// if a sphere is already specified
+	if ( sphere ) {
+		tw.sphere = *sphere;
+	}
+	else {
+		tw.sphere.use = capsule;
+		tw.sphere.radius = ( tw.size[1][0] > tw.size[1][2] ) ? tw.size[1][2]: tw.size[1][0];
+		tw.sphere.halfheight = tw.size[1][2];
+		VectorSet( tw.sphere.offset, 0, 0, tw.size[1][2] - tw.sphere.radius );
+	}
+
+	if (rotated) {
+		// rotation on trace line (start-end) instead of rotating the bmodel
+		// NOTE: This is still incorrect for bounding boxes because the actual bounding
+		//		 box that is swept through the model is not rotated. We cannot rotate
+		//		 the bounding box or the bmodel because that would make all the brush
+		//		 bevels invalid.
+		//		 However this is correct for capsules since a capsule itself is rotated too.
+		CreateRotationMatrix(angles, matrix);
+		RotatePoint(tw.start, matrix);
+		RotatePoint(tw.end, matrix);
+		// rotated sphere offset for capsule
+		tw.sphere.offset[0] = matrix[0][ 2 ] * t;
+		tw.sphere.offset[1] = -matrix[1][ 2 ] * t;
+		tw.sphere.offset[2] = matrix[2][ 2 ] * t;
+	}
+	else {
+		VectorSet( tw.sphere.offset, 0, 0, t );
+	}
+
+	tw.maxOffset = tw.size[1][0] + tw.size[1][1] + tw.size[1][2];
+
+	// tw.offsets[signbits] = vector to appropriate corner from origin
+	tw.offsets[0][0] = tw.size[0][0];
+	tw.offsets[0][1] = tw.size[0][1];
+	tw.offsets[0][2] = tw.size[0][2];
+
+	tw.offsets[1][0] = tw.size[1][0];
+	tw.offsets[1][1] = tw.size[0][1];
+	tw.offsets[1][2] = tw.size[0][2];
+
+	tw.offsets[2][0] = tw.size[0][0];
+	tw.offsets[2][1] = tw.size[1][1];
+	tw.offsets[2][2] = tw.size[0][2];
+
+	tw.offsets[3][0] = tw.size[1][0];
+	tw.offsets[3][1] = tw.size[1][1];
+	tw.offsets[3][2] = tw.size[0][2];
+
+	tw.offsets[4][0] = tw.size[0][0];
+	tw.offsets[4][1] = tw.size[0][1];
+	tw.offsets[4][2] = tw.size[1][2];
+
+	tw.offsets[5][0] = tw.size[1][0];
+	tw.offsets[5][1] = tw.size[0][1];
+	tw.offsets[5][2] = tw.size[1][2];
+
+	tw.offsets[6][0] = tw.size[0][0];
+	tw.offsets[6][1] = tw.size[1][1];
+	tw.offsets[6][2] = tw.size[1][2];
+
+	tw.offsets[7][0] = tw.size[1][0];
+	tw.offsets[7][1] = tw.size[1][1];
+	tw.offsets[7][2] = tw.size[1][2];
+
+	//
+	// calculate bounds
+	//
+	if ( tw.sphere.use ) {
+		for ( i = 0 ; i < 3 ; i++ ) {
+			if ( tw.start[i] < tw.end[i] ) {
+				tw.bounds[0][i] = tw.start[i] - fabs(tw.sphere.offset[i]) - tw.sphere.radius;
+				tw.bounds[1][i] = tw.end[i] + fabs(tw.sphere.offset[i]) + tw.sphere.radius;
+			} else {
+				tw.bounds[0][i] = tw.end[i] - fabs(tw.sphere.offset[i]) - tw.sphere.radius;
+				tw.bounds[1][i] = tw.start[i] + fabs(tw.sphere.offset[i]) + tw.sphere.radius;
+			}
+		}
+	}
+	else {
+		for ( i = 0 ; i < 3 ; i++ ) {
+			if ( tw.start[i] < tw.end[i] ) {
+				tw.bounds[0][i] = tw.start[i] + tw.size[0][i];
+				tw.bounds[1][i] = tw.end[i] + tw.size[1][i];
+			} else {
+				tw.bounds[0][i] = tw.end[i] + tw.size[0][i];
+				tw.bounds[1][i] = tw.start[i] + tw.size[1][i];
+			}
+		}
+	}
+
+	//
+	// check for position test special case
+	//
+	if (start[0] == end[0] && start[1] == end[1] && start[2] == end[2]) {
+		if ( model ) {
+#ifdef ALWAYS_BBOX_VS_BBOX // FIXME - compile time flag?
+			if ( model == BOX_MODEL_HANDLE || model == CAPSULE_MODEL_HANDLE) {
+				tw.sphere.use = qfalse;
+				CM_TestInLeaf( &tw, &cmod->leaf );
+			}
+			else
+#elif defined(ALWAYS_CAPSULE_VS_CAPSULE)
+			if ( model == BOX_MODEL_HANDLE || model == CAPSULE_MODEL_HANDLE) {
+				CM_TestCapsuleInCapsule( &tw, model );
+			}
+			else
+#endif
+			if ( model == CAPSULE_MODEL_HANDLE ) {
+				if ( tw.sphere.use ) {
+					CM_TestCapsuleInCapsule( &tw, model );
+				}
+				else {
+					CM_TestBoundingBoxInCapsule( &tw, model );
+				}
+			}
+			else {
+				CM_TestInLeaf( &tw, &cmod->leaf );
+			}
+		} else {
+			CM_PositionTest( &tw );
+		}
+	} else {
+		//
+		// check for point special case
+		//
+		if ( tw.size[0][0] == 0 && tw.size[0][1] == 0 && tw.size[0][2] == 0 ) {
+			tw.isPoint = qtrue;
+			VectorClear( tw.extents );
+		} else {
+			tw.isPoint = qfalse;
+			tw.extents[0] = tw.size[1][0];
+			tw.extents[1] = tw.size[1][1];
+			tw.extents[2] = tw.size[1][2];
+		}
+
+		//
+		// general sweeping through world
+		//
+		if ( model ) {
+#ifdef ALWAYS_BBOX_VS_BBOX
+			if ( model == BOX_MODEL_HANDLE || model == CAPSULE_MODEL_HANDLE) {
+				tw.sphere.use = qfalse;
+				CM_TraceThroughLeaf( &tw, &cmod->leaf );
+			}
+			else
+#elif defined(ALWAYS_CAPSULE_VS_CAPSULE)
+			if ( model == BOX_MODEL_HANDLE || model == CAPSULE_MODEL_HANDLE) {
+				CM_TraceCapsuleThroughCapsule( &tw, model );
+			}
+			else
+#endif
+			if ( model == CAPSULE_MODEL_HANDLE ) {
+				if ( tw.sphere.use ) {
+					CM_TraceCapsuleThroughCapsule( &tw, model );
+				}
+				else {
+					CM_TraceBoundingBoxThroughCapsule( &tw, model );
+				}
+			}
+			else {
+				CM_TraceThroughLeaf( &tw, &cmod->leaf );
+			}
+		} else {
+			CM_TraceThroughTree( &tw, 0, 0, 1, tw.start, tw.end );
+		}
+	}
+
+	// if the bmodel was rotated and there was a collision
+	if ( rotated && tw.trace.fraction != 1.0 ) {
+		// rotation of bmodel collision plane
+		TransposeMatrix(matrix, transpose);
+		RotatePoint(tw.trace.plane.normal, transpose);
+	}
+
+	// generate endpos from the original, unmodified start/end
+	if ( tw.trace.fraction == 1 ) {
+		VectorCopy (end, tw.trace.endpos);
+	} else {
+		for ( i=0 ; i<3 ; i++ ) {
+			tw.trace.endpos[i] = start[i] + tw.trace.fraction * (end[i] - start[i]);
+		}
+	}
+
+        // If allsolid is set (was entirely inside something solid), the plane is not valid.
+        // If fraction == 1.0, we never hit anything, and thus the plane is not valid.
+        // Otherwise, the normal on the plane should have unit length
+        assert(tw.trace.allsolid ||
+               tw.trace.fraction == 1.0 ||
+               VectorLengthSquared(tw.trace.plane.normal) > 0.9999);
+		*results = tw.trace;
+}
+
 
 /*
 ==================
@@ -1365,6 +1613,12 @@ void CM_BoxTrace( trace_t *results, const vec3_t start, const vec3_t end,
 						clipHandle_t model, int brushmask, qboolean capsule ) {
 	CM_Trace( results, start, end, mins, maxs, model, vec3_origin, brushmask, capsule, NULL );
 }
+void CM_BoxTrace_SourceTech( trace_t *results, const vec3_t start, const vec3_t end,
+	const vec3_t mins, const vec3_t maxs,
+	clipHandle_t model, int brushmask, qboolean capsule, const vec3_t angles  ) {
+	CM_Trace_SourceTech( results, start, end, mins, maxs, model, vec3_origin, brushmask, capsule, NULL, angles );
+}
+
 
 
 /*
