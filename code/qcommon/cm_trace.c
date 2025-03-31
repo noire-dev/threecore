@@ -1362,6 +1362,7 @@ static void CM_Trace_SourceTech( trace_t *results, const vec3_t start, const vec
 	cmodel_t	*cmod;
 	qboolean	rotated;
 	vec3_t		matrix[3], transpose[3];
+	float		t;
 
 	cmod = CM_ClipHandleToModel( model );
 
