@@ -45,13 +45,10 @@ int			CM_TransformedPointContents( const vec3_t p, clipHandle_t model, const vec
 void		CM_BoxTrace( trace_t *results, const vec3_t start, const vec3_t end,
 						const vec3_t mins, const vec3_t maxs,
 						clipHandle_t model, int brushmask, qboolean capsule );
-void		CM_BoxTrace_SourceTech( trace_t *results, const vec3_t start, const vec3_t end,
-							const vec3_t mins, const vec3_t maxs,
-							clipHandle_t model, int brushmask, qboolean capsule, const vec3_t angles );
 void		CM_TransformedBoxTrace( trace_t *results, const vec3_t start, const vec3_t end,
 						const vec3_t mins, const vec3_t maxs,
 						clipHandle_t model, int brushmask,
-						const vec3_t origin, const vec3_t angles, qboolean capsule, qboolean onTrace );
+						const vec3_t origin, const vec3_t angles, qboolean capsule );
 
 byte		*CM_ClusterPVS (int cluster);
 

@@ -1378,7 +1378,7 @@ rotating entities
 void CM_TransformedBoxTrace( trace_t *results, const vec3_t start, const vec3_t end,
 						const vec3_t mins, const vec3_t maxs,
 						clipHandle_t model, int brushmask,
-						const vec3_t origin, const vec3_t angles, qboolean capsule, qboolean onTrace ) {
+						const vec3_t origin, const vec3_t angles, qboolean capsule ) {
 	trace_t		trace;
 	vec3_t		start_l, end_l;
 	qboolean	rotated;
@@ -1422,8 +1422,8 @@ void CM_TransformedBoxTrace( trace_t *results, const vec3_t start, const vec3_t 
 				}
 			}
 		}
+
 #endif
-if(!onTrace){
 	// adjust so that mins and maxs are always symmetric, which
 	// avoids some complications with plane expanding of rotated
 	// bmodels
@@ -1438,7 +1438,6 @@ if(!onTrace){
 	// subtract origin offset
 	VectorSubtract( start_l, origin, start_l );
 	VectorSubtract( end_l, origin, end_l );
-}
 
 	// rotate start and end into the models frame of reference
 	if ( angles[0] || angles[1] || angles[2] ) {
@@ -1463,8 +1462,8 @@ if(!onTrace){
 		//		 bevels invalid.
 		//		 However this is correct for capsules since a capsule itself is rotated too.
 		CreateRotationMatrix(angles, matrix);
-		//RotatePoint(start, matrix);
-		//RotatePoint(end, matrix);
+		RotatePoint(start_l, matrix);
+		RotatePoint(end_l, matrix);
 		// rotated sphere offset for capsule
 		sphere.offset[0] = matrix[0][ 2 ] * t;
 		sphere.offset[1] = -matrix[1][ 2 ] * t;
@@ -1475,19 +1474,11 @@ if(!onTrace){
 	}
 
 	// sweep the box through the model
-if(!onTrace){
-	#ifdef USE_BSP_COLMODELS
-		CM_Trace( &trace, start_l, end_l, symetricSize[0], symetricSize[1], indexAdjusted, origin, brushmask, capsule, &sphere );
-	#else
-		CM_Trace( &trace, start_l, end_l, symetricSize[0], symetricSize[1], model, origin, brushmask, capsule, &sphere );
-	#endif
-} else {
-	#ifdef USE_BSP_COLMODELS
-		CM_Trace( &trace, start, end, symetricSize[0], symetricSize[1], indexAdjusted, origin, brushmask, capsule, &sphere );
-	#else
-		CM_Trace( &trace, start, end, symetricSize[0], symetricSize[1], model, origin, brushmask, capsule, &sphere );
-	#endif	
-}
+#ifdef USE_BSP_COLMODELS
+	CM_Trace( &trace, start_l, end_l, symetricSize[0], symetricSize[1], indexAdjusted, origin, brushmask, capsule, &sphere );
+#else
+	CM_Trace( &trace, start_l, end_l, symetricSize[0], symetricSize[1], model, origin, brushmask, capsule, &sphere );
+#endif
 
 	// if the bmodel was rotated and there was a collision
 	if ( rotated && trace.fraction != 1.0 ) {
