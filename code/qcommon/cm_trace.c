@@ -1440,7 +1440,7 @@ void CM_TransformedBoxTrace( trace_t *results, const vec3_t start, const vec3_t 
 
 	// rotate start and end into the models frame of reference
 	if ( angles[0] || angles[1] || angles[2] ) {
-		rotated = qfalse;
+		rotated = qtrue;
 	} else {
 		rotated = qfalse;
 	}
@@ -1474,9 +1474,9 @@ void CM_TransformedBoxTrace( trace_t *results, const vec3_t start, const vec3_t 
 
 	// sweep the box through the model
 #ifdef USE_BSP_COLMODELS
-	CM_Trace( &trace, start_l, end_l, symetricSize[0], symetricSize[1], indexAdjusted, origin, brushmask, capsule, &sphere );
+	CM_Trace( &trace, start, end, symetricSize[0], symetricSize[1], indexAdjusted, origin, brushmask, capsule, &sphere );
 #else
-	CM_Trace( &trace, start_l, end_l, symetricSize[0], symetricSize[1], model, origin, brushmask, capsule, &sphere );
+	CM_Trace( &trace, start, end, symetricSize[0], symetricSize[1], model, origin, brushmask, capsule, &sphere );
 #endif
 
 	// if the bmodel was rotated and there was a collision
