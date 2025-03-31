@@ -577,6 +577,7 @@ static void SV_ClipMoveToEntities( moveclip_t *clip ) {
 	}
 }
 
+
 /*
 ==================
 SV_Trace
@@ -635,55 +636,92 @@ void SV_Trace( trace_t *results, const vec3_t start, const vec3_t mins, const ve
 	*results = clip.trace;
 }
 
+void VectorMin(const vec3_t v1, const vec3_t v2, vec3_t out) {
+    for (int i = 0; i < 3; i++) {
+        out[i] = (v1[i] < v2[i]) ? v1[i] : v2[i];
+    }
+}
+
+void VectorMax(const vec3_t v1, const vec3_t v2, vec3_t out) {
+    for (int i = 0; i < 3; i++) {
+        out[i] = (v1[i] > v2[i]) ? v1[i] : v2[i];
+    }
+}
+
+void RotateAABB(vec3_t start, vec3_t end, vec3_t angles, vec3_t mins, vec3_t maxs, clip_t *clip) {
+    float radPitch = angles[PITCH] * (M_PI / 180.0f);
+    float radYaw = angles[YAW] * (M_PI / 180.0f);
+    float radRoll = angles[ROLL] * (M_PI / 180.0f);
+
+    // Создание матрицы поворота (в стиле id Tech 3)
+    vec3_t forward, right, up;
+    AngleVectors(angles, forward, right, up);
+
+    vec3_t boxCorners[8];
+    vec3_t rotatedCorners[8];
+
+    // Определяем 8 углов AABB
+    for (int i = 0; i < 8; i++) {
+        boxCorners[i][0] = (i & 1) ? maxs[0] : mins[0];
+        boxCorners[i][1] = (i & 2) ? maxs[1] : mins[1];
+        boxCorners[i][2] = (i & 4) ? maxs[2] : mins[2];
+    }
+
+    // Поворот углов
+    for (int i = 0; i < 8; i++) {
+        rotatedCorners[i][0] = boxCorners[i][0] * forward[0] + boxCorners[i][1] * right[0] + boxCorners[i][2] * up[0];
+        rotatedCorners[i][1] = boxCorners[i][0] * forward[1] + boxCorners[i][1] * right[1] + boxCorners[i][2] * up[1];
+        rotatedCorners[i][2] = boxCorners[i][0] * forward[2] + boxCorners[i][1] * right[2] + boxCorners[i][2] * up[2];
+    }
+
+    // Находим новые границы AABB
+    VectorCopy(rotatedCorners[0], clip->boxmins);
+    VectorCopy(rotatedCorners[0], clip->boxmaxs);
+
+    for (int i = 1; i < 8; i++) {
+        VectorMin(clip->boxmins, rotatedCorners[i], clip->boxmins);
+        VectorMax(clip->boxmaxs, rotatedCorners[i], clip->boxmaxs);
+    }
+}
+
 void SV_Trace_SourceTech( trace_t *results, const vec3_t start, const vec3_t mins, const vec3_t maxs, const vec3_t end, int passEntityNum, int contentmask, qboolean capsule, const vec3_t angles ) {
-	moveclip_t clip;
-	int i;
-	vec3_t rotated_start = {start[0], start[1], start[2]};
-	vec3_t rotated_end = {end[0], end[1], end[2]};
-	vec3_t offset, symetricSize[2];
-	vec3_t matrix[3], transpose[3];
-	qboolean rotated = qfalse;
+	moveclip_t	clip;
+	int			i;
 
-	if (!mins) mins = vec3_origin;
-	if (!maxs) maxs = vec3_origin;
-
-	Com_Memset(&clip, 0, sizeof(clip));
-
-	for (i = 0; i < 3; i++) {
-		offset[i] = (mins[i] + maxs[i]) * 0.5;
-		symetricSize[0][i] = mins[i] - offset[i];
-		symetricSize[1][i] = maxs[i] - offset[i];
-		rotated_start[i] = start[i] + offset[i];
-		rotated_end[i] = end[i] + offset[i];
+	if ( !mins ) {
+		mins = vec3_origin;
+	}
+	if ( !maxs ) {
+		maxs = vec3_origin;
 	}
 
-	VectorSubtract(rotated_start, start, rotated_start);
-	VectorSubtract(rotated_end, start, rotated_end);
+	Com_Memset ( &clip, 0, sizeof ( clip ) );
 
-	if (angles[0] || angles[1] || angles[2]) {
-		rotated = qtrue;
-		CreateRotationMatrix(angles, matrix);
-		RotatePoint(rotated_start, matrix);
-		RotatePoint(rotated_end, matrix);
-	}
-
-	CM_BoxTrace(&clip.trace, rotated_start, rotated_end, symetricSize[0], symetricSize[1], 0, contentmask, capsule);
+	// clip to world
+	CM_BoxTrace( &clip.trace, start, end, mins, maxs, 0, contentmask, capsule );
 	clip.trace.entityNum = clip.trace.fraction != 1.0 ? ENTITYNUM_WORLD : ENTITYNUM_NONE;
-	if (clip.trace.fraction == 0) {
+	if ( clip.trace.fraction == 0 ) {
 		*results = clip.trace;
-		return;
+		return;		// blocked immediately by the world
 	}
 
 	clip.contentmask = contentmask;
 	clip.start = start;
-	VectorCopy(rotated_end, clip.end);
+//	VectorCopy( clip.trace.endpos, clip.end );
+	VectorCopy( end, clip.end );
 	clip.mins = mins;
 	clip.maxs = maxs;
 	clip.passEntityNum = passEntityNum;
 	clip.capsule = capsule;
 
-	for (i = 0; i < 3; i++) {
-		if (rotated_end[i] > rotated_start[i]) {
+	RotateAABB(clip.start, clip.end, angles, clip.mins, clip.maxs, &clip);
+
+	// create the bounding box of the entire move
+	// we can limit it to the part of the move not
+	// already clipped off by the world, which can be
+	// a significant savings for line of sight and shot traces
+	for ( i=0 ; i<3 ; i++ ) {
+		if ( end[i] > start[i] ) {
 			clip.boxmins[i] = clip.start[i] + clip.mins[i] - 1;
 			clip.boxmaxs[i] = clip.end[i] + clip.maxs[i] + 1;
 		} else {
@@ -692,12 +730,8 @@ void SV_Trace_SourceTech( trace_t *results, const vec3_t start, const vec3_t min
 		}
 	}
 
-	if (rotated && clip.trace.fraction != 1.0) {
-		TransposeMatrix(matrix, transpose);
-		RotatePoint(clip.trace.plane.normal, transpose);
-	}
-
-	SV_ClipMoveToEntities(&clip);
+	// clip to other solid entities
+	SV_ClipMoveToEntities ( &clip );
 
 	*results = clip.trace;
 }
