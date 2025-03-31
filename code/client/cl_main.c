@@ -3385,9 +3385,6 @@ static void CL_InitRef( void ) {
 
 	rimp.CM_ClusterPVS = CM_ClusterPVS;
 	rimp.CM_DrawDebugSurface = CM_DrawDebugSurface;
-#ifdef USE_BSP_MODELS
-	rimp.CM_LoadMap = CM_LoadMap;
-#endif
 
 	rimp.FS_ReadFile = FS_ReadFile;
 	rimp.FS_FreeFile = FS_FreeFile;

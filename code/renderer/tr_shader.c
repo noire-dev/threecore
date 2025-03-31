@@ -2460,22 +2460,6 @@ static void SortNewShader( void ) {
 	float	sort;
 	shader_t	*newShader;
 
-#if 0 //defined(USE_BSP_MODELS)
-	newShader = trWorlds[0].shaders[ trWorlds[0].numShaders - 1 ];
-	sort = newShader->sort;
-	for ( i = trWorlds[0].numShaders - 2 ; i >= 0 ; i-- ) {
-		if ( trWorlds[0].sortedShaders[ i ]->sort <= sort ) {
-			break;
-		}
-		trWorlds[0].sortedShaders[i+1] = trWorlds[0].sortedShaders[i];
-		trWorlds[0].sortedShaders[i+1]->sortedIndex++;
-	}
-	if(rwi == 0) {
-		FixRenderCommandList( i+1 );
-	}
-	newShader->sortedIndex = i+1;
-	trWorlds[0].sortedShaders[i+1] = newShader;
-#else
 	newShader = tr.shaders[ tr.numShaders - 1 ];
 	sort = newShader->sort;
 
@@ -2493,7 +2477,6 @@ static void SortNewShader( void ) {
 
 	newShader->sortedIndex = i+1;
 	tr.sortedShaders[i+1] = newShader;
-#endif
 }
 
 
@@ -2524,16 +2507,6 @@ static shader_t *GeneratePermanentShader( void ) {
 
 	tr.numShaders++;
 
-#if 0 //defined(USE_BSP_MODELS)
-	if(rwi != 0) {
-		trWorlds[0].shaders[ trWorlds[0].numShaders ] = newShader;
-		trWorlds[0].sortedShaders[ trWorlds[0].numShaders ] = newShader;
-		newShader->index = trWorlds[0].numShaders;
-		newShader->sortedIndex = trWorlds[0].numShaders;
-		trWorlds[0].numShaders++;
-	}
-#endif
-
 	for ( i = 0 ; i < newShader->numUnfoggedPasses ; i++ ) {
 		if ( !stages[i].active ) {
 			break;
@@ -2558,8 +2531,6 @@ static shader_t *GeneratePermanentShader( void ) {
 
 	return newShader;
 }
-
-#ifndef USE_BSP_MODELS
 
 /*
 =================
@@ -2660,8 +2631,6 @@ static void VertexLightingCollapse( void ) {
 		Com_Memset( pStage, 0, sizeof( *pStage ) );
 	}
 }
-
-#endif
 
 /*
 ===============
@@ -2902,7 +2871,6 @@ static shader_t *FinishShader( void ) {
 			pStage->alphaGen = AGEN_SKIP;
 	}
 
-#ifndef USE_BSP_MODELS
 	//
 	// if we are in r_vertexLight mode, never use a lightmap texture
 	//
@@ -2911,7 +2879,6 @@ static shader_t *FinishShader( void ) {
 		stage = 1;
 		hasLightmapStage = qfalse;
 	}
-#endif
 
 	// whiteimage + "filter" texture == texture
 	if ( stage > 1 && stages[0].bundle[0].image[0] == tr.whiteImage && stages[0].bundle[0].numImageAnimations <= 1 && stages[0].rgbGen == CGEN_IDENTITY && stages[0].alphaGen == AGEN_SKIP ) {
@@ -3795,38 +3762,6 @@ R_InitShaders
 ==================
 */
 void R_InitShaders( void ) {
-#ifdef USE_BSP_MODELS
-	int i;
-	ri.Printf( PRINT_ALL, "\nInitializing Shaders\n" );
-
-	if(tr.numShaders == 0) {
-		Com_Memset(hashTable, 0, sizeof(hashTable));
-
-		CreateInternalShaders();
-
-		for(i = 1; i < MAX_WORLD_MODELS; i++) {
-			trWorlds[i].defaultShader = tr.defaultShader;
-			trWorlds[i].cinematicShader = tr.cinematicShader;
-			trWorlds[i].whiteShader = tr.whiteShader;
-			trWorlds[i].numShaders = 3;
-		}
-
-		ScanAndLoadShaderFiles();
-
-		CreateExternalShaders();
-
-
-	} else {
-		ScanAndLoadShaderFiles();
-		//RE_ClearScene();
-
-		//tr.inited = qtrue;
-		//tr.registered = qtrue;
-
-	}
-
-
-#else
 	ri.Printf( PRINT_ALL, "Initializing Shaders\n" );
 
 	Com_Memset(hashTable, 0, sizeof(hashTable));
@@ -3836,5 +3771,4 @@ void R_InitShaders( void ) {
 	ScanAndLoadShaderFiles();
 
 	CreateExternalShaders();
-#endif
 }

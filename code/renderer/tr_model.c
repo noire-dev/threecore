@@ -193,29 +193,6 @@ static qhandle_t R_RegisterIQM(const char *name, model_t *mod)
 	return mod->index;
 }
 
-#ifdef USE_BSP_MODELS
-qhandle_t RE_LoadWorldMap_real( const char *name, model_t *model, int clipIndex );
-static qhandle_t R_RegisterBSP(const char *name, model_t *mod)
-{
-	int chechsum, index;
-
-	// TODO: patch the bsp into the clipmap
-	if(!trWorlds[0].world) {
-		mod->type = MOD_BAD;
-		return 0;
-	}
-	index = ri.CM_LoadMap(name, qtrue, &chechsum);
-	mod->type = MOD_BAD;
-	RE_LoadWorldMap_real( name, mod, index );
-	if(mod->type == MOD_BRUSH) {
-		Com_Printf("loading bsp model: %s: %i\n", name, mod->index);
-		return mod->index;
-	}
-	mod->type = MOD_BAD;
-	return 0;
-}
-#endif
-
 typedef struct
 {
 	const char *ext;
@@ -228,12 +205,7 @@ static modelExtToLoaderMap_t modelLoaders[ ] =
 {
 	{ "iqm", R_RegisterIQM },
 	{ "mdr", R_RegisterMDR },
-#ifdef USE_BSP_MODELS
-	{ "md3", R_RegisterMD3 },
-	{ "bsp", R_RegisterBSP }
-#else
 	{ "md3", R_RegisterMD3 }
-#endif
 };
 
 static int numModelLoaders = ARRAY_LEN(modelLoaders);
@@ -271,13 +243,6 @@ model_t *R_AllocModel( void ) {
 	mod = ri.Hunk_Alloc( sizeof( *tr.models[tr.numModels] ), h_low );
 	mod->index = tr.numModels;
 	tr.models[tr.numModels] = mod;
-	#ifdef USE_BSP_MODELS
-	if(rwi != 0) {
-		trWorlds[0].models[trWorlds[0].numModels] = mod;
-		mod->index = trWorlds[0].numModels;
-		trWorlds[0].numModels++;
-	}
-	#endif
 	tr.numModels++;
 
 	return mod;

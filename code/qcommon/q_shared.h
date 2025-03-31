@@ -53,7 +53,6 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #define DEMOEXT	"dm_"			// standard demo extension
 
 //===========================================================================
-//#define USE_BSP_MODELS 1		//client side
 #define USE_BSP_COLMODELS 1 	//server side
 
 #ifdef _MSC_VER

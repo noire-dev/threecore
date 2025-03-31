@@ -25,12 +25,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 #include <string.h> // memcpy
 
-#ifdef USE_BSP_MODELS
-#define MAX_WORLD_MODELS 64
-trGlobals_t		trWorlds[MAX_WORLD_MODELS];
-#else
 trGlobals_t		tr;
-#endif
 
 static const float s_flipMatrix[16] = {
 	// convert from our coordinate system (looking down X)
