@@ -1603,17 +1603,17 @@ void CM_TransformedBoxTrace_SourceTech( trace_t *results, const vec3_t start, co
 #endif
 
 	// if the bmodel was rotated and there was a collision
-	if ( rotated && trace.fraction != 1.0 ) {
+	/*if ( rotated && trace.fraction != 1.0 ) {
 		// rotation of bmodel collision plane
 		TransposeMatrix(matrix, transpose);
 		RotatePoint(trace.plane.normal, transpose);
-	}
+	}*/
 
 	// re-calculate the end position of the trace because the trace.endpos
 	// calculated by CM_Trace could be rotated and have an offset
-	//trace.endpos[0] = start[0] + trace.fraction * (end[0] - start[0]);
-	//trace.endpos[1] = start[1] + trace.fraction * (end[1] - start[1]);
-	//trace.endpos[2] = start[2] + trace.fraction * (end[2] - start[2]);
+	trace.endpos[0] = start[0] + trace.fraction * (end[0] - start[0]);
+	trace.endpos[1] = start[1] + trace.fraction * (end[1] - start[1]);
+	trace.endpos[2] = start[2] + trace.fraction * (end[2] - start[2]);
 
 	*results = trace;
 #ifdef USE_BSP_COLMODELS
