@@ -648,7 +648,7 @@ void VectorMax(const vec3_t v1, const vec3_t v2, vec3_t out) {
     }
 }
 
-void RotateAABB(vec3_t start, vec3_t end, vec3_t angles, vec3_t mins, vec3_t maxs, clip_t *clip) {
+void RotateAABB(vec3_t start, vec3_t end, vec3_t angles, vec3_t mins, vec3_t maxs, moveclip_t *clip) {
     float radPitch = angles[PITCH] * (M_PI / 180.0f);
     float radYaw = angles[YAW] * (M_PI / 180.0f);
     float radRoll = angles[ROLL] * (M_PI / 180.0f);
