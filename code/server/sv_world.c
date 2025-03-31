@@ -636,7 +636,7 @@ void SV_Trace( trace_t *results, const vec3_t start, const vec3_t mins, const ve
 	*results = clip.trace;
 }
 
-void SV_Trace_SourceTech( trace_t *results, const vec3_t start, const vec3_t mins, const vec3_t maxs, const vec3_t end, int passEntityNum, int contentmask, qboolean capsule, const vec3_t origin, const vec3_t angles ) {
+void SV_Trace_SourceTech( trace_t *results, const vec3_t start, const vec3_t mins, const vec3_t maxs, const vec3_t end, int passEntityNum, int contentmask, qboolean capsule, const vec3_t angles ) {
 	moveclip_t	clip;
 	int			i;
 
@@ -650,7 +650,7 @@ void SV_Trace_SourceTech( trace_t *results, const vec3_t start, const vec3_t min
 	Com_Memset ( &clip, 0, sizeof ( clip ) );
 
 	// clip to world
-	CM_TransformedBoxTrace( &clip.trace, start, end, mins, maxs, 0, contentmask, origin, angles, capsule, qtrue );
+	CM_BoxTrace_SourceTech( &clip.trace, start, end, mins, maxs, 0, contentmask, angles, capsule );
 	clip.trace.entityNum = clip.trace.fraction != 1.0 ? ENTITYNUM_WORLD : ENTITYNUM_NONE;
 	if ( clip.trace.fraction == 0 ) {
 		*results = clip.trace;

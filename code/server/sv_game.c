@@ -455,7 +455,7 @@ static intptr_t SV_GameSystemCalls( intptr_t *args ) {
 		SV_Trace( VMA(1), VMA(2), VMA(3), VMA(4), VMA(5), args[6], args[7], /*int capsule*/ qfalse );
 		return 0;
 	case G_TRACESOURCETECH:
-		SV_Trace_SourceTech( VMA(1), VMA(2), VMA(3), VMA(4), VMA(5), args[6], args[7], /*int capsule*/ qfalse, VMA(8), VMA(9) );
+		SV_Trace_SourceTech( VMA(1), VMA(2), VMA(3), VMA(4), VMA(5), args[6], args[7], /*int capsule*/ qfalse, VMA(8) );
 		return 0;
 	case G_POINT_CONTENTS:
 		return SV_PointContents( VMA(1), args[2] );

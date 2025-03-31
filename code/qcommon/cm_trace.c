@@ -1354,6 +1354,39 @@ static void CM_Trace( trace_t *results, const vec3_t start, const vec3_t end, co
 	*results = tw.trace;
 }
 
+static void TransformBoundingBox(const vec3_t mins, const vec3_t maxs, const vec3_t angles, vec3_t outMins, vec3_t outMaxs) {
+    vec3_t points[8];
+    vec3_t rotationMatrix[3];
+    int i;
+
+    CreateRotationMatrix(angles, rotationMatrix);
+
+    points[0][0] = mins[0]; points[0][1] = mins[1]; points[0][2] = mins[2];
+    points[1][0] = mins[0]; points[1][1] = mins[1]; points[1][2] = maxs[2];
+    points[2][0] = mins[0]; points[2][1] = maxs[1]; points[2][2] = mins[2];
+    points[3][0] = mins[0]; points[3][1] = maxs[1]; points[3][2] = maxs[2];
+    points[4][0] = maxs[0]; points[4][1] = mins[1]; points[4][2] = mins[2];
+    points[5][0] = maxs[0]; points[5][1] = mins[1]; points[5][2] = maxs[2];
+    points[6][0] = maxs[0]; points[6][1] = maxs[1]; points[6][2] = mins[2];
+    points[7][0] = maxs[0]; points[7][1] = maxs[1]; points[7][2] = maxs[2];
+
+    for (i = 0; i < 8; i++) {
+        RotatePoint(points[i], rotationMatrix);
+    }
+
+    VectorCopy(points[0], outMins);
+    VectorCopy(points[0], outMaxs);
+
+    for (i = 1; i < 8; i++) {
+        outMins[0] = fmin(outMins[0], points[i][0]);
+        outMins[1] = fmin(outMins[1], points[i][1]);
+        outMins[2] = fmin(outMins[2], points[i][2]);
+
+        outMaxs[0] = fmax(outMaxs[0], points[i][0]);
+        outMaxs[1] = fmax(outMaxs[1], points[i][1]);
+        outMaxs[2] = fmax(outMaxs[2], points[i][2]);
+    }
+}
 
 /*
 ==================
@@ -1364,6 +1397,12 @@ void CM_BoxTrace( trace_t *results, const vec3_t start, const vec3_t end,
 						const vec3_t mins, const vec3_t maxs,
 						clipHandle_t model, int brushmask, qboolean capsule ) {
 	CM_Trace( results, start, end, mins, maxs, model, vec3_origin, brushmask, capsule, NULL );
+}
+
+void CM_BoxTrace_SourceTech( trace_t *results, const vec3_t start, const vec3_t end, const vec3_t mins, const vec3_t maxs, clipHandle_t model, int brushmask, qboolean capsule, const vec3_t angles ) {
+	vec3_t rotatedMins, rotatedMaxs;
+	TransformBoundingBox(mins, maxs, angles, rotatedMins, rotatedMaxs);
+	CM_Trace( results, start, end, rotatedMins, rotatedMaxs, model, vec3_origin, brushmask, capsule, NULL );
 }
 
 
