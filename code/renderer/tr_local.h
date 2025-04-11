@@ -47,16 +47,16 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 typedef uint32_t glIndex_t;
 
-#define	REFENTITYNUM_BITS	12	// as we actually using only 1 bit for dlight mask in opengl1 renderer
+#define	REFENTITYNUM_BITS	16	// as we actually using only 1 bit for dlight mask in opengl1 renderer
 #define	REFENTITYNUM_MASK	((1<<REFENTITYNUM_BITS) - 1)
 // the last N-bit number (2^REFENTITYNUM_BITS - 1) is reserved for the special world refentity,
 //  and this is reflected by the value of MAX_REFENTITIES (which therefore is not a power-of-2)
-#define	MAX_REFENTITIES		((1<<(REFENTITYNUM_BITS+4)) - 1)
+#define	MAX_REFENTITIES		((1<<REFENTITYNUM_BITS) - 1)
 #define	REFENTITYNUM_WORLD	((1<<REFENTITYNUM_BITS) - 1)
 // 14 bits
 // can't be increased without changing bit packing for drawsurfs
 // see QSORT_SHADERNUM_SHIFT
-#define SHADERNUM_BITS	14
+#define SHADERNUM_BITS	11
 #define MAX_SHADERS		(1<<SHADERNUM_BITS)
 #define SHADERNUM_MASK	(MAX_SHADERS-1)
 
@@ -942,7 +942,7 @@ the bits are allocated as follows:
 */
 #define	DLIGHT_BITS 1 // qboolean in opengl1 renderer
 #define	DLIGHT_MASK ((1<<DLIGHT_BITS)-1)
-#define	FOGNUM_BITS 5
+#define	FOGNUM_BITS 4
 #define	FOGNUM_MASK ((1<<FOGNUM_BITS)-1)
 
 #define	QSORT_FOGNUM_SHIFT	DLIGHT_BITS
