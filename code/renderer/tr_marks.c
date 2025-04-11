@@ -24,7 +24,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #include "tr_local.h"
 //#include "assert.h"
 
-#define MAX_VERTS_ON_POLY		1024*1
+#define MAX_VERTS_ON_POLY		128*1
 
 #define MARKER_OFFSET			0	// 1
 
