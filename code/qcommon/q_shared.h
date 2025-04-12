@@ -28,7 +28,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 #define	STANDALONE				1
 
-#define Q3_VERSION            "SourceTech 1.4"
+#define Q3_VERSION            "SourceTech 1.5"
 #ifndef SVN_VERSION
   #define SVN_VERSION Q3_VERSION
 #endif
