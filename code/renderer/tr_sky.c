@@ -851,7 +851,7 @@ void RB_StageIteratorSky( void ) {
 		GL_Cull( CT_FRONT_SIDED );
 
 		if(strlen(r_customSky->string)){
-			DrawSkyBox( RE_RegisterShaderLightMap(r_customSky->string, 0) );
+			DrawSkyBox( RE_GetShaderByHandle(RE_RegisterShaderLightMap(r_customSky->string, 0)) );
 		} else {
 			DrawSkyBox( tess.shader );
 		}
