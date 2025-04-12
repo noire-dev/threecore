@@ -57,7 +57,6 @@ cvar_t	*r_skipBackEnd;
 cvar_t	*r_anaglyphMode;
 
 //postFX
-cvar_t	*r_customSky;
 cvar_t	*r_postfx;
 cvar_t	*r_postprocess;
 
@@ -1672,8 +1671,6 @@ static void R_Register( void )
 
 
 	//postFX
-	r_customSky = ri.Cvar_Get( "r_customSky", "", CVAR_ARCHIVE_ND );
-	ri.Cvar_SetGroup( r_customSky, CVG_RENDERER );
 	r_postfx = ri.Cvar_Get( "r_postfx", "1", CVAR_ARCHIVE_ND );
 	ri.Cvar_SetGroup( r_postfx, CVG_RENDERER );
 	r_postprocess = ri.Cvar_Get( "r_postprocess", "0", CVAR_ARCHIVE_ND );

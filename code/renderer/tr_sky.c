@@ -468,7 +468,7 @@ static void DrawSkySide( image_t *image, const int mins[2], const int maxs[2] )
 }
 
 
-static void DrawSkyBox( shader_t *shader )
+static void DrawSkyBox( const shader_t *shader )
 {
 	int		i;
 	sky_min = 0;
@@ -850,11 +850,7 @@ void RB_StageIteratorSky( void ) {
 		GL_State( 0 );
 		GL_Cull( CT_FRONT_SIDED );
 
-		if(strlen(r_customSky->string)){
-			DrawSkyBox( R_GetShaderByHandle(RE_RegisterShaderLightMap(r_customSky->string, 0)) );
-		} else {
-			DrawSkyBox( tess.shader );
-		}
+		DrawSkyBox( tess.shader );
 	}
 
 	// generate the vertexes for all the clouds, which will be drawn
