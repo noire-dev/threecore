@@ -822,6 +822,35 @@ static void ParseTriSurf( const dsurface_t *ds, const drawVert_t *verts, msurfac
 	}
 }
 
+
+/*
+===============
+ParseFlare
+===============
+*/
+static void ParseFlare( const dsurface_t *ds, const drawVert_t *verts, msurface_t *surf, int *indexes ) {
+	srfFlare_t		*flare;
+	int				i;
+
+	// get fog volume
+	surf->fogIndex = LittleLong( ds->fogNum ) + 1;
+
+	// get shader
+	surf->shader = ShaderForShaderNum( LittleLong( ds->shaderNum ), LIGHTMAP_BY_VERTEX );
+
+	flare = ri.Hunk_Alloc( sizeof( *flare ), h_low );
+	flare->surfaceType = SF_FLARE;
+
+	surf->data = (surfaceType_t *)flare;
+
+	for ( i = 0 ; i < 3 ; i++ ) {
+		flare->origin[i] = LittleFloat( ds->lightmapOrigin[i] );
+		flare->color[i] = LittleFloat( ds->lightmapVecs[0][i] );
+		flare->normal[i] = LittleFloat( ds->lightmapVecs[2][i] );
+	}
+}
+
+
 /*
 =================
 R_MergedWidthPoints
@@ -1535,12 +1564,13 @@ static void R_LoadSurfaces( const lump_t *surfs, const lump_t *verts, const lump
 	const drawVert_t *dv;
 	int			*indexes;
 	int			count;
-	int			numFaces, numMeshes, numTriSurfs;
+	int			numFaces, numMeshes, numTriSurfs, numFlares;
 	int			i;
 
 	numFaces = 0;
 	numMeshes = 0;
 	numTriSurfs = 0;
+	numFlares = 0;
 
 	in = (void *)(fileBase + surfs->fileofs);
 	if (surfs->filelen % sizeof(*in))
@@ -1575,6 +1605,8 @@ static void R_LoadSurfaces( const lump_t *surfs, const lump_t *verts, const lump
 			numFaces++;
 			break;
 		case MST_FLARE:
+			ParseFlare( in, dv, out, indexes );
+			numFlares++;
 			break;
 		default:
 			ri.Error( ERR_DROP, "Bad surfaceType %i", LittleLong( in->surfaceType ) );
@@ -1591,8 +1623,8 @@ static void R_LoadSurfaces( const lump_t *surfs, const lump_t *verts, const lump
 	R_MovePatchSurfacesToHunk();
 #endif
 
-	ri.Printf( PRINT_ALL, "...loaded %d faces, %i meshes, %i trisurfs\n", 
-		numFaces, numMeshes, numTriSurfs );
+	ri.Printf( PRINT_ALL, "...loaded %d faces, %i meshes, %i trisurfs, %i flares\n", 
+		numFaces, numMeshes, numTriSurfs, numFlares );
 }
 
 
