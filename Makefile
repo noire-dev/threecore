@@ -778,6 +778,7 @@ Q3REND1OBJ = \
   $(B)/rend1/tr_bsp.o \
   $(B)/rend1/tr_cmds.o \
   $(B)/rend1/tr_curve.o \
+  $(B)/rend1/tr_flares.o \
   $(B)/rend1/tr_font.o \
   $(B)/rend1/tr_image.o \
   $(B)/rend1/tr_image_png.o \

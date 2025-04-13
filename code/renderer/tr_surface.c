@@ -1347,6 +1347,17 @@ static void RB_SurfaceBad( const surfaceType_t *surfType ) {
 }
 
 
+static void RB_SurfaceFlare( srfFlare_t *surf ) {
+	if ( r_flares->integer ) {
+#ifdef USE_VBO
+		VBO_Flush();
+#endif
+		tess.surfType = SF_FLARE;
+		RB_AddFlare( surf, tess.fogNum, surf->origin, surf->color, surf->normal );
+	}
+}
+
+
 static void RB_SurfaceSkip( void *surf ) {
 }
 
@@ -1361,5 +1372,6 @@ void (*rb_surfaceTable[SF_NUM_SURFACE_TYPES])( void *) = {
 	(void(*)(void*))RB_SurfaceMesh,			// SF_MD3,
 	(void(*)(void*))RB_MDRSurfaceAnim,		// SF_MDR,
 	(void(*)(void*))RB_IQMSurfaceAnim,		// SF_IQM,
+	(void(*)(void*))RB_SurfaceFlare,		// SF_FLARE,
 	(void(*)(void*))RB_SurfaceEntity		// SF_ENTITY
 };

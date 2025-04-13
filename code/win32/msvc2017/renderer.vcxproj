@@ -203,6 +203,7 @@
     <ClCompile Include="..\..\renderer\tr_bsp.c" />
     <ClCompile Include="..\..\renderer\tr_cmds.c" />
     <ClCompile Include="..\..\renderer\tr_curve.c" />
+    <ClCompile Include="..\..\renderer\tr_flares.c" />
     <ClCompile Include="..\..\renderer\tr_image.c" />
     <ClCompile Include="..\..\renderercommon\tr_font.c" />
     <ClCompile Include="..\..\renderercommon\tr_image_bmp.c" />

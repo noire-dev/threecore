@@ -1260,6 +1260,9 @@ static const void *RB_DrawSurfs( const void *data ) {
 	// darken down any stencil shadows
 	RB_ShadowFinish();
 
+	// add light flares on lights that aren't obscured
+	RB_RenderFlares();
+
 #ifdef USE_PMLIGHT
 	if ( backEnd.refdef.numLitSurfs ) {
 		RB_BeginDrawingLitSurfs();
