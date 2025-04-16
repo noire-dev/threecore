@@ -119,6 +119,14 @@ typedef struct {
 #define	MAX_RENDER_STRINGS			8
 #define	MAX_RENDER_STRING_LENGTH	32
 
+typedef enum {
+	FT_NONE,
+	FT_EXP,
+	FT_LINEAR,
+
+	FT_MAX_FOG_TYPE
+} fogType_t;
+
 typedef struct {
 	int			x, y, width, height;
 	float		fov_x, fov_y;
@@ -135,6 +143,35 @@ typedef struct {
 
 	// text messages for deform text shaders
 	char		text[MAX_RENDER_STRINGS][MAX_RENDER_STRING_LENGTH];
+
+	// fog
+	fogType_t	fogType;
+	vec3_t		fogColor;
+	float		fogDepthForOpaque;
+	float		fogDensity;
+
+	// OpenGL2 renderer extras
+	float			blurFactor;
+
+	// specific sun shadow casting information, if RDF_SUNLIGHT
+	float           sunDir[3];
+	float           sunCol[3];
+	float           sunAmbCol[3];
+
+	// for alphaGen skyAlpha and oneMinusSkyAlpha
+	float			skyAlpha;
+
+	//
+	// added in Spearmint 0.3
+	//
+	// maximum distance for the far clip plane
+	float			farClip;
+
+	//
+	// added in Spearmint 0.5
+	//
+	// fov for view weapon (refents with RF_DEPTHHACK and not RF_CROSSHAIR)
+	float weapon_fov_x, weapon_fov_y;
 } refdef_t;
 
 
