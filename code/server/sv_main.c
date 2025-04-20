@@ -1292,6 +1292,7 @@ void SV_Frame( int msec ) {
 	int		frameMsec;
 	int		startTime;
 	int		i;
+	char	mapname[MAX_QPATH];
 
 	if ( Cvar_CheckGroup( CVG_SERVER ) )
 		SV_TrackCvarChanges(); // update rate settings, etc.
@@ -1301,6 +1302,22 @@ void SV_Frame( int msec ) {
 		SV_Shutdown( "Server was killed" );
 		Cvar_Set( "sv_killserver", "0" );
 		return;
+	}
+
+	// restart the map the slow way
+	Q_strncpyz( mapname, Cvar_VariableString( "mapname" ), sizeof( mapname ) );
+
+	if(sv_maxclients->modified){
+		Com_Printf( "variable sv_maxclients change -- restarting.\n" );
+		SV_SpawnServer( mapname, qfalse );
+	}
+	if(sv_gametype->modified){
+		Com_Printf( "variable sv_gametype change -- restarting.\n" );
+		SV_SpawnServer( mapname, qfalse );
+	}
+	if(sv_pure->modified){
+		Com_Printf( "variable sv_pure change -- restarting.\n" );
+		SV_SpawnServer( mapname, qfalse );
 	}
 
 	if ( !com_sv_running->integer )

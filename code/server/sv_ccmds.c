@@ -277,16 +277,7 @@ static void SV_MapRestart_f( void ) {
 	// check for maxclients change
 	if ( sv_maxclients->modified || sv_gametype->modified || sv_pure->modified ) {
 		char	mapname[MAX_QPATH];
-
-		if(sv_maxclients->modified){
-		Com_Printf( "variable sv_maxclients change -- restarting.\n" );
-		}
-		if(sv_gametype->modified){
-		Com_Printf( "variable sv_gametype change -- restarting.\n" );
-		}
-		if(sv_pure->modified){
-		Com_Printf( "variable sv_pure change -- restarting.\n" );
-		}
+		
 		// restart the map the slow way
 		Q_strncpyz( mapname, Cvar_VariableString( "mapname" ), sizeof( mapname ) );
 

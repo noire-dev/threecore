@@ -471,11 +471,6 @@ void SV_SpawnServer( const char *mapname, qboolean killBots ) {
 	// server has changed
 	svs.snapFlagServerBit ^= SNAPFLAG_SERVERCOUNT;
 
-	// set nextmap to the same map, but it may be overridden
-	// by the game startup or another console command
-	Cvar_Set( "nextmap", "map_restart 0" );
-//	Cvar_Set( "nextmap", va("map %s", server) );
-
 	// try to reset level time if server is empty
 	if ( !sv_levelTimeReset->integer && !sv.restartTime ) {
 		for ( i = 0; i < sv.maxclients; i++ ) {
