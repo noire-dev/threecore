@@ -1307,19 +1307,6 @@ void SV_Frame( int msec ) {
 	// restart the map the slow way
 	Q_strncpyz( mapname, Cvar_VariableString( "mapname" ), sizeof( mapname ) );
 
-	if(sv_maxclients->modified){
-		Com_Printf( "variable sv_maxclients change -- restarting.\n" );
-		SV_SpawnServer( mapname, qfalse );
-	}
-	if(sv_gametype->modified){
-		Com_Printf( "variable sv_gametype change -- restarting.\n" );
-		SV_SpawnServer( mapname, qfalse );
-	}
-	if(sv_pure->modified){
-		Com_Printf( "variable sv_pure change -- restarting.\n" );
-		SV_SpawnServer( mapname, qfalse );
-	}
-
 	if ( !com_sv_running->integer )
 	{
 		if ( com_dedicated->integer )
@@ -1334,6 +1321,19 @@ void SV_Frame( int msec ) {
 	// allow pause if only the local client is connected
 	if ( SV_CheckPaused() ) {
 		return;
+	}
+
+	if(sv_maxclients->modified){
+		Com_Printf( "variable sv_maxclients change -- restarting.\n" );
+		SV_SpawnServer( mapname, qfalse );
+	}
+	if(sv_gametype->modified){
+		Com_Printf( "variable sv_gametype change -- restarting.\n" );
+		SV_SpawnServer( mapname, qfalse );
+	}
+	if(sv_pure->modified){
+		Com_Printf( "variable sv_pure change -- restarting.\n" );
+		SV_SpawnServer( mapname, qfalse );
 	}
 
 	// if it isn't time for the next frame, do nothing
