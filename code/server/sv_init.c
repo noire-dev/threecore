@@ -256,7 +256,7 @@ static void SV_AllocClients( int count )
 {
 	svs.clients = Z_TagMalloc( count * sizeof( client_t ), TAG_CLIENTS );
 	Com_Memset( svs.clients, 0x0, count * sizeof( client_t ) );
-	sv.maxclients = count-1;
+	sv.maxclients = count;
 	SV_SetSnapshotParams();
 }
 
