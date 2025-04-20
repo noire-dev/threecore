@@ -243,7 +243,7 @@ SV_BoundMaxClients
 */
 static int SV_BoundMaxClients( int minimum ) {
 	// get the current maxclients value
-	Cvar_Get( "sv_maxclients", "8", 0 );
+	Cvar_Get( "sv_maxclients", "128", 0 );
 
 	if ( sv_maxclients->integer < minimum ) {
 		Cvar_SetIntegerValue( "sv_maxclients", minimum );
@@ -298,7 +298,7 @@ static void SV_Startup( void ) {
 		Com_Error( ERR_FATAL, "SV_Startup: svs.initialized" );
 	}
 
-	SV_AllocClients( sv_maxclients->integer );
+	SV_AllocClients( MAX_CLIENTS );
 
 	svs.initialized = qtrue;
 
@@ -339,7 +339,7 @@ static void SV_ChangeMaxClients( void ) {
 	count++;
 
 	// never go below the highest client number in use
-	maxclients = SV_BoundMaxClients( count );
+	maxclients = MAX_CLIENTS;
 
 	// if still the same
 	if ( maxclients == sv.maxclients ) {
@@ -708,7 +708,7 @@ void SV_Init( void )
 	Cvar_SetDescription( sv_privateClients, "The number of spots, out of sv_maxclients, reserved for players with the server password (sv_privatePassword)." );
 	sv_hostname = Cvar_Get ("sv_hostname", "noname", CVAR_SERVERINFO | CVAR_ARCHIVE );
 	Cvar_SetDescription( sv_hostname, "Sets the name of the server." );
-	sv_maxclients = Cvar_Get ("sv_maxclients", "8", CVAR_SERVERINFO | CVAR_LATCH);
+	sv_maxclients = Cvar_Get ("sv_maxclients", "128", CVAR_SERVERINFO );
 	Cvar_CheckRange( sv_maxclients, "1", XSTRING(MAX_CLIENTS), CV_INTEGER );
 	Cvar_SetDescription( sv_maxclients, "Maximum number of people allowed to join the server dedicated server memory optimizations." );
 

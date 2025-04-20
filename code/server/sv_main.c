@@ -1292,7 +1292,6 @@ void SV_Frame( int msec ) {
 	int		frameMsec;
 	int		startTime;
 	int		i;
-	char	mapname[MAX_QPATH];
 
 	if ( Cvar_CheckGroup( CVG_SERVER ) )
 		SV_TrackCvarChanges(); // update rate settings, etc.
@@ -1303,9 +1302,6 @@ void SV_Frame( int msec ) {
 		Cvar_Set( "sv_killserver", "0" );
 		return;
 	}
-
-	// restart the map the slow way
-	Q_strncpyz( mapname, Cvar_VariableString( "mapname" ), sizeof( mapname ) );
 
 	if ( !com_sv_running->integer )
 	{
@@ -1321,19 +1317,6 @@ void SV_Frame( int msec ) {
 	// allow pause if only the local client is connected
 	if ( SV_CheckPaused() ) {
 		return;
-	}
-
-	if(sv_maxclients->modified && sv.state == SS_GAME){
-		Com_Printf( "variable sv_maxclients change -- restarting.\n" );
-		SV_SpawnServer( mapname, qfalse );
-	}
-	if(sv_gametype->modified && sv.state == SS_GAME){
-		Com_Printf( "variable sv_gametype change -- restarting.\n" );
-		SV_SpawnServer( mapname, qfalse );
-	}
-	if(sv_pure->modified && sv.state == SS_GAME){
-		Com_Printf( "variable sv_pure change -- restarting.\n" );
-		SV_SpawnServer( mapname, qfalse );
 	}
 
 	// if it isn't time for the next frame, do nothing
