@@ -847,7 +847,6 @@ static intptr_t SV_GameSystemCalls( intptr_t *args ) {
 		botlib_export->ai.BotFreeItemWeights( args[1] );
 		return 0;
 	case BOTLIB_AI_INTERBREED_GOAL_FUZZY_LOGIC:
-		botlib_export->ai.BotInterbreedGoalFuzzyLogic( args[1], args[2], args[3] );
 		return 0;
 	case BOTLIB_AI_SAVE_GOAL_FUZZY_LOGIC:
 		botlib_export->ai.BotSaveGoalFuzzyLogic( args[1], VMA(2) );

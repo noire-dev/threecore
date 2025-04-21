@@ -362,7 +362,6 @@ typedef struct ai_export_s
 	void	(*BotUpdateEntityItems)(void);
 	int		(*BotLoadItemWeights)(int goalstate, const char *filename);
 	void	(*BotFreeItemWeights)(int goalstate);
-	void	(*BotInterbreedGoalFuzzyLogic)(int parent1, int parent2, int child);
 	void	(*BotSaveGoalFuzzyLogic)(int goalstate, const char *filename);
 	void	(*BotMutateGoalFuzzyLogic)(int goalstate, float range);
 	int		(*BotAllocGoalState)(int client);

@@ -219,26 +219,6 @@ bot_goalstate_t *BotGoalStateFromHandle(int handle)
 // Returns:					-
 // Changes Globals:		-
 //===========================================================================
-void BotInterbreedGoalFuzzyLogic(int parent1, int parent2, int child)
-{
-	const bot_goalstate_t *p1, *p2, *c;
-
-	p1 = BotGoalStateFromHandle(parent1);
-	p2 = BotGoalStateFromHandle(parent2);
-	c = BotGoalStateFromHandle(child);
-
-	if ( !p1 || !p2 || !c )
-		return;
-
-	InterbreedWeightConfigs(p1->itemweightconfig, p2->itemweightconfig,
-									c->itemweightconfig);
-} //end of the function BotInterbreedingGoalFuzzyLogic
-//===========================================================================
-//
-// Parameter:				-
-// Returns:					-
-// Changes Globals:		-
-//===========================================================================
 void BotSaveGoalFuzzyLogic(int goalstate, const char *filename)
 {
 	//bot_goalstate_t *gs;
