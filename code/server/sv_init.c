@@ -713,9 +713,6 @@ void SV_Init( void )
 	sv_ace_wallhack = Cvar_Get( "sv_ace_wallhack", "2", CVAR_ARCHIVE );
 	Cvar_SetDescription( sv_ace_wallhack, "Enables or disables wallhack protection. 0-Off 1-Players(Fast) 2-Players 3-Players+Items." );
 
-	sv_banFile = Cvar_Get("sv_banFile", "serverbans.dat", CVAR_ARCHIVE);
-	Cvar_SetDescription( sv_banFile, "Name of the file that is used for storing the server bans." );
-
 	sv_levelTimeReset = Cvar_Get( "sv_levelTimeReset", "0", CVAR_ARCHIVE_ND );
 	Cvar_SetDescription( sv_levelTimeReset, "Whether or not to reset leveltime after new map loads." );
 
@@ -727,9 +724,6 @@ void SV_Init( void )
 
 	// init the botlib here because we need the pre-compiler in the UI
 	SV_BotInitBotLib();
-
-	// Load saved bans
-	Cbuf_AddText("rehashbans\n");
 
 	// track group cvar changes
 	Cvar_SetGroup( sv_lanForceRate, CVG_SERVER );

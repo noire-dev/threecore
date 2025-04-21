@@ -259,17 +259,6 @@ typedef struct {
 
 } serverStatic_t;
 
-#define SERVER_MAXBANS	1024
-// Structure for managing bans
-typedef struct
-{
-	netadr_t ip;
-	// For a CIDR-Notation type suffix
-	int subnet;
-
-	qboolean isexception;
-} serverBan_t;
-
 //=============================================================================
 
 extern	serverStatic_t	svs;				// persistant server info across maps
@@ -307,10 +296,6 @@ extern	cvar_t	*sv_ace_wallhack;
 
 extern	cvar_t *sv_levelTimeReset;
 extern	cvar_t *sv_filter;
-
-extern	cvar_t	*sv_banFile;
-extern	serverBan_t serverBans[SERVER_MAXBANS];
-extern	int serverBansCount;
 
 //===========================================================
 

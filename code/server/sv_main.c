@@ -58,10 +58,6 @@ cvar_t	*sv_ace_wallhack;
 cvar_t *sv_levelTimeReset;
 cvar_t *sv_filter;
 
-cvar_t	*sv_banFile;
-serverBan_t serverBans[SERVER_MAXBANS];
-int serverBansCount = 0;
-
 /*
 =============================================================================
 
