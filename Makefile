@@ -32,9 +32,10 @@ USE_LOCAL_HEADERS= 1
 USE_SYSTEM_JPEG  = 0
 
 USE_OGG_VORBIS    = 1
-USE_CODEC_MP3     = 1
 USE_SYSTEM_OGG    = 0
 USE_SYSTEM_VORBIS = 0
+USE_CODEC_MP3     = 1
+USE_INTERNAL_MP3  = 1
 
 USE_VULKAN       = 1
 USE_OPENGL       = 1
@@ -303,6 +304,10 @@ BASE_CFLAGS =
 
 ifeq ($(USE_SYSTEM_JPEG),1)
   BASE_CFLAGS += -DUSE_SYSTEM_JPEG
+endif
+
+ifeq ($(USE_CODEC_MP3),1)
+  BASE_CFLAGS += -DFPM_DEFAULT
 endif
 
 ifneq ($(HAVE_VM_COMPILED),true)
@@ -1400,7 +1405,7 @@ $(B)/client/vorbis/%.o: $(VORBISDIR)/lib/%.c
 	$(DO_CC)
 
 $(B)/client/libmad/%.o: $(MADDIR)/%.c
-	$(DO_CC) -DFPM_DEFAULT
+	$(DO_CC)
 
 $(B)/client/%.o: $(SDLDIR)/%.c
 	$(DO_CC)
