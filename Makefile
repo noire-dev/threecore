@@ -35,7 +35,6 @@ USE_OGG_VORBIS    = 1
 USE_SYSTEM_OGG    = 0
 USE_SYSTEM_VORBIS = 0
 USE_CODEC_MP3     = 1
-USE_INTERNAL_MP3  = 1
 
 USE_VULKAN       = 1
 USE_OPENGL       = 1
@@ -354,33 +353,32 @@ endif
 ifeq ($(USE_CODEC_MP3),1)
   BASE_CFLAGS += -DUSE_CODEC_MP3
 
-  ifeq ($(USE_INTERNAL_MP3),1)
-    MAD_CFLAGS = -DUSE_INTERNAL_MP3 -I$(MADDIR)/include
-    ifeq ($(ARCH),x86)
-      MAD_CFLAGS += -DFPM_INTEL
-    else
-    ifeq ($(ARCH),x86_64)
-      MAD_CFLAGS += -DFPM_64BIT
-    else
-    ifeq ($(ARCH),ppc)
-      MAD_CFLAGS += -DFPM_PPC
-    else
-    ifeq ($(ARCH),arm)
-      MAD_CFLAGS += -DFPM_ARM
-    else
-    ifeq ($(ARCH),mips)
-      MAD_CFLAGS += -DFPM_MIPS
-    else
-    ifeq ($(ARCH),sparc)
-      MAD_CFLAGS += -DFPM_SPARC
-    else
-      MAD_CFLAGS += -DFPM_DEFAULT
-    endif
-    endif
-    endif
-    endif
-    endif
-    endif
+  MAD_CFLAGS = -I$(MADDIR)/include
+  ifeq ($(ARCH),x86)
+    MAD_CFLAGS += -DFPM_INTEL
+    MAD_CFLAGS += -DWIN32_X86
+  else
+  ifeq ($(ARCH),x86_64)
+    MAD_CFLAGS += -DFPM_64BIT
+  else
+  ifeq ($(ARCH),ppc)
+    MAD_CFLAGS += -DFPM_PPC
+  else
+  ifeq ($(ARCH),arm)
+    MAD_CFLAGS += -DFPM_ARM
+  else
+  ifeq ($(ARCH),mips)
+    MAD_CFLAGS += -DFPM_MIPS
+  else
+  ifeq ($(ARCH),sparc)
+    MAD_CFLAGS += -DFPM_SPARC
+  else
+    MAD_CFLAGS += -DFPM_DEFAULT
+  endif
+  endif
+  endif
+  endif
+  endif
   endif
 
   BASE_CFLAGS += $(MAD_CFLAGS)
