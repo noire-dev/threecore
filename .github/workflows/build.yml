@@ -23,7 +23,7 @@ jobs:
             prefix: mingw-w64-x86_64
 
           - btype: Release
-            rule: install
+            rule: release
 
     defaults:
       run:
@@ -68,7 +68,7 @@ jobs:
         btype: [Release]
         include:
           - btype: Release
-            rule: install
+            rule: release
 
           - arch: x86
             use_sdl: USE_SDL=0
@@ -116,7 +116,7 @@ jobs:
         btype: [Release]
         include:
           - btype: Release
-            rule: install
+            rule: release
 
     steps:
 
@@ -129,8 +129,8 @@ jobs:
 
     - name: Build
       run: |
-        make ${{ matrix.rule }} -j$(sysctl -n hw.logicalcpu) ARCH=x86_64 CC=${{ matrix.cc }} DESTDIR=bin INSTALL=ginstall RENDERER_DEFAULT=opengl STRIP=echo
-        make ${{ matrix.rule }} -j$(sysctl -n hw.logicalcpu) ARCH=arm64 CC=${{ matrix.cc }} DESTDIR=bin INSTALL=ginstall RENDERER_DEFAULT=opengl STRIP=echo
+        make ${{ matrix.rule }} -j$(sysctl -n hw.logicalcpu) ARCH=x86_64 CC=${{ matrix.cc }} DESTDIR=bin RENDERER_DEFAULT=opengl STRIP=echo
+        make ${{ matrix.rule }} -j$(sysctl -n hw.logicalcpu) ARCH=arm64 CC=${{ matrix.cc }} DESTDIR=bin RENDERER_DEFAULT=opengl STRIP=echo
         ./make-macosx-app.sh release
         hdiutil create -format UDZO -srcfolder build/release-darwin-universal2/sandbox.app build/sandbox.dmg
 

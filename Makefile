@@ -211,7 +211,6 @@ bin_path=$(shell which $(1) 2> /dev/null)
 
 STRIP ?= strip
 PKG_CONFIG ?= pkg-config
-INSTALL=install
 MKDIR=mkdir -p
 
 ifneq ($(call bin_path, $(PKG_CONFIG)),)
