@@ -99,12 +99,10 @@ Several Makefile options are available for linux/mingw/macos builds:
 
 `USE_OPENGL2=0` - build opengl2 modular renderer, disabled by default
 
-`USE_RENDERER_DLOPEN=1` - do not link single renderer into client binary, compile all enabled renderers as dynamic libraries and allow to switch them on the fly via `\cl_renderer` cvar, enabled by default
-
-`RENDERER_DEFAULT=opengl` - set default value for `\cl_renderer` cvar or use selected renderer for static build for `USE_RENDERER_DLOPEN=0`, valid options are `opengl`, `opengl2`, `vulkan`
+`RENDERER_DEFAULT=opengl` - set default value for `\cl_renderer` cvar or use selected renderer for static build for valid options are `opengl`, `opengl2`, `vulkan`
 
 `USE_SYSTEM_JPEG=0` - use current system JPEG library, disabled by default
 
 Example:
 
-`make BUILD_SERVER=0 USE_RENDERER_DLOPEN=0 RENDERER_DEFAULT=vulkan` - which means do not build dedicated binary, build client with single static vulkan renderer
+`make BUILD_SERVER=0 RENDERER_DEFAULT=vulkan` - which means do not build dedicated binary, build client with single static vulkan renderer

@@ -28,7 +28,7 @@ BUILD_SERVER     = 1
 
 USE_SDL          = 1
 USE_CURL         = 1
-USE_LOCAL_HEADERS= 1
+USE_LOCAL_HEADERS = 1
 USE_SYSTEM_JPEG  = 0
 
 USE_OGG_VORBIS    = 1
@@ -42,7 +42,6 @@ USE_OPENGL       = 1
 USE_OPENGL2      = 0
 USE_OPENGL_API   = 1
 USE_VULKAN_API   = 1
-USE_RENDERER_DLOPEN = 1
 
 # valid options: opengl, vulkan, opengl2
 RENDERER_DEFAULT = opengl
@@ -74,7 +73,6 @@ endif
 ifeq ($(COMPILE_PLATFORM),darwin)
   USE_SDL=1
   USE_LOCAL_HEADERS=1
-  USE_RENDERER_DLOPEN = 0
 endif
 
 ifeq ($(COMPILE_PLATFORM),cygwin)
@@ -132,18 +130,10 @@ ifndef BUILD_DIR
 BUILD_DIR=build
 endif
 
-ifndef GENERATE_DEPENDENCIES
-GENERATE_DEPENDENCIES=1
-endif
-
 ifndef USE_CCACHE
 USE_CCACHE=0
 endif
 export USE_CCACHE
-
-ifndef USE_LOCAL_HEADERS
-USE_LOCAL_HEADERS=1
-endif
 
 ifndef USE_CURL
 USE_CURL=1
@@ -169,33 +159,30 @@ ifndef USE_SYSTEM_VORBIS
   USE_SYSTEM_VORBIS=1
 endif
 
-ifeq ($(USE_RENDERER_DLOPEN),0)
-  ifeq ($(RENDERER_DEFAULT),opengl)
-    USE_OPENGL=1
-    USE_OPENGL2=0
-    USE_VULKAN=0
-    USE_OPENGL_API=1
-    USE_VULKAN_API=0
-  endif
-  ifeq ($(RENDERER_DEFAULT),opengl2)
-    USE_OPENGL=0
-    USE_OPENGL2=1
-    USE_VULKAN=0
-    USE_OPENGL_API=1
-    USE_VULKAN_API=0
-  endif
-  ifeq ($(RENDERER_DEFAULT),vulkan)
-    USE_OPENGL=0
-    USE_OPENGL2=0
-    USE_VULKAN=1
-    USE_OPENGL_API=0
-  endif
+ifeq ($(RENDERER_DEFAULT),opengl)
+  USE_OPENGL=1
+  USE_OPENGL2=0
+  USE_VULKAN=0
+  USE_OPENGL_API=1
+  USE_VULKAN_API=0
+endif
+ifeq ($(RENDERER_DEFAULT),opengl2)
+  USE_OPENGL=0
+  USE_OPENGL2=1
+  USE_VULKAN=0
+  USE_OPENGL_API=1
+  USE_VULKAN_API=0
+endif
+ifeq ($(RENDERER_DEFAULT),vulkan)
+  USE_OPENGL=0
+  USE_OPENGL2=0
+  USE_VULKAN=1
+  USE_OPENGL_API=0
 endif
 
 ifneq ($(USE_VULKAN),0)
   USE_VULKAN_API=1
 endif
-
 
 #############################################################################
 
@@ -314,16 +301,6 @@ ifneq ($(HAVE_VM_COMPILED),true)
   BASE_CFLAGS += -DNO_VM_COMPILED
 endif
 
-ifneq ($(USE_RENDERER_DLOPEN),0)
-  BASE_CFLAGS += -DUSE_RENDERER_DLOPEN
-  BASE_CFLAGS += -DRENDERER_PREFIX=\\\"$(RENDERER_PREFIX)\\\"
-  BASE_CFLAGS += -DRENDERER_DEFAULT="$(RENDERER_DEFAULT)"
-endif
-
-ifdef DEFAULT_BASEDIR
-  BASE_CFLAGS += -DDEFAULT_BASEDIR=\\\"$(DEFAULT_BASEDIR)\\\"
-endif
-
 ifeq ($(USE_LOCAL_HEADERS),1)
   BASE_CFLAGS += -DUSE_LOCAL_HEADERS=1
 endif
@@ -347,10 +324,6 @@ ifeq ($(USE_OPENGL_API),1)
   BASE_CFLAGS += -DUSE_OPENGL_API
 endif
 
-ifeq ($(GENERATE_DEPENDENCIES),1)
-  BASE_CFLAGS += -MMD
-endif
-
 ifeq ($(USE_CODEC_MP3),1)
   BASE_CFLAGS += -DUSE_CODEC_MP3
 
@@ -362,22 +335,10 @@ ifeq ($(USE_CODEC_MP3),1)
     ifeq ($(ARCH),x86_64)
       MAD_CFLAGS += -DFPM_64BIT
     else
-    ifeq ($(ARCH),ppc)
-      MAD_CFLAGS += -DFPM_PPC
-    else
     ifeq ($(ARCH),arm)
       MAD_CFLAGS += -DFPM_ARM
     else
-    ifeq ($(ARCH),mips)
-      MAD_CFLAGS += -DFPM_MIPS
-    else
-    ifeq ($(ARCH),sparc)
-      MAD_CFLAGS += -DFPM_SPARC
-    else
       MAD_CFLAGS += -DFPM_DEFAULT
-    endif
-    endif
-    endif
     endif
     endif
     endif
@@ -389,7 +350,6 @@ endif
 ARCHEXT=
 
 CLIENT_EXTRA_FILES=
-
 
 #############################################################################
 # SETUP AND BUILD -- MINGW32
@@ -641,7 +601,6 @@ endif # *NIX platforms
 
 endif # !MINGW
 
-
 TARGET_CLIENT = $(CNAME)$(ARCHEXT)$(BINEXT)
 
 TARGET_REND1 = $(RENDERER_PREFIX)_opengl_$(SHLIBNAME)
@@ -660,28 +619,13 @@ endif
 
 ifneq ($(BUILD_CLIENT),0)
   TARGETS += $(B)/$(TARGET_CLIENT)
-  ifneq ($(USE_RENDERER_DLOPEN),0)
-    ifeq ($(USE_OPENGL),1)
-      TARGETS += $(B)/$(TARGET_REND1)
-    endif
-    ifeq ($(USE_OPENGL2),1)
-      TARGETS += $(B)/$(TARGET_REND2)
-    endif
-    ifeq ($(USE_VULKAN),1)
-      TARGETS += $(B)/$(TARGET_RENDV)
-    endif
-  endif
 endif
 
 ifeq ($(USE_CCACHE),1)
   CC := ccache $(CC)
 endif
 
-ifneq ($(USE_RENDERER_DLOPEN),0)
-    RENDCFLAGS=$(SHLIBCFLAGS)
-else
-    RENDCFLAGS=$(NOTSHLIBCFLAGS)
-endif
+RENDCFLAGS=$(NOTSHLIBCFLAGS)
 
 define DO_CC
 $(echo_cmd) "CC $<"
@@ -759,7 +703,7 @@ endif
 
 # Create the build directories and tools, print out
 # an informational message, then start building
-targets: makedirs tools
+targets: makedirs
 	@echo ""
 	@echo "Building quake3 in $(B):"
 	@echo ""
@@ -846,13 +790,6 @@ Q3REND1OBJ = \
   $(B)/rend1/tr_vbo.o \
   $(B)/rend1/tr_world.o
 
-ifneq ($(USE_RENDERER_DLOPEN), 0)
-  Q3REND1OBJ += \
-    $(B)/rend1/q_shared.o \
-    $(B)/rend1/puff.o \
-    $(B)/rend1/q_math.o
-endif
-
 Q3REND2OBJ = \
   $(B)/rend2/tr_animation.o \
   $(B)/rend2/tr_backend.o \
@@ -891,13 +828,6 @@ Q3REND2OBJ = \
   $(B)/rend2/tr_surface.o \
   $(B)/rend2/tr_vbo.o \
   $(B)/rend2/tr_world.o
-
-ifneq ($(USE_RENDERER_DLOPEN), 0)
-  Q3REND2OBJ += \
-    $(B)/rend2/q_shared.o \
-    $(B)/rend2/puff.o \
-    $(B)/rend2/q_math.o
-endif
 
 Q3REND2STROBJ = \
   $(B)/rend2/glsl/bokeh_fp.o \
@@ -961,13 +891,6 @@ Q3RENDVOBJ = \
   $(B)/rendv/vk.o \
   $(B)/rendv/vk_flares.o \
   $(B)/rendv/vk_vbo.o \
-
-ifneq ($(USE_RENDERER_DLOPEN), 0)
-  Q3RENDVOBJ += \
-    $(B)/rendv/q_shared.o \
-    $(B)/rendv/puff.o \
-    $(B)/rendv/q_math.o
-endif
 
 JPGOBJ = \
   $(B)/client/jpeg/jaricom.o \
@@ -1171,16 +1094,14 @@ ifeq ($(USE_CODEC_MP3),1)
     $(B)/client/snd_codec_mp3.o
 endif
 
-ifneq ($(USE_RENDERER_DLOPEN),1)
-  ifeq ($(USE_VULKAN),1)
-    Q3OBJ += $(Q3RENDVOBJ)
+ifeq ($(USE_VULKAN),1)
+  Q3OBJ += $(Q3RENDVOBJ)
+else
+  ifeq ($(USE_OPENGL2),1)
+    Q3OBJ += $(Q3REND2OBJ)
+    Q3OBJ += $(Q3REND2STROBJ)
   else
-    ifeq ($(USE_OPENGL2),1)
-      Q3OBJ += $(Q3REND2OBJ)
-      Q3OBJ += $(Q3REND2STROBJ)
-    else
-      Q3OBJ += $(Q3REND1OBJ)
-    endif
+    Q3OBJ += $(Q3REND1OBJ)
   endif
 endif
 
@@ -1506,47 +1427,3 @@ $(B)/ded/%.o: $(W32DIR)/%.c
 
 $(B)/ded/%.o: $(W32DIR)/%.rc
 	$(DO_WINDRES)
-
-#############################################################################
-# MISC
-#############################################################################
-
-install: release
-	@for i in $(TARGETS); do \
-		if [ -f $(BR)$$i ]; then \
-			$(INSTALL) -D -m 0755 "$(BR)/$$i" "$(DESTDIR)$$i"; \
-			$(STRIP) "$(DESTDIR)$$i"; \
-		fi \
-	done
-
-clean: clean-debug clean-release
-
-clean2:
-	@echo "CLEAN $(B)"
-	@if [ -d $(B) ];then (find $(B) -name '*.d' -exec rm {} \;)fi
-	@rm -f $(Q3OBJ) $(Q3DOBJ)
-	@rm -f $(TARGETS)
-
-clean-debug:
-	@rm -rf $(BD)
-
-clean-release:
-	@echo $(BR)
-	@rm -rf $(BR)
-
-distclean: clean
-	@rm -rf $(BUILD_DIR)
-
-#############################################################################
-# DEPENDENCIES
-#############################################################################
-
-D_FILES=$(shell find . -name '*.d')
-
-ifneq ($(strip $(D_FILES)),)
- include $(D_FILES)
-endif
-
-.PHONY: all clean clean2 clean-debug clean-release copyfiles \
-	debug default dist distclean makedirs release \
-	targets tools toolsclean
