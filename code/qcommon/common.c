@@ -304,7 +304,7 @@ void NORETURN FORMAT_PRINTF(2, 3) QDECL Com_Error( errorParm_t code, const char 
 	int			currentTime;
 
 #if defined(_WIN32) && defined(_DEBUG)
-	if ( code != ERR_DISCONNECT && code != ERR_NEED_CD ) {
+	if ( code != ERR_DISCONNECT ) {
 		if ( !com_noErrorInterrupt->integer ) {
 			DebugBreak();
 		}
@@ -343,10 +343,7 @@ void NORETURN FORMAT_PRINTF(2, 3) QDECL Com_Error( errorParm_t code, const char 
 	Q_vsnprintf( com_errorMessage, sizeof( com_errorMessage ), fmt, argptr );
 	va_end( argptr );
 
-	if ( code != ERR_DISCONNECT && code != ERR_NEED_CD ) {
-		// we can't recover from ERR_FATAL so there is no recipients for com_errorMessage
-		// also if ERR_FATAL was called from S_Malloc - CopyString for a long (2+ chars) text
-		// will trigger recursive error without proper client/server shutdown
+	if ( code != ERR_DISCONNECT ) {
 		if ( code != ERR_FATAL ) {
 			Cvar_Set( "com_errorMessage", com_errorMessage );
 		}

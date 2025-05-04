@@ -4827,8 +4827,7 @@ void FS_Restart( int checksumFeed ) {
 			Com_Error( ERR_DROP, "Invalid game folder" );
 			return;
 		}
-		Cvar_Set("cl_selectedmod", "default");
-		Com_Error( ERR_FATAL, "Couldn't load default.cfg, default mod restored" );
+		Com_Error( ERR_FATAL, "Couldn't load default.cfg" );
 	}
 
 	// new check before safeMode
