@@ -46,17 +46,8 @@ extern botlib_import_t botimport;
 //#define TRACE_DEBUG
 
 #define ON_EPSILON		0.005
-//#define DEG2RAD( a ) (( a * M_PI ) / 180.0F)
 
 #define MAX_BSPENTITIES		4096
-#if 0
-typedef struct rgb_s
-{
-	int red;
-	int green;
-	int blue;
-} rgb_t;
-#endif
 //bsp entity epair
 typedef struct bsp_epair_s
 {
