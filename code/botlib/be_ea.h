@@ -58,7 +58,6 @@ void EA_Move(int client, vec3_t dir, float speed);
 void EA_View(int client, vec3_t viewangles);
 
 //send regular input to the server
-void EA_EndRegular(int client, float thinktime);
 void EA_GetInput(int client, float thinktime, bot_input_t *input);
 void EA_ResetInput(int client);
 //setup and shutdown routines

@@ -1139,91 +1139,6 @@ static void RB_LightingPass( void )
 }
 #endif
 
-
-static void transform_to_eye_space( const vec3_t v, vec3_t v_eye )
-{
-	const float *m = backEnd.viewParms.world.modelMatrix;
-	v_eye[0] = m[0]*v[0] + m[4]*v[1] + m[8 ]*v[2] + m[12];
-	v_eye[1] = m[1]*v[0] + m[5]*v[1] + m[9 ]*v[2] + m[13];
-	v_eye[2] = m[2]*v[0] + m[6]*v[1] + m[10]*v[2] + m[14];
-};
-
-
-/*
-================
-RB_DebugPolygon
-================
-*/
-static void RB_DebugPolygon( int color, int numPoints, float *points ) {
-	vec3_t pa;
-	vec3_t pb;
-	vec3_t p;
-	vec3_t q;
-	vec3_t n;
-	int i;
-
-	if ( numPoints < 3 ) {
-		return;
-	}
-
-	transform_to_eye_space( &points[0], pa );
-	transform_to_eye_space( &points[3], pb );
-	VectorSubtract( pb, pa, p );
-
-	for ( i = 2; i < numPoints; i++ ) {
-		transform_to_eye_space( &points[3*i], pb );
-		VectorSubtract( pb, pa, q );
-		CrossProduct( q, p, n );
-		if ( VectorLength( n ) > 1e-5 ) {
-			break;
-		}
-	}
-
-	if ( DotProduct( n, pa ) >= 0 ) {
-		return; // discard backfacing polygon
-	}
-
-	GL_SelectTexture( 0 );
-	qglDisable( GL_TEXTURE_2D );
-
-	GL_ClientState( 0, CLS_NONE );
-	qglVertexPointer( 3, GL_FLOAT, 0, points );
-
-	// draw solid shade
-	GL_State( GLS_DEPTHMASK_TRUE | GLS_SRCBLEND_ONE | GLS_DSTBLEND_ONE );
-	qglColor4f( color&1, (color>>1)&1, (color>>2)&1, 1 );
-	qglDrawArrays( GL_TRIANGLE_FAN, 0, numPoints );
-
-	// draw wireframe outline
-	qglDepthRange( 0, 0 );
-	qglColor4f( 1, 1, 1, 1 );
-	qglDrawArrays( GL_LINE_LOOP, 0, numPoints );
-	qglDepthRange( 0, 1 );
-
-	qglEnable( GL_TEXTURE_2D );
-}
-
-
-/*
-====================
-RB_DebugGraphics
-
-Visualization aid for movement clipping debugging
-====================
-*/
-static void RB_DebugGraphics( void ) {
-
-	if ( !r_debugSurface->integer ) {
-		return;
-	}
-
-	GL_Bind( tr.whiteImage );
-	GL_Cull( CT_FRONT_SIDED );
-
-	ri.CM_DrawDebugSurface( RB_DebugPolygon );
-}
-
-
 /*
 =============
 RB_DrawSurfs
@@ -1277,9 +1192,6 @@ static const void *RB_DrawSurfs( const void *data ) {
 		}
 	}
 #endif
-
-	// draw main system development information (surface outlines, etc)
-	RB_DebugGraphics();
 
 	//TODO Maybe check for rdf_noworld stuff but q3mme has full 3d ui
 	backEnd.doneSurfaces = qtrue; // for bloom

@@ -602,7 +602,6 @@ static void CL_KeyDownEvent( int key, unsigned time )
 		// escape always gets out of CGAME stuff
 		if (Key_GetCatcher( ) & KEYCATCH_CGAME) {
 			Key_SetCatcher( Key_GetCatcher( ) & ~KEYCATCH_CGAME );
-			VM_Call( cgvm, 1, CG_EVENT_HANDLING, CGAME_EVENT_NONE );
 			return;
 		}
 
@@ -638,10 +637,6 @@ static void CL_KeyDownEvent( int key, unsigned time )
 	} else if ( Key_GetCatcher( ) & KEYCATCH_UI ) {
 		if ( uivm ) {
 			VM_Call( uivm, 2, UI_KEY_EVENT, key, qtrue );
-		}
-	} else if ( Key_GetCatcher( ) & KEYCATCH_CGAME ) {
-		if ( cgvm ) {
-			VM_Call( cgvm, 2, CG_KEY_EVENT, key, qtrue );
 		}
 	} else if ( Key_GetCatcher( ) & KEYCATCH_MESSAGE ) {
 		Message_Key( key );
@@ -698,10 +693,6 @@ static void CL_KeyUpEvent( int key, unsigned time )
 	if ( Key_GetCatcher() & KEYCATCH_UI ) {
 		if ( uivm ) {
 			VM_Call( uivm, 2, UI_KEY_EVENT, key, qfalse );
-		}
-	} else if ( Key_GetCatcher() & KEYCATCH_CGAME ) {
-		if ( cgvm ) {
-			VM_Call( cgvm, 2, CG_KEY_EVENT, key, qfalse );
 		}
 	}
 }

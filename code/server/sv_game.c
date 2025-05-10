@@ -37,7 +37,6 @@ int	SV_NumForGentity( sharedEntity_t *ent ) {
 	return num;
 }
 
-
 sharedEntity_t *SV_GentityNum( int num ) {
 	sharedEntity_t *ent;
 
@@ -45,7 +44,6 @@ sharedEntity_t *SV_GentityNum( int num ) {
 
 	return ent;
 }
-
 
 playerState_t *SV_GameClientNum( int num ) {
 	playerState_t	*ps;
@@ -55,7 +53,6 @@ playerState_t *SV_GameClientNum( int num ) {
 	return ps;
 }
 
-
 svEntity_t	*SV_SvEntityForGentity( sharedEntity_t *gEnt ) {
 	if ( !gEnt || gEnt->s.number < 0 || gEnt->s.number >= MAX_GENTITIES ) {
 		Com_Error( ERR_DROP, "SV_SvEntityForGentity: bad gEnt" );
@@ -63,14 +60,12 @@ svEntity_t	*SV_SvEntityForGentity( sharedEntity_t *gEnt ) {
 	return &sv.svEntities[ gEnt->s.number ];
 }
 
-
 sharedEntity_t *SV_GEntityForSvEntity( svEntity_t *svEnt ) {
 	int		num;
 
 	num = svEnt - sv.svEntities;
 	return SV_GentityNum( num );
 }
-
 
 /*
 ===============
@@ -90,7 +85,6 @@ static void SV_GameSendServerCommand( int clientNum, const char *text ) {
 	}
 }
 
-
 /*
 ===============
 SV_GameDropClient
@@ -104,7 +98,6 @@ static void SV_GameDropClient( int clientNum, const char *reason ) {
 	}
 	SV_DropClient( svs.clients + clientNum, reason );
 }
-
 
 /*
 =================
@@ -149,7 +142,6 @@ static void SV_SetBrushModel( sharedEntity_t *ent, const char *name ) {
 	SV_LinkEntity( ent );		// FIXME: remove
 }
 
-
 /*
 =================
 SV_inPVS
@@ -179,34 +171,6 @@ qboolean SV_inPVS( const vec3_t p1, const vec3_t p2 )
 	return qtrue;
 }
 
-
-/*
-=================
-SV_inPVSIgnorePortals
-
-Does NOT check portalareas
-=================
-*/
-static qboolean SV_inPVSIgnorePortals( const vec3_t p1, const vec3_t p2 )
-{
-	int		leafnum;
-	int		cluster;
-	byte	*mask;
-
-	leafnum = CM_PointLeafnum (p1);
-	cluster = CM_LeafCluster (leafnum);
-	mask = CM_ClusterPVS (cluster);
-
-	leafnum = CM_PointLeafnum (p2);
-	cluster = CM_LeafCluster (leafnum);
-
-	if ( mask && (!(mask[cluster>>3] & (1<<(cluster&7)) ) ) )
-		return qfalse;
-
-	return qtrue;
-}
-
-
 /*
 ========================
 SV_AdjustAreaPortalState
@@ -221,7 +185,6 @@ static void SV_AdjustAreaPortalState( sharedEntity_t *ent, qboolean open ) {
 	}
 	CM_AdjustAreaPortalState( svEnt->areanum, svEnt->areanum2, open );
 }
-
 
 /*
 ==================
@@ -243,7 +206,6 @@ static qboolean SV_EntityContact( const vec3_t mins, const vec3_t maxs, const sh
 	return trace.startsolid;
 }
 
-
 /*
 ===============
 SV_GetServerinfo
@@ -260,7 +222,6 @@ static void SV_GetServerinfo( char *buffer, int bufferSize ) {
 		Q_strncpyz( buffer, sv.configstrings[ CS_SERVERINFO ], bufferSize );
 	}
 }
-
 
 /*
 ===============
@@ -296,7 +257,6 @@ static void SV_LocateGameData( sharedEntity_t *gEnts, int numGEntities, int size
 	sv.gameClientSize = sizeofGameClient;
 }
 
-
 /*
 ===============
 SV_GetUsercmd
@@ -310,15 +270,11 @@ static void SV_GetUsercmd( int clientNum, usercmd_t *cmd ) {
 	}
 }
 
-
-//==============================================
-
 static int FloatAsInt( float f ) {
 	floatint_t fi;
 	fi.f = f;
 	return fi.i;
 }
-
 
 /*
 ====================
@@ -336,7 +292,6 @@ static void *VM_ArgPtr( intptr_t intValue ) {
 		return (void *)(gvm->dataBase + (intValue & gvm->dataMask));
 }
 
-
 /*
 ====================
 GVM_ArgPtr
@@ -348,19 +303,6 @@ void *GVM_ArgPtr( intptr_t intValue )
 {
 	return VM_ArgPtr( intValue );
 }
-
-
-static qboolean SV_GetValue( char* value, int valueSize, const char* key )
-{
-	if ( !Q_stricmp( key, "SVF_SELF_PORTAL2_Q3E" ) )
-	{
-		Com_sprintf( value, valueSize, "%i", SVF_SELF_PORTAL2 );
-		return qtrue;
-	}
-
-	return qfalse;
-}
-
 
 /*
 ====================
@@ -403,7 +345,6 @@ static intptr_t SV_GameSystemCalls( intptr_t *args ) {
 	case G_SEND_CONSOLE_COMMAND:
 		Cbuf_ExecuteText( args[1], VMA(2) );
 		return 0;
-
 	case G_FS_FOPEN_FILE:
 		return FS_VM_OpenFile( VMA(1), VMA(2), args[3], H_QAGAME );
 	case G_FS_READ:
@@ -418,17 +359,9 @@ static intptr_t SV_GameSystemCalls( intptr_t *args ) {
 	case G_FS_FCLOSE_FILE:
 		FS_VM_CloseFile( args[1], H_QAGAME );
 		return 0;
-	case G_FS_SEEK:
-		return FS_VM_SeekFile( args[1], args[2], args[3], H_QAGAME );
-
-	case G_SYSTEM:
-		Sys_Cmd( (const char*)VMA(1) );
-		return 0;
-
 	case G_FS_GETFILELIST:
 		VM_CHECKBOUNDS( gvm, args[3], args[4] );
 		return FS_GetFileList( VMA(1), VMA(2), VMA(3), args[4] );
-
 	case G_LOCATE_GAME_DATA:
 		SV_LocateGameData( VMA(1), args[2], args[3], VMA(4), args[5] );
 		return 0;
@@ -449,13 +382,8 @@ static intptr_t SV_GameSystemCalls( intptr_t *args ) {
 		return SV_AreaEntities( VMA(1), VMA(2), VMA(3), args[4] );
 	case G_ENTITY_CONTACT:
 		return SV_EntityContact( VMA(1), VMA(2), VMA(3), /*int capsule*/ qfalse );
-	case G_ENTITY_CONTACTCAPSULE:
-		return SV_EntityContact( VMA(1), VMA(2), VMA(3), /*int capsule*/ qtrue );
 	case G_TRACE:
 		SV_Trace( VMA(1), VMA(2), VMA(3), VMA(4), VMA(5), args[6], args[7], /*int capsule*/ qfalse );
-		return 0;
-	case G_TRACESOURCETECH:
-		SV_Trace_SourceTech( VMA(1), VMA(2), VMA(3), VMA(4), VMA(5), args[6], args[7], /*int capsule*/ qfalse, VMA(8) );
 		return 0;
 	case G_POINT_CONTENTS:
 		return SV_PointContents( VMA(1), args[2] );
@@ -464,9 +392,6 @@ static intptr_t SV_GameSystemCalls( intptr_t *args ) {
 		return 0;
 	case G_IN_PVS:
 		return SV_inPVS( VMA(1), VMA(2) );
-	case G_IN_PVS_IGNORE_PORTALS:
-		return SV_inPVSIgnorePortals( VMA(1), VMA(2) );
-
 	case G_SET_CONFIGSTRING:
 		SV_SetConfigstring( args[1], VMA(2) );
 		return 0;
@@ -488,15 +413,8 @@ static intptr_t SV_GameSystemCalls( intptr_t *args ) {
 	case G_ADJUST_AREA_PORTAL_STATE:
 		SV_AdjustAreaPortalState( VMA(1), args[2] );
 		return 0;
-	case G_AREAS_CONNECTED:
-		return CM_AreasConnected( args[1], args[2] );
-
 	case G_BOT_ALLOCATE_CLIENT:
 		return SV_BotAllocateClient();
-	case G_BOT_FREE_CLIENT:
-		SV_BotFreeClient( args[1] );
-		return 0;
-
 	case G_GET_USERCMD:
 		SV_GetUsercmd( args[1], VMA(2) );
 		return 0;
@@ -521,19 +439,11 @@ static intptr_t SV_GameSystemCalls( intptr_t *args ) {
 				return qtrue;
 			}
 		}
-
-	case G_DEBUG_POLYGON_CREATE:
-		return BotImport_DebugPolygonCreate( args[1], args[2], VMA(3) );
-	case G_DEBUG_POLYGON_DELETE:
-		BotImport_DebugPolygonDelete( args[1] );
-		return 0;
 	case G_REAL_TIME:
 		return Com_RealTime( VMA(1) );
-	case G_SNAPVECTOR:
-		Sys_SnapVector( VMA(1) );
+	case G_SYSTEM:
+		Sys_Cmd( (const char*)VMA(1) );
 		return 0;
-
-		//====================================
 
 	case BOTLIB_SETUP:
 		return SV_BotLibSetup();
@@ -541,31 +451,14 @@ static intptr_t SV_GameSystemCalls( intptr_t *args ) {
 		return SV_BotLibShutdown();
 	case BOTLIB_LIBVAR_SET:
 		return botlib_export->BotLibVarSet( VMA(1), VMA(2) );
-	case BOTLIB_LIBVAR_GET:
-		VM_CHECKBOUNDS( gvm, args[2], args[3] );
-		return botlib_export->BotLibVarGet( VMA(1), VMA(2), args[3] );
-
 	case BOTLIB_PC_ADD_GLOBAL_DEFINE:
 		return botlib_export->PC_AddGlobalDefine( VMA(1) );
-	case BOTLIB_PC_LOAD_SOURCE:
-		return botlib_export->PC_LoadSourceHandle( VMA(1) );
-	case BOTLIB_PC_FREE_SOURCE:
-		return botlib_export->PC_FreeSourceHandle( args[1] );
-	case BOTLIB_PC_READ_TOKEN:
-		VM_CHECKBOUNDS( gvm, args[2], sizeof( pc_token_t ) );
-		return botlib_export->PC_ReadTokenHandle( args[1], VMA(2) );
-	case BOTLIB_PC_SOURCE_FILE_AND_LINE:
-		return botlib_export->PC_SourceFileAndLine( args[1], VMA(2), VMA(3) );
-
 	case BOTLIB_START_FRAME:
 		return botlib_export->BotLibStartFrame( VMF(1) );
 	case BOTLIB_LOAD_MAP:
 		return botlib_export->BotLibLoadMap( VMA(1) );
 	case BOTLIB_UPDATENTITY:
 		return botlib_export->BotLibUpdateEntity( args[1], VMA(2) );
-	case BOTLIB_TEST:
-		return botlib_export->Test( args[1], VMA(2), VMA(3), VMA(4) );
-
 	case BOTLIB_GET_SNAPSHOT_ENTITY:
 		return SV_BotGetSnapshotEntity( args[1], args[2] );
 	case BOTLIB_GET_CONSOLE_MESSAGE:
@@ -580,7 +473,6 @@ static intptr_t SV_GameSystemCalls( intptr_t *args ) {
 			}
 		}
 		return 0;
-
 	case BOTLIB_AAS_BBOX_AREAS:
 		return botlib_export->aas.AAS_BBoxAreas( VMA(1), VMA(2), VMA(3), args[4] );
 	case BOTLIB_AAS_AREA_INFO:
@@ -590,7 +482,6 @@ static intptr_t SV_GameSystemCalls( intptr_t *args ) {
 	case BOTLIB_AAS_ENTITY_INFO:
 		botlib_export->aas.AAS_EntityInfo( args[1], VMA(2) );
 		return 0;
-
 	case BOTLIB_AAS_INITIALIZED:
 		return botlib_export->aas.AAS_Initialized();
 	case BOTLIB_AAS_PRESENCE_TYPE_BOUNDING_BOX:
@@ -598,14 +489,12 @@ static intptr_t SV_GameSystemCalls( intptr_t *args ) {
 		return 0;
 	case BOTLIB_AAS_TIME:
 		return FloatAsInt( botlib_export->aas.AAS_Time() );
-
 	case BOTLIB_AAS_POINT_AREA_NUM:
 		return botlib_export->aas.AAS_PointAreaNum( VMA(1) );
 	case BOTLIB_AAS_POINT_REACHABILITY_AREA_INDEX:
 		return botlib_export->aas.AAS_PointReachabilityAreaIndex( VMA(1) );
 	case BOTLIB_AAS_TRACE_AREAS:
 		return botlib_export->aas.AAS_TraceAreas( VMA(1), VMA(2), VMA(3), VMA(4), args[5] );
-
 	case BOTLIB_AAS_POINT_CONTENTS:
 		return botlib_export->aas.AAS_PointContents( VMA(1) );
 	case BOTLIB_AAS_NEXT_BSP_ENTITY:
@@ -619,23 +508,19 @@ static intptr_t SV_GameSystemCalls( intptr_t *args ) {
 		return botlib_export->aas.AAS_FloatForBSPEpairKey( args[1], VMA(2), VMA(3) );
 	case BOTLIB_AAS_INT_FOR_BSP_EPAIR_KEY:
 		return botlib_export->aas.AAS_IntForBSPEpairKey( args[1], VMA(2), VMA(3) );
-
 	case BOTLIB_AAS_AREA_REACHABILITY:
 		return botlib_export->aas.AAS_AreaReachability( args[1] );
-
 	case BOTLIB_AAS_AREA_TRAVEL_TIME_TO_GOAL_AREA:
 		return botlib_export->aas.AAS_AreaTravelTimeToGoalArea( args[1], VMA(2), args[3], args[4] );
 	case BOTLIB_AAS_ENABLE_ROUTING_AREA:
 		return botlib_export->aas.AAS_EnableRoutingArea( args[1], args[2] );
 	case BOTLIB_AAS_PREDICT_ROUTE:
 		return botlib_export->aas.AAS_PredictRoute( VMA(1), args[2], VMA(3), args[4], args[5], args[6], args[7], args[8], args[9], args[10], args[11] );
-
 	case BOTLIB_AAS_SWIMMING:
 		return botlib_export->aas.AAS_Swimming( VMA(1) );
 	case BOTLIB_AAS_PREDICT_CLIENT_MOVEMENT:
 		return botlib_export->aas.AAS_PredictClientMovement( VMA(1), args[2], VMA(3), args[4], args[5],
 			VMA(6), VMA(7), args[8], args[9], VMF(10), args[11], args[12], args[13] );
-
 	case BOTLIB_EA_SAY:
 		botlib_export->ea.EA_Say( args[1], VMA(2) );
 		return 0;
@@ -645,7 +530,6 @@ static intptr_t SV_GameSystemCalls( intptr_t *args ) {
 	case BOTLIB_EA_COMMAND:
 		botlib_export->ea.EA_Command( args[1], VMA(2) );
 		return 0;
-
 	case BOTLIB_EA_ACTION:
 		botlib_export->ea.EA_Action( args[1], args[2] );
 		return 0;
@@ -667,43 +551,11 @@ static intptr_t SV_GameSystemCalls( intptr_t *args ) {
 	case BOTLIB_EA_CROUCH:
 		botlib_export->ea.EA_Crouch( args[1] );
 		return 0;
-	case BOTLIB_EA_MOVE_UP:
-		botlib_export->ea.EA_MoveUp( args[1] );
-		return 0;
-	case BOTLIB_EA_MOVE_DOWN:
-		botlib_export->ea.EA_MoveDown( args[1] );
-		return 0;
-	case BOTLIB_EA_MOVE_FORWARD:
-		botlib_export->ea.EA_MoveForward( args[1] );
-		return 0;
-	case BOTLIB_EA_MOVE_BACK:
-		botlib_export->ea.EA_MoveBack( args[1] );
-		return 0;
-	case BOTLIB_EA_MOVE_LEFT:
-		botlib_export->ea.EA_MoveLeft( args[1] );
-		return 0;
-	case BOTLIB_EA_MOVE_RIGHT:
-		botlib_export->ea.EA_MoveRight( args[1] );
-		return 0;
-
 	case BOTLIB_EA_SELECT_WEAPON:
 		botlib_export->ea.EA_SelectWeapon( args[1], args[2] );
 		return 0;
-	case BOTLIB_EA_JUMP:
-		botlib_export->ea.EA_Jump( args[1] );
-		return 0;
-	case BOTLIB_EA_DELAYED_JUMP:
-		botlib_export->ea.EA_DelayedJump( args[1] );
-		return 0;
-	case BOTLIB_EA_MOVE:
-		botlib_export->ea.EA_Move( args[1], VMA(2), VMF(3) );
-		return 0;
 	case BOTLIB_EA_VIEW:
 		botlib_export->ea.EA_View( args[1], VMA(2) );
-		return 0;
-
-	case BOTLIB_EA_END_REGULAR:
-		botlib_export->ea.EA_EndRegular( args[1], VMF(2) );
 		return 0;
 	case BOTLIB_EA_GET_INPUT:
 		botlib_export->ea.EA_GetInput( args[1], VMF(2), VMA(3) );
@@ -711,25 +563,19 @@ static intptr_t SV_GameSystemCalls( intptr_t *args ) {
 	case BOTLIB_EA_RESET_INPUT:
 		botlib_export->ea.EA_ResetInput( args[1] );
 		return 0;
-
 	case BOTLIB_AI_LOAD_CHARACTER:
 		return botlib_export->ai.BotLoadCharacter( VMA(1), VMF(2) );
 	case BOTLIB_AI_FREE_CHARACTER:
 		botlib_export->ai.BotFreeCharacter( args[1] );
 		return 0;
-	case BOTLIB_AI_CHARACTERISTIC_FLOAT:
-		return FloatAsInt( botlib_export->ai.Characteristic_Float( args[1], args[2] ) );
 	case BOTLIB_AI_CHARACTERISTIC_BFLOAT:
 		return FloatAsInt( botlib_export->ai.Characteristic_BFloat( args[1], args[2], VMF(3), VMF(4) ) );
-	case BOTLIB_AI_CHARACTERISTIC_INTEGER:
-		return botlib_export->ai.Characteristic_Integer( args[1], args[2] );
 	case BOTLIB_AI_CHARACTERISTIC_BINTEGER:
 		return botlib_export->ai.Characteristic_BInteger( args[1], args[2], args[3], args[4] );
 	case BOTLIB_AI_CHARACTERISTIC_STRING:
 		VM_CHECKBOUNDS( gvm, args[3], args[4] );
 		botlib_export->ai.Characteristic_String( args[1], args[2], VMA(3), args[4] );
 		return 0;
-
 	case BOTLIB_AI_ALLOC_CHAT_STATE:
 		return botlib_export->ai.BotAllocChatState();
 	case BOTLIB_AI_FREE_CHAT_STATE:
@@ -752,8 +598,6 @@ static intptr_t SV_GameSystemCalls( intptr_t *args ) {
 		return botlib_export->ai.BotNumInitialChats( args[1], VMA(2) );
 	case BOTLIB_AI_REPLY_CHAT:
 		return botlib_export->ai.BotReplyChat( args[1], VMA(2), args[3], args[4], VMA(5), VMA(6), VMA(7), VMA(8), VMA(9), VMA(10), VMA(11), VMA(12) );
-	case BOTLIB_AI_CHAT_LENGTH:
-		return botlib_export->ai.BotChatLength( args[1] );
 	case BOTLIB_AI_ENTER_CHAT:
 		botlib_export->ai.BotEnterChat( args[1], args[2], args[3] );
 		return 0;
@@ -761,8 +605,6 @@ static intptr_t SV_GameSystemCalls( intptr_t *args ) {
 		VM_CHECKBOUNDS( gvm, args[2], args[3] );
 		botlib_export->ai.BotGetChatMessage( args[1], VMA(2), args[3] );
 		return 0;
-	case BOTLIB_AI_STRING_CONTAINS:
-		return botlib_export->ai.StringContains( VMA(1), VMA(2), args[3] );
 	case BOTLIB_AI_FIND_MATCH:
 		return botlib_export->ai.BotFindMatch( VMA(1), VMA(2), args[3] );
 	case BOTLIB_AI_MATCH_VARIABLE:
@@ -783,7 +625,6 @@ static intptr_t SV_GameSystemCalls( intptr_t *args ) {
 	case BOTLIB_AI_SET_CHAT_NAME:
 		botlib_export->ai.BotSetChatName( args[1], VMA(2), args[3] );
 		return 0;
-
 	case BOTLIB_AI_RESET_GOAL_STATE:
 		botlib_export->ai.BotResetGoalState( args[1] );
 		return 0;
@@ -828,38 +669,21 @@ static intptr_t SV_GameSystemCalls( intptr_t *args ) {
 		return botlib_export->ai.BotGetLevelItemGoal( args[1], VMA(2), VMA(3) );
 	case BOTLIB_AI_GET_NEXT_CAMP_SPOT_GOAL:
 		return botlib_export->ai.BotGetNextCampSpotGoal( args[1], VMA(2) );
-	case BOTLIB_AI_GET_MAP_LOCATION_GOAL:
-		return botlib_export->ai.BotGetMapLocationGoal( VMA(1), VMA(2) );
 	case BOTLIB_AI_AVOID_GOAL_TIME:
 		return FloatAsInt( botlib_export->ai.BotAvoidGoalTime( args[1], args[2] ) );
 	case BOTLIB_AI_SET_AVOID_GOAL_TIME:
 		botlib_export->ai.BotSetAvoidGoalTime( args[1], args[2], VMF(3));
-		return 0;
-	case BOTLIB_AI_INIT_LEVEL_ITEMS:
-		botlib_export->ai.BotInitLevelItems();
 		return 0;
 	case BOTLIB_AI_UPDATE_ENTITY_ITEMS:
 		botlib_export->ai.BotUpdateEntityItems();
 		return 0;
 	case BOTLIB_AI_LOAD_ITEM_WEIGHTS:
 		return botlib_export->ai.BotLoadItemWeights( args[1], VMA(2) );
-	case BOTLIB_AI_FREE_ITEM_WEIGHTS:
-		botlib_export->ai.BotFreeItemWeights( args[1] );
-		return 0;
-	case BOTLIB_AI_INTERBREED_GOAL_FUZZY_LOGIC:
-		return 0;
-	case BOTLIB_AI_SAVE_GOAL_FUZZY_LOGIC:
-		botlib_export->ai.BotSaveGoalFuzzyLogic( args[1], VMA(2) );
-		return 0;
-	case BOTLIB_AI_MUTATE_GOAL_FUZZY_LOGIC:
-		botlib_export->ai.BotMutateGoalFuzzyLogic( args[1], VMF(2) );
-		return 0;
 	case BOTLIB_AI_ALLOC_GOAL_STATE:
 		return botlib_export->ai.BotAllocGoalState( args[1] );
 	case BOTLIB_AI_FREE_GOAL_STATE:
 		botlib_export->ai.BotFreeGoalState( args[1] );
 		return 0;
-
 	case BOTLIB_AI_RESET_MOVE_STATE:
 		botlib_export->ai.BotResetMoveState( args[1] );
 		return 0;
@@ -877,8 +701,6 @@ static intptr_t SV_GameSystemCalls( intptr_t *args ) {
 	case BOTLIB_AI_RESET_LAST_AVOID_REACH:
 		botlib_export->ai.BotResetLastAvoidReach( args[1] );
 		return 0;
-	case BOTLIB_AI_REACHABILITY_AREA:
-		return botlib_export->ai.BotReachabilityArea( VMA(1), args[2] );
 	case BOTLIB_AI_MOVEMENT_VIEW_TARGET:
 		return botlib_export->ai.BotMovementViewTarget( args[1], VMA(2), args[3], VMF(4), VMA(5) );
 	case BOTLIB_AI_PREDICT_VISIBLE_POSITION:
@@ -891,12 +713,6 @@ static intptr_t SV_GameSystemCalls( intptr_t *args ) {
 	case BOTLIB_AI_INIT_MOVE_STATE:
 		botlib_export->ai.BotInitMoveState( args[1], VMA(2) );
 		return 0;
-
-	case BOTLIB_AI_CHOOSE_BEST_FIGHT_WEAPON:
-		return botlib_export->ai.BotChooseBestFightWeapon( args[1], VMA(2) );
-	case BOTLIB_AI_GET_WEAPON_INFO:
-		botlib_export->ai.BotGetWeaponInfo( args[1], args[2], VMA(3) );
-		return 0;
 	case BOTLIB_AI_LOAD_WEAPON_WEIGHTS:
 		return botlib_export->ai.BotLoadWeaponWeights( args[1], VMA(2) );
 	case BOTLIB_AI_ALLOC_WEAPON_STATE:
@@ -908,72 +724,33 @@ static intptr_t SV_GameSystemCalls( intptr_t *args ) {
 		botlib_export->ai.BotResetWeaponState( args[1] );
 		return 0;
 
-	case BOTLIB_AI_GENETIC_PARENTS_AND_CHILD_SELECTION:
-		return botlib_export->ai.GeneticParentsAndChildSelection(args[1], VMA(2), VMA(3), VMA(4), VMA(5));
-
 	// shared syscalls
-
 	case TRAP_MEMSET:
 		VM_CHECKBOUNDS( gvm, args[1], args[3] );
 		Com_Memset( VMA(1), args[2], args[3] );
 		return args[1];
-
 	case TRAP_MEMCPY:
 		VM_CHECKBOUNDS2( gvm, args[1], args[2], args[3] );
 		Com_Memcpy( VMA(1), VMA(2), args[3] );
 		return args[1];
-
 	case TRAP_STRNCPY:
 		VM_CHECKBOUNDS( gvm, args[1], args[3] );
 		Q_strncpy( VMA(1), VMA(2), args[3] );
 		return args[1];
-
 	case TRAP_SIN:
 		return FloatAsInt( sin( VMF(1) ) );
-
 	case TRAP_COS:
 		return FloatAsInt( cos( VMF(1) ) );
-
 	case TRAP_ATAN2:
 		return FloatAsInt( atan2( VMF(1), VMF(2) ) );
-
 	case TRAP_SQRT:
 		return FloatAsInt( sqrt( VMF(1) ) );
-
-	case G_MATRIXMULTIPLY:
-		MatrixMultiply( VMA(1), VMA(2), VMA(3) );
-		return 0;
-
-	case G_ANGLEVECTORS:
-		AngleVectors( VMA(1), VMA(2), VMA(3), VMA(4) );
-		return 0;
-
-	case G_PERPENDICULARVECTOR:
-		PerpendicularVector( VMA(1), VMA(2) );
-		return 0;
-
-	case G_FLOOR:
-		return FloatAsInt( floor( VMF(1) ) );
-
-	case G_CEIL:
-		return FloatAsInt( ceil( VMF(1) ) );
-
-	case G_TESTPRINTINT:
-		return sprintf( VMA(1), "%i", (int)args[2] );
-
-	case G_TESTPRINTFLOAT:
-		return sprintf( VMA(1), "%f", VMF(2) );
-
-	case G_TRAP_GETVALUE:
-		VM_CHECKBOUNDS( gvm, args[1], args[2] );
-		return SV_GetValue( VMA(1), args[2], VMA(3) );
 
 	default:
 		Com_Error( ERR_DROP, "Bad game system trap: %ld", (long int) args[0] );
 	}
 	return 0;
 }
-
 
 /*
 ====================
@@ -998,7 +775,6 @@ static intptr_t QDECL SV_DllSyscall( intptr_t arg, ... ) {
 #endif
 }
 
-
 /*
 ===============
 SV_ShutdownGameProgs
@@ -1015,7 +791,6 @@ void SV_ShutdownGameProgs( void ) {
 	gvm = NULL;
 	FS_VM_CloseFiles( H_QAGAME );
 }
-
 
 /*
 ==================
@@ -1043,7 +818,6 @@ static void SV_InitGameVM( qboolean restart ) {
 	VM_Call( gvm, 3, GAME_INIT, sv.time, Com_Milliseconds(), restart );
 }
 
-
 /*
 ===================
 SV_RestartGameProgs
@@ -1068,7 +842,6 @@ void SV_RestartGameProgs( void ) {
 	// load userinfo filters
 	SV_LoadFilters( sv_filter->string );
 }
-
 
 /*
 ===============
@@ -1101,7 +874,6 @@ void SV_InitGameProgs( void ) {
 	// load userinfo filters
 	SV_LoadFilters( sv_filter->string );
 }
-
 
 /*
 ====================

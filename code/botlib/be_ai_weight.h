@@ -75,7 +75,5 @@ float FuzzyWeightUndecided(int *inventory, weightconfig_t *wc, int weightnum);
 void ScaleWeight(weightconfig_t *config, char *name, float scale);
 //scale the balance range
 void ScaleBalanceRange(weightconfig_t *config, float scale);
-//evolves the weight configuration
-void EvolveWeightConfig(weightconfig_t *config);
 //frees cached weight configurations
 void BotShutdownWeights(void);

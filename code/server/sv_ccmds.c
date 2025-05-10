@@ -905,11 +905,9 @@ typedef struct {
     int triCount;
 } md3SurfaceData_t;
 
-// Rotation functions
 void RotateVertex(vec3_t vertex) {
     float x = vertex[0], y = vertex[1], z = vertex[2];
     
-    // Rotate around X axis
     if (MODEL_ROTATE_X != 0) {
         float rad = DEG2RAD(MODEL_ROTATE_X);
         float cosX = cos(rad);
@@ -920,7 +918,6 @@ void RotateVertex(vec3_t vertex) {
         z = newZ;
     }
     
-    // Rotate around Y axis
     if (MODEL_ROTATE_Y != 0) {
         float rad = DEG2RAD(MODEL_ROTATE_Y);
         float cosY = cos(rad);
@@ -931,7 +928,6 @@ void RotateVertex(vec3_t vertex) {
         z = newZ;
     }
     
-    // Rotate around Z axis
     if (MODEL_ROTATE_Z != 0) {
         float rad = DEG2RAD(MODEL_ROTATE_Z);
         float cosZ = cos(rad);
@@ -948,9 +944,7 @@ void RotateVertex(vec3_t vertex) {
 }
 
 void RotateNormal(vec3_t normal) {
-    // Apply the same rotation as vertices
     RotateVertex(normal);
-    // Ensure it's still normalized
     VectorNormalize(normal);
 }
 
@@ -1030,8 +1024,7 @@ void ParseOBJ(const char *objData, vec3_t *vertices, vec2_t *texCoords, vec3_t *
         }
         else if (strncmp(p, "vn ", 3) == 0 && *vnCount < MD3_MAX_VERTS) {
             sscanf(p+3, "%f %f %f", &normals[*vnCount][0], &normals[*vnCount][1], &normals[*vnCount][2]);
-            //VectorScale(normals[*vnCount], -1.0f, normals[*vnCount]);
-			RotateNormal(normals[*vnCount]); // Добавлено вращение нормали
+			RotateNormal(normals[*vnCount]);
             (*vnCount)++;
         }
         else if (strncmp(p, "usemtl ", 7) == 0) {
@@ -1086,68 +1079,96 @@ void ParseOBJ(const char *objData, vec3_t *vertices, vec2_t *texCoords, vec3_t *
             }
         }
         else if (strncmp(p, "f ", 2) == 0 && currentSurface >= 0 && 
-                 surfaces[currentSurface].triCount < MD3_MAX_TRIANGLES - 1) {
-            int v[4], vt[4] = {-1}, vn[4] = {-1};
-            int count = 0;
-            const char *faceStart = p + 2;
-            
-            while (*faceStart && count < 4) {
-                if (sscanf(faceStart, "%d/%d/%d", &v[count], &vt[count], &vn[count]) < 3) {
-                    if (sscanf(faceStart, "%d//%d", &v[count], &vn[count]) < 2) {
-                        if (sscanf(faceStart, "%d/%d", &v[count], &vt[count]) < 2) {
-                            sscanf(faceStart, "%d", &v[count]);
-                        }
-                    }
-                }
-                
-                v[count]--;
-                if (vt[count] >= 0) vt[count]--;
-                if (vn[count] >= 0) vn[count]--;
-                
-                count++;
-                while (*faceStart && *faceStart != ' ' && *faceStart != '\n') faceStart++;
-                while (*faceStart == ' ') faceStart++;
-            }
-            
-            if (count >= 3) {
-                // Для каждого полигона создаем новые вершины с их UV координатами
-                int indices[4];
-                for (int i = 0; i < count; i++) {
-                    // Копируем позицию вершины
-                    VectorCopy(vertices[v[i]], surfaces[currentSurface].vertices[surfaces[currentSurface].vertCount]);
-                    
-                    // Копируем UV координаты (если есть)
-                    if (vt[i] >= 0 && vt[i] < *vtCount) {
-                        Vector2Copy(texCoords[vt[i]], surfaces[currentSurface].texCoords[surfaces[currentSurface].vertCount]);
-                    } else {
-                        surfaces[currentSurface].texCoords[surfaces[currentSurface].vertCount][0] = 0;
-                        surfaces[currentSurface].texCoords[surfaces[currentSurface].vertCount][1] = 0;
-                    }
-                    
-                    // Копируем нормали (если есть)
-                    if (vn[i] >= 0 && vn[i] < *vnCount) {
-                        VectorCopy(normals[vn[i]], surfaces[currentSurface].normals[surfaces[currentSurface].vertCount]);
-                    } else {
-                        VectorSet(surfaces[currentSurface].normals[surfaces[currentSurface].vertCount], 0, 0, 0);
-                    }
-                    
-                    indices[i] = surfaces[currentSurface].vertCount++;
-                }
-                
-                // Добавляем треугольник(ы)
-                surfaces[currentSurface].triangles[surfaces[currentSurface].triCount].indexes[0] = indices[0];
-                surfaces[currentSurface].triangles[surfaces[currentSurface].triCount].indexes[1] = indices[2];
-                surfaces[currentSurface].triangles[surfaces[currentSurface].triCount].indexes[2] = indices[1];
-                surfaces[currentSurface].triCount++;
-                
-                if (count == 4 && surfaces[currentSurface].triCount < MD3_MAX_TRIANGLES) {
-                    surfaces[currentSurface].triangles[surfaces[currentSurface].triCount].indexes[0] = indices[0];
-                    surfaces[currentSurface].triangles[surfaces[currentSurface].triCount].indexes[1] = indices[3];
-                    surfaces[currentSurface].triangles[surfaces[currentSurface].triCount].indexes[2] = indices[2];
-                    surfaces[currentSurface].triCount++;
-                }
-            }
-        }
+         surfaces[currentSurface].triCount < MD3_MAX_TRIANGLES - 1) {
+		    int v[4] = {-1, -1, -1, -1}, vt[4] = {-1, -1, -1, -1}, vn[4] = {-1, -1, -1, -1};
+		    int count = 0;
+		    const char *faceStart = p + 2;
+
+		    while (*faceStart && count < 4) {
+		        while (*faceStart == ' ') faceStart++;
+		        if (!*faceStart) break;
+			
+		        char *end = NULL;
+		        long val;
+			
+		        val = strtol(faceStart, &end, 10);
+		        if (end == faceStart || val < 1) break;
+		        v[count] = (int)val - 1;
+		        faceStart = end;
+			
+		        if (*faceStart == '/') {
+		            faceStart++;
+		            if (*faceStart != '/') {
+		                val = strtol(faceStart, &end, 10);
+		                if (end != faceStart && val >= 1) {
+		                    vt[count] = (int)val - 1;
+		                }
+		                faceStart = end;
+		            }
+				
+		            if (*faceStart == '/') {
+		                faceStart++;
+		                val = strtol(faceStart, &end, 10);
+		                if (end != faceStart && val >= 1) {
+		                    vn[count] = (int)val - 1;
+		                }
+		                faceStart = end;
+		            }
+		        }
+			
+		        count++;
+		    }
+		
+		    if (count >= 3) {
+		        int valid = 1;
+		        for (int i = 0; i < count; i++) {
+		            if (v[i] < 0 || v[i] >= *vCount) valid = 0;
+		            if (vt[i] >= *vtCount) valid = 0;
+		            if (vn[i] >= *vnCount) valid = 0;
+		        }
+			
+		        if (valid) {
+		            int indices[4];
+		            for (int i = 0; i < count; i++) {
+		                if (surfaces[currentSurface].vertCount >= MD3_MAX_VERTS) {
+		                    valid = 0;
+		                    break;
+		                }
+					
+		                VectorCopy(vertices[v[i]], surfaces[currentSurface].vertices[surfaces[currentSurface].vertCount]);
+					
+		                if (vt[i] >= 0) {
+		                    Vector2Copy(texCoords[vt[i]], surfaces[currentSurface].texCoords[surfaces[currentSurface].vertCount]);
+		                } else {
+		                    surfaces[currentSurface].texCoords[surfaces[currentSurface].vertCount][0] = 0;
+							surfaces[currentSurface].texCoords[surfaces[currentSurface].vertCount][1] = 0;
+		                }
+					
+		                if (vn[i] >= 0) {
+		                    VectorCopy(normals[vn[i]], surfaces[currentSurface].normals[surfaces[currentSurface].vertCount]);
+		                } else {
+		                    VectorSet(surfaces[currentSurface].normals[surfaces[currentSurface].vertCount], 0, 0, 0);
+		                }
+					
+		                indices[i] = surfaces[currentSurface].vertCount++;
+		            }
+				
+					if (valid && surfaces[currentSurface].triCount < MD3_MAX_TRIANGLES) {
+						surfaces[currentSurface].triangles[surfaces[currentSurface].triCount].indexes[0] = indices[0];
+						surfaces[currentSurface].triangles[surfaces[currentSurface].triCount].indexes[1] = indices[2];
+						surfaces[currentSurface].triangles[surfaces[currentSurface].triCount].indexes[2] = indices[1];
+						surfaces[currentSurface].triCount++;
+
+						if (count == 4 && surfaces[currentSurface].triCount < MD3_MAX_TRIANGLES) {
+							surfaces[currentSurface].triangles[surfaces[currentSurface].triCount].indexes[0] = indices[0];
+							surfaces[currentSurface].triangles[surfaces[currentSurface].triCount].indexes[1] = indices[3];
+							surfaces[currentSurface].triangles[surfaces[currentSurface].triCount].indexes[2] = indices[2];
+							surfaces[currentSurface].triCount++;
+						}
+					}
+		        }
+		    }
+		}
         while (*p && *p != '\n') p++;
         if (*p == '\n') p++;
     }
@@ -1288,7 +1309,6 @@ void SV_ConvertOBJ(void) {
     FreeSurfaceData(surfaces, numSurfaces);
     FS_FreeFile(objData);
 }
-
 
 /*
 ==================

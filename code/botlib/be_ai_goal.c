@@ -219,36 +219,6 @@ bot_goalstate_t *BotGoalStateFromHandle(int handle)
 // Returns:					-
 // Changes Globals:		-
 //===========================================================================
-void BotSaveGoalFuzzyLogic(int goalstate, const char *filename)
-{
-	//bot_goalstate_t *gs;
-
-	//gs = BotGoalStateFromHandle(goalstate);
-
-	// if ( !gs ) return;
-	//WriteWeightConfig(filename, gs->itemweightconfig);
-} //end of the function BotSaveGoalFuzzyLogic
-//===========================================================================
-//
-// Parameter:				-
-// Returns:					-
-// Changes Globals:		-
-//===========================================================================
-void BotMutateGoalFuzzyLogic(int goalstate, float range)
-{
-	bot_goalstate_t *gs;
-
-	gs = BotGoalStateFromHandle(goalstate);
-
-	if ( !gs ) return;
-	EvolveWeightConfig(gs->itemweightconfig);
-} //end of the function BotMutateGoalFuzzyLogic
-//===========================================================================
-//
-// Parameter:				-
-// Returns:					-
-// Changes Globals:		-
-//===========================================================================
 static itemconfig_t *LoadItemConfig( const char *filename )
 {
 	int max_iteminfo;
@@ -885,34 +855,6 @@ int BotGetLevelItemGoal(int index, const char *name, bot_goal_t *goal)
 	} //end for
 	return -1;
 } //end of the function BotGetLevelItemGoal
-//===========================================================================
-//
-// Parameter:			-
-// Returns:				-
-// Changes Globals:		-
-//===========================================================================
-int BotGetMapLocationGoal(const char *name, bot_goal_t *goal)
-{
-	maplocation_t *ml;
-	vec3_t mins = {-8, -8, -8}, maxs = {8, 8, 8};
-
-	for (ml = maplocations; ml; ml = ml->next)
-	{
-		if (!Q_stricmp(ml->name, name))
-		{
-			goal->areanum = ml->areanum;
-			VectorCopy(ml->origin, goal->origin);
-			goal->entitynum = 0;
-			VectorCopy(mins, goal->mins);
-			VectorCopy(maxs, goal->maxs);
-			goal->number = 0;
-			goal->flags = 0;
-			goal->iteminfo = 0;
-			return qtrue;
-		} //end if
-	} //end for
-	return qfalse;
-} //end of the function BotGetMapLocationGoal
 //===========================================================================
 //
 // Parameter:			-

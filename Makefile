@@ -1062,7 +1062,6 @@ Q3OBJ = \
   $(B)/client/be_aas_sample.o \
   $(B)/client/be_ai_char.o \
   $(B)/client/be_ai_chat.o \
-  $(B)/client/be_ai_gen.o \
   $(B)/client/be_ai_goal.o \
   $(B)/client/be_ai_move.o \
   $(B)/client/be_ai_weap.o \
@@ -1281,7 +1280,6 @@ Q3DOBJ = \
   $(B)/ded/be_aas_sample.o \
   $(B)/ded/be_ai_char.o \
   $(B)/ded/be_ai_chat.o \
-  $(B)/ded/be_ai_gen.o \
   $(B)/ded/be_ai_goal.o \
   $(B)/ded/be_ai_move.o \
   $(B)/ded/be_ai_weap.o \

@@ -29,7 +29,6 @@ void S_StartSound( vec3_t origin, int entnum, int entchannel, sfxHandle_t sfx );
 void S_StartLocalSound( sfxHandle_t sfx, int channelNum );
 
 void S_StartBackgroundTrack( const char *intro, const char *loop );
-void S_StopBackgroundTrack( void );
 
 // cinematics and voice-over-network will send raw samples
 // 1.0 volume will be direct output of source samples
@@ -47,7 +46,7 @@ void S_StopLoopingSound(int entityNum );
 
 // recompute the relative volumes for all running sounds
 // relative to the given entityNum / orientation
-void S_Respatialize( int entityNum, const vec3_t origin, vec3_t axis[3], int inwater );
+void S_Respatialize( int entityNum, const vec3_t origin, vec3_t axis[3] );
 
 // let the sound system know where an entity currently is
 void S_UpdateEntityPosition( int entityNum, const vec3_t origin );

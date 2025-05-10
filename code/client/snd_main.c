@@ -104,20 +104,6 @@ void S_StartBackgroundTrack( const char *intro, const char *loop )
 	}
 }
 
-
-/*
-=================
-S_StopBackgroundTrack
-=================
-*/
-void S_StopBackgroundTrack( void )
-{
-	if( si.StopBackgroundTrack ) {
-		si.StopBackgroundTrack( );
-	}
-}
-
-
 /*
 =================
 S_RawSamples
@@ -205,10 +191,10 @@ S_Respatialize
 =================
 */
 void S_Respatialize( int entityNum, const vec3_t origin,
-		vec3_t axis[3], int inwater )
+		vec3_t axis[3] )
 {
 	if( si.Respatialize ) {
-		si.Respatialize( entityNum, origin, axis, inwater );
+		si.Respatialize( entityNum, origin, axis );
 	}
 }
 

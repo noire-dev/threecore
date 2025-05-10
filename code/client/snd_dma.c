@@ -1018,7 +1018,7 @@ S_Respatialize
 Change the volumes of all the playing sounds for changes in their positions
 ============
 */
-void S_Base_Respatialize( int entityNum, const vec3_t head, vec3_t axis[3], int inwater ) {
+void S_Base_Respatialize( int entityNum, const vec3_t head, vec3_t axis[3] ) {
 	int			i;
 	channel_t	*ch;
 	vec3_t		origin;

@@ -88,8 +88,6 @@ void BotInitialChat(int chatstate, const char *type, int mcontext, const char *v
 int BotNumInitialChats(int chatstate, const char *type);
 //find and select a reply for the given message
 int BotReplyChat(int chatstate, const char *message, int mcontext, int vcontext, const char *var0, const char *var1, const char *var2, const char *var3, const char *var4, const char *var5, const char *var6, const char *var7);
-//returns the length of the currently selected chat message
-int BotChatLength(int chatstate);
 //enters the selected chat message
 void BotEnterChat(int chatstate, int clientto, int sendto);
 //get the chat message ready to be output

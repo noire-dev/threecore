@@ -715,44 +715,6 @@ float FuzzyWeightUndecided(int *inventory, weightconfig_t *wc, int weightnum)
 // Returns:					-
 // Changes Globals:		-
 //===========================================================================
-static void EvolveFuzzySeperator_r(fuzzyseperator_t *fs)
-{
-	if (fs->child)
-	{
-		EvolveFuzzySeperator_r(fs->child);
-	} //end if
-	else if (fs->type == WT_BALANCE)
-	{
-		//every once in a while an evolution leap occurs, mutation
-		if (random() < 0.01) fs->weight += crandom() * (fs->maxweight - fs->minweight);
-		else fs->weight += crandom() * (fs->maxweight - fs->minweight) * 0.5;
-		//modify bounds if necessary because of mutation
-		if (fs->weight < fs->minweight) fs->minweight = fs->weight;
-		else if (fs->weight > fs->maxweight) fs->maxweight = fs->weight;
-	} //end else if
-	if (fs->next) EvolveFuzzySeperator_r(fs->next);
-} //end of the function EvolveFuzzySeperator_r
-//===========================================================================
-//
-// Parameter:				-
-// Returns:					-
-// Changes Globals:		-
-//===========================================================================
-void EvolveWeightConfig(weightconfig_t *config)
-{
-	int i;
-
-	for (i = 0; i < config->numweights; i++)
-	{
-		EvolveFuzzySeperator_r(config->weights[i].firstseperator);
-	} //end for
-} //end of the function EvolveWeightConfig
-//===========================================================================
-//
-// Parameter:				-
-// Returns:					-
-// Changes Globals:		-
-//===========================================================================
 static void ScaleFuzzySeperator_r(fuzzyseperator_t *fs, float scale)
 {
 	if (fs->child)

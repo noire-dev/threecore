@@ -500,22 +500,6 @@ static void emit_op_reg_base_offset( int prefix, int opcode, uint32_t reg, uint3
 	emit_modrm_base_offset( reg, base, offset );
 }
 
-static void emit_op2_reg_base_offset( int prefix, int opcode, int opcode2, uint32_t reg, uint32_t base, int32_t offset )
-{
-#if idx64
-	emit_rex2( base, reg );
-#endif
-	if ( prefix != 0 )
-		Emit1( prefix );
-
-	Emit1( opcode );
-
-	Emit1( opcode2 );
-
-	emit_modrm_base_offset( reg, base, offset );
-}
-
-
 static void emit_op_reg_base_index( int prefix, int opcode, uint32_t reg, uint32_t base, uint32_t index, int scale, int32_t disp )
 {
 	if ( ( index & R_MASK ) == 4 ) {
@@ -1245,20 +1229,6 @@ static void emit_sqrt( uint32_t xmmreg, uint32_t base, int32_t offset )
 {
 	Emit1( 0xF3 );
 	emit_op_reg_base_offset( 0x0F, 0x51, xmmreg, base, offset );
-}
-
-static void emit_floor( uint32_t xmmreg, uint32_t base, int32_t offset )
-{
-	Emit1( 0x66 );
-	emit_op2_reg_base_offset( 0x0F, 0x3A, 0x0A, xmmreg, base, offset );
-	Emit1( 0x01 ); // exceptions not masked
-}
-
-static void emit_ceil( uint32_t xmmreg, uint32_t base, int32_t offset )
-{
-	Emit1( 0x66 );
-	emit_op2_reg_base_offset( 0x0F, 0x3A, 0x0A, xmmreg, base, offset );
-	Emit1( 0x02 ); // exceptions not masked
 }
 
 // legacy x87 functions
@@ -3419,36 +3389,6 @@ static void EmitDATWFunc( vm_t *vm )
 
 #ifdef CONST_OPTIMIZE
 
-static qboolean IsFloorTrap( const vm_t *vm, const int trap )
-{
-	if ( trap == ~CG_FLOOR && vm->index == VM_CGAME )
-		return qtrue;
-
-	if ( trap == ~UI_FLOOR && vm->index == VM_UI )
-		return qtrue;
-
-	if ( trap == ~G_FLOOR && vm->index == VM_GAME )
-		return qtrue;
-
-	return qfalse;
-}
-
-
-static qboolean IsCeilTrap( const vm_t *vm, const int trap )
-{
-	if ( trap == ~CG_CEIL && vm->index == VM_CGAME )
-		return qtrue;
-
-	if ( trap == ~UI_CEIL && vm->index == VM_UI )
-		return qtrue;
-
-	if ( trap == ~G_CEIL && vm->index == VM_GAME )
-		return qtrue;
-
-	return qfalse;
-}
-
-
 static qboolean NextLoad( const var_addr_t *v, const instruction_t *i, int op )
 {
 	if ( i->jused ) {
@@ -3644,22 +3584,6 @@ static qboolean ConstOptimize( vm_t *vm, instruction_t *ci, instruction_t *ni )
 				if ( ci->value == ~TRAP_SQRT ) {
 					int sx = alloc_sx( R_XMM0 );
 					emit_sqrt( sx, R_PROCBASE, 8 );		// sqrtss xmm0, dword ptr [ebp + 8]
-					store_sx_opstack( sx );				// *opstack = xmm0
-					ip += 1; // OP_CALL
-					return qtrue;
-				}
-
-				if ( IsFloorTrap( vm, ci->value ) && ( CPU_Flags & CPU_SSE41 ) ) {
-					int sx = alloc_sx( R_XMM0 );
-					emit_floor( sx, R_PROCBASE, 8 );	// roundss xmm0, dword ptr [ebp + 8], 1
-					store_sx_opstack( sx );				// *opstack = xmm0
-					ip += 1; // OP_CALL
-					return qtrue;
-				}
-
-				if ( IsCeilTrap( vm, ci->value ) && ( CPU_Flags & CPU_SSE41 ) ) {
-					int sx = alloc_sx( R_XMM0 );
-					emit_ceil( sx, R_PROCBASE, 8 );		// roundss xmm0, dword ptr [ebp + 8], 2
 					store_sx_opstack( sx );				// *opstack = xmm0
 					ip += 1; // OP_CALL
 					return qtrue;

@@ -137,7 +137,7 @@ typedef struct
 	void (*AddLoopingSound)( int entityNum, const vec3_t origin, const vec3_t velocity, sfxHandle_t sfx );
 	void (*AddRealLoopingSound)( int entityNum, const vec3_t origin, const vec3_t velocity, sfxHandle_t sfx );
 	void (*StopLoopingSound)(int entityNum );
-	void (*Respatialize)( int entityNum, const vec3_t origin, vec3_t axis[3], int inwater );
+	void (*Respatialize)( int entityNum, const vec3_t origin, vec3_t axis[3] );
 	void (*UpdateEntityPosition)( int entityNum, const vec3_t origin );
 	void (*Update)( int msec );
 	void (*DisableSounds)( void );

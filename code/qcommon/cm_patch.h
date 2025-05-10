@@ -20,46 +20,6 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 ===========================================================================
 */
 
-//#define	CULL_BBOX
-
-/*
-
-This file does not reference any globals, and has these entry points:
-
-void CM_ClearLevelPatches( void );
-struct patchCollide_s	*CM_GeneratePatchCollide( int width, int height, const vec3_t *points );
-void CM_TraceThroughPatchCollide( traceWork_t *tw, const struct patchCollide_s *pc );
-qboolean CM_PositionTestInPatchCollide( traceWork_t *tw, const struct patchCollide_s *pc );
-void CM_DrawDebugSurface( void (*drawPoly)(int color, int numPoints, flaot *points) );
-
-
-Issues for collision against curved surfaces:
-
-Surface edges need to be handled differently than surface planes
-
-Plane expansion causes raw surfaces to expand past expanded bounding box
-
-Position test of a volume against a surface is tricky.
-
-Position test of a point against a surface is not well defined, because the surface has no volume.
-
-
-Tracing leading edge points instead of volumes?
-Position test by tracing corner to corner? (8*7 traces -- ouch)
-
-coplanar edges
-triangulated patches
-degenerate patches
-
-  endcaps
-  degenerate
-
-WARNING: this may misbehave with meshes that have rows or columns that only
-degenerate a few triangles.  Completely degenerate rows and columns are handled
-properly.
-*/
-
-
 #define	MAX_FACETS			4096
 #define	MAX_PATCH_PLANES	(65536+128)
 

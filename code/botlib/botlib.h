@@ -280,21 +280,11 @@ typedef struct ea_export_s
 	void	(*EA_Attack)(int client);
 	void	(*EA_Use)(int client);
 	void	(*EA_Respawn)(int client);
-	void	(*EA_MoveUp)(int client);
-	void	(*EA_MoveDown)(int client);
-	void	(*EA_MoveForward)(int client);
-	void	(*EA_MoveBack)(int client);
-	void	(*EA_MoveLeft)(int client);
-	void	(*EA_MoveRight)(int client);
 	void	(*EA_Crouch)(int client);
 
 	void	(*EA_SelectWeapon)(int client, int weapon);
-	void	(*EA_Jump)(int client);
-	void	(*EA_DelayedJump)(int client);
-	void	(*EA_Move)(int client, vec3_t dir, float speed);
 	void	(*EA_View)(int client, vec3_t viewangles);
 	//send regular input to the server
-	void	(*EA_EndRegular)(int client, float thinktime);
 	void	(*EA_GetInput)(int client, float thinktime, bot_input_t *input);
 	void	(*EA_ResetInput)(int client);
 } ea_export_t;
@@ -323,7 +313,6 @@ typedef struct ai_export_s
 	void	(*BotInitialChat)(int chatstate, const char *type, int mcontext, const char *var0, const char *var1, const char *var2, const char *var3, const char *var4, const char *var5, const char *var6, const char *var7);
 	int		(*BotNumInitialChats)(int chatstate, const char *type);
 	int		(*BotReplyChat)(int chatstate, const char *message, int mcontext, int vcontext, const char *var0, const char *var1, const char *var2, const char *var3, const char *var4, const char *var5, const char *var6, const char *var7);
-	int		(*BotChatLength)(int chatstate);
 	void	(*BotEnterChat)(int chatstate, int client, int sendto);
 	void	(*BotGetChatMessage)(int chatstate, char *buf, int size);
 	int		(*StringContains)(const char *str1, const char *str2, int casesensitive);
@@ -355,15 +344,12 @@ typedef struct ai_export_s
 	int		(*BotItemGoalInVisButNotVisible)(int viewer, vec3_t eye, vec3_t viewangles, struct bot_goal_s *goal);
 	int		(*BotGetLevelItemGoal)(int index, const char *classname, struct bot_goal_s *goal);
 	int		(*BotGetNextCampSpotGoal)(int num, struct bot_goal_s *goal);
-	int		(*BotGetMapLocationGoal)(const char *name, struct bot_goal_s *goal);
 	float	(*BotAvoidGoalTime)(int goalstate, int number);
 	void	(*BotSetAvoidGoalTime)(int goalstate, int number, float avoidtime);
 	void	(*BotInitLevelItems)(void);
 	void	(*BotUpdateEntityItems)(void);
 	int		(*BotLoadItemWeights)(int goalstate, const char *filename);
 	void	(*BotFreeItemWeights)(int goalstate);
-	void	(*BotSaveGoalFuzzyLogic)(int goalstate, const char *filename);
-	void	(*BotMutateGoalFuzzyLogic)(int goalstate, float range);
 	int		(*BotAllocGoalState)(int client);
 	void	(*BotFreeGoalState)(int handle);
 	//-----------------------------------
@@ -374,7 +360,6 @@ typedef struct ai_export_s
 	int		(*BotMoveInDirection)(int movestate, vec3_t dir, float speed, int type);
 	void	(*BotResetAvoidReach)(int movestate);
 	void	(*BotResetLastAvoidReach)(int movestate);
-	int		(*BotReachabilityArea)(vec3_t origin, int testground);
 	int		(*BotMovementViewTarget)(int movestate, struct bot_goal_s *goal, int travelflags, float lookahead, vec3_t target);
 	int		(*BotPredictVisiblePosition)(vec3_t origin, int areanum, struct bot_goal_s *goal, int travelflags, vec3_t target);
 	int		(*BotAllocMoveState)(void);
@@ -384,16 +369,10 @@ typedef struct ai_export_s
 	//-----------------------------------
 	// be_ai_weap.h
 	//-----------------------------------
-	int		(*BotChooseBestFightWeapon)(int weaponstate, int *inventory);
-	void	(*BotGetWeaponInfo)(int weaponstate, int weapon, struct weaponinfo_s *weaponinfo);
 	int		(*BotLoadWeaponWeights)(int weaponstate, const char *filename);
 	int		(*BotAllocWeaponState)(void);
 	void	(*BotFreeWeaponState)(int weaponstate);
 	void	(*BotResetWeaponState)(int weaponstate);
-	//-----------------------------------
-	// be_ai_gen.h
-	//-----------------------------------
-	int		(*GeneticParentsAndChildSelection)(int numranks, float *ranks, int *parent1, int *parent2, int *child);
 } ai_export_t;
 
 //bot AI library imported functions
@@ -411,8 +390,6 @@ typedef struct botlib_export_s
 	int (*BotLibShutdown)(void);
 	//sets a library variable returns BLERR_
 	int (*BotLibVarSet)( const char *var_name, const char *value );
-	//gets a library variable returns BLERR_
-	int (*BotLibVarGet)( const char *var_name, char *value, int size );
 
 	//sets a C-like define returns BLERR_
 	int (*PC_AddGlobalDefine)(const char *string);
@@ -427,8 +404,6 @@ typedef struct botlib_export_s
 	int (*BotLibLoadMap)(const char *mapname);
 	//entity updates
 	int (*BotLibUpdateEntity)(int ent, bot_entitystate_t *state);
-	//just for testing
-	int (*Test)(int parm0, char *parm1, vec3_t parm2, vec3_t parm3);
 } botlib_export_t;
 
 //linking of bot library

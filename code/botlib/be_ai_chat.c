@@ -2914,20 +2914,6 @@ int BotReplyChat(int chatstate, const char *message, int mcontext, int vcontext,
 } //end of the function BotReplyChat
 //===========================================================================
 //
-// Parameter:				-
-// Returns:					-
-// Changes Globals:		-
-//===========================================================================
-int BotChatLength(int chatstate)
-{
-	bot_chatstate_t *cs;
-
-	cs = BotChatStateFromHandle(chatstate);
-	if (!cs) return 0;
-	return strlen(cs->chatmessage);
-} //end of the function BotChatLength
-//===========================================================================
-//
 // Parameter:			-
 // Returns:				-
 // Changes Globals:		-

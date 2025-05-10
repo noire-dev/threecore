@@ -829,7 +829,6 @@ void	FS_FilenameCompletion( const char *dir, const char *ext, qboolean stripExt,
 int FS_VM_OpenFile( const char *qpath, fileHandle_t *f, fsMode_t mode, handleOwner_t owner );
 int FS_VM_ReadFile( void *buffer, int len, fileHandle_t f, handleOwner_t owner );
 void FS_VM_WriteFile( void *buffer, int len, fileHandle_t f, handleOwner_t owner );
-int FS_VM_SeekFile( fileHandle_t f, long offset, fsOrigin_t origin, handleOwner_t owner );
 void FS_VM_CloseFile( fileHandle_t f, handleOwner_t owner );
 void FS_VM_CloseFiles( handleOwner_t owner );
 
@@ -1259,8 +1258,6 @@ qboolean Sys_SetAffinityMask( const uint64_t mask );
 void	Sys_Cmd( const char *command );
 int		Sys_Milliseconds( void );
 int64_t	Sys_Microseconds( void );
-
-void	Sys_SnapVector( float *vector );
 
 qboolean Sys_RandomBytes( byte *string, int len );
 

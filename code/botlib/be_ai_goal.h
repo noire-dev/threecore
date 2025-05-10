@@ -88,8 +88,6 @@ int BotItemGoalInVisButNotVisible(int viewer, vec3_t eye, vec3_t viewangles, bot
 int BotGetLevelItemGoal(int index, const char *classname, bot_goal_t *goal);
 //get the next camp spot in the map
 int BotGetNextCampSpotGoal(int num, bot_goal_t *goal);
-//get the map location with the given name
-int BotGetMapLocationGoal(const char *name, bot_goal_t *goal);
 //returns the avoid goal time
 float BotAvoidGoalTime(int goalstate, int number);
 //set the avoid goal time
@@ -98,10 +96,6 @@ void BotSetAvoidGoalTime(int goalstate, int number, float avoidtime);
 void BotInitLevelItems(void);
 //regularly update dynamic entity items (dropped weapons, flags etc.)
 void BotUpdateEntityItems(void);
-//save the goal fuzzy logic to disk
-void BotSaveGoalFuzzyLogic(int goalstate, const char *filename);
-//mutate the goal fuzzy logic
-void BotMutateGoalFuzzyLogic(int goalstate, float range);
 //loads item weights for the bot
 int BotLoadItemWeights(int goalstate, const char *filename);
 //frees the item weights of the bot

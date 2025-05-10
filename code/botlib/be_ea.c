@@ -413,15 +413,6 @@ void EA_View(int client, vec3_t viewangles)
 // Returns:				-
 // Changes Globals:		-
 //===========================================================================
-void EA_EndRegular(int client, float thinktime)
-{
-} //end of the function EA_EndRegular
-//===========================================================================
-//
-// Parameter:			-
-// Returns:				-
-// Changes Globals:		-
-//===========================================================================
 void EA_GetInput(int client, float thinktime, bot_input_t *input)
 {
 	bot_input_t *bi;

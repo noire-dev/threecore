@@ -88,60 +88,25 @@ typedef enum {
 	UI_LAN_GETSERVERADDRESSSTRING,
 	UI_R_REMAP_SHADER,
 	UI_SYSTEM,
-	UI_R_ADDLINEARLIGHTTOSCENE,
-
-	UI_FLOOR = 107,
-	UI_CEIL,
+	UI_R_ADDLINEARLIGHTTOSCENE
 } uiImport_t;
 
 typedef enum {
 	UIMENU_NONE,
 	UIMENU_MAIN,
-	UIMENU_INGAME,
-	UIMENU_TEAM,
-	UIMENU_POSTGAME
+	UIMENU_INGAME
 } uiMenuCommand_t;
-
-#define SORT_HOST			0
-#define SORT_MAP			1
-#define SORT_CLIENTS		2
-#define SORT_GAME			3
-#define SORT_PING			4
 
 typedef enum {
 	UI_INIT = 0,
-//	void	UI_Init( void );
-
 	UI_SHUTDOWN,
-//	void	UI_Shutdown( void );
-
 	UI_KEY_EVENT,
-//	void	UI_KeyEvent( int key, int down );
-
 	UI_MOUSE_EVENT,
-//	void	UI_MouseEvent( int dx, int dy );
-
 	UI_REFRESH,
-//	void	UI_Refresh( int time );
-
 	UI_IS_FULLSCREEN,
-//	qboolean UI_IsFullscreen( void );
-
 	UI_SET_ACTIVE_MENU,
-//	void	UI_SetActiveMenu( uiMenuCommand_t menu );
-
 	UI_CONSOLE_COMMAND,
-//	qboolean UI_ConsoleCommand( int realTime );
-
-	UI_DRAW_CONNECT_SCREEN,
-//	void	UI_DrawConnectScreen( qboolean overlay );
-
-	UI_HASUNIQUECDKEY,
-// if !overlay, the background will be drawn, otherwise it will be
-// overlayed over whatever the cgame has drawn.
-// a GetClientState syscall will be made to get the current strings
-	
-	UI_EXPORT_LAST,
+	UI_DRAW_CONNECT_SCREEN
 } uiExport_t;
 
 #endif

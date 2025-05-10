@@ -4948,21 +4948,6 @@ void FS_VM_WriteFile( void *buffer, int len, fileHandle_t f, handleOwner_t owner
 	FS_Write( buffer, len, f );
 }
 
-
-int FS_VM_SeekFile( fileHandle_t f, long offset, fsOrigin_t origin, handleOwner_t owner ) {
-	int r;
-
-	if ( f <= 0 || f >= MAX_FILE_HANDLES )
-		return -1;
-
-	if ( fsh[f].owner != owner || !fsh[f].handleFiles.file.v )
-		return -1;
-
-	r = FS_Seek( f, offset, origin );
-	return r;
-}
-
-
 void FS_VM_CloseFile( fileHandle_t f, handleOwner_t owner ) {
 
 	if ( f <= 0 || f >= MAX_FILE_HANDLES )

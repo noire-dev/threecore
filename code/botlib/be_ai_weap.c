@@ -134,21 +134,6 @@ static weaponconfig_t *weaponconfig;
 // Returns:					-
 // Changes Globals:		-
 //========================================================================
-static int BotValidWeaponNumber(int weaponnum)
-{
-	if (weaponnum <= 0 || weaponnum > weaponconfig->numweapons)
-	{
-		botimport.Print(PRT_ERROR, "weapon number out of range\n");
-		return qfalse;
-	} //end if
-	return qtrue;
-} //end of the function BotValidWeaponNumber
-//========================================================================
-//
-// Parameter:				-
-// Returns:					-
-// Changes Globals:		-
-//========================================================================
 static bot_weaponstate_t *BotWeaponStateFromHandle(int handle)
 {
 	if (handle <= 0 || handle > MAX_CLIENTS)
@@ -379,59 +364,6 @@ int BotLoadWeaponWeights(int weaponstate, const char *filename)
 	ws->weaponweightindex = WeaponWeightIndex(ws->weaponweightconfig, weaponconfig);
 	return BLERR_NOERROR;
 } //end of the function BotLoadWeaponWeights
-//===========================================================================
-//
-// Parameter:				-
-// Returns:					-
-// Changes Globals:		-
-//===========================================================================
-void BotGetWeaponInfo(int weaponstate, int weapon, weaponinfo_t *weaponinfo)
-{
-	bot_weaponstate_t *ws;
-
-	if (!BotValidWeaponNumber(weapon)) return;
-	ws = BotWeaponStateFromHandle(weaponstate);
-	if (!ws) return;
-	if (!weaponconfig) return;
-	Com_Memcpy(weaponinfo, &weaponconfig->weaponinfo[weapon], sizeof(weaponinfo_t));
-} //end of the function BotGetWeaponInfo
-//===========================================================================
-//
-// Parameter:				-
-// Returns:					-
-// Changes Globals:		-
-//===========================================================================
-int BotChooseBestFightWeapon(int weaponstate, int *inventory)
-{
-	int i, index, bestweapon;
-	float weight, bestweight;
-	weaponconfig_t *wc;
-	bot_weaponstate_t *ws;
-
-	ws = BotWeaponStateFromHandle(weaponstate);
-	if (!ws) return 0;
-	wc = weaponconfig;
-	if (!weaponconfig) return 0;
-
-	//if the bot has no weapon weight configuration
-	if (!ws->weaponweightconfig) return 0;
-
-	bestweight = 0;
-	bestweapon = 0;
-	for (i = 0; i < wc->numweapons; i++)
-	{
-		if (!wc->weaponinfo[i].valid) continue;
-		index = ws->weaponweightindex[i];
-		if (index < 0) continue;
-		weight = FuzzyWeight(inventory, ws->weaponweightconfig, index);
-		if (weight > bestweight)
-		{
-			bestweight = weight;
-			bestweapon = i;
-		} //end if
-	} //end for
-	return bestweapon;
-} //end of the function BotChooseBestFightWeapon
 //===========================================================================
 //
 // Parameter:				-

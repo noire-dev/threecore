@@ -68,9 +68,7 @@ typedef struct {
 	void	(*ClearScene)( void );
 	void	(*AddRefEntityToScene)( const refEntity_t *re, qboolean intShaderTime );
 	void	(*AddPolyToScene)( qhandle_t hShader , int numVerts, const polyVert_t *verts, int num );
-	int		(*LightForPoint)( vec3_t point, vec3_t ambientLight, vec3_t directedLight, vec3_t lightDir );
 	void	(*AddLightToScene)( const vec3_t org, float intensity, float r, float g, float b );
-	void	(*AddAdditiveLightToScene)( const vec3_t org, float intensity, float r, float g, float b );
 	void	(*AddLinearLightToScene)( const vec3_t start, const vec3_t end, float intensity, float r, float g, float b );
 	void	(*RenderScene)( const refdef_t *fd );
 
@@ -174,9 +172,6 @@ typedef struct {
 	void	(*Cmd_ExecuteText)( cbufExec_t exec_when, const char *text );
 
 	byte	*(*CM_ClusterPVS)(int cluster);
-
-	// visualization for debugging collision detection
-	void	(*CM_DrawDebugSurface)( void (*drawPoly)(int color, int numPoints, float *points) );
 
 	// a qfalse return means the file does not exist
 	// NULL can be passed for buf to just determine existence

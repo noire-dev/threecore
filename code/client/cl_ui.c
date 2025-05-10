@@ -245,6 +245,7 @@ The ui module is making a system call
 */
 static intptr_t CL_UISystemCalls( intptr_t *args ) {
 	switch( args[0] ) {
+		
 	case UI_ERROR:
 		Com_Error( ERR_DROP, "%s", (const char*)VMA(1) );
 		return 0;
@@ -504,15 +505,8 @@ static intptr_t CL_UISystemCalls( intptr_t *args ) {
 	case TRAP_SQRT:
 		return FloatAsInt( sqrt( VMF(1) ) );
 
-	case UI_FLOOR:
-		return FloatAsInt( floor( VMF(1) ) );
-
-	case UI_CEIL:
-		return FloatAsInt( ceil( VMF(1) ) );
-
 	default:
 		Com_Error( ERR_DROP, "Bad UI system trap: %ld", (long int) args[0] );
-
 	}
 
 	return 0;
