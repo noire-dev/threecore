@@ -2738,8 +2738,6 @@ qboolean VM_Compile( vm_t *vm, vmHeader_t *header )
 		vm->instructionPointers = Hunk_Alloc( header->instructionCount * sizeof(vm->instructionPointers[0]), h_high );
 	}
 
-	VM_ReplaceInstructions( vm, inst );
-
 	litBase = NULL;
 #ifdef USE_LITERAL_POOL
 	VM_InitLiterals();

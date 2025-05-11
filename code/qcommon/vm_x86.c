@@ -3840,8 +3840,6 @@ qboolean VM_Compile( vm_t *vm, vmHeader_t *header ) {
 		return qfalse;
 	}
 
-	VM_ReplaceInstructions( vm, inst );
-
 	VM_FindMOps( inst, vm->instructionCount );
 
 #if JUMP_OPTIMIZE

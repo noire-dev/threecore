@@ -2469,8 +2469,6 @@ qboolean VM_Compile( vm_t *vm, vmHeader_t *header )
 		vm->instructionPointers = Hunk_Alloc( header->instructionCount * sizeof(vm->instructionPointers[0]), h_high );
 	}
 
-	VM_ReplaceInstructions( vm, inst );
-
 	memset( savedOffset, 0, sizeof( savedOffset ) );
 
 	code = NULL;

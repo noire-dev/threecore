@@ -1743,26 +1743,6 @@ static void R_LoadNodesAndLeafs( const lump_t *nodeLump, const lump_t *leafLump 
 
 //=============================================================================
 
-
-/*
-=================
-R_ReplaceShaders
-
-replaces some buggy map shaders
-=================
-*/
-static void R_ReplaceMapShaders( dshader_t *out, int count ) 
-{
-	if ( Q_stricmp( s_worldData.baseName, "mapel4b" ) == 0 && count == 86 ) {
-		if ( crc32_buffer( (const byte*)out, count*sizeof(*out) ) == 0x1593623C ) {
-			if ( strcmp( out[72].shader, "textures/mapel4/crate1_top3" ) == 0 ) {
-				strcpy( out[72].shader, "textures/mapel4/crate1_top2" );
-			}
-		}
-	}
-}
-
-
 /*
 =================
 R_LoadShaders
@@ -1782,8 +1762,6 @@ static void R_LoadShaders( const lump_t *l ) {
 	s_worldData.numShaders = count;
 
 	Com_Memcpy( out, in, count*sizeof(*out) );
-
-	R_ReplaceMapShaders( out, count );
 
 	for ( i=0 ; i<count ; i++ ) {
 		out[i].surfaceFlags = LittleLong( out[i].surfaceFlags );

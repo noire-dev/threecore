@@ -239,8 +239,6 @@ const char *VM_CheckInstructions( instruction_t *buf, int instructionCount,
 								 int numJumpTableTargets,
 								 int dataLength );
 
-void VM_ReplaceInstructions( vm_t *vm, instruction_t *buf );
-
 #define JUMP	(1<<0)
 #define FPU		(1<<1)
 

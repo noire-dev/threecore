@@ -122,8 +122,6 @@ qboolean VM_PrepareInterpreter2( vm_t *vm, vmHeader_t *header )
 		return qfalse;
 	}
 
-	VM_ReplaceInstructions( vm, buf );
-
 	VM_FindMOps( buf, vm->instructionCount );
 
 	vm->codeBase.ptr = (void*)buf;
