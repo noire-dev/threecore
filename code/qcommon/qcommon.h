@@ -366,7 +366,7 @@ typedef enum {
 } vmInterpret_t;
 
 typedef enum {
-	TRAP_MEMSET = 100,
+	TRAP_MEMSET = 1000,
 	TRAP_MEMCPY,
 	TRAP_STRNCPY,
 	TRAP_SIN,
@@ -1170,6 +1170,8 @@ void S_ClearSoundBuffer( void );
 
 void CL_SystemInfoChanged( qboolean onlyGame );
 qboolean CL_GameSwitch( void );
+
+void CL_StartConvertOBJ(const char *name);
 
 // AVI files have the start of pixel lines 4 byte-aligned
 #define AVI_LINE_PADDING 4

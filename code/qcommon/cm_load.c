@@ -672,7 +672,6 @@ void CM_LoadMap( const char *name, qboolean clientload, int *checksum ) {
 #endif
 #ifdef USE_BSP_COLMODELS
 	Cmd_AddCommand("cmlist", CM_MapList_f);
-	//Cmd_SetDescription("cmlist", "List the currently loaded clip maps\nUsage: maplist");
 #endif
 
 #ifdef USE_BSP_COLMODELS

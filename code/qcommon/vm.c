@@ -666,18 +666,18 @@ static char *VM_ValidateHeader( vmHeader_t *header, int fileSize )
 	}
 
 	// bad magic
-	if ( LittleLong( header->vmMagic ) != VM_MAGIC && LittleLong( header->vmMagic ) != VM_MAGIC_VER2 ) {
+	if ( LittleLong( header->vmMagic ) != VM_MAGIC_VER3 ) {
 		sprintf( errMsg, "bad file magic %08x", LittleLong( header->vmMagic ) );
 		return errMsg;
 	}
 
 	// truncated
-	if ( fileSize < sizeof( vmHeader_t ) && LittleLong( header->vmMagic ) != VM_MAGIC_VER2 ) {
+	if ( fileSize < sizeof( vmHeader_t ) && LittleLong( header->vmMagic ) != VM_MAGIC_VER3 ) {
 		sprintf( errMsg, "truncated image header (%i bytes long)", fileSize );
 		return errMsg;
 	}
 
-	if ( LittleLong( header->vmMagic ) == VM_MAGIC_VER2 )
+	if ( LittleLong( header->vmMagic ) == VM_MAGIC_VER3 )
 		n = sizeof( vmHeader_t );
 	else
 		n = ( sizeof( vmHeader_t ) - sizeof( int32_t ) );
@@ -709,7 +709,7 @@ static char *VM_ValidateHeader( vmHeader_t *header, int fileSize )
 		return errMsg;
 	}
 
-	if ( header->vmMagic == VM_MAGIC_VER2 ) {
+	if ( header->vmMagic == VM_MAGIC_VER3 ) {
 		// bad lit/jtrg length
 		if ( header->dataOffset + header->dataLength + header->litLength + header->jtrgLength != fileSize ) {
 			sprintf( errMsg, "bad lit/jtrg segment length" );
@@ -786,8 +786,8 @@ static vmHeader_t *VM_LoadQVM( vm_t *vm, qboolean alloc ) {
 	vm->crc32sum = crc32sum;
 	tryjts = qfalse;
 
-	if( header->vmMagic == VM_MAGIC_VER2 ) {
-		Com_Printf( "...which has vmMagic VM_MAGIC_VER2\n" );
+	if( header->vmMagic == VM_MAGIC_VER3 ) {
+		Com_Printf( "...which has vmMagic VM_MAGIC_VER3\n" );
 	} else {
 		tryjts = qtrue;
 	}
@@ -853,7 +853,7 @@ static vmHeader_t *VM_LoadQVM( vm_t *vm, qboolean alloc ) {
 	// byte swap the longs
 	VM_SwapLongs( vm->dataBase, header->dataLength );
 
-	if( header->vmMagic == VM_MAGIC_VER2 ) {
+	if( header->vmMagic == VM_MAGIC_VER3 ) {
 		int previousNumJumpTableTargets = vm->numJumpTableTargets;
 
 		header->jtrgLength &= ~0x03;
@@ -1545,9 +1545,8 @@ const char *VM_CheckInstructions( instruction_t *buf,
 			}
 		}
 		if ( i != numJumpTableTargets ) {
-			// we may trap this on buggy VM_MAGIC_VER2 images
+			// we may trap this on buggy VM_MAGIC_VER3 images
 			// but we can safely optimize code even without JTRGSEG
-			// so just switch to VM_MAGIC path here
 			goto __noJTS;
 		}
 		// second pass - apply

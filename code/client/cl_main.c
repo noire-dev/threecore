@@ -3391,6 +3391,441 @@ static void CL_GenerateQKey(void)
 }
 
 /*
+==================
+CL_ConvertOBJ
+==================
+*/
+#define OBJ_TO_MD3_SCALE 3205 //for BlockBench sizes
+
+// Rotation for BlockBench orient
+#define MODEL_ROTATE_X 90
+#define MODEL_ROTATE_Y 0
+#define MODEL_ROTATE_Z 90
+
+typedef struct {
+    char newmtl[MAX_QPATH];
+    char map_Kd[MAX_QPATH*2];
+} md3Material_t;
+
+typedef struct {
+    char materialName[MAX_QPATH];
+    vec3_t *vertices;
+    vec2_t *texCoords;
+    vec3_t *normals;
+    md3Triangle_t *triangles;
+    int vertCount;
+    int texCoordCount;
+    int normalCount;
+    int triCount;
+} md3SurfaceData_t;
+
+void RotateVertex(vec3_t vertex) {
+    float x = vertex[0], y = vertex[1], z = vertex[2];
+    
+    if (MODEL_ROTATE_X != 0) {
+        float rad = DEG2RAD(MODEL_ROTATE_X);
+        float cosX = cos(rad);
+        float sinX = sin(rad);
+        float newY = y * cosX - z * sinX;
+        float newZ = y * sinX + z * cosX;
+        y = newY;
+        z = newZ;
+    }
+    
+    if (MODEL_ROTATE_Y != 0) {
+        float rad = DEG2RAD(MODEL_ROTATE_Y);
+        float cosY = cos(rad);
+        float sinY = sin(rad);
+        float newX = x * cosY + z * sinY;
+        float newZ = -x * sinY + z * cosY;
+        x = newX;
+        z = newZ;
+    }
+    
+    if (MODEL_ROTATE_Z != 0) {
+        float rad = DEG2RAD(MODEL_ROTATE_Z);
+        float cosZ = cos(rad);
+        float sinZ = sin(rad);
+        float newX = x * cosZ - y * sinZ;
+        float newY = x * sinZ + y * cosZ;
+        x = newX;
+        y = newY;
+    }
+    
+    vertex[0] = x;
+    vertex[1] = y;
+    vertex[2] = z;
+}
+
+void RotateNormal(vec3_t normal) {
+    RotateVertex(normal);
+    VectorNormalize(normal);
+}
+
+short MD3_EncodeNormal(float x, float y, float z) {
+    int16_t lat, lng;
+
+    if (x == 0.0f && y == 0.0f) {
+        if (z > 0.0f) {
+            lat = 0;
+            lng = 0;
+        } else {
+            lat = 128;
+            lng = 0;
+        }
+    } else {
+        lng = (int16_t)( acos(z) * 255 / (2 * M_PI) );
+        lat = (int16_t)( atan2(y, x) * 255 / (2 * M_PI) );
+    }
+
+    return (short)((lat & 255) * 256 | (lng & 255));
+}
+
+void LoadMTR(const char *name, md3Shader_t *shaders, int *numShaders, md3Material_t *materials, int *numMaterials) {
+    char mtlFilename[MAX_QPATH];
+	char folderFilename[MAX_QPATH];
+    Q_strncpyz(mtlFilename, name, sizeof(mtlFilename));
+	Q_strncpyz(folderFilename, name, sizeof(folderFilename));
+    Q_strcat(mtlFilename, sizeof(mtlFilename), ".mtl");
+    
+    if (FS_ReadFile(mtlFilename, NULL) <= 0) return;
+    
+    char *mtlData = NULL;
+    int mtlSize = FS_ReadFile(mtlFilename, (void **)&mtlData);
+    if (!mtlData || mtlSize <= 0) return;
+
+    char *p = mtlData;
+    int currentMaterial = -1;
+    
+    while (*p && *numMaterials < MD3_MAX_SHADERS) {
+        if (strncmp(p, "newmtl ", 7) == 0) {
+            currentMaterial = (*numMaterials)++;
+            sscanf(p+7, "%s", materials[currentMaterial].newmtl);
+            materials[currentMaterial].map_Kd[0] = '\0';
+        }
+        else if (strncmp(p, "map_Kd ", 7) == 0 && currentMaterial >= 0) {
+			char texturePath[MAX_QPATH];
+			sscanf(p + 7, "%s", texturePath);
+			
+			snprintf( materials[currentMaterial].map_Kd, sizeof(materials[currentMaterial].map_Kd), "%s/%s", folderFilename, texturePath );
+		}
+        while (*p && *p != '\n') p++;
+        if (*p == '\n') p++;
+    }
+    FS_FreeFile(mtlData);
+}
+
+void ParseOBJ(const char *objData, vec3_t *vertices, vec2_t *texCoords, vec3_t *normals,
+              md3SurfaceData_t *surfaces, int *numSurfaces, int *vCount, int *vtCount, int *vnCount,
+              const md3Material_t *materials, int numMaterials, md3Shader_t *shaders, int *numShaders) {
+    const char *p = objData;
+    int currentSurface = -1;
+    int currentMaterialIndex = -1;
+    int currentShaderIndex = -1;
+
+    while (*p) {
+        if (strncmp(p, "v ", 2) == 0 && *vCount < MD3_MAX_VERTS) {
+            sscanf(p+2, "%f %f %f", &vertices[*vCount][0], &vertices[*vCount][1], &vertices[*vCount][2]);
+			RotateVertex(vertices[*vCount]); // Вращение вершины
+            (*vCount)++;
+        }
+        else if (strncmp(p, "vt ", 3) == 0 && *vtCount < MD3_MAX_VERTS) {
+            sscanf(p+3, "%f %f", &texCoords[*vtCount][0], &texCoords[*vtCount][1]);
+            texCoords[*vtCount][1] = 1.0f - texCoords[*vtCount][1];
+            (*vtCount)++;
+        }
+        else if (strncmp(p, "vn ", 3) == 0 && *vnCount < MD3_MAX_VERTS) {
+            sscanf(p+3, "%f %f %f", &normals[*vnCount][0], &normals[*vnCount][1], &normals[*vnCount][2]);
+			RotateNormal(normals[*vnCount]);
+            (*vnCount)++;
+        }
+        else if (strncmp(p, "usemtl ", 7) == 0) {
+            char materialName[MAX_QPATH];
+            sscanf(p+7, "%63s", materialName);
+            
+            currentSurface = -1;
+            for (int i = 0; i < *numSurfaces; i++) {
+                if (!Q_stricmp(surfaces[i].materialName, materialName)) {
+                    currentSurface = i;
+                    break;
+                }
+            }
+            
+            if (currentSurface == -1 && *numSurfaces < MD3_MAX_SURFACES) {
+                currentSurface = *numSurfaces;
+                Q_strncpyz(surfaces[currentSurface].materialName, materialName, sizeof(surfaces[currentSurface].materialName));
+                surfaces[currentSurface].vertices = malloc(MD3_MAX_VERTS * sizeof(vec3_t));
+                surfaces[currentSurface].texCoords = malloc(MD3_MAX_VERTS * sizeof(vec2_t));
+                surfaces[currentSurface].normals = malloc(MD3_MAX_VERTS * sizeof(vec3_t));
+                surfaces[currentSurface].triangles = malloc(MD3_MAX_TRIANGLES * sizeof(md3Triangle_t));
+                surfaces[currentSurface].vertCount = 0;
+                surfaces[currentSurface].texCoordCount = 0;
+                surfaces[currentSurface].normalCount = 0;
+                surfaces[currentSurface].triCount = 0;
+                (*numSurfaces)++;
+            }
+            
+            currentMaterialIndex = -1;
+            for (int i = 0; i < numMaterials; i++) {
+                if (!Q_stricmp(materials[i].newmtl, materialName)) {
+                    currentMaterialIndex = i;
+                    break;
+                }
+            }
+            
+            currentShaderIndex = -1;
+            if (currentMaterialIndex != -1) {
+                for (int i = 0; i < *numShaders; i++) {
+                    if (!Q_stricmp(shaders[i].name, materialName)) {
+                        currentShaderIndex = i;
+                        break;
+                    }
+                }
+                
+                if (currentShaderIndex == -1 && *numShaders < MD3_MAX_SHADERS) {
+                    Q_strncpyz(shaders[*numShaders].name, materialName, sizeof(shaders[*numShaders].name));
+                    shaders[*numShaders].shaderIndex = *numShaders;
+                    currentShaderIndex = *numShaders;
+                    (*numShaders)++;
+                }
+            }
+        }
+        else if (strncmp(p, "f ", 2) == 0 && currentSurface >= 0 && 
+         surfaces[currentSurface].triCount < MD3_MAX_TRIANGLES - 1) {
+		    int v[4] = {-1, -1, -1, -1}, vt[4] = {-1, -1, -1, -1}, vn[4] = {-1, -1, -1, -1};
+		    int count = 0;
+		    const char *faceStart = p + 2;
+
+		    while (*faceStart && count < 4) {
+		        while (*faceStart == ' ') faceStart++;
+		        if (!*faceStart) break;
+			
+		        char *end = NULL;
+		        long val;
+			
+		        val = strtol(faceStart, &end, 10);
+		        if (end == faceStart || val < 1) break;
+		        v[count] = (int)val - 1;
+		        faceStart = end;
+			
+		        if (*faceStart == '/') {
+		            faceStart++;
+		            if (*faceStart != '/') {
+		                val = strtol(faceStart, &end, 10);
+		                if (end != faceStart && val >= 1) {
+		                    vt[count] = (int)val - 1;
+		                }
+		                faceStart = end;
+		            }
+				
+		            if (*faceStart == '/') {
+		                faceStart++;
+		                val = strtol(faceStart, &end, 10);
+		                if (end != faceStart && val >= 1) {
+		                    vn[count] = (int)val - 1;
+		                }
+		                faceStart = end;
+		            }
+		        }
+			
+		        count++;
+		    }
+		
+		    if (count >= 3) {
+		        int valid = 1;
+		        for (int i = 0; i < count; i++) {
+		            if (v[i] < 0 || v[i] >= *vCount) valid = 0;
+		            if (vt[i] >= *vtCount) valid = 0;
+		            if (vn[i] >= *vnCount) valid = 0;
+		        }
+			
+		        if (valid) {
+		            int indices[4];
+		            for (int i = 0; i < count; i++) {
+		                if (surfaces[currentSurface].vertCount >= MD3_MAX_VERTS) {
+		                    valid = 0;
+		                    break;
+		                }
+					
+		                VectorCopy(vertices[v[i]], surfaces[currentSurface].vertices[surfaces[currentSurface].vertCount]);
+					
+		                if (vt[i] >= 0) {
+		                    Vector2Copy(texCoords[vt[i]], surfaces[currentSurface].texCoords[surfaces[currentSurface].vertCount]);
+		                } else {
+		                    surfaces[currentSurface].texCoords[surfaces[currentSurface].vertCount][0] = 0;
+							surfaces[currentSurface].texCoords[surfaces[currentSurface].vertCount][1] = 0;
+		                }
+					
+		                if (vn[i] >= 0) {
+		                    VectorCopy(normals[vn[i]], surfaces[currentSurface].normals[surfaces[currentSurface].vertCount]);
+		                } else {
+		                    VectorSet(surfaces[currentSurface].normals[surfaces[currentSurface].vertCount], 0, 0, 0);
+		                }
+					
+		                indices[i] = surfaces[currentSurface].vertCount++;
+		            }
+				
+					if (valid && surfaces[currentSurface].triCount < MD3_MAX_TRIANGLES) {
+						surfaces[currentSurface].triangles[surfaces[currentSurface].triCount].indexes[0] = indices[0];
+						surfaces[currentSurface].triangles[surfaces[currentSurface].triCount].indexes[1] = indices[2];
+						surfaces[currentSurface].triangles[surfaces[currentSurface].triCount].indexes[2] = indices[1];
+						surfaces[currentSurface].triCount++;
+
+						if (count == 4 && surfaces[currentSurface].triCount < MD3_MAX_TRIANGLES) {
+							surfaces[currentSurface].triangles[surfaces[currentSurface].triCount].indexes[0] = indices[0];
+							surfaces[currentSurface].triangles[surfaces[currentSurface].triCount].indexes[1] = indices[3];
+							surfaces[currentSurface].triangles[surfaces[currentSurface].triCount].indexes[2] = indices[2];
+							surfaces[currentSurface].triCount++;
+						}
+					}
+		        }
+		    }
+		}
+        while (*p && *p != '\n') p++;
+        if (*p == '\n') p++;
+    }
+}
+
+void WriteMD3(const char *name, const md3SurfaceData_t *surfaces, int numSurfaces, 
+              const md3Shader_t *shaders, int numShaders, const md3Material_t *materials, int numMaterials) {
+    fileHandle_t f = FS_FOpenFileWrite(va("%s.md3", name));
+    if (!f) {
+        Com_Printf("Error: Failed to create %s.md3\n", name);
+        return;
+    }
+
+    md3Header_t header = {
+        .ident = MD3_IDENT,
+        .version = MD3_VERSION,
+        .numFrames = 1,
+        .numTags = 0,
+        .numSurfaces = numSurfaces,
+        .numSkins = numShaders
+    };
+    Q_strncpyz(header.name, name, sizeof(header.name));
+    
+    md3Frame_t frame = {0};
+    VectorSet(frame.bounds[0], -25, -25, -25);
+    VectorSet(frame.bounds[1], 25, 25, 25);
+    frame.radius = 50.0f * OBJ_TO_MD3_SCALE;
+    Q_strncpyz(frame.name, "default", sizeof(frame.name));
+    
+    FS_Write(&header, sizeof(header), f);
+    FS_Write(&frame, sizeof(frame), f);
+    
+    int totalVertCount = 0;
+    int totalTriCount = 0;
+    
+    for (int s = 0; s < numSurfaces; s++) {
+        const md3SurfaceData_t *surf = &surfaces[s];
+        
+        md3Surface_t surface = {0};
+        surface.ident = MD3_IDENT;
+        Q_strncpyz(surface.name, surf->materialName, sizeof(surface.name));
+        surface.numFrames = 1;
+        surface.numShaders = 1;
+        surface.numVerts = surf->vertCount;
+        surface.numTriangles = surf->triCount;
+        surface.ofsTriangles = sizeof(md3Surface_t);
+        surface.ofsShaders = surface.ofsTriangles + surf->triCount * sizeof(md3Triangle_t);
+        surface.ofsSt = surface.ofsShaders + sizeof(md3Shader_t);
+        surface.ofsXyzNormals = surface.ofsSt + surf->vertCount * sizeof(md3St_t);
+        surface.ofsEnd = surface.ofsXyzNormals + surf->vertCount * sizeof(md3XyzNormal_t);
+        
+        FS_Write(&surface, sizeof(surface), f);
+        
+        FS_Write(surf->triangles, surf->triCount * sizeof(md3Triangle_t), f);
+        
+        md3Shader_t shader;
+        Q_strncpyz(shader.name, surf->materialName, sizeof(shader.name));
+        shader.shaderIndex = 0;
+        
+        for (int i = 0; i < numMaterials; i++) {
+            if (!Q_stricmp(materials[i].newmtl, surf->materialName)) {
+                Q_strncpyz(shader.name, materials[i].map_Kd, sizeof(shader.name));
+                break;
+            }
+        }
+        
+        FS_Write(&shader, sizeof(shader), f);
+        
+        for (int i = 0; i < surf->vertCount; i++) {
+            md3St_t st = { .st = { surf->texCoords[i][0], surf->texCoords[i][1] } };
+            FS_Write(&st, sizeof(st), f);
+        }
+        
+        for (int i = 0; i < surf->vertCount; i++) {
+            md3XyzNormal_t xyz;
+            xyz.xyz[0] = (short)(surf->vertices[i][0] * OBJ_TO_MD3_SCALE);
+            xyz.xyz[1] = (short)(surf->vertices[i][1] * OBJ_TO_MD3_SCALE);
+            xyz.xyz[2] = (short)(surf->vertices[i][2] * OBJ_TO_MD3_SCALE);
+            xyz.normal = MD3_EncodeNormal(surf->normals[i][0], surf->normals[i][1], surf->normals[i][2]);
+            FS_Write(&xyz, sizeof(xyz), f);
+        }
+        
+        totalVertCount += surf->vertCount;
+        totalTriCount += surf->triCount;
+    }
+    
+    header.ofsSurfaces = sizeof(md3Header_t) + sizeof(md3Frame_t);
+    header.ofsEnd = FS_FTell(f);
+    FS_Seek(f, 0, FS_SEEK_SET);
+    FS_Write(&header, sizeof(header), f);
+    FS_FCloseFile(f);
+    
+    Com_Printf("Success: Converted %s.obj to %s.md3 (%d verts, %d tris, %d surfaces, %d shaders)\n",
+              name, name, totalVertCount, totalTriCount, numSurfaces, numShaders);
+}
+
+void FreeSurfaceData(md3SurfaceData_t *surfaces, int numSurfaces) {
+    for (int i = 0; i < numSurfaces; i++) {
+        free(surfaces[i].vertices);
+        free(surfaces[i].texCoords);
+        free(surfaces[i].normals);
+        free(surfaces[i].triangles);
+    }
+}
+
+void CL_StartConvertOBJ(const char *name) {
+    char *objData = NULL;
+    int objSize = FS_ReadFile(va("%s.obj", name), (void **)&objData);
+    if (!objData || objSize <= 0) {
+        Com_Printf("Error: Failed to open %s.obj\n", name);
+        return;
+    }
+
+    md3Material_t materials[MD3_MAX_SHADERS];
+    int numMaterials = 0;
+    md3Shader_t shaders[MD3_MAX_SHADERS];
+    int numShaders = 0;
+    LoadMTR(name, shaders, &numShaders, materials, &numMaterials);
+
+    vec3_t vertices[MD3_MAX_VERTS];
+    vec2_t texCoords[MD3_MAX_VERTS];
+    vec3_t normals[MD3_MAX_VERTS];
+    int vCount = 0, vtCount = 0, vnCount = 0;
+    
+    md3SurfaceData_t surfaces[MD3_MAX_SURFACES];
+    int numSurfaces = 0;
+
+    ParseOBJ(objData, vertices, texCoords, normals, surfaces, &numSurfaces, 
+             &vCount, &vtCount, &vnCount, materials, numMaterials, shaders, &numShaders);
+
+    WriteMD3(name, surfaces, numSurfaces, shaders, numShaders, materials, numMaterials);
+    FreeSurfaceData(surfaces, numSurfaces);
+    FS_FreeFile(objData);
+}
+
+void CL_ConvertOBJ(void) {
+    const char *name = Cmd_Argv(1);
+    if (!name[0]) {
+        Com_Printf("Usage: importOBJ <modelname> (without .obj)\n");
+        return;
+    }
+    CL_StartConvertOBJ(name);
+}
+
+/*
 ** CL_GetModeInfo
 */
 typedef struct vidmode_s
@@ -3737,6 +4172,8 @@ void CL_Init( void ) {
 	Cmd_AddCommand( "dlmap", CL_Download_f );
 #endif
 	Cmd_AddCommand( "modelist", CL_ModeList_f );
+
+	Cmd_AddCommand( "importOBJ", CL_ConvertOBJ );
 
 	Cvar_Set( "cl_running", "1" );
 

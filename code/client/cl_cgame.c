@@ -653,6 +653,14 @@ static intptr_t CL_CgameSystemCalls( intptr_t *args ) {
 		re.AddLinearLightToScene( VMA(1), VMA(2), VMF(3), VMF(4), VMF(5), VMF(6) );
 		return 0;
 
+	case CG_FS_GETFILELIST:
+		VM_CHECKBOUNDS( uivm, args[3], args[4] );
+		return FS_GetFileList( VMA(1), VMA(2), VMA(3), args[4] );
+
+	case CG_IMPORTOBJ:
+		CL_StartConvertOBJ( VMA(1) );
+		return 0;
+
 	// shared syscalls
 	case TRAP_MEMSET:
 		VM_CHECKBOUNDS( cgvm, args[1], args[3] );

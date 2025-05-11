@@ -39,8 +39,7 @@ QVM files
 ========================================================================
 */
 
-#define	VM_MAGIC		0x12721444
-#define	VM_MAGIC_VER2	0x12721445
+#define	VM_MAGIC_VER3	0x12721446
 typedef struct {
 	int32_t vmMagic;
 
@@ -54,7 +53,7 @@ typedef struct {
 	int32_t litLength;			// ( dataLength - litLength ) should be byteswapped on load
 	int32_t bssLength;			// zero filled memory appended to datalength
 
-	//!!! below here is VM_MAGIC_VER2 !!!
+	//!!! below here is VM_MAGIC_VER3 !!!
 	int32_t jtrgLength;			// number of jump table targets
 } vmHeader_t;
 
@@ -71,8 +70,8 @@ typedef struct {
 
 // limits
 #define MD3_MAX_LODS		3
-#define	MD3_MAX_TRIANGLES	65535	// per surface for embedded importer
-#define MD3_MAX_VERTS		32768	// per surface for embedded importer
+#define	MD3_MAX_TRIANGLES	65535*3	// per surface for embedded importer
+#define MD3_MAX_VERTS		32768*6	// per surface for embedded importer
 #define MD3_MAX_SHADERS		256		// per surface for embedded importer
 #define MD3_MAX_FRAMES		1024	// per model
 #define	MD3_MAX_SURFACES	128		// per model for embedded importer

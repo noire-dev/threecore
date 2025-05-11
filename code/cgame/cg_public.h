@@ -106,8 +106,10 @@ typedef enum {
 	CG_S_STOPLOOPINGSOUND,
 	CG_SYSTEM,
 	CG_R_ADDLINEARLIGHTTOSCENE,
+	CG_FS_GETFILELIST,
+	CG_IMPORTOBJ,
 
-	CG_ACOS = 107
+	CG_ACOS = 1007
 } cgameImport_t;
 
 typedef enum {
