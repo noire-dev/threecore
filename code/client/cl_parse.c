@@ -788,9 +788,6 @@ static void CL_ParseCommandString( msg_t *msg ) {
 	Q_strncpyz( clc.serverCommands[ index ], s, sizeof( clc.serverCommands[ index ] ) );
 	clc.serverCommandsIgnore[ index ] = qfalse;
 
-#ifdef USE_CURL
-	if ( !clc.cURLUsed )
-#endif
 	// -EC- : we may stuck on downloading because of non-working cgvm
 	// or in "awaiting snapshot..." state so handle "disconnect" here
 	if ( ( !cgvm && cls.state == CA_CONNECTED && clc.download != FS_INVALID_HANDLE ) || ( cgvm && cls.state == CA_PRIMED ) ) {

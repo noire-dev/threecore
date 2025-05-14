@@ -25,6 +25,10 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #include "../client/client.h"
 #include "sdl_glw.h"
 
+#ifdef _WIN32
+#include <windows.h>
+#endif
+
 static Uint16 r[256];
 static Uint16 g[256];
 static Uint16 b[256];
@@ -38,7 +42,6 @@ void GLimp_InitGamma( glconfig_t *config )
 		config->deviceSupportsGamma = SDL_SetWindowBrightness( SDL_window, 1.0f ) >= 0 ? qtrue : qfalse;
 	}
 }
-
 
 /*
 =================
@@ -58,7 +61,6 @@ void GLimp_SetGamma( unsigned char red[256], unsigned char green[256], unsigned 
 	}
 
 #ifdef _WIN32
-#include <windows.h>
 
 	// Win2K and newer put this odd restriction on gamma ramps...
 	{
@@ -108,7 +110,6 @@ void GLimp_SetGamma( unsigned char red[256], unsigned char green[256], unsigned 
 		Com_DPrintf( "SDL_SetWindowGammaRamp() failed: %s\n", SDL_GetError() );
 	}
 }
-
 
 /*
 ** GLW_RestoreGamma

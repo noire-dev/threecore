@@ -1,15 +1,5 @@
 
-# Quake3 Unix Makefile
-#
-# Nov '98 by Zoid <zoid@idsoftware.com>
-#
-# Loki Hacking by Bernd Kreimeier
-#  and a little more by Ryan C. Gordon.
-#  and a little more by Rafael Barrero
-#  and a little more by the ioq3 cr3w
-#
-# GNU Make required
-#
+# SourceTech Makefile, GNU Make required
 COMPILE_PLATFORM=$(shell uname | sed -e 's/_.*//' | tr '[:upper:]' '[:lower:]' | sed -e 's/\//_/g')
 COMPILE_ARCH=$(shell uname -m | sed -e 's/i.86/x86/' | sed -e 's/^arm.*/arm/')
 
@@ -26,17 +16,22 @@ endif
 BUILD_CLIENT      = 1
 BUILD_SERVER      = 1
 
-USE_SDL           = 1
-USE_CURL          = 1
-USE_LOCAL_HEADERS = 1
-USE_SYSTEM_JPEG   = 0
+# Build
+MOUNT_DIR         = code
 
+# General
+USE_SDL           = 1
+USE_LOCAL_HEADERS = 1
+
+# Audio
 USE_OGG_VORBIS    = 1
-USE_SYSTEM_OGG    = 0
-USE_SYSTEM_VORBIS = 0
 USE_CODEC_MP3     = 1
 USE_INTERNAL_MP3  = 1
 
+# Misc
+USE_CCACHE        = 0
+
+# Render
 USE_VULKAN        = 1
 USE_OPENGL        = 1
 USE_OPENGL2       = 0
@@ -49,9 +44,6 @@ RENDERER_DEFAULT = opengl
 CNAME            = sandbox
 DNAME            = sandbox.ded
 
-RENDERER_PREFIX  = $(CNAME)
-
-
 ifeq ($(V),1)
 echo_cmd=@:
 Q=
@@ -59,16 +51,6 @@ else
 echo_cmd=@echo
 Q=@
 endif
-
-#############################################################################
-#
-# If you require a different configuration from the defaults below, create a
-# new file named "Makefile.local" in the same directory as this file and define
-# your parameters there. This allows you to change configuration without
-# causing problems with keeping up to date with the repository.
-#
-#############################################################################
--include Makefile.local
 
 ifeq ($(COMPILE_PLATFORM),darwin)
   USE_SDL=1
@@ -119,44 +101,11 @@ endif
 export CROSS_COMPILING
 
 ifndef DESTDIR
-DESTDIR=/usr/local/games/quake3
-endif
-
-ifndef MOUNT_DIR
-MOUNT_DIR=code
+DESTDIR=bin
 endif
 
 ifndef BUILD_DIR
 BUILD_DIR=build
-endif
-
-ifndef USE_CCACHE
-USE_CCACHE=0
-endif
-export USE_CCACHE
-
-ifndef USE_CURL
-USE_CURL=1
-endif
-
-ifndef USE_CURL_DLOPEN
-  ifdef MINGW
-    USE_CURL_DLOPEN=0
-  else
-    USE_CURL_DLOPEN=1
-  endif
-endif
-
-ifndef USE_OGG_VORBIS
-  USE_OGG_VORBIS=1
-endif
-
-ifndef USE_SYSTEM_OGG
-  USE_SYSTEM_OGG=1
-endif
-
-ifndef USE_SYSTEM_VORBIS
-  USE_SYSTEM_VORBIS=1
 endif
 
 ifeq ($(RENDERER_DEFAULT),opengl)
@@ -205,7 +154,7 @@ BLIBDIR=$(MOUNT_DIR)/botlib
 JPDIR=$(MOUNT_DIR)/libjpeg
 OGGDIR=$(MOUNT_DIR)/libogg
 VORBISDIR=$(MOUNT_DIR)/libvorbis
-MADDIR=$(MOUNT_DIR)/libmad-0.15.1b
+MADDIR=$(MOUNT_DIR)/libmad
 
 bin_path=$(shell which $(1) 2> /dev/null)
 
@@ -221,14 +170,6 @@ ifneq ($(call bin_path, $(PKG_CONFIG)),)
   else
     X11_INCLUDE ?= $(shell $(PKG_CONFIG) --silence-errors --cflags-only-I x11)
     X11_LIBS ?= $(shell $(PKG_CONFIG) --silence-errors --libs x11)
-  endif
-  ifeq ($(USE_SYSTEM_OGG),1)
-    OGG_CFLAGS ?= $(shell $(PKG_CONFIG) --silence-errors --cflags ogg || true)
-    OGG_LIBS ?= $(shell $(PKG_CONFIG) --silence-errors --libs ogg || echo -logg)
-  endif
-  ifeq ($(USE_SYSTEM_VORBIS),1)
-    VORBIS_CFLAGS ?= $(shell $(PKG_CONFIG) --silence-errors --cflags vorbisfile || true)
-    VORBIS_LIBS ?= $(shell $(PKG_CONFIG) --silence-errors --libs vorbisfile || echo -lvorbisfile)
   endif
 endif
 
@@ -249,24 +190,6 @@ ifeq ($(OGG_FLAGS),)
 endif
 ifeq ($(VORBIS_FLAGS),)
   VORBIS_FLAGS = -I$(VORBISDIR)/include -I$(VORBISDIR)/lib
-endif
-ifeq ($(USE_SYSTEM_OGG),1)
-  ifeq ($(OGG_LIBS),)
-    OGG_LIBS = -logg
-  endif
-endif
-ifeq ($(USE_SYSTEM_VORBIS),1)
-  ifeq ($(VORBIS_LIBS),)
-    VORBIS_LIBS = -lvorbisfile
-  endif
-endif
-
-# extract version info
-ifneq ($(COMPILE_PLATFORM),darwin)
-VERSION=$(shell grep ".\+define[ \t]\+Q3_VERSION[ \t]\+\+" $(CMDIR)/q_shared.h | \
-  sed -e 's/.*".* \([^ ]*\)"/\1/')
-else
-VERSION=1.32e
 endif
 
 # common qvm definition
@@ -289,10 +212,6 @@ endif
 
 BASE_CFLAGS =
 
-ifeq ($(USE_SYSTEM_JPEG),1)
-  BASE_CFLAGS += -DUSE_SYSTEM_JPEG
-endif
-
 ifeq ($(USE_CODEC_MP3),1)
   BASE_CFLAGS += -DFPM_DEFAULT
 endif
@@ -303,17 +222,6 @@ endif
 
 ifeq ($(USE_LOCAL_HEADERS),1)
   BASE_CFLAGS += -DUSE_LOCAL_HEADERS=1
-endif
-
-ifeq ($(USE_CURL),1)
-  BASE_CFLAGS += -DUSE_CURL
-  ifeq ($(USE_CURL_DLOPEN),1)
-    BASE_CFLAGS += -DUSE_CURL_DLOPEN
-  else
-    ifeq ($(MINGW),1)
-      BASE_CFLAGS += -DCURL_STATICLIB
-    endif
-  endif
 endif
 
 ifeq ($(USE_VULKAN_API),1)
@@ -402,10 +310,11 @@ ifdef MINGW
     $(error Cannot find a suitable cross compiler for $(PLATFORM))
   endif
 
-  BASE_CFLAGS += -Wall -Wimplicit -Wstrict-prototypes -DMINGW=1
+  BASE_CFLAGS += -Wall -Wimplicit -Wstrict-prototypes -DMINGW=1 -DWIN32_LEAN_AND_MEAN
 
   BASE_CFLAGS += -Wno-unused-result -fvisibility=hidden
   BASE_CFLAGS += -ffunction-sections -flto
+  BASE_CFLAGS += -D__inline=inline
 
   ifeq ($(ARCH),x86_64)
     ARCHEXT = .x64
@@ -442,16 +351,6 @@ ifdef MINGW
       CLIENT_LDFLAGS += -lSDL264
       CLIENT_EXTRA_FILES += $(MOUNT_DIR)/libsdl/windows/mingw/lib64/SDL264.dll
     endif
-  endif
-
-  ifeq ($(USE_CURL),1)
-    BASE_CFLAGS += -I$(MOUNT_DIR)/libcurl/windows/include
-    ifeq ($(ARCH),x86)
-      CLIENT_LDFLAGS += -L$(MOUNT_DIR)/libcurl/windows/mingw/lib32
-    else
-      CLIENT_LDFLAGS += -L$(MOUNT_DIR)/libcurl/windows/mingw/lib64
-    endif
-    CLIENT_LDFLAGS += -lcurl -lwldap32 -lcrypt32
   endif
 
   ifeq ($(USE_OGG_VORBIS),1)
@@ -510,10 +409,6 @@ ifeq ($(COMPILE_PLATFORM),darwin)
   endif
   endif
 
-  ifeq ($(USE_SYSTEM_JPEG),1)
-    CLIENT_LDFLAGS += -ljpeg
-  endif
-
   ifeq ($(USE_OGG_VORBIS),1)
     BASE_CFLAGS += -DUSE_OGG_VORBIS $(OGG_FLAGS) $(VORBIS_FLAGS)
     CLIENT_LDFLAGS += $(OGG_LIBS) $(VORBIS_LIBS)
@@ -568,16 +463,6 @@ else
     CLIENT_LDFLAGS = $(X11_LIBS)
   endif
 
-  ifeq ($(USE_SYSTEM_JPEG),1)
-    CLIENT_LDFLAGS += -ljpeg
-  endif
-
-  ifeq ($(USE_CURL),1)
-    ifeq ($(USE_CURL_DLOPEN),0)
-      CLIENT_LDFLAGS += -lcurl
-    endif
-  endif
-
   ifeq ($(USE_OGG_VORBIS),1)
     BASE_CFLAGS += -DUSE_OGG_VORBIS $(OGG_FLAGS) $(VORBIS_FLAGS)
     CLIENT_LDFLAGS += $(OGG_LIBS) $(VORBIS_LIBS)
@@ -603,13 +488,7 @@ endif # !MINGW
 
 TARGET_CLIENT = $(CNAME)$(ARCHEXT)$(BINEXT)
 
-TARGET_REND1 = $(RENDERER_PREFIX)_opengl_$(SHLIBNAME)
-TARGET_REND2 = $(RENDERER_PREFIX)_opengl2_$(SHLIBNAME)
-TARGET_RENDV = $(RENDERER_PREFIX)_vulkan_$(SHLIBNAME)
-
 TARGET_SERVER = $(DNAME)$(ARCHEXT)$(BINEXT)
-
-STRINGIFY = $(B)/rend2/stringify$(BINEXT)
 
 TARGETS =
 
@@ -637,12 +516,6 @@ $(echo_cmd) "REND_CC $<"
 $(Q)$(CC) $(CFLAGS) $(RENDCFLAGS) -o $@ -c $<
 endef
 
-define DO_REF_STR
-$(echo_cmd) "REF_STR $<"
-$(Q)rm -f $@
-$(Q)$(STRINGIFY) $< $@
-endef
-
 define DO_BOT_CC
 $(echo_cmd) "BOT_CC $<"
 $(Q)$(CC) $(CFLAGS) $(BOTCFLAGS) -DBOTLIB -o $@ -c $<
@@ -662,10 +535,6 @@ define DO_WINDRES
 $(echo_cmd) "WINDRES $<"
 $(Q)$(WINDRES) -i $< -o $@
 endef
-
-ifndef SHLIBNAME
-  SHLIBNAME=$(ARCH).$(SHLIBEXT)
-endif
 
 #############################################################################
 # MAIN TARGETS
@@ -705,9 +574,8 @@ endif
 # an informational message, then start building
 targets: makedirs
 	@echo ""
-	@echo "Building quake3 in $(B):"
+	@echo "Building SourceTech in $(B):"
 	@echo ""
-	@echo "  VERSION: $(VERSION)"
 	@echo "  PLATFORM: $(PLATFORM)"
 	@echo "  ARCH: $(ARCH)"
 	@echo "  COMPILE_PLATFORM: $(COMPILE_PLATFORM)"
@@ -738,16 +606,10 @@ makedirs:
 	@if [ ! -d $(B) ];then $(MKDIR) $(B);fi
 	@if [ ! -d $(B)/client ];then $(MKDIR) $(B)/client;fi
 	@if [ ! -d $(B)/client/jpeg ];then $(MKDIR) $(B)/client/jpeg;fi
-ifeq ($(USE_SYSTEM_OGG),0)
 	@if [ ! -d $(B)/client/ogg ];then $(MKDIR) $(B)/client/ogg;fi
-endif
-ifeq ($(USE_SYSTEM_VORBIS),0)
 	@if [ ! -d $(B)/client/vorbis ];then $(MKDIR) $(B)/client/vorbis;fi
-endif
 	@if [ ! -d $(B)/client/libmad ];then $(MKDIR) $(B)/client/libmad;fi
 	@if [ ! -d $(B)/rend1 ];then $(MKDIR) $(B)/rend1;fi
-	@if [ ! -d $(B)/rend2 ];then $(MKDIR) $(B)/rend2;fi
-	@if [ ! -d $(B)/rend2/glsl ];then $(MKDIR) $(B)/rend2/glsl;fi
 	@if [ ! -d $(B)/rendv ];then $(MKDIR) $(B)/rendv;fi
 ifneq ($(BUILD_SERVER),0)
 	@if [ ! -d $(B)/ded ];then $(MKDIR) $(B)/ded;fi
@@ -786,72 +648,6 @@ Q3REND1OBJ = \
   $(B)/rend1/tr_surface.o \
   $(B)/rend1/tr_vbo.o \
   $(B)/rend1/tr_world.o
-
-Q3REND2OBJ = \
-  $(B)/rend2/tr_backend.o \
-  $(B)/rend2/tr_bsp.o \
-  $(B)/rend2/tr_cmds.o \
-  $(B)/rend2/tr_curve.o \
-  $(B)/rend2/tr_dsa.o \
-  $(B)/rend2/tr_extramath.o \
-  $(B)/rend2/tr_extensions.o \
-  $(B)/rend2/tr_fbo.o \
-  $(B)/rend2/tr_flares.o \
-  $(B)/rend2/tr_glsl.o \
-  $(B)/rend2/tr_image.o \
-  $(B)/rend2/tr_image_bmp.o \
-  $(B)/rend2/tr_image_jpg.o \
-  $(B)/rend2/tr_image_pcx.o \
-  $(B)/rend2/tr_image_png.o \
-  $(B)/rend2/tr_image_tga.o \
-  $(B)/rend2/tr_image_dds.o \
-  $(B)/rend2/tr_init.o \
-  $(B)/rend2/tr_light.o \
-  $(B)/rend2/tr_main.o \
-  $(B)/rend2/tr_marks.o \
-  $(B)/rend2/tr_mesh.o \
-  $(B)/rend2/tr_model.o \
-  $(B)/rend2/tr_noise.o \
-  $(B)/rend2/tr_postprocess.o \
-  $(B)/rend2/tr_scene.o \
-  $(B)/rend2/tr_shade.o \
-  $(B)/rend2/tr_shade_calc.o \
-  $(B)/rend2/tr_shader.o \
-  $(B)/rend2/tr_shadows.o \
-  $(B)/rend2/tr_sky.o \
-  $(B)/rend2/tr_surface.o \
-  $(B)/rend2/tr_vbo.o \
-  $(B)/rend2/tr_world.o
-
-Q3REND2STROBJ = \
-  $(B)/rend2/glsl/bokeh_fp.o \
-  $(B)/rend2/glsl/bokeh_vp.o \
-  $(B)/rend2/glsl/calclevels4x_fp.o \
-  $(B)/rend2/glsl/calclevels4x_vp.o \
-  $(B)/rend2/glsl/depthblur_fp.o \
-  $(B)/rend2/glsl/depthblur_vp.o \
-  $(B)/rend2/glsl/dlight_fp.o \
-  $(B)/rend2/glsl/dlight_vp.o \
-  $(B)/rend2/glsl/down4x_fp.o \
-  $(B)/rend2/glsl/down4x_vp.o \
-  $(B)/rend2/glsl/fogpass_fp.o \
-  $(B)/rend2/glsl/fogpass_vp.o \
-  $(B)/rend2/glsl/generic_fp.o \
-  $(B)/rend2/glsl/generic_vp.o \
-  $(B)/rend2/glsl/lightall_fp.o \
-  $(B)/rend2/glsl/lightall_vp.o \
-  $(B)/rend2/glsl/pshadow_fp.o \
-  $(B)/rend2/glsl/pshadow_vp.o \
-  $(B)/rend2/glsl/shadowfill_fp.o \
-  $(B)/rend2/glsl/shadowfill_vp.o \
-  $(B)/rend2/glsl/shadowmask_fp.o \
-  $(B)/rend2/glsl/shadowmask_vp.o \
-  $(B)/rend2/glsl/ssao_fp.o \
-  $(B)/rend2/glsl/ssao_vp.o \
-  $(B)/rend2/glsl/texturecolor_fp.o \
-  $(B)/rend2/glsl/texturecolor_vp.o \
-  $(B)/rend2/glsl/tonemap_fp.o \
-  $(B)/rend2/glsl/tonemap_vp.o
 
 Q3RENDVOBJ = \
   $(B)/rendv/tr_backend.o \
@@ -932,13 +728,10 @@ JPGOBJ = \
   $(B)/client/jpeg/jutils.o
 
 ifeq ($(USE_OGG_VORBIS),1)
-ifeq ($(USE_SYSTEM_OGG),0)
 OGGOBJ = \
   $(B)/client/ogg/bitwise.o \
   $(B)/client/ogg/framing.o
-endif
 
-ifeq ($(USE_SYSTEM_VORBIS),0)
 VORBISOBJ = \
   $(B)/client/vorbis/analysis.o \
   $(B)/client/vorbis/bitrate.o \
@@ -961,7 +754,6 @@ VORBISOBJ = \
   $(B)/client/vorbis/synthesis.o \
   $(B)/client/vorbis/vorbisfile.o \
   $(B)/client/vorbis/window.o
-endif
 endif
 
 ifeq ($(USE_CODEC_MP3),1)
@@ -1070,10 +862,6 @@ Q3OBJ = \
   $(B)/client/l_script.o \
   $(B)/client/l_struct.o
 
-ifneq ($(USE_SYSTEM_JPEG),1)
-  Q3OBJ += $(JPGOBJ)
-endif
-
 ifeq ($(USE_OGG_VORBIS),1)
   Q3OBJ += $(OGGOBJ) $(VORBISOBJ) \
     $(B)/client/snd_codec_ogg.o
@@ -1085,14 +873,9 @@ ifeq ($(USE_CODEC_MP3),1)
 endif
 
 ifeq ($(USE_VULKAN),1)
-  Q3OBJ += $(Q3RENDVOBJ)
+  Q3OBJ += $(Q3RENDVOBJ) $(JPGOBJ)
 else
-  ifeq ($(USE_OPENGL2),1)
-    Q3OBJ += $(Q3REND2OBJ)
-    Q3OBJ += $(Q3REND2STROBJ)
-  else
-    Q3OBJ += $(Q3REND1OBJ)
-  endif
+  Q3OBJ += $(Q3REND1OBJ) $(JPGOBJ)
 endif
 
 ifeq ($(ARCH),x86)
@@ -1121,10 +904,6 @@ ifeq ($(HAVE_VM_COMPILED),true)
   ifeq ($(ARCH),aarch64)
     Q3OBJ += $(B)/client/vm_aarch64.o
   endif
-endif
-
-ifeq ($(USE_CURL),1)
-  Q3OBJ += $(B)/client/cl_curl.o
 endif
 
 ifdef MINGW
@@ -1199,24 +978,6 @@ $(B)/$(TARGET_CLIENT): $(Q3OBJ)
 	$(echo_cmd) "LD $@"
 	$(Q)$(CC) -o $@ $(Q3OBJ) $(CLIENT_LDFLAGS) \
 		$(LDFLAGS)
-
-# modular renderers
-
-$(B)/$(TARGET_REND1): $(Q3REND1OBJ)
-	$(echo_cmd) "LD $@"
-	$(Q)$(CC) -o $@ $(Q3REND1OBJ) $(SHLIBCFLAGS) $(SHLIBLDFLAGS)
-
-$(STRINGIFY): $(MOUNT_DIR)/renderer2/stringify.c
-	$(echo_cmd) "LD $@"
-	$(Q)$(CC) -o $@ $(MOUNT_DIR)/renderer2/stringify.c $(LDFLAGS)
-
-$(B)/$(TARGET_REND2): $(Q3REND2OBJ) $(Q3REND2STROBJ)
-	$(echo_cmd) "LD $@"
-	$(Q)$(CC) -o $@ $(Q3REND2OBJ) $(Q3REND2STROBJ) $(SHLIBCFLAGS) $(SHLIBLDFLAGS)
-
-$(B)/$(TARGET_RENDV): $(Q3RENDVOBJ)
-	$(echo_cmd) "LD $@"
-	$(Q)$(CC) -o $@ $(Q3RENDVOBJ) $(SHLIBCFLAGS) $(SHLIBLDFLAGS)
 
 #############################################################################
 # DEDICATED SERVER
@@ -1361,21 +1122,6 @@ $(B)/rend1/%.o: $(RCDIR)/%.c
 	$(DO_REND_CC)
 
 $(B)/rend1/%.o: $(CMDIR)/%.c
-	$(DO_REND_CC)
-
-$(B)/rend2/glsl/%.c: $(R2DIR)/glsl/%.glsl $(STRINGIFY)
-	$(DO_REF_STR)
-
-$(B)/rend2/glsl/%.o: $(B)/renderer2/glsl/%.c
-	$(DO_REND_CC)
-
-$(B)/rend2/%.o: $(R2DIR)/%.c
-	$(DO_REND_CC)
-
-$(B)/rend2/%.o: $(RCDIR)/%.c
-	$(DO_REND_CC)
-
-$(B)/rend2/%.o: $(CMDIR)/%.c
 	$(DO_REND_CC)
 
 $(B)/rendv/%.o: $(RVDIR)/%.c

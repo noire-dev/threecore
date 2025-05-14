@@ -31,10 +31,6 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #include "snd_public.h"
 #include "keys.h"
 
-#ifdef USE_CURL
-#include "cl_curl.h"
-#endif
-
 // file full of random crap that gets used to create cl_guid
 #define QKEY_FILE "qkey"
 #define QKEY_SIZE 2048
@@ -207,15 +203,6 @@ typedef struct {
 	char		downloadList[BIG_INFO_STRING]; // list of paks we need to download
 	qboolean	downloadRestart;	// if true, we need to do another FS_Restart because we downloaded a pak
 
-#ifdef USE_CURL
-	qboolean	cURLEnabled;
-	qboolean	cURLUsed;
-	qboolean	cURLDisconnected;
-	char		downloadURL[MAX_OSPATH];
-	CURL		*downloadCURL;
-	CURLM		*downloadCURLM;
-#endif /* USE_CURL */
-
 	// demo information
 	char		demoName[MAX_OSPATH];
 	char		recordName[MAX_OSPATH]; // without extension
@@ -362,18 +349,6 @@ extern	clientStatic_t		cls;
 extern	char		cl_oldGame[MAX_QPATH];
 extern	qboolean	cl_oldGameSet;
 
-#ifdef USE_CURL
-
-extern		download_t	download;
-qboolean	Com_DL_Perform( download_t *dl );
-void		Com_DL_Cleanup( download_t *dl );
-qboolean	Com_DL_Begin( download_t *dl, const char *localName, const char *remoteURL, qboolean autoDownload );
-qboolean	Com_DL_InProgress( const download_t *dl );
-qboolean	Com_DL_ValidFileName( const char *fileName );
-qboolean	CL_Download( const char *cmd, const char *pakname, qboolean autoDownload );
-
-#endif
-
 //=============================================================================
 
 extern	vm_t			*cgvm;	// interface to cgame dll or vm
@@ -400,10 +375,6 @@ extern	cvar_t	*cl_aviPipeFormat;
 extern	cvar_t	*cl_activeAction;
 
 extern	cvar_t	*cl_allowDownload;
-#ifdef USE_CURL
-extern	cvar_t	*cl_mapAutoDownload;
-extern	cvar_t	*cl_dlDirectory;
-#endif
 extern	cvar_t	*cl_conXOffset;
 extern	cvar_t	*cl_conColor;
 extern	cvar_t	*cl_inGameVideo;

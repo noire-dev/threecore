@@ -828,21 +828,6 @@ static void Con_DrawSolidConsole( float frac ) {
 		row--;
 	}
 
-#ifdef USE_CURL
-	if ( download.progress[ 0 ] ) 
-	{
-		currentColorIndex = ColorIndex( COLOR_CYAN );
-		re.SetColor( g_color_table[ currentColorIndex ] );
-
-		i = strlen( download.progress );
-		for ( x = 0 ; x < i ; x++ ) 
-		{
-			SCR_DrawSmallChar( ( x + 1 ) * smallchar_width,
-				lines - smallchar_height, download.progress[x] );
-		}
-	}
-#endif
-
 	currentColorIndex = ColorIndex( COLOR_WHITE );
 	re.SetColor( g_color_table[ currentColorIndex ] );
 

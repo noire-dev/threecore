@@ -30,6 +30,10 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #include "sdl_glw.h"
 #include "sdl_icon.h"
 
+#ifdef _WIN32
+#include <windows.h>
+#endif
+
 typedef enum {
 	RSERR_OK,
 	RSERR_INVALID_FULLSCREEN,

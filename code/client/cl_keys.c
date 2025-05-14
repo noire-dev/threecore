@@ -582,11 +582,6 @@ static void CL_KeyDownEvent( int key, unsigned time )
 
 	// escape is always handled special
 	if ( key == K_ESCAPE ) {
-#ifdef USE_CURL
-		if ( Com_DL_InProgress( &download ) && download.mapAutoDownload ) {
-			Com_DL_Cleanup( &download );
-		}
-#endif
 		if ( Key_GetCatcher() & KEYCATCH_CONSOLE ) {
 			// escape always closes console
 			Con_ToggleConsole_f();
