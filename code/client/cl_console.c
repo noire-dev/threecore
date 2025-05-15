@@ -71,7 +71,6 @@ console_t	con;
 
 cvar_t		*con_conspeed;
 cvar_t		*con_autoclear;
-cvar_t		*con_notifytime;
 cvar_t		*con_scale;
 
 int			g_console_field_width;
@@ -393,8 +392,6 @@ Con_Init
 */
 void Con_Init( void ) 
 {
-	con_notifytime = Cvar_Get( "con_notifytime", "3", 0 );
-	Cvar_SetDescription( con_notifytime, "Defines how long messages (from players or the system) are on the screen (in seconds)." );
 	con_conspeed = Cvar_Get( "scr_conspeed", "3", 0 );
 	Cvar_SetDescription( con_conspeed, "Console opening/closing scroll speed." );
 	con_autoclear = Cvar_Get("con_autoclear", "1", CVAR_ARCHIVE_ND);
@@ -655,70 +652,22 @@ Con_DrawNotify
 Draws the last few lines of output transparently over the game top
 ================
 */
-static void Con_DrawNotify( void )
-{
-	int		x, v;
-	short	*text;
-	int		i;
-	int		time;
-	int		skip;
-	int		currentColorIndex;
-	int		colorIndex;
-
-	currentColorIndex = ColorIndex( COLOR_WHITE );
-	re.SetColor( g_color_table[ currentColorIndex ] );
-
-	v = 380;
-	for (i= con.current-NUM_CON_TIMES+1 ; i<=con.current ; i++)
-	{
-		if (i < 0)
-			continue;
-		time = con.times[i % NUM_CON_TIMES];
-		if (time == 0)
-			continue;
-		time = cls.realtime - time;
-		if ( time >= con_notifytime->value*1000 )
-			continue;
-		text = con.text + (i % con.totallines)*con.linewidth;
-
-		if (cl.snap.ps.pm_type != PM_INTERMISSION && Key_GetCatcher( ) & (KEYCATCH_UI | KEYCATCH_CGAME) ) {
-			continue;
-		}
-
-		for (x = 0 ; x < con.linewidth ; x++) {
-			if ( ( text[x] & 0xff ) == ' ' ) {
-				continue;
-			}
-			colorIndex = ( text[x] >> 8 ) & 63;
-			if ( currentColorIndex != colorIndex ) {
-				currentColorIndex = colorIndex;
-				re.SetColor( g_color_table[ colorIndex ] );
-			}
-			SCR_DrawSmallChar( cl_conXOffset->integer + con.xadjust + (x+1)*smallchar_width, v, text[x] & 0xff );
-		}
-
-		v += smallchar_height;
-	}
-
-	re.SetColor( NULL );
+static void Con_DrawNotify( void ) {
+	int		v, skip;
 
 	if ( Key_GetCatcher() & (KEYCATCH_UI | KEYCATCH_CGAME) ) {
 		return;
 	}
 
 	// draw the chat line
-	if ( Key_GetCatcher( ) & KEYCATCH_MESSAGE )
-	{
+	if ( Key_GetCatcher( ) & KEYCATCH_MESSAGE ) {
 		// rescale to virtual 640x480 space
 		v /= cls.glconfig.vidHeight / 480.0;
 
-		if (chat_team)
-		{
+		if (chat_team) {
 			SCR_DrawBigString( SMALLCHAR_WIDTH, v, "Team chat:", 1.0f, qfalse );
 			skip = 11;
-		}
-		else
-		{
+		} else {
 			SCR_DrawBigString( SMALLCHAR_WIDTH, v, "Chat:", 1.0f, qfalse );
 			skip = 6;
 		}
