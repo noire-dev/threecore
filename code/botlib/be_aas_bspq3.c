@@ -114,20 +114,6 @@ cname_t contentnames[] =
 	{CONTENTS_LADDER,"CONTENTS_LADDER"},
 	{0, 0}
 };
-#if 0
-void PrintContents(int contents)
-{
-	int i;
-
-	for (i = 0; contentnames[i].value; i++)
-	{
-		if (contents & contentnames[i].value)
-		{
-			botimport.Print(PRT_MESSAGE, "%s\n", contentnames[i].name);
-		} //end if
-	} //end for
-} //end of the function PrintContents
-#endif
 #endif // BSP_DEBUG
 //===========================================================================
 // traces axial boxes of any size through the world
@@ -173,30 +159,6 @@ qboolean AAS_EntityCollision(int entnum,
 	} //end if
 	return qfalse;
 } //end of the function AAS_EntityCollision
-#if 0
-//===========================================================================
-// returns true if in Potentially Hearable Set
-//
-// Parameter:				-
-// Returns:					-
-// Changes Globals:		-
-//===========================================================================
-qboolean AAS_inPVS(vec3_t p1, vec3_t p2)
-{
-	return botimport.inPVS(p1, p2);
-} //end of the function AAS_InPVS
-//===========================================================================
-// returns true if in Potentially Visible Set
-//
-// Parameter:				-
-// Returns:					-
-// Changes Globals:		-
-//===========================================================================
-qboolean AAS_inPHS(vec3_t p1, vec3_t p2)
-{
-	return qtrue;
-} //end of the function AAS_inPHS
-#endif
 //===========================================================================
 //
 // Parameter:				-
@@ -227,18 +189,6 @@ bsp_link_t *AAS_BSPLinkEntity(vec3_t absmins, vec3_t absmaxs, int entnum, int mo
 {
 	return NULL;
 } //end of the function AAS_BSPLinkEntity
-#if 0
-//===========================================================================
-//
-// Parameter:				-
-// Returns:					-
-// Changes Globals:		-
-//===========================================================================
-int AAS_BoxEntities(vec3_t absmins, vec3_t absmaxs, int *list, int maxcount)
-{
-	return 0;
-} //end of the function AAS_BoxEntities
-#endif
 //===========================================================================
 //
 // Parameter:			-
@@ -434,17 +384,6 @@ static void AAS_ParseBSPEntities(void)
 	} //end while
 	FreeScript(script);
 } //end of the function AAS_ParseBSPEntities
-#if 0
-//===========================================================================
-//
-// Parameter:				-
-// Returns:					-
-// Changes Globals:		-
-//===========================================================================
-static int AAS_BSPTraceLight(vec3_t start, vec3_t end, vec3_t endpos, int *red, int *green, int *blue)
-{
-	return 0;
-#endif
 //===========================================================================
 //
 // Parameter:				-
