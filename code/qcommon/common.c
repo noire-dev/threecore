@@ -87,12 +87,8 @@ cvar_t	*com_affinityMask;
 static cvar_t *com_logfile;		// 1 = buffer log, 2 = flush after each print
 static cvar_t *com_showtrace;
 cvar_t	*com_version;
-static cvar_t *com_buildScript;	// for automated data building scripts
 
 #ifndef DEDICATED
-static cvar_t	*com_introPlayed;
-cvar_t	*com_skipIdLogo;
-
 cvar_t	*cl_paused;
 cvar_t	*cl_packetdelay;
 cvar_t	*com_cl_running;
@@ -317,12 +313,6 @@ void NORETURN FORMAT_PRINTF(2, 3) QDECL Com_Error( errorParm_t code, const char 
 	com_errorEntered = qtrue;
 
 	Cvar_SetIntegerValue( "com_errorCode", code );
-
-	// when we are running automated scripts, make sure we
-	// know if anything failed
-	if ( com_buildScript && com_buildScript->integer ) {
-		code = ERR_FATAL;
-	}
 
 	// if we are getting a solid stream of ERR_DROP, do an ERR_FATAL
 	currentTime = Sys_Milliseconds();
@@ -606,45 +596,6 @@ void Com_StartupVariable( const char *match ) {
 	}
 }
 
-
-/*
-=================
-Com_AddStartupCommands
-
-Adds command line parameters as script statements
-Commands are separated by + signs
-
-Returns qtrue if any late commands were added, which
-will keep the demoloop from immediately starting
-=================
-*/
-static qboolean Com_AddStartupCommands( void ) {
-	int		i;
-	qboolean	added;
-
-	added = qfalse;
-	// quote every token, so args with semicolons can work
-	for (i=0 ; i < com_numConsoleLines ; i++) {
-		if ( !com_consoleLines[i] || !com_consoleLines[i][0] ) {
-			continue;
-		}
-
-		// set commands already added with Com_StartupVariable
-		if ( !Q_stricmpn( com_consoleLines[i], "set ", 4 ) ) {
-			continue;
-		}
-
-		added = qtrue;
-		Cbuf_AddText( com_consoleLines[i] );
-		Cbuf_AddText( "\n" );
-	}
-
-	return added;
-}
-
-
-//============================================================================
-
 void Info_Print( const char *s ) {
 	char	key[BIG_INFO_KEY];
 	char	value[BIG_INFO_VALUE];
@@ -661,7 +612,6 @@ void Info_Print( const char *s ) {
 
 	} while ( *s != '\0' );
 }
-
 
 /*
 ============
@@ -684,7 +634,6 @@ static const char *Com_StringContains( const char *str1, const char *str2, int l
 	}
 	return NULL;
 }
-
 
 /*
 ============
@@ -755,7 +704,6 @@ int Com_Filter( const char *filter, const char *name )
 	}
 	return qtrue;
 }
-
 
 /*
 ============
@@ -3603,17 +3551,7 @@ void Com_Init( char *commandLine ) {
 	com_sv_running = Cvar_Get( "sv_running", "0", CVAR_ROM | CVAR_NOTABCOMPLETE );
 	Cvar_SetDescription( com_sv_running, "Communicates to game modules if there is a server currently running." );
 
-	com_buildScript = Cvar_Get( "com_buildScript", "0", 0 );
-	Cvar_SetDescription( com_buildScript, "Loads all game assets, regardless whether they are required or not." );
-
 	Cvar_Get( "com_errorMessage", "", CVAR_ROM | CVAR_NORESTART );
-
-#ifndef DEDICATED
-	com_introPlayed = Cvar_Get( "com_introplayed", "0", CVAR_ARCHIVE );
-	Cvar_SetDescription( com_introPlayed, "Skips the introduction cinematic." );
-	com_skipIdLogo  = Cvar_Get( "com_skipIdLogo", "0", CVAR_ARCHIVE );
-	Cvar_SetDescription( com_skipIdLogo, "Skip playing Id Software logo cinematic at startup." );
-#endif
 
 	if ( com_dedicated->integer ) {
 		if ( !com_viewlog->integer ) {
@@ -3679,24 +3617,8 @@ void Com_Init( char *commandLine ) {
 #ifndef DEDICATED
 	if ( !com_dedicated->integer ) {
 		CL_Init();
-		// Sys_ShowConsole( com_viewlog->integer, qfalse ); // moved down
 	}
 #endif
-
-	// add + commands from command line
-	if ( !Com_AddStartupCommands() ) {
-		// if the user didn't give any commands, run default action
-		if ( !com_dedicated->integer ) {
-#ifndef DEDICATED
-			if ( !com_skipIdLogo || !com_skipIdLogo->integer )
-				Cbuf_AddText( "cinematic sandbox_logo.RoQ\n" );
-			if( !com_introPlayed->integer ) {
-				Cvar_Set( com_introPlayed->name, "1" );
-				Cvar_Set( "nextmap", "cinematic sandbox_intro.RoQ" );
-			}
-#endif
-		}
-	}
 
 #ifndef DEDICATED
 	CL_StartHunkUsers();

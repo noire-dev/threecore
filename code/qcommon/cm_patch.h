@@ -20,8 +20,8 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 ===========================================================================
 */
 
-#define	MAX_FACETS			4096
-#define	MAX_PATCH_PLANES	(65536+128)
+#define	MAX_FACETS			1024
+#define	MAX_PATCH_PLANES	(2048+128)
 
 typedef struct {
 	float	plane[4];

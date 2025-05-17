@@ -153,68 +153,6 @@ const char *Sys_DefaultHomePath( void )
 #endif
 }
 
-
-/*
-================
-Sys_SteamPath
-================
-*/
-const char *Sys_SteamPath( void )
-{
-	static TCHAR steamPath[ MAX_OSPATH ]; // will be converted from TCHAR to ANSI
-
-#if defined(STEAMPATH_NAME) || defined(STEAMPATH_APPID)
-	HKEY steamRegKey;
-	DWORD pathLen = MAX_OSPATH;
-	qboolean finishPath = qfalse;
-#endif
-
-#ifdef STEAMPATH_APPID
-	// Assuming Steam is a 32-bit app
-	if ( !steamPath[0] && RegOpenKeyEx(HKEY_LOCAL_MACHINE, AtoW("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\Steam App " STEAMPATH_APPID), 0, KEY_QUERY_VALUE | KEY_WOW64_32KEY, &steamRegKey ) == ERROR_SUCCESS ) 
-	{
-		pathLen = sizeof( steamPath );
-		if ( RegQueryValueEx( steamRegKey, AtoW("InstallLocation"), NULL, NULL, (LPBYTE)steamPath, &pathLen ) != ERROR_SUCCESS )
-			steamPath[ 0 ] = '\0';
-
-		RegCloseKey( steamRegKey );
-	}
-
-#ifdef STEAMPATH_NAME
-	if ( !steamPath[0] && RegOpenKeyEx(HKEY_CURRENT_USER, AtoW("Software\\Valve\\Steam"), 0, KEY_QUERY_VALUE, &steamRegKey ) == ERROR_SUCCESS )
-	{
-		pathLen = sizeof( steamPath );
-		if ( RegQueryValueEx( steamRegKey, AtoW("SteamPath"), NULL, NULL, (LPBYTE)steamPath, &pathLen ) != ERROR_SUCCESS ) {
-			pathLen = sizeof( steamPath );
-			if ( RegQueryValueEx( steamRegKey, AtoW("InstallPath"), NULL, NULL, (LPBYTE)steamPath, &pathLen ) != ERROR_SUCCESS )
-				steamPath[ 0 ] = '\0';
-		}
-
-		if ( steamPath[ 0 ] )
-			finishPath = qtrue;
-
-		RegCloseKey( steamRegKey );
-	}
-#endif
-
-	if ( steamPath[ 0 ] )
-	{
-		if ( pathLen == sizeof( steamPath ) )
-			pathLen--;
-
-		*( ((char*)steamPath) + pathLen )  = '\0';
-#ifdef UNICODE
-		strcpy( (char*)steamPath, WtoA( steamPath ) );
-#endif
-		if ( finishPath )
-			Q_strcat( (char*)steamPath, MAX_OSPATH, "\\SteamApps\\common\\" STEAMPATH_NAME );
-	}
-#endif
-
-	return (const char*)steamPath;
-}
-
-
 /*
 ================
 Sys_SetAffinityMask

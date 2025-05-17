@@ -436,19 +436,6 @@ const char *Sys_DefaultHomePath( void )
 	return ""; // assume current dir
 }
 
-
-/*
- ================
-Sys_SteamPath
-================
-*/
-const char *Sys_SteamPath( void )
-{
-	static char steamPath[ MAX_OSPATH ];
-	return steamPath;
-}
-
-
 /*
 =================
 Sys_ShowConsole

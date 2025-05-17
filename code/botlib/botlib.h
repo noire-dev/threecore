@@ -413,7 +413,7 @@ botlib_export_t *GetBotLibAPI( int apiVersion, botlib_import_t *import );
 
 name:						default:			module(s):			description:
 
-"basedir"					"baseq3"			be_interface.c		base directory
+"basedir"					"game"				be_interface.c		base directory
 "gamedir"					""					be_interface.c		game directory
 "homedir"					""					be_interface.c		home directory
 
@@ -464,7 +464,6 @@ name:						default:			module(s):			description:
 "forcereachability"			"0"					be_aas_main.c		force recalculation of reachabilities
 "forcewrite"				"0"					be_aas_main.c		force writing of aas file
 "aasoptimize"				"0"					be_aas_main.c		enable aas optimization
-"sv_mapChecksum"			"0"					be_aas_main.c		BSP file checksum
 "bot_visualizejumppads"		"0"					be_aas_reach.c		visualize jump pads
 
 "bot_reloadcharacters"		"0"					-					reload bot character files

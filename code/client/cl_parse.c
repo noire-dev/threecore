@@ -401,10 +401,7 @@ void CL_SystemInfoChanged( qboolean onlyGame ) {
 		if ( !Q_stricmp( key, "sv_serverid" ) || !Q_stricmp( key, "sv_fps" ) ) {
 			continue;
 		}
-		if ( !Q_stricmp( key, "sv_paks" ) || !Q_stricmp( key, "sv_pakNames" ) ) {
-			continue;
-		}
-		if ( !Q_stricmp( key, "sv_referencedPaks" ) || !Q_stricmp( key, "sv_referencedPakNames" ) ) {
+		if ( !Q_stricmp( key, "sv_referencedPakNames" ) ) {
 			continue;
 		}
 

@@ -695,16 +695,13 @@ void CL_ReadDemoMessage( void ) {
 CL_DemoExtCallback
 ====================
 */
-static qboolean CL_DemoNameCallback_f( const char *filename, int length )
-{
+static qboolean CL_DemoNameCallback_f( const char *filename, int length ) {
 	const int ext_len = strlen( "." "demo" );
 	const int num_len = 2;
-	int version;
 
 	if ( length <= ext_len + num_len || Q_stricmpn( filename + length - (ext_len + num_len), "." "demo", ext_len ) != 0 )
 		return qfalse;
-
-	version = atoi( filename + length - num_len );
+	
 	return qtrue;
 }
 

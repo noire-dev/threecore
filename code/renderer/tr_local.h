@@ -289,8 +289,7 @@ typedef struct {
 } texModInfo_t;
 
 
-#define MAX_IMAGE_ANIMATIONS		64
-#define MAX_IMAGE_ANIMATIONS_VQ3	64
+#define MAX_IMAGE_ANIMATIONS		24
 
 #define LIGHTMAP_INDEX_NONE			0
 #define LIGHTMAP_INDEX_SHADER		1

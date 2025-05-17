@@ -792,7 +792,6 @@ const char *FS_LoadedPakNames( void );
 
 qboolean FS_ExcludeReference( void );
 const char *FS_ReferencedPakNames( void );
-const char *FS_ReferencedPakChecksums( void );
 
 void FS_ClearPakReferences( int flags );
 // clears referenced booleans on loaded pk3s
@@ -1264,7 +1263,6 @@ qboolean Sys_ResetReadOnlyAttribute( const char *ospath );
 const char *Sys_Pwd( void );
 const char *Sys_DefaultBasePath( void );
 const char *Sys_DefaultHomePath( void );
-const char *Sys_SteamPath( void );
 
 #ifdef __APPLE__
 char    *Sys_DefaultAppPath( void );

@@ -486,8 +486,6 @@ void SV_SpawnServer( const char *mapname, qboolean killBots ) {
 	// set serverinfo visible name
 	Cvar_Set( "mapname", mapname );
 
-	Cvar_SetIntegerValue( "sv_mapChecksum", checksum );
-
 	// serverid should be different each time
 	sv.serverId = com_frameTime;
 	sv.restartedServerId = sv.serverId;
@@ -574,12 +572,6 @@ void SV_SpawnServer( const char *mapname, qboolean killBots ) {
 	}
 	Cvar_Set( "sv_referencedPakNames", p );
 
-	p = FS_ReferencedPakChecksums();
-	Cvar_Set( "sv_referencedPaks", p );
-
-	Cvar_Set( "sv_paks", "" );
-	Cvar_Set( "sv_pakNames", "" ); // not used on client-side
-
 	// save systeminfo and serverinfo strings
 	SV_SetConfigstring( CS_SYSTEMINFO, Cvar_InfoString_Big( CVAR_SYSTEMINFO, NULL ) );
 	cvar_modifiedFlags &= ~CVAR_SYSTEMINFO;
@@ -652,9 +644,6 @@ void SV_Init( void )
 	// systeminfo
 	Cvar_Get( "sv_cheats", "1", CVAR_SYSTEMINFO | CVAR_ROM );
 	sv_serverid = Cvar_Get( "sv_serverid", "0", CVAR_SYSTEMINFO | CVAR_ROM );
-	Cvar_Get( "sv_paks", "", CVAR_SYSTEMINFO | CVAR_ROM );
-	Cvar_Get( "sv_pakNames", "", CVAR_SYSTEMINFO | CVAR_ROM );
-	Cvar_Get( "sv_referencedPaks", "", CVAR_SYSTEMINFO | CVAR_ROM );
 	sv_referencedPakNames = Cvar_Get( "sv_referencedPakNames", "", CVAR_SYSTEMINFO | CVAR_ROM );
 	Cvar_SetDescription( sv_referencedPakNames, "Variable holds a list of all the pk3 files the server loaded data from." );
 
@@ -689,8 +678,6 @@ void SV_Init( void )
 	Cvar_SetDescription( sv_padPackets, "Adds padding bytes to network packets for rate debugging." );
 	sv_killserver = Cvar_Get( "sv_killserver", "0", 0 );
 	Cvar_SetDescription( sv_killserver, "Internal flag to manage server state." );
-	sv_mapChecksum = Cvar_Get( "sv_mapChecksum", "", CVAR_ROM );
-	Cvar_SetDescription( sv_mapChecksum, "Allows check for client server map to match." );
 	sv_lanForceRate = Cvar_Get( "sv_lanForceRate", "1", CVAR_ARCHIVE_ND );
 	Cvar_SetDescription( sv_lanForceRate, "Forces LAN clients to the maximum rate instead of accepting client setting." );
 
@@ -819,9 +806,7 @@ void SV_Shutdown( const char *finalmsg ) {
 #endif
 
 	// clean some server cvars
-	Cvar_Set( "sv_referencedPaks", "" );
 	Cvar_Set( "sv_referencedPakNames", "" );
-	Cvar_Set( "sv_mapChecksum", "" );
 	Cvar_Set( "sv_serverid", "0" );
 
 	Sys_SetStatus( "Server is not running" );

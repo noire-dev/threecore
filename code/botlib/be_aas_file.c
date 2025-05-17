@@ -381,14 +381,7 @@ int AAS_LoadAASFile(char *filename)
 	{
 		AAS_DData((unsigned char *) &header + 8, sizeof(aas_header_t) - 8);
 	} //end if
-	//
-	aasworld.bspchecksum = atoi(LibVarGetString( "sv_mapChecksum"));
-	/*if (LittleLong(header.bspchecksum) != aasworld.bspchecksum)
-	{
-		AAS_Error("aas file %s is out of date\n", filename);
-		botimport.FS_FCloseFile(fp);
-		return BLERR_WRONGAASFILEVERSION;
-	}*/ //end if
+
 	//load the lumps:
 	//bounding boxes
 	offset = LittleLong(header.lumps[AASLUMP_BBOXES].fileofs);

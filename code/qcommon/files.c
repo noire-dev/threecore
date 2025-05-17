@@ -287,7 +287,6 @@ static	cvar_t		*fs_homepath;
 // Also search the .app bundle for .pk3 files
 static  cvar_t          *fs_apppath;
 #endif
-static	cvar_t		*fs_steampath;
 
 static	cvar_t		*fs_basepath;
 static	cvar_t		*fs_basegame;
@@ -888,28 +887,13 @@ int FS_SV_FOpenFileRead( const char *filename, fileHandle_t *fp ) {
 	if ( !fd->handleFiles.file.o )
 	{
 		// NOTE TTimo on non *nix systems, fs_homepath == fs_basepath, might want to avoid
-		if ( Q_stricmp( fs_homepath->string, fs_basepath->string ) != 0 )
-		{
+		if ( Q_stricmp( fs_homepath->string, fs_basepath->string ) != 0 ) {
 			// search basepath
 			ospath = FS_BuildOSPath( fs_basepath->string, filename, NULL );
 
 			if ( fs_debug->integer )
 			{
 				Com_Printf( "FS_SV_FOpenFileRead (fs_basepath): %s\n", ospath );
-			}
-
-			fd->handleFiles.file.o = Sys_FOpen( ospath, "rb" );
-		}
-
-		// Check fs_steampath too
-		if ( !fd->handleFiles.file.o && fs_steampath->string[0] )
-		{
-			// search steampath
-			ospath = FS_BuildOSPath( fs_steampath->string, filename, NULL );
-
-			if ( fs_debug->integer )
-			{
-				Com_Printf( "FS_SV_FOpenFileRead (fs_steampath): %s\n", ospath );
 			}
 
 			fd->handleFiles.file.o = Sys_FOpen( ospath, "rb" );
@@ -3508,7 +3492,7 @@ static int FS_GetModList( char *listbuf, int bufsize ) {
 	qboolean bDrop = qfalse;
 
 	// paths to search for mods
-	cvar_t *const *paths[] = { &fs_basepath, &fs_homepath, &fs_steampath };
+	cvar_t *const *paths[] = { &fs_basepath, &fs_homepath };
 
 	*listbuf = '\0';
 	nMods = nTotal = 0;
@@ -4346,7 +4330,6 @@ static void FS_Startup( void ) {
 	Cvar_SetDescription( fs_basepath, "Write-protected CVAR specifying the path to the installation folder of the game." );
 	fs_basegame = Cvar_Get( "fs_basegame", BASEGAME, CVAR_INIT | CVAR_PROTECTED );
 	Cvar_SetDescription( fs_basegame, "Write-protected CVAR specifying the path to the base game(s) folder(s), separated by '/'." );
-	fs_steampath = Cvar_Get( "fs_steampath", Sys_SteamPath(), CVAR_INIT | CVAR_PROTECTED | CVAR_PRIVATE );
 
 	/* parse fs_basegame cvar */
 	if ( basegame_cnt == 0 || Q_stricmp( basegame, fs_basegame->string ) ) {
@@ -4402,14 +4385,6 @@ static void FS_Startup( void ) {
 #endif
 #endif
 
-	// add search path elements in reverse priority order
-	if (fs_steampath->string[0]) {
-		// handle multiple basegames:
-		for (i = 0; i < basegame_cnt; i++) {
-			FS_AddGameDirectory( fs_steampath->string, basegames[i] );
-		}
-	}
-
 	if (fs_basepath->string[0]) {
 		// handle multiple basegames:
 		for (i = 0; i < basegame_cnt; i++) {
@@ -4439,9 +4414,6 @@ static void FS_Startup( void ) {
 
 	// check for additional game folder for mods
 	if ( fs_gamedirvar->string[0] != '\0' && !FS_IsBaseGame( fs_gamedirvar->string ) ) {
-		if ( fs_steampath->string[0] != '\0' ) {
-			FS_AddGameDirectory( fs_steampath->string, fs_gamedirvar->string );
-		}
 		if ( fs_basepath->string[0] != '\0' ) {
 			FS_AddGameDirectory( fs_basepath->string, fs_gamedirvar->string );
 		}
@@ -4530,35 +4502,6 @@ const char *FS_LoadedPakNames( void ) {
 	return info;
 }
 #endif
-
-/*
-=====================
-FS_ReferencedPakChecksums
-
-Returns a space separated string containing the checksums of all referenced pk3 files.
-The server will send this to the clients so they can check which files should be auto-downloaded. 
-=====================
-*/
-const char *FS_ReferencedPakChecksums( void ) {
-	static char	info[BIG_INFO_STRING];
-	const searchpath_t *search;
-
-	info[0] = '\0';
-
-	for ( search = fs_searchpaths ; search ; search = search->next ) {
-		// is the element a pak file?
-		if ( search->pack ) {
-			if ( search->pack->exclude ) {
-				continue;
-			}
-			if ( search->pack->referenced || !FS_IsBaseGame( search->pack->pakGamename ) ) {
-				Q_strcat( info, sizeof( info ), va( "%i ", search->pack->checksum ) );
-			}
-		}
-	}
-
-	return info;
-}
 
 /*
 =====================

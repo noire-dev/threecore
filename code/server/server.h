@@ -269,7 +269,6 @@ extern	cvar_t	*sv_reconnectlimit;
 extern	cvar_t	*sv_padPackets;
 extern	cvar_t	*sv_killserver;
 extern	cvar_t	*sv_mapname;
-extern	cvar_t	*sv_mapChecksum;
 extern	cvar_t	*sv_referencedPakNames;
 extern	cvar_t	*sv_serverid;
 extern	cvar_t	*sv_minRate;
