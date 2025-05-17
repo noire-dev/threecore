@@ -48,8 +48,6 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #define GAMENAME_FOR_MASTER		"OpenSandbox"
 #define HEARTBEAT_FOR_MASTER	"OpenSandbox"
 
-#define DEMOEXT	"dm_"			// standard demo extension
-
 //===========================================================================
 #define USE_BSP_COLMODELS 1 	//server side
 

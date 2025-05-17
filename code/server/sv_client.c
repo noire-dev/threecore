@@ -130,17 +130,10 @@ void SV_GetChallenge( const netadr_t *from ) {
 		// legacy client query, don't send unneeded information
 		NET_OutOfBandPrint( NS_SERVER, from, "challengeResponse %i", challenge );
 	} else {
-		int sv_proto = com_protocol->integer;
-		if ( sv_proto == DEFAULT_PROTOCOL_VERSION ) {
-			// we support new protocol features by default
-			sv_proto = NEW_PROTOCOL_VERSION;
-		}
-
 		// Grab the client's challenge to echo back (if given)
 		clientChallenge = atoi( Cmd_Argv( 1 ) );
 
-		NET_OutOfBandPrint( NS_SERVER, from, "challengeResponse %i %i %i",
-			challenge, clientChallenge, sv_proto );
+		NET_OutOfBandPrint( NS_SERVER, from, "challengeResponse %i %i", challenge, clientChallenge );
 	}
 }
 
@@ -187,7 +180,6 @@ void SV_DirectConnect( const netadr_t *from ) {
 	char		userinfo[MAX_INFO_STRING];
 	int			i, n;
 	client_t	*cl, *newcl;
-	//sharedEntity_t *ent;
 	int			clientNum;
 	int			qport;
 	int			challenge;
@@ -195,10 +187,7 @@ void SV_DirectConnect( const netadr_t *from ) {
 	int			startIndex;
 	intptr_t	denied;
 	int			count;
-	int			cl_proto, sv_proto;
 	const char	*ip, *info, *v;
-	qboolean	compat;
-	qboolean	longstr;
 
 	Com_DPrintf( "SVC_DirectConnect()\n" );
 
@@ -230,10 +219,8 @@ void SV_DirectConnect( const netadr_t *from ) {
 	// verify challenge in first place
 	info = Cmd_Argv( 1 );
 	v = Info_ValueForKey( info, "challenge" );
-	if ( *v == '\0' )
-	{
-		if ( !SVC_RateLimit( &bucket, 10, 200 ) )
-		{
+	if ( *v == '\0' ) {
+		if ( !SVC_RateLimit( &bucket, 10, 200 ) ) {
 			NET_OutOfBandPrint( NS_SERVER, from, "print\nMissing challenge in userinfo.\n" );
 		}
 		return;
@@ -257,45 +244,8 @@ void SV_DirectConnect( const netadr_t *from ) {
 
 	Q_strncpyz( userinfo, info, sizeof( userinfo ) );
 
-	v = Info_ValueForKey( userinfo, "protocol" );
-	if ( *v == '\0' )
-	{
-		if ( !SVC_RateLimit( &bucket, 10, 200 ) )
-		{
-			NET_OutOfBandPrint( NS_SERVER, from, "print\nMissing protocol in userinfo.\n" );
-		}
-		return;
-	}
-	cl_proto = atoi( v );
-
-	sv_proto = com_protocol->integer;
-	if ( sv_proto == DEFAULT_PROTOCOL_VERSION )
-	{
-		// we support new protocol features by default
-		sv_proto = NEW_PROTOCOL_VERSION;
-	}
-
-	if ( cl_proto <= OLD_PROTOCOL_VERSION )
-		compat = qtrue;
-	else
-	{
-		if ( cl_proto != sv_proto )
-		{
-			// avoid excessive outgoing traffic
-			if ( !SVC_RateLimit( &bucket, 10, 200 ) )
-			{
-				NET_OutOfBandPrint( NS_SERVER, from, "print\nServer uses protocol version %i "
-					"(yours is %i).\n", sv_proto, cl_proto );
-			}
-			Com_DPrintf( "    rejected connect from version %i\n", cl_proto );
-			return;
-		}
-		compat = qfalse;
-	}
-
 	v = Info_ValueForKey( userinfo, "qport" );
-	if ( *v == '\0' )
-	{
+	if ( *v == '\0' ) {
 		if ( !SVC_RateLimit( &bucket, 10, 200 ) )
 		{
 			NET_OutOfBandPrint( NS_SERVER, from, "print\nMissing qport in userinfo.\n" );
@@ -304,22 +254,9 @@ void SV_DirectConnect( const netadr_t *from ) {
 	}
 	qport = atoi( Info_ValueForKey( userinfo, "qport" ) );
 
-	// if "client" is present in userinfo and it is a modern client
-	// then assume it can properly decode long strings and protocol extensions
-	if ( !compat && *Info_ValueForKey( userinfo, "client" ) != '\0' ) {
-		longstr = qtrue;
-	} else {
-		longstr = qfalse;
-		if ( com_protocolCompat ) {
-			// enforce dm68-compatible stream for other clients
-			compat = qtrue;
-		}
-	}
-
 	// we don't need these keys after connection, release some space in userinfo
 	Info_RemoveKey( userinfo, "challenge" );
 	Info_RemoveKey( userinfo, "qport" );
-	Info_RemoveKey( userinfo, "protocol" );
 	Info_RemoveKey( userinfo, "client" );
 
 	// don't let "ip" overflow userinfo string
@@ -466,16 +403,13 @@ gotnewcl:
 	newcl->challenge = challenge;
 
 	// save the address
-	newcl->compat = compat;
-	Netchan_Setup( NS_SERVER, &newcl->netchan, from, qport, challenge, compat );
+	Netchan_Setup( NS_SERVER, &newcl->netchan, from, qport, challenge );
 
 	// init the netchan queue
 	newcl->netchan_end_queue = &newcl->netchan_start_queue;
 
 	// save the userinfo
 	Q_strncpyz( newcl->userinfo, userinfo, sizeof(newcl->userinfo) );
-
-	newcl->longstr = longstr;
 
 	SV_UserinfoChanged( newcl, qtrue, qfalse ); // update userinfo, do not run filter
 
@@ -491,11 +425,7 @@ gotnewcl:
 	}
 
 	// send the connect packet to the client
-	if ( longstr /*&& !compat*/ ) {
-		NET_OutOfBandPrint( NS_SERVER, from, "connectResponse %d %d", challenge, sv_proto );
-	} else {
-		NET_OutOfBandPrint( NS_SERVER, from, "connectResponse %d", challenge );
-	}
+	NET_OutOfBandPrint( NS_SERVER, from, "connectResponse %d", challenge );
 
 	SV_PrintClientStateChange( newcl, CS_CONNECTED );
 

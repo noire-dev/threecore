@@ -146,7 +146,7 @@ void QDECL SV_SendServerCommand( client_t *cl, const char *fmt, ... ) {
 	char		message[MAX_STRING_CHARS+128]; // slightly larger than allowed, to detect overflows
 	client_t	*client;
 	int			j, len;
-	
+
 	va_start( argptr, fmt );
 	len = Q_vsnprintf( message, sizeof( message ), fmt, argptr );
 	va_end( argptr );
@@ -154,7 +154,7 @@ void QDECL SV_SendServerCommand( client_t *cl, const char *fmt, ... ) {
 	if ( cl != NULL ) {
 		// outdated clients can't properly decode 1023-chars-long strings
 		// http://aluigi.altervista.org/adv/q3msgboom-adv.txt
-		if ( len <= 1022 || cl->longstr ) {
+		if ( len <= 1022 ){
 			SV_AddServerCommand( cl, message );
 		}
 		return;
@@ -167,7 +167,7 @@ void QDECL SV_SendServerCommand( client_t *cl, const char *fmt, ... ) {
 
 	// send the data to all relevant clients
 	for ( j = 0, client = svs.clients; j < sv.maxclients; j++, client++ ) {
-		if ( len <= 1022 || client->longstr ) {
+		if ( len <= 1022 ){
 			SV_AddServerCommand( client, message );
 		}
 	}
@@ -738,7 +738,6 @@ static void SVC_Info( const netadr_t *from ) {
 	// to prevent timed spoofed reply packets that add ghost servers
 	Info_SetValueForKey( infostring, "challenge", Cmd_Argv(1) );
 
-	Info_SetValueForKey( infostring, "protocol", va( "%i", com_protocol->integer ) );
 	Info_SetValueForKey( infostring, "hostname", sv_hostname->string );
 	Info_SetValueForKey( infostring, "mapname", sv_mapname->string );
 	Info_SetValueForKey( infostring, "clients", va("%i", count) );

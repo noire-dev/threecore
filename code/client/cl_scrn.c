@@ -396,47 +396,6 @@ static void SCR_DrawDemoRecording( void ) {
 	}
 }
 
-
-#ifdef USE_VOIP
-/*
-=================
-SCR_DrawVoipMeter
-=================
-*/
-static void SCR_DrawVoipMeter( void ) {
-	char	buffer[16];
-	char	string[256];
-	int limit, i;
-
-	if (!cl_voipShowMeter->integer)
-		return;  // player doesn't want to show meter at all.
-	else if (!cl_voipSend->integer)
-		return;  // not recording at the moment.
-	else if (clc.state != CA_ACTIVE)
-		return;  // not connected to a server.
-	else if (!clc.voipEnabled)
-		return;  // server doesn't support VoIP.
-	else if (clc.demoplaying)
-		return;  // playing back a demo.
-	else if (!cl_voip->integer)
-		return;  // client has VoIP support disabled.
-
-	limit = (int) (clc.voipPower * 10.0f);
-	if (limit > 10)
-		limit = 10;
-
-	for (i = 0; i < limit; i++)
-		buffer[i] = '*';
-	while (i < 10)
-		buffer[i++] = ' ';
-	buffer[i] = '\0';
-
-	sprintf( string, "VoIP: [%s]", buffer );
-	SCR_DrawStringExt( 320 - strlen( string ) * 4, 10, 8, string, g_color_table[ ColorIndex( COLOR_WHITE ) ], qtrue, qfalse );
-}
-#endif
-
-
 /*
 ===============================================================================
 
@@ -589,9 +548,6 @@ static void SCR_DrawScreenField( void ) {
 		case CA_ACTIVE:
 			CL_CGameRendering();
 			SCR_DrawDemoRecording();
-#ifdef USE_VOIP
-			SCR_DrawVoipMeter();
-#endif
 			break;
 		}
 	}

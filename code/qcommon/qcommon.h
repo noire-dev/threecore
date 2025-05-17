@@ -263,13 +263,12 @@ typedef struct {
 	int			lastSentTime;
 	int			lastSentSize;
 
-	qboolean	compat; // ioq3 extension
 	qboolean	isLANAddress;
 
 } netchan_t;
 
 void Netchan_Init( int qport );
-void Netchan_Setup( netsrc_t sock, netchan_t *chan, const netadr_t *adr, int port, int challenge, qboolean compat );
+void Netchan_Setup( netsrc_t sock, netchan_t *chan, const netadr_t *adr, int port, int challenge );
 
 void Netchan_Transmit( netchan_t *chan, int length, const byte *data );
 void Netchan_TransmitNextFragment( netchan_t *chan );
@@ -286,17 +285,7 @@ PROTOCOL
 ==============================================================
 */
 
-#define	OLD_PROTOCOL_VERSION	68
-// new protocol with UDP spoofing protection:
-#define	NEW_PROTOCOL_VERSION	71
-// 1.31 - 67
-
-#define DEFAULT_PROTOCOL_VERSION	NEW_PROTOCOL_VERSION
-
-
-// maintain a list of compatible protocols for demo playing
-// NOTE: that stuff only works with two digits protocols
-extern const int demo_protocols[];
+#define	PROTOCOL_VERSION 71
 
 // override on command line, config files etc.
 #ifndef AUTHORIZE_SERVER_NAME
@@ -328,10 +317,6 @@ enum svc_ops_e {
 	svc_download,				// [short] size [size bytes]
 	svc_snapshot,
 	svc_EOF,
-
-	// new commands, supported only by ioquake3 protocol but not legacy
-	svc_voipSpeex,     // not wrapped in USE_VOIP, so this value is reserved.
-	svc_voipOpus,      //
 };
 
 
@@ -345,10 +330,6 @@ enum clc_ops_e {
 	clc_moveNoDelta,		// [[usercmd_t]
 	clc_clientCommand,		// [string] message
 	clc_EOF,
-
-	// new commands, supported only by ioquake3 protocol but not legacy
-	clc_voipSpeex,   // not wrapped in USE_VOIP, so this value is reserved.
-	clc_voipOpus,    //
 };
 
 /*
@@ -988,8 +969,6 @@ extern	cvar_t	*com_viewlog;			// 0 = hidden, 1 = visible, 2 = minimized
 extern	cvar_t	*com_version;
 extern	cvar_t	*com_journal;
 extern	cvar_t	*com_cameraMode;
-extern	cvar_t	*com_protocol;
-extern	qboolean com_protocolCompat;
 extern 	cvar_t	*cl_selectedmod;
 extern 	cvar_t	*cl_changeqvm;
 extern 	cvar_t	*os_32bit;

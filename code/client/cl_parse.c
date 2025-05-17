@@ -34,8 +34,6 @@ static const char *svc_strings[256] = {
 	"svc_download",
 	"svc_snapshot",
 	"svc_EOF",
-	"svc_voipSpeex", // ioq3 extension
-	"svc_voipOpus",  // ioq3 extension
 };
 
 static void SHOWNET( msg_t *msg, const char *s ) {
@@ -884,22 +882,6 @@ void CL_ParseServerMessage( msg_t *msg ) {
 				return;
 			CL_ParseDownload( msg );
 			break;
-		case svc_voipSpeex: // ioq3 extension
-			clc.dm68compat = qfalse;
-#ifdef USE_VOIP
-			CL_ParseVoip( msg, qtrue );
-			break;
-#else
-			return;
-#endif
-		case svc_voipOpus: // ioq3 extension
-			clc.dm68compat = qfalse;
-#ifdef USE_VOIP
-			CL_ParseVoip( msg, !clc.voipEnabled );
-			break;
-#else
-			return;
-#endif
 		}
 	}
 }

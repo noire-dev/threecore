@@ -216,7 +216,6 @@ void CL_StopRecord_f( void ) {
 	if ( clc.recordfile != FS_INVALID_HANDLE ) {
 		char tempName[MAX_OSPATH];
 		char finalName[MAX_OSPATH];
-		int protocol;
 		int	len, sequence;
 
 		// finish up
@@ -226,20 +225,9 @@ void CL_StopRecord_f( void ) {
 		FS_FCloseFile( clc.recordfile );
 		clc.recordfile = FS_INVALID_HANDLE;
 
-		// select proper extension
-		if ( clc.dm68compat || clc.demoplaying ) {
-			protocol = OLD_PROTOCOL_VERSION;
-		} else {
-			protocol = NEW_PROTOCOL_VERSION;
-		}
-
-		if ( com_protocol->integer != DEFAULT_PROTOCOL_VERSION ) {
-			protocol = com_protocol->integer;
-		}
-
 		Com_sprintf( tempName, sizeof( tempName ), "%s.tmp", clc.recordName );
 
-		Com_sprintf( finalName, sizeof( finalName ), "%s.%s%d", clc.recordName, DEMOEXT, protocol );
+		Com_sprintf( finalName, sizeof( finalName ), "%s.%s", clc.recordName, "demo" );
 
 		if ( clc.explicitRecordName ) {
 			FS_Remove( finalName );
@@ -247,8 +235,8 @@ void CL_StopRecord_f( void ) {
 			// add sequence suffix to avoid overwrite
 			sequence = 0;
 			while ( FS_FileExists( finalName ) && ++sequence < 1000 ) {
-				Com_sprintf( finalName, sizeof( finalName ), "%s-%02d.%s%d",
-					clc.recordName, sequence, DEMOEXT, protocol );
+				Com_sprintf( finalName, sizeof( finalName ), "%s-%02d.%s",
+					clc.recordName, sequence, "demo" );
 			}
 		}
 
@@ -527,8 +515,6 @@ Begins recording a demo from the current position
 static void CL_Record_f( void ) {
 	char		demoName[MAX_OSPATH];
 	char		name[MAX_OSPATH];
-	char		demoExt[16];
-	const char	*ext;
 	qtime_t		t;
 
 	if ( Cmd_Argc() > 2 ) {
@@ -548,33 +534,13 @@ static void CL_Record_f( void ) {
 		return;
 	}
 
-	// sync 0 doesn't prevent recording, so not forcing it off .. everyone does g_sync 1 ; record ; g_sync 0 ..
-	if ( NET_IsLocalAddress( &clc.serverAddress ) && !Cvar_VariableIntegerValue( "g_synchronousClients" ) ) {
-		Com_Printf (S_COLOR_YELLOW "WARNING: You should set 'g_synchronousClients 1' for smoother demo recording\n");
-	}
-
 	if ( Cmd_Argc() == 2 ) {
 		// explicit demo name specified
 		Q_strncpyz( demoName, Cmd_Argv( 1 ), sizeof( demoName ) );
-		ext = COM_GetExtension( demoName );
-		if ( *ext ) {
-			// strip demo extension
-			sprintf( demoExt, "%s%d", DEMOEXT, OLD_PROTOCOL_VERSION );
-			if ( Q_stricmp( ext, demoExt ) == 0 ) {
-				*(strrchr( demoName, '.' )) = '\0';
-			} else {
-				// check both protocols
-				sprintf( demoExt, "%s%d", DEMOEXT, NEW_PROTOCOL_VERSION );
-				if ( Q_stricmp( ext, demoExt ) == 0 ) {
-					*(strrchr( demoName, '.' )) = '\0';
-				}
-			}
-		}
 		Com_sprintf( name, sizeof( name ), "demos/%s", demoName );
 
 		clc.explicitRecordName = qtrue;
 	} else {
-
 		Com_RealTime( &t );
 		Com_sprintf( name, sizeof( name ), "demos/demo-%04d%02d%02d-%02d%02d%02d",
 			1900 + t.tm_year, 1 + t.tm_mon,	t.tm_mday, t.tm_hour, t.tm_min, t.tm_sec );
@@ -611,9 +577,6 @@ static void CL_Record_f( void ) {
 	// don't start saving messages until a non-delta compressed message is received
 	clc.demowaiting = qtrue;
 
-	// we will rename record to dm_68 or dm_71 depending from this flag
-	clc.dm68compat = qtrue;
-
 	// write out the gamestate message
 	CL_WriteGamestate( qtrue );
 
@@ -626,14 +589,9 @@ static void CL_Record_f( void ) {
 CL_CompleteRecordName
 ====================
 */
-static void CL_CompleteRecordName(const char *args, int argNum )
-{
-	if ( argNum == 2 )
-	{
-		char demoExt[ 16 ];
-
-		Com_sprintf( demoExt, sizeof( demoExt ), ".%s%d", DEMOEXT, com_protocol->integer );
-		Field_CompleteFilename( "demos", demoExt, qtrue, FS_MATCH_EXTERN | FS_MATCH_STICK );
+static void CL_CompleteRecordName(const char *args, int argNum ) {
+	if ( argNum == 2 ){
+		Field_CompleteFilename( "demos", "demo", qtrue, FS_MATCH_EXTERN | FS_MATCH_STICK );
 	}
 }
 
@@ -665,7 +623,6 @@ static void CL_DemoCompleted( void ) {
 	CL_Disconnect( qtrue );
 	CL_NextDemo();
 }
-
 
 /*
 =================
@@ -733,36 +690,6 @@ void CL_ReadDemoMessage( void ) {
 	}
 }
 
-
-/*
-====================
-CL_WalkDemoExt
-====================
-*/
-static int CL_WalkDemoExt( const char *arg, char *name, int name_len, fileHandle_t *handle )
-{
-	int i;
-
-	*handle = FS_INVALID_HANDLE;
-	i = 0;
-
-	while ( demo_protocols[ i ] )
-	{
-		Com_sprintf( name, name_len, "demos/%s.%s%d", arg, DEMOEXT, demo_protocols[ i ] );
-		FS_FOpenFileRead( name, handle, qtrue );
-		if ( *handle != FS_INVALID_HANDLE )
-		{
-			Com_Printf( "Demo file: %s\n", name );
-			return demo_protocols[ i ];
-		}
-		else
-			Com_Printf( "Not found: %s\n", name );
-		i++;
-	}
-	return -1;
-}
-
-
 /*
 ====================
 CL_DemoExtCallback
@@ -770,23 +697,16 @@ CL_DemoExtCallback
 */
 static qboolean CL_DemoNameCallback_f( const char *filename, int length )
 {
-	const int ext_len = strlen( "." DEMOEXT );
+	const int ext_len = strlen( "." "demo" );
 	const int num_len = 2;
 	int version;
 
-	if ( length <= ext_len + num_len || Q_stricmpn( filename + length - (ext_len + num_len), "." DEMOEXT, ext_len ) != 0 )
+	if ( length <= ext_len + num_len || Q_stricmpn( filename + length - (ext_len + num_len), "." "demo", ext_len ) != 0 )
 		return qfalse;
 
 	version = atoi( filename + length - num_len );
-	if ( version == com_protocol->integer )
-		return qtrue;
-
-	if ( version < 66 || version > NEW_PROTOCOL_VERSION )
-		return qfalse;
-
 	return qtrue;
 }
-
 
 /*
 ====================
@@ -795,14 +715,12 @@ CL_CompleteDemoName
 */
 static void CL_CompleteDemoName(const char *args, int argNum )
 {
-	if ( argNum == 2 )
-	{
+	if ( argNum == 2 ) {
 		FS_SetFilenameCallback( CL_DemoNameCallback_f );
-		Field_CompleteFilename( "demos", "." DEMOEXT "??", qfalse, FS_MATCH_ANY | FS_MATCH_STICK );
+		Field_CompleteFilename( "demos", "." "demo" "??", qfalse, FS_MATCH_ANY | FS_MATCH_STICK );
 		FS_SetFilenameCallback( NULL );
 	}
 }
-
 
 /*
 ====================
@@ -814,10 +732,7 @@ demo <demoname>
 */
 static void CL_PlayDemo_f( void ) {
 	char		name[MAX_OSPATH];
-	const char		*arg;
-	char		*ext_test;
-	int			protocol, i;
-	char		retry[MAX_OSPATH];
+	const char	*arg;
 	const char	*shortname, *slash;
 	fileHandle_t hFile;
 
@@ -829,41 +744,8 @@ static void CL_PlayDemo_f( void ) {
 	// open the demo file
 	arg = Cmd_Argv( 1 );
 
-	// check for an extension .DEMOEXT_?? (?? is protocol)
-	ext_test = strrchr(arg, '.');
-	if ( ext_test && !Q_stricmpn(ext_test + 1, DEMOEXT, ARRAY_LEN(DEMOEXT) - 1) )
-	{
-		protocol = atoi(ext_test + ARRAY_LEN(DEMOEXT));
-
-		for( i = 0; demo_protocols[ i ]; i++ )
-		{
-			if ( demo_protocols[ i ] == protocol )
-				break;
-		}
-
-		if ( demo_protocols[ i ] || protocol == com_protocol->integer  )
-		{
-			Com_sprintf(name, sizeof(name), "demos/%s", arg);
-			FS_FOpenFileRead( name, &hFile, qtrue );
-		}
-		else
-		{
-			size_t len;
-
-			Com_Printf("Protocol %d not supported for demos\n", protocol );
-			len = ext_test - arg;
-
-			if ( len > ARRAY_LEN( retry ) - 1 ) {
-				len = ARRAY_LEN( retry ) - 1;
-			}
-
-			Q_strncpyz( retry, arg, len + 1);
-			retry[len] = '\0';
-			protocol = CL_WalkDemoExt( retry, name, sizeof( name ), &hFile );
-		}
-	}
-	else
-		protocol = CL_WalkDemoExt( arg, name, sizeof( name ), &hFile );
+	Com_sprintf(name, sizeof(name), "demos/%s", arg);
+	FS_FOpenFileRead( name, &hFile, qtrue );
 
 	if ( hFile == FS_INVALID_HANDLE ) {
 		Com_Printf( S_COLOR_YELLOW "couldn't open %s\n", name );
@@ -880,8 +762,7 @@ static void CL_PlayDemo_f( void ) {
 	CL_Disconnect( qtrue );
 
 	// clc.demofile will be closed during CL_Disconnect so reopen it
-	if ( FS_FOpenFileRead( name, &clc.demofile, qtrue ) == -1 )
-	{
+	if ( FS_FOpenFileRead( name, &clc.demofile, qtrue ) == -1 ) {
 		// drop this time
 		Com_Error( ERR_DROP, "couldn't open %s\n", name );
 		return;
@@ -900,11 +781,6 @@ static void CL_PlayDemo_f( void ) {
 	clc.demoplaying = qtrue;
 	Q_strncpyz( cls.servername, shortname, sizeof( cls.servername ) );
 
-	if ( protocol <= OLD_PROTOCOL_VERSION )
-		clc.compat = qtrue;
-	else
-		clc.compat = qfalse;
-
 	// read demo messages until connected
 	while ( cls.state >= CA_CONNECTED && cls.state < CA_PRIMED ) {
 		CL_ReadDemoMessage();
@@ -914,7 +790,6 @@ static void CL_PlayDemo_f( void ) {
 	// time from the gamestate load from messing causing a time skip
 	clc.firstDemoFrameSkipped = qfalse;
 }
-
 
 /*
 ==================
@@ -939,7 +814,6 @@ static void CL_NextDemo( void ) {
 	Cbuf_Execute();
 }
 
-
 //======================================================================
 
 /*
@@ -952,7 +826,6 @@ static void CL_ShutdownVMs( void )
 	CL_ShutdownCGame();
 	CL_ShutdownUI();
 }
-
 
 /*
 =====================
@@ -984,7 +857,6 @@ void CL_ShutdownAll( void ) {
 	SCR_Done();
 }
 
-
 /*
 =================
 CL_ClearMemory
@@ -1003,7 +875,6 @@ void CL_ClearMemory( void ) {
 	}
 }
 
-
 /*
 =================
 CL_FlushMemory
@@ -1021,7 +892,6 @@ void CL_FlushMemory( void ) {
 
 	CL_StartHunkUsers();
 }
-
 
 /*
 =====================
@@ -1071,7 +941,6 @@ void CL_MapLoading( void ) {
 	}
 }
 
-
 /*
 =====================
 CL_ClearState
@@ -1085,7 +954,6 @@ void CL_ClearState( void ) {
 
 	Com_Memset( &cl, 0, sizeof( cl ) );
 }
-
 
 /*
 ====================
@@ -1109,7 +977,6 @@ static void CL_UpdateGUID( const char *prefix, int prefix_len )
 			prefix, prefix_len ) );
 }
 
-
 /*
 =====================
 CL_ResetOldGame
@@ -1120,7 +987,6 @@ void CL_ResetOldGame( void )
 	cl_oldGameSet = qfalse;
 	cl_oldGame[0] = '\0';
 }
-
 
 /*
 =====================
@@ -1140,7 +1006,6 @@ static qboolean CL_RestoreOldGame( void )
 	}
 	return qfalse;
 }
-
 
 /*
 =====================
@@ -1245,7 +1110,6 @@ qboolean CL_Disconnect( qboolean showMainMenu ) {
 
 	return cl_restarted;
 }
-
 
 /*
 ===================
@@ -2003,14 +1867,6 @@ static void CL_CheckForResend( void ) {
 			notOverflowed = qtrue;
 		}
 
-		if ( com_protocol->integer != DEFAULT_PROTOCOL_VERSION ) {
-			notOverflowed &= Info_SetValueForKey_s( info, MAX_USERINFO_LENGTH, "protocol",
-				com_protocol->string );
-		} else {
-			notOverflowed &= Info_SetValueForKey_s( info, MAX_USERINFO_LENGTH, "protocol",
-				clc.compat ? XSTRING( OLD_PROTOCOL_VERSION ) : XSTRING( NEW_PROTOCOL_VERSION ) );
-		}
-
 		notOverflowed &= Info_SetValueForKey_s( info, MAX_USERINFO_LENGTH, "qport",
 			va( "%i", port ) );
 
@@ -2329,47 +2185,10 @@ static qboolean CL_ConnectionlessPacket( const netadr_t *from, msg_t *msg ) {
 		if ( *c != '\0' )
 			challenge = atoi( c );
 
-		clc.compat = qtrue;
-		s = Cmd_Argv( 3 ); // analyze server protocol version
-		if ( *s != '\0' ) {
-			int sv_proto = atoi( s );
-			if ( sv_proto > OLD_PROTOCOL_VERSION ) {
-				if ( sv_proto == NEW_PROTOCOL_VERSION || sv_proto == com_protocol->integer ) {
-					clc.compat = qfalse;
-				} else {
-					int cl_proto = com_protocol->integer;
-					if ( cl_proto == DEFAULT_PROTOCOL_VERSION ) {
-						// we support new protocol features by default
-						cl_proto = NEW_PROTOCOL_VERSION;
-					}
-					Com_Printf( S_COLOR_YELLOW "Warning: Server reports protocol version %d, "
-						"we have %d. Trying legacy protocol %d.\n",
-						sv_proto, cl_proto, OLD_PROTOCOL_VERSION );
-				}
-			}
-		}
-
-		if ( clc.compat )
+		if ( *c == '\0' || challenge != clc.challenge )
 		{
-			if ( !NET_CompareAdr( from, &clc.serverAddress ) )
-			{
-				// This challenge response is not coming from the expected address.
-				// Check whether we have a matching client challenge to prevent
-				// connection hi-jacking.
-				if ( *c == '\0' || challenge != clc.challenge )
-				{
-					Com_DPrintf( "Challenge response received from unexpected source. Ignored.\n" );
-					return qfalse;
-				}
-			}
-		}
-		else
-		{
-			if ( *c == '\0' || challenge != clc.challenge )
-			{
-				Com_Printf( "Bad challenge for challengeResponse. Ignored.\n" );
-				return qfalse;
-			}
+			Com_Printf( "Bad challenge for challengeResponse. Ignored.\n" );
+			return qfalse;
 		}
 
 		// start sending connect instead of challenge request packets
@@ -2400,41 +2219,21 @@ static qboolean CL_ConnectionlessPacket( const netadr_t *from, msg_t *msg ) {
 			return qfalse;
 		}
 
-		if ( !clc.compat ) {
-			// first argument: challenge response
-			c = Cmd_Argv( 1 );
-			if ( *c != '\0' ) {
-				challenge = atoi( c );
-			} else {
-				Com_Printf( "Bad connectResponse received. Ignored.\n" );
-				return qfalse;
-			}
-
-			if ( challenge != clc.challenge ) {
-				Com_Printf( "ConnectResponse with bad challenge received. Ignored.\n" );
-				return qfalse;
-			}
-
-			if ( com_protocolCompat ) {
-				// enforce dm68-compatible stream for legacy/unknown servers
-				clc.compat = qtrue;
-			}
-
-			// second (optional) argument: actual protocol version used on server-side
-			c = Cmd_Argv( 2 );
-			if ( *c != '\0' ) {
-				int protocol = atoi( c );
-				if ( protocol > 0 ) {
-					if ( protocol <= OLD_PROTOCOL_VERSION ) {
-						clc.compat = qtrue;
-					} else {
-						clc.compat = qfalse;
-					}
-				}
-			}
+		// first argument: challenge response
+		c = Cmd_Argv( 1 );
+		if ( *c != '\0' ) {
+			challenge = atoi( c );
+		} else {
+			Com_Printf( "Bad connectResponse received. Ignored.\n" );
+			return qfalse;
 		}
 
-		Netchan_Setup( NS_CLIENT, &clc.netchan, from, Cvar_VariableIntegerValue( "net_qport" ), clc.challenge, clc.compat );
+		if ( challenge != clc.challenge ) {
+			Com_Printf( "ConnectResponse with bad challenge received. Ignored.\n" );
+			return qfalse;
+		}
+
+		Netchan_Setup( NS_CLIENT, &clc.netchan, from, Cvar_VariableIntegerValue( "net_qport" ), clc.challenge );
 
 		cls.state = CA_CONNECTED;
 		clc.lastPacketSentTime = cls.realtime - 9999; // send first packet immediately
@@ -4171,16 +3970,8 @@ static void CL_ServerInfoPacket( const netadr_t *from, msg_t *msg ) {
 	int		i, type, len;
 	char	info[MAX_INFO_STRING];
 	const char *infoString;
-	int		prot;
 
 	infoString = MSG_ReadString( msg );
-
-	// if this isn't the correct protocol version, ignore it
-	prot = atoi( Info_ValueForKey( infoString, "protocol" ) );
-	if ( prot != OLD_PROTOCOL_VERSION && prot != NEW_PROTOCOL_VERSION && prot != com_protocol->integer ) {
-		Com_DPrintf( "Different protocol info packet: %s\n", infoString );
-		return;
-	}
 
 	// iterate servers waiting for ping response
 	for (i=0; i<MAX_PINGREQUESTS; i++)
@@ -4521,7 +4312,7 @@ static void CL_GlobalServers_f( void ) {
 
 	if ( (count = Cmd_Argc()) < 3 || (masterNum = atoi(Cmd_Argv(1))) < 0 || masterNum > MAX_MASTER_SERVERS )
 	{
-		Com_Printf( "usage: globalservers <master# 0-%d> <protocol> [keywords]\n", MAX_MASTER_SERVERS );
+		Com_Printf( "usage: globalservers <master# 0-%d> [keywords]\n", MAX_MASTER_SERVERS );
 		return;
 	}
 

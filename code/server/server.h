@@ -102,7 +102,6 @@ typedef struct {
 
 	int				frameNum;			// from snapshot storage to compare with last valid
 	entityState_t	*ents[ MAX_SNAPSHOT_ENTITIES ];
-
 } clientSnapshot_t;
 
 typedef enum {
@@ -205,7 +204,6 @@ typedef struct client_s {
 
 	int				oldServerTime;
 	qboolean		csUpdated[MAX_CONFIGSTRINGS];
-	qboolean		compat;
 
 	qboolean		netError;
 	int				viewDistance;
@@ -215,9 +213,6 @@ typedef struct client_s {
 	rateLimit_t		cmd_rate;
 	rateLimit_t		info_rate;
 	rateLimit_t		gamestate_rate;
-
-	// client can decode long strings
-	qboolean		longstr;
 
 	qboolean		justConnected;
 } client_t;
