@@ -88,9 +88,6 @@ cvar_t		*s_khz;
 cvar_t		*s_show;
 static cvar_t *s_mixahead;
 static cvar_t *s_mixOffset;
-#if defined(__linux__) && !defined(USE_SDL)
-cvar_t		*s_device;
-#endif
 
 static loopSound_t	loopSounds[MAX_GENTITIES];
 static	channel_t	*freelist = NULL;
@@ -1506,13 +1503,6 @@ qboolean S_Base_Init( soundInterface_t *si ) {
 	Cvar_SetDescription( s_show, "Debugging output (used sound files)." );
 	s_testsound = Cvar_Get( "s_testsound", "0", CVAR_CHEAT );
 	Cvar_SetDescription( s_testsound, "Debugging tool that plays a simple sine wave tone to test the sound system." );
-#if defined(__linux__) && !defined(USE_SDL)
-	s_device = Cvar_Get( "s_device", "default", CVAR_ARCHIVE_ND | CVAR_LATCH );
-	Cvar_SetDescription( s_device, "Set ALSA output device\n"
-		" Use \"default\", \"sysdefault\", \"front\", etc.\n"
-		" Enter " S_COLOR_CYAN "aplay -L "S_COLOR_WHITE"in your shell to see all options.\n"
-		S_COLOR_YELLOW " Please note that only mono/stereo devices are acceptable.\n" );
-#endif
 
 	r = SNDDMA_Init();
 

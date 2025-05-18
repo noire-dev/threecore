@@ -71,7 +71,6 @@ void GLimp_Shutdown( qboolean unloadDLL )
 		SDL_QuitSubSystem( SDL_INIT_VIDEO );
 }
 
-
 /*
 ===============
 GLimp_Minimize

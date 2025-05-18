@@ -20,7 +20,6 @@ BUILD_SERVER      = 1
 MOUNT_DIR         = code
 
 # General
-USE_SDL           = 1
 USE_LOCAL_HEADERS = 1
 
 # Audio
@@ -50,11 +49,6 @@ Q=
 else
 echo_cmd=@echo
 Q=@
-endif
-
-ifeq ($(COMPILE_PLATFORM),darwin)
-  USE_SDL=1
-  USE_LOCAL_HEADERS=1
 endif
 
 ifeq ($(COMPILE_PLATFORM),cygwin)
@@ -164,13 +158,8 @@ INSTALL=install
 MKDIR=mkdir -p
 
 ifneq ($(call bin_path, $(PKG_CONFIG)),)
-  ifneq ($(USE_SDL),0)
     SDL_INCLUDE ?= $(shell $(PKG_CONFIG) --silence-errors --cflags-only-I sdl2)
     SDL_LIBS ?= $(shell $(PKG_CONFIG) --silence-errors --libs sdl2)
-  else
-    X11_INCLUDE ?= $(shell $(PKG_CONFIG) --silence-errors --cflags-only-I x11)
-    X11_LIBS ?= $(shell $(PKG_CONFIG) --silence-errors --libs x11)
-  endif
 endif
 
 # supply some reasonable defaults for SDL/X11
@@ -339,18 +328,15 @@ ifdef MINGW
 
   CLIENT_LDFLAGS=$(LDFLAGS)
 
-  ifeq ($(USE_SDL),1)
-    BASE_CFLAGS += -DUSE_LOCAL_HEADERS=1 -I$(SDLHDIR)
-    #CLIENT_CFLAGS += -DUSE_LOCAL_HEADERS=1
-    ifeq ($(ARCH),x86)
-      CLIENT_LDFLAGS += -L$(MOUNT_DIR)/libsdl/windows/mingw/lib32
-      CLIENT_LDFLAGS += -lSDL2
-      CLIENT_EXTRA_FILES += $(MOUNT_DIR)/libsdl/windows/mingw/lib32/SDL2.dll
-    else
-      CLIENT_LDFLAGS += -L$(MOUNT_DIR)/libsdl/windows/mingw/lib64
-      CLIENT_LDFLAGS += -lSDL264
-      CLIENT_EXTRA_FILES += $(MOUNT_DIR)/libsdl/windows/mingw/lib64/SDL264.dll
-    endif
+  BASE_CFLAGS += -DUSE_LOCAL_HEADERS=1 -I$(SDLHDIR)
+  ifeq ($(ARCH),x86)
+    CLIENT_LDFLAGS += -L$(MOUNT_DIR)/libsdl/windows/mingw/lib32
+    CLIENT_LDFLAGS += -lSDL2
+    CLIENT_EXTRA_FILES += $(MOUNT_DIR)/libsdl/windows/mingw/lib32/SDL2.dll
+  else
+    CLIENT_LDFLAGS += -L$(MOUNT_DIR)/libsdl/windows/mingw/lib64
+    CLIENT_LDFLAGS += -lSDL264
+    CLIENT_EXTRA_FILES += $(MOUNT_DIR)/libsdl/windows/mingw/lib64/SDL264.dll
   endif
 
   ifeq ($(USE_OGG_VORBIS),1)
@@ -455,13 +441,8 @@ else
   LDFLAGS += -lm
   LDFLAGS += -Wl,--gc-sections -fvisibility=hidden
 
-  ifeq ($(USE_SDL),1)
-    BASE_CFLAGS += $(SDL_INCLUDE)
-    CLIENT_LDFLAGS = $(SDL_LIBS)
-  else
-    BASE_CFLAGS += $(X11_INCLUDE)
-    CLIENT_LDFLAGS = $(X11_LIBS)
-  endif
+  BASE_CFLAGS += $(SDL_INCLUDE)
+  CLIENT_LDFLAGS = $(SDL_LIBS)
 
   ifeq ($(USE_OGG_VORBIS),1)
     BASE_CFLAGS += -DUSE_OGG_VORBIS $(OGG_FLAGS) $(VORBIS_FLAGS)
@@ -913,31 +894,11 @@ ifdef MINGW
     $(B)/client/win_syscon.o \
     $(B)/client/win_resource.o
 
-ifeq ($(USE_SDL),1)
-    Q3OBJ += \
-        $(B)/client/sdl_glimp.o \
-        $(B)/client/sdl_gamma.o \
-        $(B)/client/sdl_input.o \
-        $(B)/client/sdl_snd.o
-else # !USE_SDL
-    Q3OBJ += \
-        $(B)/client/win_gamma.o \
-        $(B)/client/win_glimp.o \
-        $(B)/client/win_input.o \
-        $(B)/client/win_minimize.o \
-        $(B)/client/win_snd.o \
-        $(B)/client/win_wndproc.o
-
-ifeq ($(USE_OPENGL_API),1)
-    Q3OBJ += \
-        $(B)/client/win_qgl.o
-endif
-
-ifeq ($(USE_VULKAN_API),1)
-    Q3OBJ += \
-        $(B)/client/win_qvk.o
-endif
-endif # !USE_SDL
+  Q3OBJ += \
+      $(B)/client/sdl_glimp.o \
+      $(B)/client/sdl_gamma.o \
+      $(B)/client/sdl_input.o \
+      $(B)/client/sdl_snd.o
 
 else # !MINGW
 
@@ -946,28 +907,11 @@ else # !MINGW
     $(B)/client/unix_shared.o \
     $(B)/client/linux_signals.o
 
-ifeq ($(USE_SDL),1)
-    Q3OBJ += \
-        $(B)/client/sdl_glimp.o \
-        $(B)/client/sdl_gamma.o \
-        $(B)/client/sdl_input.o \
-        $(B)/client/sdl_snd.o
-else # !USE_SDL
-    Q3OBJ += \
-        $(B)/client/linux_glimp.o \
-        $(B)/client/linux_snd.o \
-        $(B)/client/x11_dga.o \
-        $(B)/client/x11_randr.o \
-        $(B)/client/x11_vidmode.o
-ifeq ($(USE_OPENGL_API),1)
-    Q3OBJ += \
-        $(B)/client/linux_qgl.o
-endif
-ifeq ($(USE_VULKAN_API),1)
-    Q3OBJ += \
-        $(B)/client/linux_qvk.o
-endif
-endif # !USE_SDL
+  Q3OBJ += \
+      $(B)/client/sdl_glimp.o \
+      $(B)/client/sdl_gamma.o \
+      $(B)/client/sdl_input.o \
+      $(B)/client/sdl_snd.o
 
 endif # !MINGW
 
