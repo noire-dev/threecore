@@ -1119,7 +1119,6 @@ static qboolean R_MirrorViewBySurface( const drawSurf_t *drawSurf, int entityNum
 		return qfalse;		// bad portal, no portalentity
 	}
 
-#ifdef USE_PMLIGHT
 	// create dedicated set for each view
 	if ( r_numdlights + oldParms.num_dlights <= ARRAY_LEN( backEndData->dlights ) ) {
 		int i;
@@ -1129,7 +1128,6 @@ static qboolean R_MirrorViewBySurface( const drawSurf_t *drawSurf, int entityNum
 		for ( i = 0; i < oldParms.num_dlights; i++ )
 			newParms.dlights[i] = oldParms.dlights[i];
 	}
-#endif
 
 	if ( tess.numVertexes > 2 && r_fastsky->integer ) {
 		int mins[2], maxs[2];
@@ -1256,9 +1254,6 @@ static void R_RadixSort( drawSurf_t *source, int size )
   R_Radix( 0, size, scratch, source );
 #endif //Q3_LITTLE_ENDIAN
 }
-
-
-#ifdef USE_PMLIGHT
 
 typedef struct litSurf_tape_s {
 	struct litSurf_s *first;
@@ -1400,8 +1395,6 @@ void R_DecomposeLitSort( unsigned sort, int *entityNum, shader_t **shader, int *
 	*entityNum = ( sort >> QSORT_REFENTITYNUM_SHIFT ) & REFENTITYNUM_MASK;
 }
 
-#endif // USE_PMLIGHT
-
 
 //==========================================================================================
 
@@ -1488,22 +1481,15 @@ static void R_SortDrawSurfs( drawSurf_t *drawSurfs, int numDrawSurfs ) {
 		}
 	}
 
-#ifdef USE_PMLIGHT
-#ifdef USE_LEGACY_DLIGHTS
-	if ( r_dlightMode->integer ) 
-#endif
-	{
-		dlight_t *dl;
-		// all the lit surfaces are in a single queue
-		// but each light's surfaces are sorted within its subsection
-		for ( i = 0; i < tr.refdef.num_dlights; ++i ) { 
-			dl = &tr.refdef.dlights[ i ];
-			if ( dl->head ) {
-				R_SortLitsurfs( dl );
-			}
+	dlight_t *dl;
+	// all the lit surfaces are in a single queue
+	// but each light's surfaces are sorted within its subsection
+	for ( i = 0; i < tr.refdef.num_dlights; ++i ) { 
+		dl = &tr.refdef.dlights[ i ];
+		if ( dl->head ) {
+			R_SortLitsurfs( dl );
 		}
 	}
-#endif // USE_PMLIGHT
 
 	R_AddDrawSurfCmd( drawSurfs, numDrawSurfs );
 }
@@ -1526,9 +1512,6 @@ static void R_AddEntitySurfaces( void ) {
 			tr.currentEntityNum < tr.refdef.num_entities;
 			tr.currentEntityNum++ ) {
 		ent = tr.currentEntity = &tr.refdef.entities[tr.currentEntityNum];
-#ifdef USE_LEGACY_DLIGHTS
-		ent->needDlights = 0;
-#endif
 		// preshift the value we are going to OR into the drawsurf sort
 		tr.shiftedEntityNum = tr.currentEntityNum << QSORT_REFENTITYNUM_SHIFT;
 

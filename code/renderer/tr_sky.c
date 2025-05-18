@@ -808,22 +808,13 @@ Other things could be stuck in here, like birds in the sky, etc
 */
 void RB_StageIteratorSky( void ) {
 
-#ifdef USE_PMLIGHT
-#ifdef USE_LEGACY_DLIGHTS
-	if ( r_dlightMode->integer ) 
-#endif 
-	{
-		GL_ProgramDisable();
-	}
-#endif // USE_PMLIGHT
+	GL_ProgramDisable();
 
 	if ( r_fastsky->integer ) {
 		return;
 	}
 
-#ifdef USE_VBO
 	VBO_UnBind();
-#endif
 
 	// go through all the polygons and project them onto
 	// the sky box to see which blocks on each side need

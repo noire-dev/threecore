@@ -46,11 +46,9 @@ return a hash value for the filename
 */
 void R_GammaCorrect( byte *buffer, int bufSize ) {
 	int i;
-#ifdef USE_FBO
 	if ( fboEnabled ) {
 		return;
 	}
-#endif
 	if ( !gls.deviceSupportsGamma ) {
 		return;
 	}
@@ -296,11 +294,7 @@ static void R_LightScaleTexture( byte *in, int inwidth, int inheight, qboolean o
 
 	if ( only_gamma )
 	{
-#ifdef USE_FBO
 		if ( !glConfig.deviceSupportsGamma && !fboEnabled )
-#else
-		if ( !glConfig.deviceSupportsGamma )
-#endif
 		{
 			int		i, c;
 			byte	*p;
@@ -325,11 +319,7 @@ static void R_LightScaleTexture( byte *in, int inwidth, int inheight, qboolean o
 
 		c = inwidth*inheight;
 
-#ifdef USE_FBO
 		if ( glConfig.deviceSupportsGamma || fboEnabled )
-#else
-		if ( glConfig.deviceSupportsGamma )
-#endif
 		{
 			for (i=0 ; i<c ; i++, p+=4)
 			{
@@ -1355,19 +1345,11 @@ void R_SetColorMappings( void ) {
 	tr.overbrightBits = abs( r_overBrightBits->integer );
 
 	// never overbright in windowed mode
-#ifdef USE_FBO
 	if ( !glConfig.isFullscreen && r_overBrightBits->integer >= 0 && !fboEnabled ) {
-#else
-	if ( !glConfig.isFullscreen && r_overBrightBits->integer >= 0 ) {
-#endif
 		tr.overbrightBits = 0;
 		applyGamma = qfalse;
 	} else {
-#ifdef USE_FBO
 		if ( !glConfig.deviceSupportsGamma && !fboEnabled ) {
-#else
-		if ( !glConfig.deviceSupportsGamma ) {
-#endif
 			tr.overbrightBits = 0; // need hardware gamma for overbright
 			applyGamma = qfalse;
 		} else {
@@ -1421,11 +1403,9 @@ void R_SetColorMappings( void ) {
 	}
 
 	if ( gls.deviceSupportsGamma ) {
-#ifdef USE_FBO
 		if ( fboEnabled )
 			ri.GLimp_SetGamma( s_gammatable_linear, s_gammatable_linear, s_gammatable_linear );
 		else
-#endif
 		{
 			if ( applyGamma ) {
 				ri.GLimp_SetGamma( s_gammatable, s_gammatable, s_gammatable );

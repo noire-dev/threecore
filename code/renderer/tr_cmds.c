@@ -328,10 +328,8 @@ void RE_EndFrame( int *frontEndMsec, int *backEndMsec ) {
 	{
 		ARB_UpdatePrograms();
 
-#ifdef USE_FBO
 		if ( r_ext_multisample->modified || r_hdr->modified )
 			QGL_InitFBO();
-#endif
 
 		if ( r_textureMode->modified )
 			GL_TextureMode( r_textureMode->string );
@@ -380,7 +378,6 @@ void RE_ThrottleBackend( void )
 
 void RE_FinishBloom( void )
 {
-#ifdef USE_FBO
 	finishBloomCommand_t *cmd;
 
 	if ( !tr.registered ) {
@@ -393,17 +390,12 @@ void RE_FinishBloom( void )
 	}
 
 	cmd->commandId = RC_FINISHBLOOM;
-#endif // USE_FBO
 }
 
 
 qboolean RE_CanMinimize( void )
 {
-#ifdef USE_FBO
 	return fboEnabled;
-#else
-	return qfalse;
-#endif
 }
 
 

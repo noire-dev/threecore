@@ -23,17 +23,13 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #ifndef TR_LOCAL_H
 #define TR_LOCAL_H
 
-#define USE_LEGACY_DLIGHTS	// vq3 dynamic lights
-#define USE_PMLIGHT			// promode dynamic lights via \r_dlightMode 1|2
 #define MAX_REAL_DLIGHTS	(MAX_DLIGHTS*2)
 #define MAX_LITSURFS		(MAX_DRAWSURFS)
 
 #define MAX_TEXTURE_SIZE	2048 // must be less or equal to 32768
 
-#define USE_VBO
 #define USE_TESS_NEEDS_NORMAL
 //#define USE_TESS_NEEDS_ST2
-#define USE_FBO
 
 #include "../qcommon/q_shared.h"
 #include "../qcommon/qfiles.h"
@@ -71,10 +67,8 @@ typedef struct dlight_s {
 	vec3_t	transformed2;		// origin2 in local coordinate system
 	int		additive;			// texture detail is lost tho when the lightmap is dark
 	qboolean linear;
-#ifdef USE_PMLIGHT
 	struct litSurf_s	*head;
 	struct litSurf_s	*tail;
-#endif
 } dlight_t;
 
 
@@ -84,17 +78,12 @@ typedef struct {
 	refEntity_t	e;
 
 	float		axisLength;		// compensate for non-normalized axis
-#ifdef USE_LEGACY_DLIGHTS
-	int			needDlights;	// 1 for bmodels that touch a dlight
-#endif
 	qboolean	lightingCalculated;
 	vec3_t		lightDir;		// normalized direction towards light
 	vec3_t		ambientLight;	// color normalized to 0-255
 	int			ambientLightInt;	// 32 bit rgba packed
 	vec3_t		directedLight;
-#ifdef USE_PMLIGHT
 	vec3_t		shadowLightDir;	// normalized direction towards light
-#endif
 	qboolean	intShaderTime;
 } trRefEntity_t;
 
@@ -422,10 +411,8 @@ typedef struct shader_s {
 	int			numUnfoggedPasses;
 	shaderStage_t	*stages[MAX_SHADER_STAGES];
 
-#ifdef USE_PMLIGHT
 	int			lightingStage;
 	int			lightingBundle;
-#endif
 	qboolean	isStaticShader;
 	int			svarsSize;
 	int			iboOffset;
@@ -480,10 +467,8 @@ typedef struct {
 
 	int			numDrawSurfs;
 	struct drawSurf_s	*drawSurfs;
-#ifdef USE_PMLIGHT
 	int			numLitSurfs;
 	struct litSurf_s	*litSurfs;
-#endif
 } trRefdef_t;
 
 
@@ -572,11 +557,9 @@ typedef struct {
 	float		zFar;
 	int 		portalViewDepth;
 	int			lastENum;
-#ifdef USE_PMLIGHT
 	// each view will have its own dlight set
 	unsigned int num_dlights;
 	struct dlight_s	*dlights;
-#endif
 } viewParms_t;
 
 /*
@@ -608,13 +591,11 @@ typedef struct drawSurf_s {
 	surfaceType_t		*surface;		// any of surface*_t
 } drawSurf_t;
 
-#ifdef USE_PMLIGHT
 typedef struct litSurf_s {
 	unsigned int		sort;			// bit combination for fast compares
 	surfaceType_t		*surface;		// any of surface*_t
 	struct litSurf_s	*next;
 } litSurf_t;
-#endif
 
 #define	MAX_FACE_POINTS		64
 
@@ -675,10 +656,6 @@ typedef struct {
 	surfaceType_t	surfaceType;
 	cplane_t	plane;
 
-	// dynamic lighting information
-#ifdef USE_LEGACY_DLIGHTS
-	int			dlightBits;
-#endif
 	int			vboItemIndex;
 	float		*normals;
 
@@ -695,10 +672,6 @@ typedef struct {
 typedef struct {
 	surfaceType_t	surfaceType;
 
-	// dynamic lighting information
-#ifdef USE_LEGACY_DLIGHTS
-	int				dlightBits;
-#endif
 	int				vboItemIndex;
 
 	// culling information (FIXME: use this!)
@@ -737,10 +710,8 @@ typedef struct msurface_s {
 	int					viewCount;		// if == tr.viewCount, already added
 	struct shader_s		*shader;
 	int					fogIndex;
-#ifdef USE_PMLIGHT
 	int					vcVisible;		// if == tr.viewCount, is actually VISIBLE in this frame, i.e. passed facecull and has been added to the drawsurf list
 	int					lightCount;		// if == tr.lightCount, already added to the litsurf list for the current light
-#endif // USE_PMLIGHT
 	surfaceType_t		*data;			// any of srf*_t
 } msurface_t;
 
@@ -899,14 +870,12 @@ typedef struct {
 	int		c_leafs;
 	int		c_dlightSurfaces;
 	int		c_dlightSurfacesCulled;
-#ifdef USE_PMLIGHT
 	int		c_light_cull_out;
 	int		c_light_cull_in;
 	int		c_lit_leafs;
 	int		c_lit_surfs;
 	int		c_lit_culls;
 	int		c_lit_masks;
-#endif
 } frontEndCounters_t;
 
 #define	FOG_TABLE_SIZE		256
@@ -948,14 +917,12 @@ typedef struct {
 	int		c_flareRenders;
 
 	int		msec;			// total msec for backend run
-#ifdef USE_PMLIGHT
 	int		c_lit_batches;
 	int		c_lit_vertices;
 	int		c_lit_indices;
 	int		c_lit_indices_latecull_in;
 	int		c_lit_indices_latecull_out;
 	int		c_lit_vertices_lateculltest;
-#endif
 } backEndCounters_t;
 
 typedef struct videoFrameCommand_s {
@@ -1024,9 +991,7 @@ typedef struct {
 	int						sceneCount;		// incremented every scene
 	int						viewCount;		// incremented every view (twice a scene if portaled)
 											// and every R_MarkFragments call
-#ifdef USE_PMLIGHT
 	int						lightCount;		// incremented for each dlight in the view
-#endif
 
 	int						frameSceneNum;	// zeroed at RE_BeginFrame
 
@@ -1077,9 +1042,7 @@ typedef struct {
 	trRefdef_t				refdef;
 
 	int						viewCluster;
-#ifdef USE_PMLIGHT
 	dlight_t				*light;				// current light during R_RecursiveLightNode
-#endif
 	vec3_t					sunLight;			// from the sky shader for this level
 	vec3_t					sunDirection;
 
@@ -1129,10 +1092,8 @@ extern glstate_t	glState;		// outside of TR since it shouldn't be cleared during
 
 extern glstatic_t gls;
 
-#ifdef USE_FBO
 extern	qboolean			windowAdjusted;
 extern	qboolean			superSampled;
-#endif
 
 //
 // cvars
@@ -1156,18 +1117,13 @@ extern cvar_t	*r_neatsky;				// nomip and nopicmip for skyboxes, cnq3 like look
 extern cvar_t	*r_drawSun;				// controls drawing of sun quad
 extern cvar_t	*r_dynamiclight;		// dynamic lights enabled/disabled
 extern cvar_t	*r_mergeLightmaps;
-#ifdef USE_PMLIGHT
 extern cvar_t	*r_dlightMode;			// 0 - vq3, 1 - pmlight
 extern cvar_t	*r_dlightSpecPower;		// 1 - 32
 extern cvar_t	*r_dlightSpecColor;		// -1.0 - 1.0
 extern cvar_t	*r_dlightScale;			// 0.1 - 1.0
 extern cvar_t	*r_dlightIntensity;		// 0.1 - 1.0
-#endif
 extern cvar_t	*r_dlightSaturation;	// 0.0 - 1.0
-#ifdef USE_VBO
 extern cvar_t	*r_vbo;
-#endif
-#ifdef USE_FBO
 extern cvar_t	*r_fbo;
 extern cvar_t	*r_hdr;
 extern cvar_t	*r_bloom_threshold;
@@ -1182,7 +1138,6 @@ extern cvar_t	*r_bloom_reflection;
 extern cvar_t	*r_renderWidth;
 extern cvar_t	*r_renderHeight;
 extern cvar_t	*r_renderScale;
-#endif // USE_FBO
 
 extern cvar_t	*r_dlightBacks;			// dlight non-facing surfaces for continuity
 
@@ -1292,10 +1247,8 @@ void R_DecomposeSort( unsigned sort, int *entityNum, shader_t **shader,
 					 int *fogNum, int *dlightMap );
 
 void R_AddDrawSurf( surfaceType_t *surface, shader_t *shader, int fogIndex, int dlightMap );
-#ifdef USE_PMLIGHT
 void R_DecomposeLitSort( unsigned sort, int *entityNum, shader_t **shader, int *fogNum );
 void R_AddLitSurf( surfaceType_t *surface, shader_t *shader, int fogIndex );
-#endif
 
 #define	CULL_IN		0		// completely unclipped
 #define	CULL_CLIP	1		// clipped by one or more planes
@@ -1445,9 +1398,6 @@ typedef struct shaderCommands_s
 	vec2_t		texCoords[2][SHADER_MAX_VERTEXES] QALIGN(16);
 	vec2_t		texCoords00[SHADER_MAX_VERTEXES] QALIGN(16);
 	color4ub_t	vertexColors[SHADER_MAX_VERTEXES] QALIGN(16);
-#ifdef USE_LEGACY_DLIGHTS
-	int			vertexDlightBits[SHADER_MAX_VERTEXES] QALIGN(16);
-#endif
 	stageVars_t	svars QALIGN(16);
 
 	color4ub_t	constantColor255[SHADER_MAX_VERTEXES] QALIGN(16);
@@ -1460,18 +1410,13 @@ typedef struct shaderCommands_s
 	shader_t	*shader;
 	double		shaderTime;	// -EC- set to double for frameloss fix
 	int			fogNum;
-#ifdef USE_LEGACY_DLIGHTS
-	int			dlightBits;	// or together of all vertexDlightBits
-#endif
 	int			numIndexes;
 	int			numVertexes;
 
-#ifdef USE_PMLIGHT
 	const dlight_t* light;
 	qboolean	dlightPass;
 	qboolean	dlightUpdateParams;
 	cullType_t	cullType;
-#endif
 
 	// info extracted from current shader
 #ifdef USE_TESS_NEEDS_NORMAL
@@ -1541,11 +1486,9 @@ void R_DlightBmodel( bmodel_t *bmodel );
 void R_SetupEntityLighting( const trRefdef_t *refdef, trRefEntity_t *ent );
 void R_TransformDlights( int count, dlight_t *dl, orientationr_t *or );
 
-#ifdef USE_PMLIGHT
 void ARB_SetupLightParams( void );
 void ARB_LightingPass( void );
 qboolean R_LightCullBounds( const dlight_t* dl, const vec3_t mins, const vec3_t maxs );
-#endif // USE_PMLIGHT
 
 void R_BindAnimatedImage( const textureBundle_t *bundle );
 void R_DrawElements( int numIndexes, const glIndex_t *indexes );
@@ -1554,16 +1497,13 @@ void R_ComputeTexCoords( const int b, const textureBundle_t *bundle );
 
 void QGL_InitARB( void );
 void QGL_DoneARB( void );
-#ifdef USE_FBO
 void QGL_InitFBO( void );
-#endif
 qboolean ARB_UpdatePrograms( void );
 
 qboolean GL_ProgramAvailable( void );
 void GL_ProgramDisable( void );
 void GL_ProgramEnable( void );
 
-#ifdef USE_FBO
 extern qboolean		fboEnabled;
 extern qboolean		blitMSfbo;
 
@@ -1574,7 +1514,6 @@ void FBO_BlitSS( void );
 qboolean FBO_Bloom( const float gamma, const float obScale, qboolean finalPass );
 void FBO_CopyScreen( void );
 GLuint FBO_ScreenTexture( void );
-#endif //  USE_FBO
 
 /*
 ============================================================
@@ -1788,9 +1727,7 @@ typedef enum {
 	RC_DRAW_SURFS,
 	RC_DRAW_BUFFER,
 	RC_SWAP_BUFFERS,
-#ifdef USE_FBO
 	RC_FINISHBLOOM,
-#endif
 	RC_COLORMASK,
 	RC_CLEARDEPTH,
 	RC_CLEARCOLOR
@@ -1807,12 +1744,8 @@ typedef enum {
 // contained in a backEndData_t
 typedef struct {
 	drawSurf_t	drawSurfs[MAX_DRAWSURFS];
-#ifdef USE_PMLIGHT
 	litSurf_t	litSurfs[MAX_LITSURFS];
 	dlight_t	dlights[MAX_REAL_DLIGHTS];
-#else
-	dlight_t	dlights[MAX_DLIGHTS];
-#endif
 
 	trRefEntity_t	entities[MAX_REFENTITIES];
 	srfPoly_t	*polys;//[MAX_POLYS];
@@ -1867,7 +1800,6 @@ void R_BloomScreen( void );
 #undef GLE
 
 // VBO functions
-#ifdef USE_VBO
 extern void RB_StageIteratorVBO( void );
 extern void R_BuildWorldVBO( msurface_t *surf, int surfCount );
 
@@ -1879,7 +1811,6 @@ extern void VBO_Cleanup( void );
 extern void VBO_QueueItem( int itemIndex );
 extern void VBO_ClearQueue( void );
 extern void VBO_Flush( void );
-#endif
 
 // ARB shaders definitions
 
@@ -1898,7 +1829,6 @@ typedef enum {
 
 	// locate all fog programs in predefined order (sequentially after non-fogged ones)
 	// so we can easy switch/adjust them without many if() statements
-#ifdef USE_PMLIGHT
 	DLIGHT_VERTEX,
 	DLIGHT_VERTEX_FOG_IN,
 	DLIGHT_VERTEX_FOG_OUT,
@@ -1914,9 +1844,7 @@ typedef enum {
 
 	DLIGHT_LINEAR_ABS_FRAGMENT,
 	DLIGHT_LINEAR_ABS_FRAGMENT_FOG,
-#endif
 	SPRITE_FRAGMENT,
-#ifdef USE_FBO
 	GAMMA_FRAGMENT,
 	BLOOM_EXTRACT_FRAGMENT,
 	BLUR_FRAGMENT,
@@ -1924,7 +1852,6 @@ typedef enum {
 	BLENDX_FRAGMENT,
 	BLEND2_FRAGMENT,
 	BLEND2_GAMMA_FRAGMENT,
-#endif
 	PROGRAM_COUNT
 
 } programNum;

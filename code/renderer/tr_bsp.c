@@ -507,10 +507,7 @@ static shader_t *ShaderForShaderNum( const int shaderNum, int lightmapNum ) {
 	return shader;
 }
 
-
-#ifdef USE_PMLIGHT
-static void GenerateNormals( srfSurfaceFace_t *face )
-{
+static void GenerateNormals( srfSurfaceFace_t *face ) {
 	vec3_t ba, ca, cross;
 	float *v1, *v2, *v3, *n1, *n2, *n3;
 	int i, *indices, i0, i1, i2;
@@ -545,7 +542,6 @@ static void GenerateNormals( srfSurfaceFace_t *face )
 		VectorNormalize2( n1, n1 );
 	}
 }
-#endif // USE_PMLIGHT
 
 
 /*
@@ -623,7 +619,6 @@ static void ParseFace( const dsurface_t *ds, const drawVert_t *verts, msurface_t
 		cv->plane.normal[i] = LittleFloat( ds->lightmapVecs[2][i] );
 	}
 
-#ifdef USE_PMLIGHT
 	if ( surf->shader->numUnfoggedPasses && surf->shader->lightingStage >= 0 ) {
 		if ( fabs( cv->plane.normal[0] ) < 0.01 && fabs( cv->plane.normal[1] ) < 0.01 && fabs( cv->plane.normal[2] ) < 0.01 ) {
 			// Zero-normals case:
@@ -638,7 +633,6 @@ static void ParseFace( const dsurface_t *ds, const drawVert_t *verts, msurface_t
 			GenerateNormals( cv );
 		}
 	}
-#endif
 
 	cv->plane.dist = DotProduct( cv->points[0], cv->plane.normal );
 	SetPlaneSignbits( &cv->plane );
@@ -2204,10 +2198,7 @@ void RE_LoadWorldMap( const char *name ) {
 	R_LoadVisibility( &header->lumps[LUMP_VISIBILITY] );
 	R_LoadEntities( &header->lumps[LUMP_ENTITIES] );
 	R_LoadLightGrid( &header->lumps[LUMP_LIGHTGRID] );
-
-#ifdef USE_VBO
 	R_BuildWorldVBO( s_worldData.surfaces, s_worldData.numsurfaces );
-#endif
 
 	tr.mapLoading = qfalse;
 

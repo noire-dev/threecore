@@ -86,21 +86,16 @@ cvar_t	*r_neatsky;
 cvar_t	*r_drawSun;
 cvar_t	*r_dynamiclight;
 cvar_t  *r_mergeLightmaps;
-#ifdef USE_PMLIGHT
 cvar_t	*r_dlightMode;
 cvar_t	*r_dlightSpecPower;
 cvar_t	*r_dlightSpecColor;
 cvar_t	*r_dlightScale;
 cvar_t	*r_dlightIntensity;
-#endif // USE_PMLIGHT
 
 cvar_t	*r_dlightSaturation;
 
-#ifdef USE_VBO
 cvar_t	*r_vbo;
-#endif
 
-#ifdef USE_FBO
 cvar_t	*r_fbo;
 cvar_t	*r_hdr;
 cvar_t	*r_bloom_threshold;
@@ -115,7 +110,6 @@ cvar_t	*r_bloom_reflection;
 cvar_t	*r_renderWidth;
 cvar_t	*r_renderHeight;
 cvar_t	*r_renderScale;
-#endif // USE_FBO
 
 cvar_t	*r_dlightBacks;
 
@@ -147,10 +141,8 @@ cvar_t	*r_ignoreGLErrors;
 //cvar_t	*r_stencilbits;
 cvar_t	*r_texturebits;
 
-#ifdef USE_FBO
 cvar_t	*r_ext_multisample;
 cvar_t	*r_ext_supersample;
-#endif // USE_FBO
 
 cvar_t	*r_drawBuffer;
 cvar_t	*r_lightmap;
@@ -513,7 +505,6 @@ static void R_InitExtensions( void )
 		}
 	}
 
-#ifdef USE_VBO
 	if ( R_HaveExtension( "ARB_vertex_buffer_object" ) && qglActiveTextureARB )
 	{
 		err = R_ResolveSymbols( vbo_procs, ARRAY_LEN( vbo_procs ) );
@@ -527,9 +518,7 @@ static void R_InitExtensions( void )
 			ri.Printf( PRINT_ALL, "...using ARB vertex buffer objects\n" );
 		}
 	}
-#endif // USE_VBO
 
-#ifdef USE_FBO
 	if ( R_HaveExtension( "GL_EXT_framebuffer_object" ) && R_HaveExtension( "GL_EXT_framebuffer_blit" ) )
 	{
 		err = R_ResolveSymbols( fbo_procs, ARRAY_LEN( fbo_procs ) );
@@ -544,7 +533,6 @@ static void R_InitExtensions( void )
 			R_ResolveSymbols( fbo_opt_procs, ARRAY_LEN( fbo_opt_procs ) );
 		}
 	}
-#endif // USE_FBO
 }
 
 
@@ -596,7 +584,6 @@ static void InitOpenGL( void )
 
 		ri.CL_SetScaling( 1.0, gls.captureWidth, gls.captureHeight );
 
-#ifdef USE_FBO
 		if ( r_fbo->integer && qglGenProgramsARB && qglGenFramebuffers )
 		{
 			if ( r_renderScale->integer )
@@ -617,7 +604,6 @@ static void InitOpenGL( void )
 				ri.CL_SetScaling( 2.0, gls.captureWidth, gls.captureHeight );
 			}
 		}
-#endif
 
 		QGL_InitARB();
 
@@ -637,9 +623,7 @@ static void InitOpenGL( void )
 	}
 	else
 	{
-#ifdef USE_FBO
 		QGL_SetRenderScale( qfalse );
-#endif
 	}
 
 	if ( !qglViewport ) // might happen after REF_KEEP_WINDOW
@@ -1423,10 +1407,8 @@ static void R_Register( void )
 	r_mergeLightmaps = ri.Cvar_Get( "r_mergeLightmaps", "1", CVAR_ARCHIVE_ND | CVAR_LATCH );
 	ri.Cvar_SetDescription( r_mergeLightmaps, "Merge built-in small lightmaps into bigger lightmaps (atlases)." );
 
-#ifdef USE_VBO
 	r_vbo = ri.Cvar_Get( "r_vbo", "1", CVAR_ARCHIVE_ND | CVAR_LATCH );
 	ri.Cvar_SetDescription( r_vbo, "Use Vertex Buffer Objects to cache static map geometry, may improve FPS on modern GPUs, increases hunk memory usage by 15-30MB (map-dependent)." );
-#endif
 
 	r_mapGreyScale = ri.Cvar_Get( "r_mapGreyScale", "0", CVAR_ARCHIVE_ND | CVAR_LATCH );
 	ri.Cvar_CheckRange( r_mapGreyScale, "-1", "1", CV_FLOAT );
@@ -1461,12 +1443,7 @@ static void R_Register( void )
 	ri.Cvar_SetDescription( r_drawSun, "Draw sun shader in skies." );
 	r_dynamiclight = ri.Cvar_Get( "r_dynamiclight", "1", CVAR_ARCHIVE );
 	ri.Cvar_SetDescription( r_dynamiclight, "Enables dynamic lighting." );
-#ifdef USE_PMLIGHT
-#if arm32 || arm64 // RPi4 GL driver have very poor ARB shaders performance...
-	r_dlightMode = ri.Cvar_Get( "r_dlightMode", "0", CVAR_ARCHIVE );
-#else
 	r_dlightMode = ri.Cvar_Get( "r_dlightMode", "1", CVAR_ARCHIVE );
-#endif
 	ri.Cvar_CheckRange( r_dlightMode, "0", "2", CV_INTEGER );
 	ri.Cvar_SetDescription( r_dlightMode, "Dynamic light mode:\n 0: VQ3 'fake' dynamic lights\n 1: High-quality per-pixel dynamic lights, slightly faster than VQ3's on modern hardware\n 2: Same as 1 but applies to all MD3 models too" );
 	r_dlightScale = ri.Cvar_Get( "r_dlightScale", "1.0", CVAR_ARCHIVE_ND );
@@ -1483,11 +1460,9 @@ static void R_Register( void )
 	r_dlightIntensity = ri.Cvar_Get( "r_dlightIntensity", "1.0", CVAR_ARCHIVE_ND );
 	ri.Cvar_CheckRange( r_dlightIntensity, "0.1", "1", CV_FLOAT );
 	ri.Cvar_SetDescription( r_dlightIntensity, "Adjusts dynamic light intensity but not radius." );
-#endif // USE_PMLIGHT
 	r_dlightSaturation = ri.Cvar_Get( "r_dlightSaturation", "1", CVAR_ARCHIVE_ND );
 	ri.Cvar_CheckRange( r_dlightSaturation, "0", "1", CV_FLOAT );
 
-#ifdef USE_FBO
 	r_ext_multisample = ri.Cvar_Get( "r_ext_multisample", "0", CVAR_ARCHIVE_ND );
 	ri.Cvar_CheckRange( r_ext_multisample, "0", "8", CV_INTEGER );
 	ri.Cvar_SetDescription( r_ext_multisample, "For anti-aliasing geometry edges, valid values: 0|2|4|6|8. Requires \\r_fbo 1." );
@@ -1522,7 +1497,6 @@ static void R_Register( void )
 	r_bloom_reflection = ri.Cvar_Get( "r_bloom_reflection", "0.05", CVAR_ARCHIVE_ND );
 	ri.Cvar_CheckRange( r_bloom_reflection, "-4", "4", CV_FLOAT );
 	ri.Cvar_SetDescription( r_bloom_reflection, "Bloom lens reflection effect, value is an intensity factor of the effect, negative value means blend only reflection and skip main bloom texture." );
-#endif // USE_FBO
 
 	r_dlightBacks = ri.Cvar_Get( "r_dlightBacks", "1", CVAR_ARCHIVE_ND );
 	ri.Cvar_SetDescription( r_dlightBacks, "Whether or not dynamic lights should light up back-face culled geometry, affects only VQ3 dynamic lights." );
@@ -1707,7 +1681,6 @@ static void R_Register( void )
 	r_flares = ri.Cvar_Get( "r_flares", "0", CVAR_ARCHIVE_ND | CVAR_LATCH );
 	ri.Cvar_SetDescription( r_flares, "Enables corona effects on light sources." );
 
-#ifdef USE_FBO
 	r_fbo = ri.Cvar_Get( "r_fbo", "1", CVAR_ARCHIVE_ND | CVAR_LATCH );
 	ri.Cvar_SetDescription( r_fbo, "Use framebuffer objects, enables gamma correction in windowed mode and allows arbitrary video size and screenshot/video capture.\n Required for bloom, HDR rendering, anti-aliasing and greyscale effects.\n OpenGL 3.0+ required." );
 
@@ -1730,7 +1703,6 @@ static void R_Register( void )
 		" 2 - nearest filtering, preserve aspect ratio (black bars on sides)\n"
 		" 3 - linear filtering, stretch to full size\n"
 		" 4 - linear filtering, preserve aspect ratio (black bars on sides)\n" );
-#endif // USE_FBO
 }
 
 #define EPSILON 1e-6f
@@ -1858,9 +1830,7 @@ static void RE_Shutdown( refShutdownCode_t code ) {
 
 		QGL_DoneARB();
 
-#ifdef USE_VBO
 		VBO_Cleanup();
-#endif
 
 		R_ClearSymTables();
 

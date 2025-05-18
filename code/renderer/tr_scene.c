@@ -23,9 +23,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #include "tr_local.h"
 
 static int			r_firstSceneDrawSurf;
-#ifdef USE_PMLIGHT
 static int			r_firstSceneLitSurf;
-#endif
 
 int			r_numdlights;
 static int			r_firstSceneDlight;
@@ -50,9 +48,7 @@ void R_InitNextFrame( void ) {
 	backEndData->commands.used = 0;
 
 	r_firstSceneDrawSurf = 0;
-#ifdef USE_PMLIGHT
 	r_firstSceneLitSurf = 0;
-#endif
 
 	r_numdlights = 0;
 	r_firstSceneDlight = 0;
@@ -243,17 +239,10 @@ static void RE_AddDynamicLightToScene( const vec3_t org, float intensity, float 
 		return;
 	}
 	
-#ifdef USE_PMLIGHT
-#ifdef USE_LEGACY_DLIGHTS
-	if ( r_dlightMode->integer )
-#endif
-	{
-		r *= r_dlightIntensity->value;
-		g *= r_dlightIntensity->value;
-		b *= r_dlightIntensity->value;
-		intensity *= r_dlightScale->value;
-	}
-#endif
+	r *= r_dlightIntensity->value;
+	g *= r_dlightIntensity->value;
+	b *= r_dlightIntensity->value;
+	intensity *= r_dlightScale->value;
 
 	if ( r_dlightSaturation->value != 1.0 )
 	{
@@ -294,17 +283,11 @@ void RE_AddLinearLightToScene( const vec3_t start, const vec3_t end, float inten
 	if ( intensity <= 0 ) {
 		return;
 	}
-#ifdef USE_PMLIGHT
-#ifdef USE_LEGACY_DLIGHTS
-	if ( r_dlightMode->integer )
-#endif
-	{
-		r *= r_dlightIntensity->value;
-		g *= r_dlightIntensity->value;
-		b *= r_dlightIntensity->value;
-		intensity *= r_dlightScale->value;
-	}
-#endif
+
+	r *= r_dlightIntensity->value;
+	g *= r_dlightIntensity->value;
+	b *= r_dlightIntensity->value;
+	intensity *= r_dlightScale->value;
 
 	if ( r_dlightSaturation->value != 1.0 )
 	{
@@ -411,10 +394,8 @@ void RE_RenderScene( const refdef_t *fd ) {
 	tr.refdef.numDrawSurfs = r_firstSceneDrawSurf;
 	tr.refdef.drawSurfs = backEndData->drawSurfs;
 
-#ifdef USE_PMLIGHT
 	tr.refdef.numLitSurfs = r_firstSceneLitSurf;
 	tr.refdef.litSurfs = backEndData->litSurfs;
-#endif
 
 	tr.refdef.num_entities = r_numentities - r_firstSceneEntity;
 	tr.refdef.entities = &backEndData->entities[r_firstSceneEntity];
@@ -452,10 +433,8 @@ void RE_RenderScene( const refdef_t *fd ) {
 
 	parms.portalView = PV_NONE;
 
-#ifdef USE_PMLIGHT
 	parms.dlights = tr.refdef.dlights;
 	parms.num_dlights = tr.refdef.num_dlights;
-#endif
 
 	parms.fovX = tr.refdef.fov_x;
 	parms.fovY = tr.refdef.fov_y;
@@ -471,9 +450,7 @@ void RE_RenderScene( const refdef_t *fd ) {
 
 	// the next scene rendered in this frame will tack on after this one
 	r_firstSceneDrawSurf = tr.refdef.numDrawSurfs;
-#ifdef USE_PMLIGHT
 	r_firstSceneLitSurf = tr.refdef.numLitSurfs;
-#endif
 
 	r_firstSceneEntity = r_numentities;
 	r_firstSceneDlight = r_numdlights;

@@ -131,11 +131,9 @@ void RB_ShadowTessEnd( void ) {
 		return;
 	}
 
-#ifdef USE_PMLIGHT
 	if ( r_dlightMode->integer == 2 && r_shadows->integer == 2 )
 		VectorCopy( backEnd.currentEntity->shadowLightDir, lightDir );
 	else
-#endif
 		VectorCopy( backEnd.currentEntity->lightDir, lightDir );
 
 	// clamp projection by height
@@ -315,11 +313,9 @@ void RB_ProjectionShadowDeform( void ) {
 
 	groundDist = backEnd.or.origin[2] - backEnd.currentEntity->e.shadowPlane;
 
-#ifdef USE_PMLIGHT
 	if ( r_dlightMode->integer == 2 && r_shadows->integer == 2 )
 		VectorCopy( backEnd.currentEntity->shadowLightDir, lightDir );
 	else
-#endif
 		VectorCopy( backEnd.currentEntity->lightDir, lightDir );
 
 	d = DotProduct( lightDir, ground );

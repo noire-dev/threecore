@@ -665,13 +665,11 @@ static qboolean ParseStage( shaderStage_t *stage, const char **text )
 
 			if ( !Q_stricmp( token, "screenMap" ) ) {
 				flags = IMGFLAG_NONE;
-#ifdef USE_FBO
 				if ( fboEnabled ) {
 					stage->bundle[0].isScreenMap = qtrue;
 					shader.hasScreenMap = qtrue;
 					tr.needScreenMap = qtrue;
 				}
-#endif
 			} else {
 				flags = IMGFLAG_CLAMPTOEDGE;
 			}
@@ -2230,9 +2228,6 @@ static qboolean CollapseMultitexture( shaderStage_t *st0, shaderStage_t *st1, in
 	return qtrue;
 }
 
-
-#ifdef USE_PMLIGHT
-
 static int tcmodWeight( const textureBundle_t *bundle )
 {
 	if ( bundle->numTexMods == 0 )
@@ -2321,8 +2316,6 @@ static void FindLightingStages( void )
 		bundle = lightingBundle( i, bundle );
 	}
 }
-#endif
-
 
 /*
 =============
@@ -2392,14 +2385,12 @@ static void FixRenderCommandList( int newShader ) {
 				curCmd = (const void *)(sb_cmd + 1);
 				break;
 				}
-#ifdef USE_FBO
 			case RC_FINISHBLOOM:
 				{
 				const finishBloomCommand_t *fb_cmd = (const finishBloomCommand_t *)curCmd;
 				curCmd = (const void *)(fb_cmd + 1);
 				break;
 				}
-#endif // USE_FBO
 			case RC_COLORMASK:
 				{
 				const colorMaskCommand_t *cm_cmd = (const colorMaskCommand_t *)curCmd;
@@ -2803,9 +2794,7 @@ static shader_t *FinishShader( void ) {
 		shader.fogPass = FP_LE;
 	}
 
-#ifdef USE_PMLIGHT
 	FindLightingStages();
-#endif
 
 	// make sure that amplitude for TMOD_STRETCH is not zero
 	for ( i = 0; i < shader.numUnfoggedPasses; i++ ) {

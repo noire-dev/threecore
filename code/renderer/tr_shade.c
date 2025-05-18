@@ -67,12 +67,10 @@ void R_BindAnimatedImage( const textureBundle_t *bundle ) {
 		return;
 	}
 
-#ifdef USE_FBO
 	if ( bundle->isScreenMap && backEnd.viewParms.frameSceneNum == 1 ) {
 		GL_BindTexNum( FBO_ScreenTexture() );
 		return;
 	}
-#endif
 
 	if ( bundle->numImageAnimations <= 1 ) {
 		GL_Bind( bundle->image[0] );
@@ -114,18 +112,14 @@ static void DrawTris( const shaderCommands_t *input ) {
 
 	GL_ProgramDisable();
 
-#ifdef USE_PMLIGHT
 	tess.dlightUpdateParams = qtrue;
-#endif
 
 	GL_ClientState( 0, CLS_NONE );
 	qglDisable( GL_TEXTURE_2D );
 
-#ifdef USE_PMLIGHT
 	if ( tess.dlightPass )
 		qglColor4f( 1.0f, 0.33f, 0.2f, 1.0f );
 	else
-#endif
 	qglColor4f( 1, 1, 1, 1 );
 
 	GL_State( GLS_POLYMODE_LINE | GLS_DEPTHMASK_TRUE );
@@ -204,11 +198,7 @@ void RB_BeginSurface( shader_t *shader, int fogNum ) {
 
 	shader_t *state;
 
-#ifdef USE_PMLIGHT
 	if ( !tess.dlightPass && shader->isStaticShader && !shader->remappedShader )
-#else
-	if ( shader->isStaticShader )
-#endif
 		tess.allowVBO = qtrue;
 	else
 		tess.allowVBO = qfalse;
@@ -219,18 +209,12 @@ void RB_BeginSurface( shader_t *shader, int fogNum ) {
 		state = shader;
 	}
 
-#ifdef USE_PMLIGHT
 	if ( tess.fogNum != fogNum || tess.cullType != state->cullType ) {
 		tess.dlightUpdateParams = qtrue;
 	}
-#endif
 
 #ifdef USE_TESS_NEEDS_NORMAL
-#ifdef USE_PMLIGHT
 	tess.needsNormal = state->needsNormal || tess.dlightPass || r_shownormals->integer;
-#else
-	tess.needsNormal = state->needsNormal || r_shownormals->integer;
-#endif
 #endif
 
 #ifdef USE_TESS_NEEDS_ST2
@@ -242,9 +226,6 @@ void RB_BeginSurface( shader_t *shader, int fogNum ) {
 	tess.shader = state;
 	tess.fogNum = fogNum;
 
-#ifdef USE_LEGACY_DLIGHTS
-	tess.dlightBits = 0;		// will be OR'd in by surface functions
-#endif
 	tess.xstages = state->stages;
 	tess.numPasses = state->numUnfoggedPasses;
 
@@ -309,162 +290,11 @@ static void DrawMultitextured( const shaderCommands_t *input, int stage ) {
 	//
 	// disable texturing on TEXTURE1, then select TEXTURE0
 	//
-#ifdef USE_VBO
-	if ( r_vbo->integer ) {
-		// some drivers may try to load texcoord[1] data even with multi-texturing disabled
-		// (and actually gpu shaders doesn't care about conventional GL_TEXTURE_2D states)
-		// which doesn't cause problems while data pointer is the same or represents fixed-size set
-		// but when we switch to/from vbo - texcoord[1] data may point on larger set (it's ok)
-		// or smaller set - which will cause out-of-bounds index access/crash during non-multitexture rendering
-		// GL_ClientState( 1, GLS_NONE );
-	}
-#endif // USE_VBO
 
 	qglDisable( GL_TEXTURE_2D );
 
 	GL_SelectTexture( 0 );
 }
-
-
-#ifdef USE_LEGACY_DLIGHTS
-/*
-===================
-ProjectDlightTexture
-
-Perform dynamic lighting with another rendering pass
-===================
-*/
-static void ProjectDlightTexture( void ) {
-	int		i, l;
-	vec3_t	origin;
-	float	*texCoords;
-	float	*colors;
-	byte	clipBits[SHADER_MAX_VERTEXES];
-	float	texCoordsArray[SHADER_MAX_VERTEXES][2];
-	float	colorArray[SHADER_MAX_VERTEXES][4];
-	glIndex_t hitIndexes[SHADER_MAX_INDEXES];
-	int		numIndexes;
-	float	scale;
-	float	radius;
-	float	modulate = 0.0f;
-	const dlight_t *dl;
-
-	if ( !backEnd.refdef.num_dlights ) {
-		return;
-	}
-
-	for ( l = 0 ; l < backEnd.refdef.num_dlights ; l++ ) {
-
-		if ( !( tess.dlightBits & ( 1 << l ) ) ) {
-			continue;	// this surface definitely doesn't have any of this light
-		}
-		texCoords = texCoordsArray[0];
-		colors = colorArray[0];
-
-		dl = &backEnd.refdef.dlights[l];
-		VectorCopy( dl->transformed, origin );
-		radius = dl->radius;
-		scale = 1.0f / radius;
-
-		for ( i = 0 ; i < tess.numVertexes ; i++, texCoords += 2, colors += 4 ) {
-			int		clip = 0;
-			vec3_t	dist;
-
-			VectorSubtract( origin, tess.xyz[i], dist );
-
-			backEnd.pc.c_dlightVertexes++;
-
-			texCoords[0] = 0.5f + dist[0] * scale;
-			texCoords[1] = 0.5f + dist[1] * scale;
-
-			if ( !r_dlightBacks->integer &&
-					// dist . tess.normal[i]
-					( dist[0] * tess.normal[i][0] +
-					dist[1] * tess.normal[i][1] +
-					dist[2] * tess.normal[i][2] ) < 0.0f ) {
-				clip = 63;
-			} else {
-				if ( texCoords[0] < 0.0f ) {
-					clip |= 1;
-				} else if ( texCoords[0] > 1.0f ) {
-					clip |= 2;
-				}
-				if ( texCoords[1] < 0.0f ) {
-					clip |= 4;
-				} else if ( texCoords[1] > 1.0f ) {
-					clip |= 8;
-				}
-
-				// modulate the strength based on the height and color
-				if ( dist[2] > radius ) {
-					clip |= 16;
-					modulate = 0.0f;
-				} else if ( dist[2] < -radius ) {
-					clip |= 32;
-					modulate = 0.0f;
-				} else {
-					//*((int*)&dist[2]) &= 0x7FFFFFFF;
-					dist[2] = fabsf( dist[2] );
-					if ( dist[2] < radius * 0.5f ) {
-						modulate = 1.0f;
-					} else {
-						modulate = 2.0f * (radius - dist[2]) * scale;
-					}
-				}
-			}
-			clipBits[i] = clip;
-			colors[0] = dl->color[0] * modulate;
-			colors[1] = dl->color[1] * modulate;
-			colors[2] = dl->color[2] * modulate;
-			colors[3] = 1.0f;
-		}
-
-		// build a list of triangles that need light
-		numIndexes = 0;
-		for ( i = 0 ; i < tess.numIndexes ; i += 3 ) {
-			int		a, b, c;
-
-			a = tess.indexes[i];
-			b = tess.indexes[i+1];
-			c = tess.indexes[i+2];
-			if ( clipBits[a] & clipBits[b] & clipBits[c] ) {
-				continue;	// not lighted
-			}
-			hitIndexes[numIndexes] = a;
-			hitIndexes[numIndexes+1] = b;
-			hitIndexes[numIndexes+2] = c;
-			numIndexes += 3;
-		}
-
-		if ( !numIndexes ) {
-			continue;
-		}
-
-		GL_ClientState( 1, CLS_NONE );
-		GL_ClientState( 0, CLS_TEXCOORD_ARRAY | CLS_COLOR_ARRAY );
-
-		qglTexCoordPointer( 2, GL_FLOAT, 0, texCoordsArray[0] );
-		qglColorPointer( 4, GL_FLOAT, 0, colorArray );
-
-		GL_Bind( tr.dlightImage );
-
-		// include GLS_DEPTHFUNC_EQUAL so alpha tested surfaces don't add light
-		// where they aren't rendered
-
-		if ( dl->additive ) {
-			GL_State( GLS_SRCBLEND_ONE | GLS_DSTBLEND_ONE | GLS_DEPTHFUNC_EQUAL );
-		} else {
-			GL_State( GLS_SRCBLEND_DST_COLOR | GLS_DSTBLEND_ONE | GLS_DEPTHFUNC_EQUAL );
-		}
-
-		R_DrawElements( numIndexes, hitIndexes );
-
-		backEnd.pc.c_totalIndexes += numIndexes;
-		backEnd.pc.c_dlightIndexes += numIndexes;
-	}
-}
-#endif // USE_LEGACY_DLIGHTS
-
 
 /*
 ===================
@@ -884,17 +714,13 @@ void RB_StageIteratorGeneric( void )
 	const shaderCommands_t *input;
 	shader_t		*shader;
 
-#ifdef USE_PMLIGHT
-	if ( tess.dlightPass )
-	{
+	if ( tess.dlightPass ) {
 		ARB_LightingPass();
 		return;
 	}
 
 	GL_ProgramDisable();
-#endif // USE_PMLIGHT
 
-#ifdef USE_VBO
 	if ( tess.vboIndex )
 	{
 		RB_StageIteratorVBO();
@@ -902,7 +728,6 @@ void RB_StageIteratorGeneric( void )
 	}
 
 	VBO_UnBind();
-#endif
 
 	input = &tess;
 	shader = input->shader;
@@ -976,19 +801,6 @@ void RB_StageIteratorGeneric( void )
 	RB_IterateStagesGeneric( input );
 
 	//
-	// now do any dynamic lighting needed
-	//
-#ifdef USE_LEGACY_DLIGHTS
-#ifdef USE_PMLIGHT
-	if ( !r_dlightMode->integer )
-#endif
-	if ( tess.dlightBits && tess.shader->sort <= SS_OPAQUE && !(tess.shader->surfaceFlags & (SURF_NODLIGHT | SURF_SKY) ) )
-	{
-		ProjectDlightTexture();
-	}
-#endif // USE_LEGACY_DLIGHTS
-
-	//
 	// now do fog
 	//
 	if ( tess.fogNum && tess.shader->fogPass )
@@ -1025,9 +837,7 @@ void RB_EndSurface( void ) {
 	input = &tess;
 
 	if ( input->numIndexes == 0 ) {
-#ifdef USE_VBO
 		VBO_UnBind();
-#endif
 		return;
 	}
 
@@ -1046,23 +856,18 @@ void RB_EndSurface( void ) {
 
 	// for debugging of sort order issues, stop rendering after a given sort value
 	if ( r_debugSort->integer && r_debugSort->integer < tess.shader->sort && !backEnd.doneSurfaces ) {
-#ifdef USE_VBO
 		VBO_UnBind();
-#endif
 		return;
 	}
 
 	//
 	// update performance counters
 	//
-#ifdef USE_PMLIGHT
 	if ( tess.dlightPass ) {
 		backEnd.pc.c_lit_batches++;
 		backEnd.pc.c_lit_vertices += tess.numVertexes;
 		backEnd.pc.c_lit_indices += tess.numIndexes;
-	} else
-#endif
-	{
+	} else {
 		backEnd.pc.c_shaders++;
 		backEnd.pc.c_vertexes += tess.numVertexes;
 		backEnd.pc.c_indexes += tess.numIndexes;
@@ -1077,11 +882,7 @@ void RB_EndSurface( void ) {
 	//
 	// draw debugging stuff
 	//
-#ifdef USE_VBO
 	if ( !VBO_Active() ) {
-#else
-	{
-#endif
 		if ( r_showtris->integer ) {
 			DrawTris( input );
 		}

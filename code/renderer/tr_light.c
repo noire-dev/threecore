@@ -57,63 +57,6 @@ void R_TransformDlights( int count, dlight_t *dl, orientationr_t *or) {
 	}
 }
 
-
-#ifdef USE_LEGACY_DLIGHTS
-/*
-=============
-R_DlightBmodel
-
-Determine which dynamic lights may effect this bmodel
-=============
-*/
-void R_DlightBmodel( bmodel_t *bmodel ) {
-	int			i, j;
-	const dlight_t	*dl;
-	int			mask;
-	msurface_t	*surf;
-
-	// transform all the lights
-	R_TransformDlights( tr.refdef.num_dlights, tr.refdef.dlights, &tr.or );
-
-	mask = 0;
-	for ( i = 0; i < tr.refdef.num_dlights; i++ ) {
-		dl = &tr.refdef.dlights[i];
-
-		// see if the point is close enough to the bounds to matter
-		for ( j = 0 ; j < 3 ; j++ ) {
-			if ( dl->transformed[j] - bmodel->bounds[1][j] > dl->radius ) {
-				break;
-			}
-			if ( bmodel->bounds[0][j] - dl->transformed[j] > dl->radius ) {
-				break;
-			}
-		}
-		if ( j < 3 ) {
-			continue;
-		}
-
-		// we need to check this light
-		mask |= 1 << i;
-	}
-
-	tr.currentEntity->needDlights = (mask != 0) ? 1 : 0;
-
-	// set the dlight bits in all the surfaces
-	for ( i = 0 ; i < bmodel->numSurfaces ; i++ ) {
-		surf = bmodel->firstSurface + i;
-
-		if ( *surf->data == SF_FACE ) {
-			((srfSurfaceFace_t *)surf->data)->dlightBits = mask;
-		} else if ( *surf->data == SF_GRID ) {
-			((srfGridMesh_t *)surf->data)->dlightBits = mask;
-		} else if ( *surf->data == SF_TRIANGLES ) {
-			((srfTriangles_t *)surf->data)->dlightBits = mask;
-		}
-	}
-}
-#endif // USE_LEGACY_DLIGHTS
-
-
 /*
 =============================================================================
 
@@ -284,9 +227,7 @@ void R_SetupEntityLighting( const trRefdef_t *refdef, trRefEntity_t *ent ) {
 	float			d;
 	vec3_t			lightDir;
 	vec3_t			lightOrigin;
-#ifdef USE_PMLIGHT
 	vec3_t			shadowLightDir;
-#endif
 
 	// lighting calculations
 	if ( ent->lightingCalculated ) {
@@ -331,7 +272,6 @@ void R_SetupEntityLighting( const trRefdef_t *refdef, trRefEntity_t *ent ) {
 	//
 	d = VectorLength( ent->directedLight );
 	VectorScale( ent->lightDir, d, lightDir );
-#ifdef USE_PMLIGHT
 	if ( r_dlightMode->integer == 2 ) {
 		// only direct lights
 		// but we need to deal with shadow light direction
@@ -353,7 +293,6 @@ void R_SetupEntityLighting( const trRefdef_t *refdef, trRefEntity_t *ent ) {
 		} // if ( r_shadows->integer == 2 )
 	}  // if ( r_dlightMode->integer == 2 )
 	else
-#endif
 	for ( i = 0 ; i < refdef->num_dlights ; i++ ) {
 		dl = &refdef->dlights[i];
 		VectorSubtract( dl->origin, lightOrigin, dir );
@@ -392,12 +331,10 @@ void R_SetupEntityLighting( const trRefdef_t *refdef, trRefEntity_t *ent ) {
 	ent->lightDir[1] = DotProduct( lightDir, ent->e.axis[1] );
 	ent->lightDir[2] = DotProduct( lightDir, ent->e.axis[2] );
 
-#ifdef USE_PMLIGHT
 	if ( r_shadows->integer == 3 && r_dlightMode->integer == 2 ) {
 		VectorNormalize( shadowLightDir );
 		ent->shadowLightDir[0] = DotProduct( shadowLightDir, ent->e.axis[0] );
 		ent->shadowLightDir[1] = DotProduct( shadowLightDir, ent->e.axis[1] );
 		ent->shadowLightDir[2] = DotProduct( shadowLightDir, ent->e.axis[2] );
 	}
-#endif
 }
