@@ -1269,16 +1269,6 @@ static void RB_SurfaceBad( const surfaceType_t *surfType ) {
 	ri.Printf( PRINT_ALL, "Bad surface tesselated.\n" );
 }
 
-
-static void RB_SurfaceFlare( srfFlare_t *surf ) {
-	if ( r_flares->integer ) {
-		VBO_Flush();
-		tess.surfType = SF_FLARE;
-		RB_AddFlare( surf, tess.fogNum, surf->origin, surf->color, surf->normal );
-	}
-}
-
-
 static void RB_SurfaceSkip( void *surf ) {
 }
 
@@ -1291,6 +1281,6 @@ void (*rb_surfaceTable[SF_NUM_SURFACE_TYPES])( void *) = {
 	(void(*)(void*))RB_SurfaceTriangles,	// SF_TRIANGLES,
 	(void(*)(void*))RB_SurfacePolychain,	// SF_POLY,
 	(void(*)(void*))RB_SurfaceMesh,			// SF_MD3,
-	(void(*)(void*))RB_SurfaceFlare,		// SF_FLARE,
+	(void(*)(void*))RB_SurfaceSkip,			// SF_FLARE,
 	(void(*)(void*))RB_SurfaceEntity		// SF_ENTITY
 };

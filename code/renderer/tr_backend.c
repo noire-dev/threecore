@@ -1057,15 +1057,10 @@ static const void *RB_DrawSurfs( const void *data ) {
 
 	VBO_UnBind();
 
-	if ( r_drawSun->integer ) {
-		RB_DrawSun( 0.1f, tr.sunShader );
-	}
+	RB_DrawSun( 0.1f, tr.sunShader );
 
 	// darken down any stencil shadows
 	RB_ShadowFinish();
-
-	// add light flares on lights that aren't obscured
-	RB_RenderFlares();
 
 	if ( backEnd.refdef.numLitSurfs ) {
 		RB_BeginDrawingLitSurfs();

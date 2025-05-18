@@ -1336,10 +1336,6 @@ static void ParseSkyParms( const char **text ) {
 	int			i;
 	imgFlags_t imgFlags = IMGFLAG_MIPMAP | IMGFLAG_PICMIP;
 
-	if ( r_neatsky->integer ) {
-		imgFlags = IMGFLAG_NONE;
-	}
-
 	// outerbox
 	token = COM_ParseExt( text, qfalse );
 	if ( token[0] == 0 ) {
@@ -1938,10 +1934,6 @@ static qboolean ParseShader( const char **text )
 		else if ( !Q_stricmp( token, "skyparms" ) )
 		{
 			ParseSkyParms( text );
-			if ( r_neatsky->integer ) {
-				shader.noPicMip = qtrue;
-				shader.noMipMaps = qtrue;
-			}
 			continue;
 		}
 		// light <value> determines flaring in q3map, not needed here
@@ -3597,21 +3589,6 @@ CreateExternalShaders
 */
 static void CreateExternalShaders( void ) {
 	tr.projectionShadowShader = R_FindShader( "projectionShadow", LIGHTMAP_NONE, qtrue );
-	tr.flareShader = R_FindShader( "flareShader", LIGHTMAP_NONE, qtrue );
-
-	// Hack to make fogging work correctly on flares. Fog colors are calculated
-	// in tr_flare.c already.
-	if(!tr.flareShader->defaultShader)
-	{
-		int index;
-
-		for(index = 0; index < tr.flareShader->numUnfoggedPasses; index++)
-		{
-			tr.flareShader->stages[index]->adjustColorsForFog = ACFF_NONE;
-			tr.flareShader->stages[index]->stateBits |= GLS_DEPTHTEST_DISABLE;
-		}
-	}
-
 	tr.sunShader = R_FindShader( "sun", LIGHTMAP_NONE, qtrue );
 }
 

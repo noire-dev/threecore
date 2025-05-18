@@ -794,7 +794,6 @@ static void ParseTriSurf( const dsurface_t *ds, const drawVert_t *verts, msurfac
 	}
 }
 
-
 /*
 ===============
 ParseFlare
@@ -822,7 +821,6 @@ static void ParseFlare( const dsurface_t *ds, const drawVert_t *verts, msurface_
 	}
 }
 
-
 /*
 =================
 R_MergedWidthPoints
@@ -844,7 +842,6 @@ static qboolean R_MergedWidthPoints( const srfGridMesh_t *grid, int offset ) {
 	return qfalse;
 }
 
-
 /*
 =================
 R_MergedHeightPoints
@@ -865,7 +862,6 @@ static qboolean R_MergedHeightPoints( const srfGridMesh_t *grid, int offset ) {
 	}
 	return qfalse;
 }
-
 
 /*
 =================
@@ -980,7 +976,6 @@ static void R_FixSharedVertexLodError_r( int start, srfGridMesh_t *grid1 ) {
 	}
 }
 
-
 /*
 =================
 R_FixSharedVertexLodError
@@ -1008,7 +1003,6 @@ static void R_FixSharedVertexLodError( void ) {
 		R_FixSharedVertexLodError_r( i + 1, grid1);
 	}
 }
-
 
 /*
 ===============
@@ -1417,7 +1411,6 @@ static int R_StitchPatches( int grid1num, int grid2num ) {
 	return qfalse;
 }
 
-
 /*
 ===============
 R_TryStitchPatch
@@ -1457,7 +1450,6 @@ static int R_TryStitchingPatch( int grid1num ) {
 	return numstitches;
 }
 
-
 /*
 ===============
 R_StitchAllPatches
@@ -1490,7 +1482,6 @@ static void R_StitchAllPatches( void ) {
 	while (stitched);
 	ri.Printf( PRINT_ALL, "stitched %d LoD cracks\n", numstitches );
 }
-
 
 /*
 ===============
@@ -1595,8 +1586,8 @@ static void R_LoadSurfaces( const lump_t *surfs, const lump_t *verts, const lump
 	R_MovePatchSurfacesToHunk();
 #endif
 
-	ri.Printf( PRINT_ALL, "...loaded %d faces, %i meshes, %i trisurfs, %i flares\n", 
-		numFaces, numMeshes, numTriSurfs, numFlares );
+	ri.Printf( PRINT_ALL, "...loaded %d faces, %i meshes, %i trisurfs\n", 
+		numFaces, numMeshes, numTriSurfs );
 }
 
 

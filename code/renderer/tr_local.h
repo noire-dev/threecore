@@ -612,7 +612,6 @@ typedef struct srfPoly_s {
 	polyVert_t		*verts;
 } srfPoly_t;
 
-
 typedef struct srfFlare_s {
 	surfaceType_t	surfaceType;
 	vec3_t			origin;
@@ -912,10 +911,6 @@ typedef struct {
 	int		c_dlightVertexes;
 	int		c_dlightIndexes;
 
-	int		c_flareAdds;
-	int		c_flareTests;
-	int		c_flareRenders;
-
 	int		msec;			// total msec for backend run
 	int		c_lit_batches;
 	int		c_lit_vertices;
@@ -1004,7 +999,6 @@ typedef struct {
 	image_t					*scratchImage[ MAX_VIDEO_HANDLES ];
 	image_t					*fogImage;
 	image_t					*dlightImage;	// inverse-quare highlight for projective adding
-	image_t					*flareImage;
 	image_t					*whiteImage;			// full of 0xff
 	image_t					*identityLightImage;	// full of tr.identityLightByte
 
@@ -1014,7 +1008,6 @@ typedef struct {
 	shader_t				*shadowShader;
 	shader_t				*projectionShadowShader;
 
-	shader_t				*flareShader;
 	shader_t				*sunShader;
 
 	int						numLightmaps;
@@ -1098,9 +1091,6 @@ extern	qboolean			superSampled;
 //
 // cvars
 //
-extern cvar_t	*r_flareSize;
-extern cvar_t	*r_flareFade;
-extern cvar_t	*r_flareCoeff;			// coefficient for the flare intensity falloff function. 
 
 extern cvar_t	*r_railWidth;
 extern cvar_t	*r_railCoreWidth;
@@ -1113,9 +1103,6 @@ extern cvar_t	*r_lodbias;				// push/pull LOD transitions
 extern cvar_t	*r_lodscale;
 
 extern cvar_t	*r_fastsky;				// controls whether sky should be cleared or drawn
-extern cvar_t	*r_neatsky;				// nomip and nopicmip for skyboxes, cnq3 like look
-extern cvar_t	*r_drawSun;				// controls drawing of sun quad
-extern cvar_t	*r_dynamiclight;		// dynamic lights enabled/disabled
 extern cvar_t	*r_mergeLightmaps;
 extern cvar_t	*r_dlightMode;			// 0 - vq3, 1 - pmlight
 extern cvar_t	*r_dlightSpecPower;		// 1 - 32
@@ -1174,7 +1161,6 @@ extern	cvar_t	*r_shownormals;					// draws wireframe normals
 extern	cvar_t	*r_clear;						// force screen clear every frame
 
 extern	cvar_t	*r_shadows;						// controls shadows: 0 = none, 1 = blur, 2 = stencil, 3 = black planar projection
-extern	cvar_t	*r_flares;						// light flares
 
 extern	cvar_t	*r_intensity;
 
@@ -1459,21 +1445,6 @@ WORLD MAP
 void R_AddBrushModelSurfaces( trRefEntity_t *e );
 void R_AddWorldSurfaces( void );
 qboolean R_inPVS( const vec3_t p1, const vec3_t p2 );
-
-
-/*
-============================================================
-
-FLARES
-
-============================================================
-*/
-
-void R_ClearFlares( void );
-
-void RB_AddFlare( void *surface, int fogNum, vec3_t point, vec3_t color, vec3_t normal );
-void RB_AddDlightFlares( void );
-void RB_RenderFlares( void );
 
 /*
 ============================================================

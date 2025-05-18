@@ -2317,10 +2317,7 @@ void QGL_InitFBO( void )
 	if ( FBO_CreateMS( &frameBufferMS, w, h ) )
 	{
 		frameBufferMultiSampling = qtrue;
-		if ( r_flares->integer )
-			depthStencil = qtrue;
-		else
-			depthStencil = qfalse;
+		depthStencil = qfalse;
 		result = FBO_Create( &frameBuffers[ 0 ], w, h, depthStencil, &fboTextureFormat, &fboTextureType )
 			&& FBO_Create( &frameBuffers[ 1 ], w, h, depthStencil, NULL, NULL )
 			&& FBO_Create( &frameBuffers[ 2 ], SCR_WIDTH, SCR_HEIGHT, qfalse, NULL, NULL )
