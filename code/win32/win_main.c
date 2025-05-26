@@ -694,7 +694,6 @@ WinMain
 */
 int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow ) {
 	static char	sys_cmdline[ MAX_STRING_CHARS ];
-	int xpos, ypos;
 	HANDLE hProcess;
 	DWORD dwPriority;
 

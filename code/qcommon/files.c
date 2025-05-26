@@ -1332,10 +1332,9 @@ static const char *FS_HasExt( const char *fileName, const char **extList, int ex
 }
 
 
-static qboolean FS_GeneralRef( const char *filename ) 
-{
+static qboolean FS_GeneralRef( const char *filename ) {
 	// allowed non-ref extensions
-	static const char *extList[] = { "config", "shader", "shaderx", "mtr", "arena", "menu", "bot", "cfg", "txt" };
+	static const char *extList[] = { "config", "shader", "arena", "menu", "bot", "cfg", "txt" };
 
 	if ( FS_HasExt( filename, extList, ARRAY_LEN( extList ) ) )
 		return qfalse;

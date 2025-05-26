@@ -822,7 +822,6 @@ char *FS_CopyString( const char *in );
 
 
 // AVI pipes
-
 fileHandle_t FS_PipeOpenWrite( const char *cmd, const char *filename );
 void FS_PipeClose( fileHandle_t f );
 

@@ -25,9 +25,6 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 static char *s_shaderText;
 
-static const char *s_extensionOffset;
-static int s_extendedShader;
-
 // the shader is parsed into these global variables, then copied into
 // dynamically allocated memory if it is valid.
 static	shaderStage_t	stages[MAX_SHADER_STAGES];
@@ -659,7 +656,7 @@ static qboolean ParseStage( shaderStage_t *stage, const char **text )
 		//
 		// clampmap <name>
 		//
-		else if ( !Q_stricmp( token, "clampmap" ) || ( !Q_stricmp( token, "screenMap" ) && s_extendedShader ) )
+		else if ( !Q_stricmp( token, "clampmap" ) || ( !Q_stricmp( token, "screenMap" ) ) )
 		{
 			imgFlags_t flags;
 
@@ -1081,7 +1078,7 @@ static qboolean ParseStage( shaderStage_t *stage, const char **text )
 
 			continue;
 		}
-		else if ( !Q_stricmp( token, "depthFragment" ) && s_extendedShader )
+		else if ( !Q_stricmp( token, "depthFragment" ) )
 		{
 			stage->depthFragment = qtrue;
 		}
@@ -1764,8 +1761,6 @@ static qboolean ParseShader( const char **text )
 
 	numStages = 0;
 
-	s_extendedShader = (*text >= s_extensionOffset);
-
 	token = COM_ParseExt( text, qtrue );
 	if ( token[0] != '{' )
 	{
@@ -1880,11 +1875,6 @@ static qboolean ParseShader( const char **text )
 			shader.noPicMip = 1;
 			continue;
 		}
-		else if ( !Q_stricmp( token, "novlcollapse" ) && s_extendedShader )
-		{
-			shader.noVLcollapse = 1;
-			continue;
-		}
 		// polygonOffset
 		else if ( !Q_stricmp( token, "polygonOffset" ) )
 		{
@@ -1968,7 +1958,7 @@ static qboolean ParseShader( const char **text )
 			continue;
 		}
 		// conditional stage definition
-		else if ( ( !Q_stricmp( token, "if" ) || !Q_stricmp( token, "else" ) || !Q_stricmp( token, "elif" ) ) && s_extendedShader )
+		else if ( ( !Q_stricmp( token, "if" ) || !Q_stricmp( token, "else" ) || !Q_stricmp( token, "elif" ) ) )
 		{
 			if ( Q_stricmp( token, "if" ) == 0 ) {
 				branch = brIF;
@@ -3375,10 +3365,9 @@ a single large text block that can be scanned for shader names
 */
 static void ScanAndLoadShaderFiles( void )
 {
-	char **shaderFiles, **shaderxFiles;
+	char **shaderFiles;
 	char *buffers[MAX_SHADER_FILES];
-	char *xbuffers[MAX_SHADER_FILES];
-	int numShaderFiles, numShaderxFiles;
+	int numShaderFiles;
 	int i;
 	const char *token, *hashMem;
 	char *textEnd;
@@ -3390,15 +3379,7 @@ static void ScanAndLoadShaderFiles( void )
 	// scan for legacy shader files
 	shaderFiles = ri.FS_ListFiles( "scripts", ".shader", &numShaderFiles );
 
-	if ( GL_ProgramAvailable() ) {
-		// if ARB shaders available - scan for extended shader files
-		shaderxFiles = ri.FS_ListFiles( "scripts", ".shaderx", &numShaderxFiles );
-	} else {
-		shaderxFiles = NULL;
-		numShaderxFiles = 0;
-	}
-
-	if ( (!shaderFiles || !numShaderFiles) && (!shaderxFiles || !numShaderxFiles) ) {
+	if ( (!shaderFiles || !numShaderFiles) ) {
 		ri.Printf( PRINT_WARNING, "WARNING: no shader files found\n" );
 		return;
 	}
@@ -3406,17 +3387,13 @@ static void ScanAndLoadShaderFiles( void )
 	if ( numShaderFiles > MAX_SHADER_FILES ) {
 		numShaderFiles = MAX_SHADER_FILES;
 	}
-	if ( numShaderxFiles > MAX_SHADER_FILES ) {
-		numShaderxFiles = MAX_SHADER_FILES;
-	}
 
 	sum = 0;
-	sum += loadShaderBuffers( shaderxFiles, numShaderxFiles, xbuffers );
 	sum += loadShaderBuffers( shaderFiles, numShaderFiles, buffers );
 
 	// build single large buffer
-	s_shaderText = ri.Hunk_Alloc( sum + numShaderxFiles*2 + numShaderFiles*2 + 1, h_low );
-	s_shaderText[ 0 ] = s_shaderText[ sum + numShaderxFiles*2 + numShaderFiles*2 ] = '\0';
+	s_shaderText = ri.Hunk_Alloc( sum + numShaderFiles*2 + 1, h_low );
+	s_shaderText[ 0 ] = s_shaderText[ sum + numShaderFiles*2 ] = '\0';
 
 	textEnd = s_shaderText;
 
@@ -3430,22 +3407,7 @@ static void ScanAndLoadShaderFiles( void )
 		}
 	}
 
-	// if shader text >= s_extensionOffset then it is an extended shader
-	// normal shaders will never encounter that
-	s_extensionOffset = textEnd;
-
-	// extended shaders
-	for ( i = numShaderxFiles - 1; i >= 0 ; i-- ) {
-		if ( xbuffers[ i ] ) {
-			textEnd = Q_stradd( textEnd, xbuffers[ i ] );
-			textEnd = Q_stradd( textEnd, "\n" );
-			ri.FS_FreeFile( xbuffers[ i ] );
-		}
-	}
-
 	// free up memory
-	if ( shaderxFiles )
-		ri.FS_FreeFileList( shaderxFiles );
 	if ( shaderFiles )
 		ri.FS_FreeFileList( shaderFiles );
 
