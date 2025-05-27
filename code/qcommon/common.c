@@ -3341,7 +3341,7 @@ void Com_Init( char *commandLine ) {
 	Cvar_CheckRange( com_developer, NULL, NULL, CV_INTEGER );
 
 	Com_StartupVariable( "vm_rtChecks" );
-	vm_rtChecks = Cvar_Get( "vm_rtChecks", "7", CVAR_INIT | CVAR_PROTECTED );
+	vm_rtChecks = Cvar_Get( "vm_rtChecks", "15", CVAR_INIT | CVAR_PROTECTED );
 	Cvar_CheckRange( vm_rtChecks, "0", "15", CV_INTEGER );
 	Cvar_SetDescription( vm_rtChecks,
 		"Runtime checks in compiled vm code, bitmask:\n 1 - program stack overflow\n" \
