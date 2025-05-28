@@ -2502,8 +2502,7 @@ void Sys_QueEvent( int evTime, sysEventType_t evType, int value, int value2, int
 Com_GetSystemEvent
 ================
 */
-static sysEvent_t Com_GetSystemEvent( void )
-{
+static sysEvent_t Com_GetSystemEvent( void ) {
 	sysEvent_t  ev;
 	const char	*s;
 	int			evTime;

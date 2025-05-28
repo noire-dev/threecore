@@ -35,7 +35,7 @@ USE_OPENGL2         = 0
 USE_OPENGL_API      = 1
 USE_VULKAN_API      = 1
 
-# valid options: opengl, vulkan, opengl2
+# valid options: opengl, vulkan
 RENDERER_DEFAULT = opengl
 
 CNAME            = sandbox
@@ -282,11 +282,6 @@ ifdef MINGW
   endif
 
   BASE_CFLAGS += -Wall -Wimplicit -Wstrict-prototypes -DMINGW=1 -DWIN32_LEAN_AND_MEAN
-
-  ifneq ($(BUILD_SERVER),0)
-    BASE_CFLAGS += -mconsole
-  endif
-
   BASE_CFLAGS += -Wno-unused-result -fvisibility=hidden
   BASE_CFLAGS += -ffunction-sections -flto
   BASE_CFLAGS += -D__inline=inline

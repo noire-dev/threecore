@@ -23,9 +23,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 #include "../qcommon/q_shared.h"
 #include "../qcommon/qcommon.h"
-#ifndef DEDICATED
 #include "../client/client.h"
-#endif
 #include "win_local.h"
 #include "resource.h"
 #include <sys/types.h>
@@ -33,7 +31,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #include <errno.h>
 #include <direct.h>
 #include <io.h>
-
+#include <fcntl.h>
 
 #define MEM_THRESHOLD (96*1024*1024)
 
@@ -66,9 +64,7 @@ void NORETURN FORMAT_PRINTF(1, 2) QDECL Sys_Error( const char *error, ... ) {
 	Q_vsnprintf( text, sizeof( text ), error, argptr );
 	va_end( argptr );
 
-#ifndef DEDICATED
 	CL_Shutdown( text, qtrue );
-#endif
 
 	timeEndPeriod( 1 );
 
@@ -91,9 +87,7 @@ Sys_Quit
 ==============
 */
 void NORETURN Sys_Quit( void ) {
-
 	timeEndPeriod( 1 );
-
 	exit( 0 );
 }
 
@@ -103,6 +97,7 @@ Sys_Print
 ==============
 */
 void Sys_Print( const char *msg ) {
+	printf( msg );
 	return;
 }
 
@@ -112,6 +107,46 @@ Sys_ConsoleInput
 ==============
 */
 char *Sys_ConsoleInput( void ) {
+	static char inputBuffer[1024];
+	static int index = 0;
+
+	DWORD numRead;
+	INPUT_RECORD inputRecord;
+	HANDLE hInput = GetStdHandle(STD_INPUT_HANDLE);
+
+	while (1) {
+		if (!PeekConsoleInput(hInput, &inputRecord, 1, &numRead) || numRead == 0)
+			return NULL;
+
+		ReadConsoleInput(hInput, &inputRecord, 1, &numRead);
+
+		if (inputRecord.EventType != KEY_EVENT)
+			continue;
+
+		KEY_EVENT_RECORD key = inputRecord.Event.KeyEvent;
+
+		if (!key.bKeyDown)
+			continue;
+
+		if (key.uChar.AsciiChar == '\r') {
+			printf("\n");
+			inputBuffer[index] = '\0';
+			index = 0;
+			return inputBuffer;
+		}
+
+		if (key.uChar.AsciiChar == '\b' && index > 0) {
+			index--;
+			printf("\b \b");
+			continue;
+		}
+
+		if ((key.uChar.AsciiChar == '\t' || isprint(key.uChar.AsciiChar)) && index < sizeof(inputBuffer) - 1) {
+			putchar(key.uChar.AsciiChar);
+			inputBuffer[index++] = key.uChar.AsciiChar;
+		}
+	}
+
 	return NULL;
 }
 
@@ -434,87 +469,6 @@ qboolean Sys_GetFileStats( const char *filename, fileOffset_t *size, fileTime_t 
 	}
 }
 
-//========================================================
-
-/*
-========================================================================
-
-LOAD/UNLOAD DLL
-
-========================================================================
-*/
-
-static int dll_err_count = 0;
-
-/*
-=================
-Sys_LoadLibrary
-=================
-*/
-void *Sys_LoadLibrary( const char *name )
-{
-	const char *ext;
-
-	if ( !name || !*name )
-		return NULL;
-
-	if ( FS_AllowedExtension( name, qfalse, &ext ) )
-	{
-		Com_Error( ERR_FATAL, "Sys_LoadLibrary: Unable to load library with '%s' extension", ext );
-	}
-
-	return (void *)LoadLibrary( AtoW( name ) );
-}
-
-
-/*
-=================
-Sys_LoadFunction
-=================
-*/
-void *Sys_LoadFunction( void *handle, const char *name )
-{
-	void *symbol;
-
-	if ( handle == NULL || name == NULL || *name == '\0' ) 
-	{
-		dll_err_count++;
-		return NULL;
-	}
-
-	symbol = GetProcAddress( handle, name );
-	if ( !symbol )
-		dll_err_count++;
-
-	return symbol;
-}
-
-
-/*
-=================
-Sys_LoadFunctionErrors
-=================
-*/
-int Sys_LoadFunctionErrors( void )
-{
-	int result = dll_err_count;
-	dll_err_count = 0;
-	return result;
-}
-
-
-/*
-=================
-Sys_UnloadLibrary
-=================
-*/
-void Sys_UnloadLibrary( void *handle )
-{
-	if ( handle )
-		FreeLibrary( handle );
-}
-
-
 /*
 =================
 Sys_SendKeyEvents
@@ -523,15 +477,9 @@ Platform-dependent event handling
 =================
 */
 void Sys_SendKeyEvents( void ) {
-#ifndef DEDICATED
-	if ( !com_dedicated->integer )
+	if (!com_dedicated->integer)
 		HandleEvents();
-#endif
 }
-
-
-//================================================================
-
 
 /*
 ==================
@@ -540,8 +488,7 @@ SetTimerResolution
 Try to set lower timer period
 ==================
 */
-static void SetTimerResolution( void )
-{
+static void SetTimerResolution( void ) {
 	typedef HRESULT (WINAPI *pfnNtQueryTimerResolution)( PULONG MinRes, PULONG MaxRes, PULONG CurRes );
 	typedef HRESULT (WINAPI *pfnNtSetTimerResolution)( ULONG NewRes, BOOLEAN SetRes, PULONG CurRes );
 	pfnNtQueryTimerResolution pNtQueryTimerResolution;
@@ -550,12 +497,10 @@ static void SetTimerResolution( void )
 	HMODULE dll;
 
 	dll = LoadLibrary( T( "ntdll" ) );
-	if ( dll )
-	{
+	if ( dll ) {
 		pNtQueryTimerResolution = (pfnNtQueryTimerResolution) GetProcAddress( dll, "NtQueryTimerResolution" );
 		pNtSetTimerResolution = (pfnNtSetTimerResolution) GetProcAddress( dll, "NtSetTimerResolution" );
-		if ( pNtQueryTimerResolution && pNtSetTimerResolution )
-		{
+		if ( pNtQueryTimerResolution && pNtSetTimerResolution ) {
 			pNtQueryTimerResolution( &minr, &maxr, &curr );
 			if ( maxr < 5000 ) // well, we don't need less than 0.5ms periods for select()
 				maxr = 5000;
@@ -564,7 +509,6 @@ static void SetTimerResolution( void )
 		FreeLibrary( dll );
 	}
 }
-
 
 /*
 ================
@@ -575,24 +519,48 @@ are initialized
 ================
 */
 void Sys_Init( void ) {
-
 	// make sure the timer is high precision, otherwise
 	// NT gets 18ms resolution
 	timeBeginPeriod( 1 );
 
 	SetTimerResolution();
 
+	AllocConsole();
+
+	FILE* dummy;
+	freopen_s(&dummy, "CONOUT$", "w", stdout);
+	freopen_s(&dummy, "CONOUT$", "w", stderr);
+
+	HANDLE hStdout = GetStdHandle(STD_OUTPUT_HANDLE);
+	int hCrt = _open_osfhandle((intptr_t)hStdout, _O_TEXT);
+	FILE* fp = _fdopen(hCrt, "w");
+	*stdout = *fp;
+	setvbuf(stdout, NULL, _IONBF, 0);
+
+	HANDLE hStdin = CreateFileA("CONIN$", GENERIC_READ | GENERIC_WRITE,  FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_EXISTING, 0, NULL);
+	if (hStdin != INVALID_HANDLE_VALUE) {
+	    SetStdHandle(STD_INPUT_HANDLE, hStdin);
+	    hCrt = _open_osfhandle((intptr_t)hStdin, _O_TEXT);
+	    fp = _fdopen(hCrt, "r");
+	    *stdin = *fp;
+	    setvbuf(stdin, NULL, _IONBF, 0);
+	} else {
+	    printf("Failed to open CONIN$\n");
+	}
+
+	HANDLE hStderr = GetStdHandle(STD_ERROR_HANDLE);
+	hCrt = _open_osfhandle((intptr_t)hStderr, _O_TEXT);
+	fp = _fdopen(hCrt, "w");
+	*stderr = *fp;
+	setvbuf(stderr, NULL, _IONBF, 0);
+
 	Cvar_Set( "arch", "winnt" );
 }
 
-//=======================================================================
-
-static const char *GetExceptionName( DWORD code )
-{
+static const char *GetExceptionName( DWORD code ) {
 	static char buf[ 32 ];
 
-	switch ( code )
-	{
+	switch ( code ) {
 		case EXCEPTION_ACCESS_VIOLATION: return "ACCESS_VIOLATION";
 		case EXCEPTION_DATATYPE_MISALIGNMENT: return "DATATYPE_MISALIGNMENT";
 		case EXCEPTION_ARRAY_BOUNDS_EXCEEDED: return "ARRAY_BOUNDS_EXCEEDED";
@@ -611,7 +579,6 @@ static const char *GetExceptionName( DWORD code )
 	return buf;
 }
 
-
 /*
 ==================
 ExceptionFilter
@@ -619,10 +586,8 @@ ExceptionFilter
 Restore gamma and hide fullscreen window in case of crash
 ==================
 */
-static LONG WINAPI ExceptionFilter( struct _EXCEPTION_POINTERS *ExceptionInfo )
-{
-#ifndef DEDICATED
-	if ( com_dedicated->integer == 0 ) {
+static LONG WINAPI ExceptionFilter( struct _EXCEPTION_POINTERS *ExceptionInfo ) {
+	if (com_dedicated->integer == 0) {
 		extern cvar_t *com_cl_running;
 		if ( com_cl_running  && com_cl_running->integer ) {
 			// assume we can restart client module
@@ -631,10 +596,8 @@ static LONG WINAPI ExceptionFilter( struct _EXCEPTION_POINTERS *ExceptionInfo )
 			GLW_HideFullscreenWindow();
 		}
 	}
-#endif
 
-	if ( ExceptionInfo->ExceptionRecord->ExceptionCode != EXCEPTION_BREAKPOINT )
-	{
+	if ( ExceptionInfo->ExceptionRecord->ExceptionCode != EXCEPTION_BREAKPOINT ) {
 		char msg[128], name[MAX_OSPATH];
 		const char *basename;
 		HMODULE hModule, hKernel32;
@@ -658,8 +621,7 @@ static LONG WINAPI ExceptionFilter( struct _EXCEPTION_POINTERS *ExceptionInfo )
 						basename = strrchr( name, '\\' );
 						if ( basename ) {
 							basename = basename + 1;
-						}
-						else {
+						} else {
 							basename = strrchr( name, '/' );
 							if ( basename ) {
 								basename = basename + 1;
@@ -685,7 +647,6 @@ static LONG WINAPI ExceptionFilter( struct _EXCEPTION_POINTERS *ExceptionInfo )
 
 	return EXCEPTION_EXECUTE_HANDLER;
 }
-
 
 /*
 ==================
@@ -721,15 +682,10 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLin
 
 	// main game loop
 	while ( 1 ) {
-#ifdef DEDICATED
-		// run the game
-		Com_Frame( qfalse );
-#else
 		// make sure mouse and joystick are only called once a frame
 		IN_Frame();
 		// run the game
 		Com_Frame( CL_NoDelay() );
-#endif
 	}
 
 	// never gets here
