@@ -1125,7 +1125,7 @@ typedef enum {
 
 #define	MAX_MODELS			4096
 #define	MAX_SOUNDS			4096
-#define	MAX_CONFIGSTRINGS	10000
+#define	MAX_CONFIGSTRINGS	10000+1
 
 // these are the only configstrings that the system reserves, all the
 // other ones are strictly for servergame to clientgame communication
