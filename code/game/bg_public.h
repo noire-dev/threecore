@@ -25,34 +25,16 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 // CS_SERVERINFO and CS_SYSTEMINFO are defined in q_shared.h
 #define	CS_MUSIC				2
-#define	CS_WARMUP				3
-#define	CS_SCORES1				4
-#define	CS_SCORES2				5
-#define CS_VOTE_TIME			6
-#define CS_VOTE_STRING			7
-#define	CS_VOTE_YES				8
-#define	CS_VOTE_NO				9
-#define CS_TEAMVOTE_TIME		10 // 2 slots
-#define CS_TEAMVOTE_STRING		12 // 2 slots
-#define	CS_TEAMVOTE_YES			14 // 2 slots
-#define	CS_TEAMVOTE_NO			16 // 2 slots
-#define	CS_GAME_VERSION			18
-#define	CS_LEVEL_START_TIME		19
-#define	CS_INTERMISSION			20
-#define CS_FLAGSTATUS			21
-#define CS_SHADERSTATE			22
-#define CS_BOTINFO				23 // 2 slots
-#define	CS_ITEMS				25
-#define CS_PRIMARYOBJECTIVE		26
-#define CS_SECONDARYOBJECTIVE	27
-#define	CS_OVERLAY				28
-#define CS_SCOREBOARDMUSIC		29
-#define CS_DEATHMUSIC			30
-#define CS_CUTSCENE				31
-#define CS_PLAYERMODEL			32
-#define CS_PLAYERHEADMODEL		33
-#define CS_OBJECTIVESOVERLAY	34
-#define	CS_MODELS				35
+#define	CS_SCORES1				3
+#define	CS_SCORES2				4
+#define	CS_GAME_VERSION			5
+#define	CS_LEVEL_START_TIME		6
+#define	CS_INTERMISSION			7
+#define CS_FLAGSTATUS			8
+#define CS_SHADERSTATE			9
+#define CS_BOTINFO				10 // 2 slots
+#define	CS_ITEMS				12
+#define	CS_MODELS				13
 #define	CS_SOUNDS				(CS_MODELS+MAX_MODELS)
 #define	CS_PLAYERS				(CS_SOUNDS+MAX_SOUNDS)
 #define CS_LOCATIONS			(CS_PLAYERS+MAX_CLIENTS)

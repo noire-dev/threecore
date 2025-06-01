@@ -672,8 +672,7 @@ CL_CompleteDemoName
 */
 static void CL_CompleteDemoName(const char *args, int argNum ) {
 	if ( argNum == 2 ) {
-		FS_SetFilenameCallback( CL_DemoNameCallback_f );
-		Field_CompleteFilename( "demos", ".demo", qfalse, FS_MATCH_ANY | FS_MATCH_STICK );
+		Field_CompleteFilename( "demos", "demo", qfalse, FS_MATCH_ANY | FS_MATCH_STICK );
 		FS_SetFilenameCallback( NULL );
 	}
 }
@@ -1054,7 +1053,6 @@ qboolean CL_Disconnect( qboolean showMainMenu ) {
 
 	CL_UpdateGUID( NULL, 0 );
 
-	// Cmd_RemoveCommand( "callvote" );
 	Cmd_RemoveCgameCommands();
 
 	if ( noGameRestart )
@@ -1555,20 +1553,6 @@ static void CL_Systeminfo_f( void ) {
 	Info_Print( cl.gameState.stringData + ofs );
 }
 
-
-static void CL_CompleteCallvote(const char *args, int argNum )
-{
-	if( argNum >= 2 )
-	{
-		// Skip "callvote "
-		const char *p = Com_SkipTokens( args, 1, " " );
-
-		if ( p > args )
-			Field_CompleteCommand( p, qtrue, qtrue );
-	}
-}
-
-
 //====================================================================
 
 /*
@@ -1616,11 +1600,6 @@ static void CL_DownloadsComplete( void ) {
 	// initialize the CGame
 	cls.cgameStarted = qtrue;
 	CL_InitCGame();
-
-	if ( clc.demofile == FS_INVALID_HANDLE ) {
-		Cmd_AddCommand( "callvote", NULL );
-		Cmd_SetCommandCompletionFunc( "callvote", CL_CompleteCallvote );
-	}
 
 	CL_WritePacket( 2 );
 }

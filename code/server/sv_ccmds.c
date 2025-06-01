@@ -215,16 +215,7 @@ static void SV_MapRestart_f( void ) {
 	if ( Cmd_Argc() > 1 ) {
 		delay = atoi( Cmd_Argv(1) );
 	} else {
-		delay = 5;
-	}
-
-	if ( delay != 0 && Cvar_VariableIntegerValue( "g_doWarmup" ) == 0 ) {
-		sv.restartTime = sv.time + delay * 1000;
-		if ( sv.restartTime == 0 ) {
-			sv.restartTime = 1;
-		}
-		SV_SetConfigstring( CS_WARMUP, va( "%i", sv.restartTime ) );
-		return;
+		delay = 0;
 	}
 
 	// check for changes in variables that can't just be restarted
@@ -264,8 +255,7 @@ static void SV_MapRestart_f( void ) {
 	SV_RestartGameProgs();
 
 	// run a few frames to allow everything to settle
-	for ( i = 0; i < 3; i++ )
-	{
+	for ( i = 0; i < 3; i++ ) {
 		sv.time += 100;
 		VM_Call( gvm, 1, GAME_RUN_FRAME, sv.time );
 	}
