@@ -804,7 +804,6 @@ all big things are allocated on the hunk.
 
 #define DIRECTION next
 // we may have up to 4 lists to group free blocks by size
-//#define TINY_SIZE	32
 #define SMALL_SIZE	64
 #define MEDIUM_SIZE	128
 
@@ -883,7 +882,6 @@ static void RemoveFree( memblock_t *block )
 	prev->next = next;
 	next->prev = prev;
 }
-
 
 static void InsertFree( memzone_t *zone, memblock_t *block )
 {
@@ -1256,7 +1254,7 @@ void *Z_TagMalloc( int size, memtag_t tag ) {
 
 	if ( size < (sizeof( freeblock_t ) ) ) {
 		size = (sizeof( freeblock_t ) );
-	
+	}
 
 	//
 	// scan through the block list looking for the first free block
@@ -1268,7 +1266,6 @@ void *Z_TagMalloc( int size, memtag_t tag ) {
 #endif
 
 	size = PAD(size, sizeof(intptr_t));		// align to 32/64 bit boundary
-
 	base = SearchFree( zone, size );
 
 	RemoveFree( base );
@@ -1293,12 +1290,16 @@ void *Z_TagMalloc( int size, memtag_t tag ) {
 	}
 
 	zone->used += base->size;
+
 	base->tag = tag;			// no longer a free block
 	base->id = ZONEID;
+
+#ifdef ZONE_DEBUG
 	base->d.label = label;
 	base->d.file = file;
 	base->d.line = line;
 	base->d.allocSize = allocSize;
+#endif
 
 #ifdef USE_TRASH_TEST
 	// marker for memory trash testing
@@ -1916,6 +1917,10 @@ Com_InitHunkMemory
 static void Com_InitHunkMemory( void ) {
 	cvar_t	*cv;
 
+	// make sure the file system has allocated and "not" freed any temp blocks
+	// this allows the config and product id files ( journal files too ) to be loaded
+	// by the file system without redundant routines in the file system utilizing different
+	// memory systems
 	if ( FS_LoadStack() != 0 ) {
 		Com_Error( ERR_FATAL, "Hunk initialization failed. File system load stack not zero" );
 	}
@@ -1945,6 +1950,7 @@ static void Com_InitHunkMemory( void ) {
 	Cmd_AddCommand( "hunksmalllog", Hunk_SmallLog );
 #endif
 }
+
 
 /*
 ====================
