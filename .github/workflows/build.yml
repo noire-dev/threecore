@@ -10,13 +10,13 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        arch: [x86, x86_64]
+        arch: [x86_64]  #disabled windows 32 bit (check allocate memory and add x86)
         cc: [gcc]
         btype: [Release]
         include:
-          - arch: x86
-            msystem: MINGW32
-            prefix: mingw-w64-i686
+#          - arch: x86
+#            msystem: MINGW32
+#            prefix: mingw-w64-i686
 
           - arch: x86_64
             msystem: MINGW64
