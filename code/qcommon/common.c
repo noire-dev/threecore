@@ -34,15 +34,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 #include "../client/keys.h"
 
-#if defined(__i386__)
-    #define MAX_COMHUNKMEGS		1023
-#else
-    #define MAX_COMHUNKMEGS		2047
-#endif
-
-#define DEF_COMHUNKMEGS			512
-#define MIN_COMHUNKMEGS			256
-
+#define DEF_COMHUNKMEGS			2047
 #define DEF_COMZONEMEGS			16
 
 static jmp_buf abortframe;	// an ERR_DROP occurred, exit the entire frame
@@ -1804,20 +1796,8 @@ Com_InitZoneMemory
 */
 static void Com_InitZoneMemory( void ) {
 	int		mainZoneSize;
-	cvar_t	*cv;
 
-	// Please note: com_zoneMegs can only be set on the command line, and
-	// not in q3config.cfg or Com_StartupVariable, as they haven't been
-	// executed by this point. It's a chicken and egg problem. We need the
-	// memory manager configured to handle those places where you would
-	// configure the memory manager.
-
-	// allocate the random block zone
-	cv = Cvar_Get( "com_zoneMegs", XSTRING( DEF_COMZONEMEGS ), CVAR_LATCH | CVAR_ARCHIVE );
-	Cvar_CheckRange( cv, "1", NULL, CV_INTEGER );
-	Cvar_SetDescription( cv, "Initial amount of memory (RAM) allocated for the main block zone (in MB)." );
-
-	mainZoneSize = cv->integer * 1024 * 1024;
+	mainZoneSize = DEF_COMZONEMEGS * 1024 * 1024;
 
 	mainzone = calloc( mainZoneSize, 1 );
 	if ( !mainzone ) {
@@ -1915,22 +1895,12 @@ Com_InitHunkMemory
 =================
 */
 static void Com_InitHunkMemory( void ) {
-	cvar_t	*cv;
 
-	// make sure the file system has allocated and "not" freed any temp blocks
-	// this allows the config and product id files ( journal files too ) to be loaded
-	// by the file system without redundant routines in the file system utilizing different
-	// memory systems
 	if ( FS_LoadStack() != 0 ) {
 		Com_Error( ERR_FATAL, "Hunk initialization failed. File system load stack not zero" );
 	}
 
-	// allocate the stack based hunk allocator
-	cv = Cvar_Get( "com_hunkMegs", XSTRING( DEF_COMHUNKMEGS ), CVAR_LATCH | CVAR_ARCHIVE );
-	Cvar_CheckRange( cv, XSTRING( MIN_COMHUNKMEGS ), XSTRING( MAX_COMHUNKMEGS ), CV_INTEGER );
-	Cvar_SetDescription( cv, "The size of the hunk memory segment." );
-
-	s_hunkTotal = cv->integer * 1024 * 1024;
+	s_hunkTotal = DEF_COMHUNKMEGS * 1024 * 1024;
 
 	s_hunkData = calloc( s_hunkTotal + 63, 1 );
 	if ( !s_hunkData ) {

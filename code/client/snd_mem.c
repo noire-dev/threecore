@@ -32,11 +32,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #include "snd_local.h"
 #include "snd_codec.h"
 
-#if defined(__i386__)
-#define DEF_COMSOUNDMEGS "8"
-#else
 #define DEF_COMSOUNDMEGS "256"
-#endif
 
 /*
 ===============================================================================
@@ -84,20 +80,15 @@ sndBuffer *SND_malloc( void ) {
 void SND_setup( void ) 
 {
 	sndBuffer *p, *q;
-	cvar_t	*cv;
 	int scs, sz;
 	static int old_scs = -1;
 
-	cv = Cvar_Get( "com_soundMegs", DEF_COMSOUNDMEGS, CVAR_LATCH | CVAR_ARCHIVE );
-	Cvar_CheckRange( cv, "1", "512", CV_INTEGER );
-	Cvar_SetDescription( cv, "Amount of memory (RAM) assigned to the sound buffer (in MB)." );
-
-	scs = ( cv->integer * 12 * dma.speed ) / 22050;
+	scs = ( DEF_COMSOUNDMEGS * 12 * dma.speed ) / 22050;
 	scs *= 128;
 
 	sz = scs * sizeof( sndBuffer );
 
-	// realloc buffer if com_soundMegs changed
+	// realloc buffer if changed
 	if ( old_scs != scs ) {
 		if ( buffer != NULL ) {
 			free( buffer );
