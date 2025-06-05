@@ -652,21 +652,6 @@ void CL_ReadDemoMessage( void ) {
 
 /*
 ====================
-CL_DemoExtCallback
-====================
-*/
-static qboolean CL_DemoNameCallback_f( const char *filename, int length ) {
-	const int ext_len = strlen( "." "demo" );
-	const int num_len = 2;
-
-	if ( length <= ext_len + num_len || Q_stricmpn( filename + length - (ext_len + num_len), "." "demo", ext_len ) != 0 )
-		return qfalse;
-	
-	return qtrue;
-}
-
-/*
-====================
 CL_CompleteDemoName
 ====================
 */
@@ -2538,27 +2523,6 @@ void CL_StartHunkUsers( void ) {
 
 	if ( !com_cl_running || !com_cl_running->integer ) {
 		return;
-	}
-
-	if ( cls.state >= CA_LOADING ) {
-		// try to apply map-depending configuration from cvar cl_mapConfig_<mapname> cvars
-		const char *info = cl.gameState.stringData + cl.gameState.stringOffsets[ CS_SERVERINFO ];
-		const char *mapname = Info_ValueForKey( info, "mapname" );
-		if ( mapname && *mapname != '\0' ) {
-			const char *fmt = "cl_mapConfig_%s";
-			const char *cmd = Cvar_VariableString( va( fmt, mapname ) );
-			if ( cmd && *cmd != '\0' ) {
-				Cbuf_AddText( cmd );
-				Cbuf_AddText( "\n" );
-			} else {
-				// apply mapname "default" if present
-				cmd = Cvar_VariableString( va( fmt, "default" ) );
-				if ( cmd && *cmd != '\0' ) {
-					Cbuf_AddText( cmd );
-					Cbuf_AddText( "\n" );
-				}
-			}
-		}
 	}
 	
 	FS_Reload();

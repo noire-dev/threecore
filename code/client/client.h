@@ -100,7 +100,6 @@ typedef struct {
 	qboolean	newSnapshots;		// set on parse of any valid packet
 
 	gameState_t	gameState;			// configstrings
-	char		mapname[MAX_QPATH];	// extracted from CS_SERVERINFO
 
 	int			parseEntitiesNum;	// index (not anded off) into cl_parse_entities[]
 

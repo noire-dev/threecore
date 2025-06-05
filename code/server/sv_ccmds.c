@@ -217,7 +217,7 @@ static void SV_MapRestart_f( void ) {
 		char	mapname[MAX_QPATH];
 
 		// restart the map the slow way
-		Q_strncpyz( mapname, Cvar_VariableString( "mapname" ), sizeof( mapname ) );
+		Q_strncpyz( mapname, Cvar_VariableString( "sv_mapname" ), sizeof( mapname ) );
 
 		SV_SpawnServer( mapname );
 		return;

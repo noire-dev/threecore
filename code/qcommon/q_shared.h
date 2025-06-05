@@ -1114,6 +1114,7 @@ typedef enum {
 #define	MAX_MODELS			1024
 #define	MAX_SOUNDS			256
 #define	MAX_CLIENTS			128
+#define MAX_LOCATIONS		64
 #define	GENTITYNUM_BITS		12
 #define	MAX_GENTITIES		(1<<GENTITYNUM_BITS)
 
@@ -1131,8 +1132,6 @@ typedef enum {
 // other ones are strictly for servergame to clientgame communication
 #define	CS_SERVERINFO		0		// an info string with all the serverinfo cvars
 #define	CS_SYSTEMINFO		1		// an info string for server system to client system configuration (timescale, etc)
-
-#define	RESERVED_CONFIGSTRINGS	2	// game can't modify below this, only the system can
 
 typedef struct {
 	int			stringOffsets[MAX_CONFIGSTRINGS];

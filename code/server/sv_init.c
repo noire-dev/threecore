@@ -107,6 +107,8 @@ void SV_SetConfigstring (int index, const char *val) {
 	int		i;
 	client_t	*client;
 
+	Com_Printf( "!! SET CONFIGSTRING[%d] = %s\n", index, val );
+
 	if ( index < 0 || index >= MAX_CONFIGSTRINGS ) {
 		return;
 	}
@@ -477,7 +479,7 @@ void SV_SpawnServer( const char *mapname ) {
 	CM_LoadMap( va( "maps/%s.bsp", mapname ), qfalse, &checksum );
 
 	// set serverinfo visible name
-	Cvar_Set( "mapname", mapname );
+	Cvar_Set( "sv_mapname", mapname );
 
 	// serverid should be different each time
 	sv.serverId = com_frameTime;
@@ -606,7 +608,7 @@ void SV_Init( void )
 	Cvar_Get ("timelimit", "0", CVAR_SERVERINFO);
 	sv_gametype = Cvar_Get ("g_gametype", "0", CVAR_SERVERINFO | CVAR_LATCH );
 	Cvar_SetDescription( sv_gametype, "Set the gametype to mod." );
-	sv_mapname = Cvar_Get ("mapname", "nomap", CVAR_SERVERINFO | CVAR_ROM);
+	sv_mapname = Cvar_Get ("sv_mapname", "nomap", CVAR_SERVERINFO );
 	Cvar_SetDescription( sv_mapname, "Display the name of the current map being used on a server." );
 	sv_privateClients = Cvar_Get( "sv_privateClients", "0", 0 );
 	Cvar_CheckRange( sv_privateClients, "0", va( "%i", MAX_CLIENTS-1 ), CV_INTEGER );

@@ -681,8 +681,6 @@ Should only be called by CL_StartHunkUsers
 ====================
 */
 void CL_InitCGame( void ) {
-	const char			*info;
-	const char			*mapname;
 	int					t1, t2;
 
 	Cbuf_NestedReset();
@@ -691,11 +689,6 @@ void CL_InitCGame( void ) {
 
 	// put away the console
 	Con_Close();
-
-	// find the current mapname
-	info = cl.gameState.stringData + cl.gameState.stringOffsets[ CS_SERVERINFO ];
-	mapname = Info_ValueForKey( info, "mapname" );
-	Com_sprintf( cl.mapname, sizeof( cl.mapname ), "maps/%s.bsp", mapname );
 
 	// allow vertex lighting for in-game elements
 	re.VertexLighting( qtrue );

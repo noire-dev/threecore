@@ -1203,7 +1203,7 @@ static void SV_Restart( const char *reason ) {
 	sv.time = 0; // force level time reset
 	sv.restartTime = 0;
 	
-	Cvar_VariableStringBuffer( "mapname", mapName, sizeof( mapName ) );
+	Cvar_VariableStringBuffer( "sv_mapname", mapName, sizeof( mapName ) );
 	
 	if ( sv_shutdown ) {
 		SV_Shutdown( reason );
