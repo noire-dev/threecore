@@ -1703,7 +1703,7 @@ void CIN_UploadCinematic( int handle ) {
 			cinTable[handle].dirty = qfalse;
 		}
 
-		else if (cinTable[handle].playonwalls != 1) {
+		if (cinTable[handle].playonwalls != 1) {
 			cinTable[handle].playonwalls = 1;
 		}
 	}
