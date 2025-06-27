@@ -67,7 +67,6 @@ typedef enum {
 	ET_ITEM,
 	ET_MISSILE,
 	ET_MOVER,
-	ET_BEAM,
 	ET_PORTAL,
 	ET_SPEAKER,
 	ET_PUSH_TRIGGER,
@@ -75,6 +74,7 @@ typedef enum {
 	ET_INVISIBLE,
 	ET_GRAPPLE,
 	ET_TEAM,
+
 	ET_EVENTS
 } entityType_t;
 
