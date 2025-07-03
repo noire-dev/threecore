@@ -52,12 +52,8 @@ static int LAN_GetServerCount( int source ) {
 		case AS_LOCAL :
 			return cls.numlocalservers;
 			break;
-		case AS_MPLAYER:
 		case AS_GLOBAL :
 			return cls.numglobalservers;
-			break;
-		case AS_FAVORITES :
-			return cls.numfavoriteservers;
 			break;
 	}
 	return 0;
@@ -76,16 +72,9 @@ static void LAN_GetServerAddressString( int source, int n, char *buf, int buflen
 				return;
 			}
 			break;
-		case AS_MPLAYER:
 		case AS_GLOBAL :
 			if (n >= 0 && n < MAX_GLOBAL_SERVERS) {
 				Q_strncpyz(buf, NET_AdrToStringwPort( &cls.globalServers[n].adr) , buflen );
-				return;
-			}
-			break;
-		case AS_FAVORITES :
-			if (n >= 0 && n < MAX_OTHER_SERVERS) {
-				Q_strncpyz(buf, NET_AdrToStringwPort( &cls.favoriteServers[n].adr) , buflen );
 				return;
 			}
 			break;

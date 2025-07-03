@@ -602,16 +602,14 @@ void SV_Init( void )
 		SV_AddDedicatedCommands();
 
 	// serverinfo vars
-	Cvar_Get ("fraglimit", "0", CVAR_SERVERINFO);
-	Cvar_Get ("timelimit", "0", CVAR_SERVERINFO);
 	sv_gametype = Cvar_Get ("g_gametype", "0", CVAR_SERVERINFO | CVAR_LATCH );
 	Cvar_SetDescription( sv_gametype, "Set the gametype to mod." );
-	sv_mapname = Cvar_Get ("sv_mapname", "nomap", CVAR_SERVERINFO );
+	sv_mapname = Cvar_Get ("sv_mapname", "", CVAR_SERVERINFO );
 	Cvar_SetDescription( sv_mapname, "Display the name of the current map being used on a server." );
 	sv_privateClients = Cvar_Get( "sv_privateClients", "0", 0 );
 	Cvar_CheckRange( sv_privateClients, "0", va( "%i", MAX_CLIENTS-1 ), CV_INTEGER );
 	Cvar_SetDescription( sv_privateClients, "The number of spots, out of g_maxClients, reserved for players with the server password (sv_privatePassword)." );
-	sv_hostname = Cvar_Get ("sv_hostname", "noname", CVAR_SERVERINFO | CVAR_ARCHIVE );
+	sv_hostname = Cvar_Get ("sv_hostname", "OpenSandbox", CVAR_SERVERINFO | CVAR_ARCHIVE );
 	Cvar_SetDescription( sv_hostname, "Sets the name of the server." );
 
 	sv_maxclientsPerIP = Cvar_Get( "sv_maxclientsPerIP", "3", CVAR_ARCHIVE );

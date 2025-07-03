@@ -3939,10 +3939,6 @@ static void CL_LocalServers_f( void ) {
 /*
 ==================
 CL_GlobalServers_f
-
-Originally master 0 was Internet and master 1 was MPlayer.
-ioquake3 2008; added support for requesting five separate master servers using 0-4.
-ioquake3 2017; made master 0 fetch all master servers and 1-5 request a single master server.
 ==================
 */
 static void CL_GlobalServers_f( void ) {
@@ -4263,7 +4259,7 @@ qboolean CL_UpdateVisiblePings_f(int source) {
 	int			max;
 	qboolean status = qfalse;
 
-	if (source < 0 || source > AS_FAVORITES) {
+	if (source < 0 || source > AS_GLOBAL) {
 		return qfalse;
 	}
 
@@ -4281,10 +4277,6 @@ qboolean CL_UpdateVisiblePings_f(int source) {
 			case AS_GLOBAL :
 				server = &cls.globalServers[0];
 				max = cls.numglobalservers;
-			break;
-			case AS_FAVORITES :
-				server = &cls.favoriteServers[0];
-				max = cls.numfavoriteservers;
 			break;
 			default:
 				return qfalse;
