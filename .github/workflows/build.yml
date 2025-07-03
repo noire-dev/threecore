@@ -6,7 +6,7 @@ on:
 jobs:
   windows-msys:
     name: ${{ matrix.btype }} Windows-GCC ${{ matrix.arch }}
-    runs-on: windows-2022
+    runs-on: windows-2025
     strategy:
       fail-fast: false
       matrix:
