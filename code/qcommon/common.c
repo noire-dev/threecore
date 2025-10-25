@@ -34,7 +34,13 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 #include "../client/keys.h"
 
-    #define DEF_COMHUNKMEGS 800  // defaults
+#if ARCH == x86
+    #define DEF_COMHUNKMEGS 1023
+#elif ARCH == x86_64
+    #define DEF_COMHUNKMEGS 2047
+#else
+    #define DEF_COMHUNKMEGS 1023  // defaults
+#endif
 #define DEF_COMZONEMEGS			12
 
 static jmp_buf abortframe;	// an ERR_DROP occurred, exit the entire frame
