@@ -39,7 +39,7 @@ jobs:
     - uses: actions/upload-artifact@v4
       if: matrix.cc == 'gcc' && matrix.btype == 'release'
       with:
-        name: linux-${{ matrix.arch }}
+        name: windows-${{ matrix.arch }}
         path: bin
         if-no-files-found: error
         retention-days: 5
@@ -129,10 +129,10 @@ jobs:
           - artifact_dir: linux-x86_64
             artifact_name: sandbox_linux-x86_64.zip
 
-          - artifact_dir: windows-mingw-x86
+          - artifact_dir: windows-x86
             artifact_name: sandbox_windows-x86.zip 
 
-          - artifact_dir: windows-mingw-x86_64
+          - artifact_dir: windows-x86_64
             artifact_name: sandbox_windows-x86_64.zip
 
           - artifact_dir: darwin-universal2
@@ -152,6 +152,7 @@ jobs:
           tag: ${{ github.ref }}
           overwrite: true
           file: ${{ matrix.artifact_name }}
+
 
 
 
