@@ -116,7 +116,7 @@ jobs:
 
   update-release:
     if: ${{ github.event_name == 'release' }}
-    needs: [windows-msys, ubuntu-x86, macos]
+    needs: [windows-mingw, ubuntu-x86, macos]
     runs-on: ubuntu-latest
 
     strategy:
@@ -148,3 +148,4 @@ jobs:
           tag: ${{ github.ref }}
           overwrite: true
           file: ${{ matrix.artifact_name }}
+
