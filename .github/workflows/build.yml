@@ -5,7 +5,7 @@ on:
 
 jobs:
   windows-mingw:
-    name: ${{ matrix.btype }} Ubuntu ${{ matrix.arch }}
+    name: ${{ matrix.btype }} Windows ${{ matrix.arch }}
     runs-on: ubuntu-22.04
     strategy:
       fail-fast: false
@@ -34,7 +34,7 @@ jobs:
     - name: Build
       if: ${{ github.event_name != 'release' || matrix.btype != 'Debug' }} # skip in Release builds
       run: |
-        make ${{ matrix.rule }} -j 8 ARCH=${{ matrix.arch }} PLATFORM=mingw64 CC=${{ matrix.cc }} DESTDIR=bin RENDERER_DEFAULT=opengl
+        make ${{ matrix.rule }} -j 8 ARCH=${{ matrix.arch }} PLATFORM=mingw64 CC: ${{ matrix.arch == 'x86_64' && 'x86_64-w64-mingw32-gcc' || 'i686-w64-mingw32-gcc' }} DESTDIR=bin RENDERER_DEFAULT=opengl
 
     - uses: actions/upload-artifact@v4
       if: matrix.cc == 'gcc' && matrix.btype == 'release'
@@ -152,6 +152,7 @@ jobs:
           tag: ${{ github.ref }}
           overwrite: true
           file: ${{ matrix.artifact_name }}
+
 
 
 
