@@ -70,8 +70,8 @@ typedef struct {
 
 // limits
 #define MD3_MAX_LODS		3
-#define	MD3_MAX_TRIANGLES	65535*2	// per surface for embedded importer
-#define MD3_MAX_VERTS		32768*4	// per surface for embedded importer
+#define	MD3_MAX_TRIANGLES	65535*3	// per surface for embedded importer
+#define MD3_MAX_VERTS		32768*6	// per surface for embedded importer
 #define MD3_MAX_SHADERS		256		// per surface for embedded importer
 #define MD3_MAX_FRAMES		1024	// per model
 #define	MD3_MAX_SURFACES	128		// per model for embedded importer
