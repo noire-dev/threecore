@@ -54,7 +54,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        arch: [x86_64, arm64]
+        arch: [x86_64, aarch64]
         cc: [gcc]
         btype: [Release]
         include:
@@ -133,8 +133,8 @@ jobs:
           - artifact_dir: linux-x86_64
             artifact_name: sandbox_linux-x86_64.zip
     
-          - artifact_dir: linux-arm64
-            artifact_name: sandbox_linux-arm64.zip
+          - artifact_dir: linux-aarch64
+            artifact_name: sandbox_linux-aarch64.zip
 
           - artifact_dir: windows-x86
             artifact_name: sandbox_windows-x86.zip 
@@ -159,6 +159,7 @@ jobs:
           tag: ${{ github.ref }}
           overwrite: true
           file: ${{ matrix.artifact_name }}
+
 
 
 
