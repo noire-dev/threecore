@@ -214,7 +214,7 @@ ifeq ($(USE_CODEC_MP3),1)
     ifeq ($(ARCH),x86_64)
       MAD_CFLAGS += -DFPM_64BIT
     else
-    ifeq ($(ARCH),aarch64)
+    ifeq ($(ARCH),arm)
       MAD_CFLAGS += -DFPM_ARM
     else
       MAD_CFLAGS += -DFPM_DEFAULT
