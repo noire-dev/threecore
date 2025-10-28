@@ -563,6 +563,7 @@ void	Cvar_SetValueSafe( const char *var_name, float value );
 
 qboolean Cvar_SetModified( const char *var_name, qboolean modified );
 
+cvar_t *Cvar_FindVar( const char *var_name );
 float	Cvar_VariableValue( const char *var_name );
 int		Cvar_VariableIntegerValue( const char *var_name );
 // returns 0 if not defined or non numeric
