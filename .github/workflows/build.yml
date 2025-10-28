@@ -10,7 +10,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        arch: [x86_64, x86]
+        arch: [x86_64]
         cc: [gcc]
         btype: [Release]
         include:
@@ -18,7 +18,6 @@ jobs:
             rule: install
 
           - arch: x86_64
-          - arch: x86
 
     steps:
 
@@ -33,17 +32,12 @@ jobs:
 
     - name: Build
       run: |
-        if [ "${{ matrix.arch }}" = "x86_64" ]; then
-          CC=x86_64-w64-mingw32-gcc
-        else
-          CC=i686-w64-mingw32-gcc
-        fi
-        make ${{ matrix.rule }} -j8 ARCH=${{ matrix.arch }} PLATFORM=mingw64 CC=$CC DESTDIR=bin RENDERER_DEFAULT=opengl
+        make ${{ matrix.rule }} -j8 ARCH=${{ matrix.arch }} PLATFORM=mingw64 CC=x86_64-w64-mingw32-gcc DESTDIR=bin RENDERER_DEFAULT=opengl
 
     - uses: actions/upload-artifact@v4
       if: matrix.btype == 'release'
       with:
-        name: windows-${{ matrix.arch }}
+        name: windows
         path: bin
         if-no-files-found: error
         retention-days: 5
@@ -82,7 +76,7 @@ jobs:
     - uses: actions/upload-artifact@v4
       if: matrix.cc == 'gcc' && matrix.btype == 'release'
       with:
-        name: linux-${{ matrix.arch }}
+        name: linux
         path: bin
         if-no-files-found: error
         retention-days: 5
@@ -130,14 +124,11 @@ jobs:
     strategy:
       matrix:
         include:
-          - artifact_dir: linux-x86_64
-            artifact_name: sandbox_linux-x86_64.zip
+          - artifact_dir: linux
+            artifact_name: sandbox_linux.zip
 
-          - artifact_dir: windows-x86
-            artifact_name: sandbox_windows-x86.zip 
-
-          - artifact_dir: windows-x86_64
-            artifact_name: sandbox_windows-x86_64.zip
+          - artifact_dir: windows
+            artifact_name: sandbox_windows.zip
 
           - artifact_dir: macos
             artifact_name: sandbox_macos.zip
@@ -156,6 +147,7 @@ jobs:
           tag: ${{ github.ref }}
           overwrite: true
           file: ${{ matrix.artifact_name }}
+
 
 
 
