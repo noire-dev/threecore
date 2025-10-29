@@ -667,13 +667,13 @@ static void Cmd_List_f(void) {
 	Com_Printf("%i commands\n", i);
 }
 
-void Cmd_CompleteCfgName(const char* args, int argNum) {
+static void Cmd_CompleteCfgName(const char* args, int argNum) {
 	if(argNum == 2) {
 		Field_CompleteFilename("", "cfg", qfalse, FS_MATCH_ANY | FS_MATCH_STICK | FS_MATCH_SUBDIRS);
 	}
 }
 
-static void Cmd_CompleteWriteCfgName(const char* args, int argNum) {
+void Cmd_CompleteWriteCfgName(const char* args, int argNum) {
 	if(argNum == 2) {
 		Field_CompleteFilename("", "cfg", qfalse, FS_MATCH_EXTERN | FS_MATCH_STICK);
 	}
