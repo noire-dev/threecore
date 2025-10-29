@@ -116,37 +116,6 @@ jobs:
         if-no-files-found: error
         retention-days: 5
 
-  Upload:
-    if: ${{ github.event_name == 'release' }}
-    needs: [windows, ubuntu, macos]
-    runs-on: ubuntu-latest
-
-    strategy:
-      matrix:
-        include:
-          - artifact_dir: linux
-            artifact_name: sandbox_linux.zip
-
-          - artifact_dir: windows
-            artifact_name: sandbox_windows.zip
-
-          - artifact_dir: macos
-            artifact_name: sandbox_macos.zip
-
-    steps:
-      - name: Download Artifacts
-        uses: actions/download-artifact@v4
-
-      - name: Create archive
-        run: 7z a -r ${{ matrix.artifact_name }} ./${{ matrix.artifact_dir }}/*
-
-      - name: Upload archive
-        uses: "svenstaro/upload-release-action@latest"
-        with:
-          repo_token: ${{ secrets.GITHUB_TOKEN }}
-          tag: ${{ github.ref }}
-          overwrite: true
-          file: ${{ matrix.artifact_name }}
 
 
 
