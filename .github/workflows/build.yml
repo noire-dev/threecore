@@ -116,7 +116,7 @@ jobs:
         if-no-files-found: error
         retention-days: 5
 
-  update-release:
+  Upload:
     if: ${{ github.event_name == 'release' }}
     needs: [windows, ubuntu, macos]
     runs-on: ubuntu-latest
@@ -147,6 +147,7 @@ jobs:
           tag: ${{ github.ref }}
           overwrite: true
           file: ${{ matrix.artifact_name }}
+
 
 
 
