@@ -1306,6 +1306,7 @@ vm_t *VM_Create( vmIndex_t index, syscall_t systemCalls ) {
 	vm->compiled = qfalse;
 
 	#ifdef QVM_RUNTIME_COMPILE
+	Com_Printf( "Compile qvm%i.\n", vm->index );
 	if ( VM_Compile( vm, header ) ) {
 		vm->compiled = qtrue;
 	}
@@ -1412,6 +1413,8 @@ intptr_t QDECL VM_Call( vm_t *vm, int nargs, int callnum, ... ) {
 	++vm->callLevel;
 #if id386 && !defined __clang__ // calling convention doesn't need conversion in some cases
 #ifdef QVM_RUNTIME_COMPILE
+    Com_Printf( "Using runtime compilation for qvm%i.\n", vm->index );
+
 	if ( vm->compiled )
 		r = VM_CallCompiled( vm, nargs+1, (int32_t*)&callnum );
 #endif
@@ -1427,6 +1430,7 @@ intptr_t QDECL VM_Call( vm_t *vm, int nargs, int callnum, ... ) {
 	va_end(ap);
 
 #ifdef QVM_RUNTIME_COMPILE
+    Com_Printf( "Using runtime compilation for qvm%i.\n", vm->index );
 	if ( vm->compiled )
 		r = VM_CallCompiled( vm, nargs+1, &args[0] );
 	else
