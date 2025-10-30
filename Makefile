@@ -21,7 +21,6 @@ MOUNT_DIR           = code
 
 # General
 USE_LOCAL_HEADERS   = 1
-QVM_RUNTIME_COMPILE = 1
 
 # Audio
 USE_OGG_VORBIS      = 1
@@ -189,10 +188,6 @@ endif
 
 ifeq ($(USE_LOCAL_HEADERS),1)
   BASE_CFLAGS += -DUSE_LOCAL_HEADERS=1
-endif
-
-ifeq ($(QVM_RUNTIME_COMPILE),1)
-  BASE_CFLAGS += -DQVM_RUNTIME_COMPILE=1
 endif
 
 ifeq ($(USE_VULKAN_API),1)
@@ -847,22 +842,20 @@ ifeq ($(ARCH),x86_64)
     $(B)/client/snd_mix_x86_64.o
 endif
 
-ifeq ($(QVM_RUNTIME_COMPILE),1)
-  ifeq ($(ARCH),x86)
-    Q3OBJ += $(B)/client/vm_x86.o
-  endif
-  ifeq ($(ARCH),x86_64)
-    Q3OBJ += $(B)/client/vm_x86.o
-  endif
-  ifeq ($(ARCH),arm)
-    Q3OBJ += $(B)/client/vm_armv7l.o
-  endif
-  ifeq ($(ARCH),aarch64)
-    Q3OBJ += $(B)/client/vm_aarch64.o
-  endif
-  ifeq ($(ARCH),arm64)
-    Q3OBJ += $(B)/client/vm_aarch64.o
-  endif
+ifeq ($(ARCH),x86)
+  Q3OBJ += $(B)/client/vm_x86.o
+endif
+ifeq ($(ARCH),x86_64)
+  Q3OBJ += $(B)/client/vm_x86.o
+endif
+ifeq ($(ARCH),arm)
+  Q3OBJ += $(B)/client/vm_armv7l.o
+endif
+ifeq ($(ARCH),aarch64)
+  Q3OBJ += $(B)/client/vm_aarch64.o
+endif
+ifeq ($(ARCH),arm64)
+  Q3OBJ += $(B)/client/vm_aarch64.o
 endif
 
 ifdef MINGW
@@ -983,22 +976,20 @@ else
   $(B)/ded/unix_shared.o
 endif
 
-ifeq ($(QVM_RUNTIME_COMPILE),1)
-  ifeq ($(ARCH),x86)
-    Q3DOBJ += $(B)/ded/vm_x86.o
-  endif
-  ifeq ($(ARCH),x86_64)
-    Q3DOBJ += $(B)/ded/vm_x86.o
-  endif
-  ifeq ($(ARCH),arm)
-    Q3DOBJ += $(B)/ded/vm_armv7l.o
-  endif
-  ifeq ($(ARCH),aarch64)
-    Q3DOBJ += $(B)/ded/vm_aarch64.o
-  endif
-  ifeq ($(ARCH),arm64)
-    Q3DOBJ += $(B)/ded/vm_aarch64.o
-  endif
+ifeq ($(ARCH),x86)
+  Q3DOBJ += $(B)/ded/vm_x86.o
+endif
+ifeq ($(ARCH),x86_64)
+  Q3DOBJ += $(B)/ded/vm_x86.o
+endif
+ifeq ($(ARCH),arm)
+  Q3DOBJ += $(B)/ded/vm_armv7l.o
+endif
+ifeq ($(ARCH),aarch64)
+  Q3DOBJ += $(B)/ded/vm_aarch64.o
+endif
+ifeq ($(ARCH),arm64)
+  Q3DOBJ += $(B)/ded/vm_aarch64.o
 endif
 
 $(B)/$(TARGET_SERVER): $(Q3DOBJ)
