@@ -695,6 +695,34 @@ static qboolean AllowEmptyCvar(funcType_t ftype) {
 	};
 }
 
+static const char* GetValue(int index, int* ival, float* fval) {
+	static char buf[MAX_CVAR_VALUE_STRING];
+	const char* cmd;
+	cvar_t* var;
+
+	cmd = Cmd_Argv(index);
+
+	if((*cmd == '-' && *(cmd + 1) == '\0') || *cmd == '\0') {
+		*ival = 0;
+		*fval = 0.0f;
+		buf[0] = '\0';
+		return NULL;
+	}
+
+	var = Cvar_FindVar(cmd);
+	if(!var) {      // cvar not found, return string
+		*ival = atoi(cmd);
+		*fval = Q_atof(cmd);
+		Q_strncpyz(buf, cmd, sizeof(buf));
+		return buf;
+	} else {        // found cvar, extract values
+		*ival = var->integer;
+		*fval = var->value;
+		Q_strncpyz(buf, var->string, sizeof(buf));
+		return buf;
+	}
+}
+
 static void Cvar_Op(funcType_t ftype, int* ival, float* fval) {
 	int icap, imod;
 	float fcap, fmod;
@@ -901,36 +929,6 @@ static void Cvar_Reset_f(void) {
 		return;
 	}
 	Cvar_Reset(Cmd_Argv(1));
-}
-
-static const char* GetValue(int index, int* ival, float* fval) {
-	static char buf[MAX_CVAR_VALUE_STRING];
-	const char* cmd;
-	cvar_t* var;
-
-	cmd = Cmd_Argv(index);
-
-	if((*cmd == '-' && *(cmd + 1) == '\0') || *cmd == '\0') {
-		*ival = 0;
-		*fval = 0.0f;
-		buf[0] = '\0';
-		return NULL;
-	}
-
-	var = Cvar_FindVar(cmd);
-	if(!var)  // cvar not found, return string
-	{
-		*ival = atoi(cmd);
-		*fval = Q_atof(cmd);
-		Q_strncpyz(buf, cmd, sizeof(buf));
-		return buf;
-	} else  // found cvar, extract values
-	{
-		*ival = var->integer;
-		*fval = var->value;
-		Q_strncpyz(buf, var->string, sizeof(buf));
-		return buf;
-	}
 }
 
 void Cvar_WriteVariables(fileHandle_t f) {
