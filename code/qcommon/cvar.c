@@ -827,8 +827,8 @@ qboolean Cvar_Command(void) {
 		Cvar_Set2(v->name, Cmd_ArgsFrom(2), qfalse);
 		return qtrue;
 	} else {
+	    ival = v->integer;
 		fval = v->value;
-		ival = v->integer;
 
 		if(ftype == FT_RAND)
 			Cvar_Rand(&ival, &fval);
@@ -844,7 +844,8 @@ qboolean Cvar_Command(void) {
 				sprintf(value, "%f", fval);
 		}
 
-		Cvar_Set2(Cmd_Argv(0), value, qfalse);
+		Cvar_Set2(v->name, value, qfalse);
+		return qtrue;
 	}
 }
 
