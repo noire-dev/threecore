@@ -457,7 +457,7 @@ static void Cvar_Sort(void) {
 }
 
 static void Cvar_Print(const cvar_t* v) {
-	Com_Printf("\"%s\": \"%s" S_COLOR_WHITE "\"", v->name, v->string);
+	Com_Printf("\"%s\" \"%s" S_COLOR_WHITE "\"", v->name, v->string);
 
 	if(!(v->flags & CVAR_ROM)) {
 		Com_Printf(" default:\"%s" S_COLOR_WHITE "\"\n", v->resetString);
@@ -657,6 +657,10 @@ void Cvar_SetCheatState(void) {
 
 typedef enum {
 	FT_BAD = 0,
+    FT_CREATE,
+    FT_SAVE,
+    FT_RESET,
+    FT_UNSET
 	FT_SET,
 	FT_ADD,
 	FT_SUB,
@@ -671,6 +675,10 @@ typedef enum {
 static funcType_t GetFuncType(void) {
 	const char* cmd;
 	cmd = Cmd_Argv(1);
+	if(!Q_stricmp(cmd, "-")) return FT_CREATE;
+	if(!Q_stricmp(cmd, "+")) return FT_SAVE;
+	if(!Q_stricmp(cmd, "*")) return FT_RESET;
+	if(!Q_stricmp(cmd, "/")) return FT_UNSET;
 	if(!Q_stricmp(cmd, "=")) return FT_SET;
 	if(!Q_stricmp(cmd, "+=")) return FT_ADD;
 	if(!Q_stricmp(cmd, "-=")) return FT_SUB;
@@ -698,7 +706,6 @@ static qboolean AllowEmptyCvar(funcType_t ftype) {
 static const char* GetValue(int index, int* ival, float* fval) {
 	static char buf[MAX_CVAR_VALUE_STRING];
 	const char* cmd;
-	cvar_t* var;
 
 	cmd = Cmd_Argv(index);
 
@@ -709,18 +716,10 @@ static const char* GetValue(int index, int* ival, float* fval) {
 		return NULL;
 	}
 
-	var = Cvar_FindVar(cmd);
-	if(!var) {      // cvar not found, return string
-		*ival = atoi(cmd);
-		*fval = Q_atof(cmd);
-		Q_strncpyz(buf, cmd, sizeof(buf));
-		return buf;
-	} else {        // found cvar, extract values
-		*ival = var->integer;
-		*fval = var->value;
-		Q_strncpyz(buf, var->string, sizeof(buf));
-		return buf;
-	}
+	*ival = atoi(cmd);
+	*fval = Q_atof(cmd);
+	Q_strncpyz(buf, cmd, sizeof(buf));
+	return buf;
 }
 
 static void Cvar_Op(funcType_t ftype, int* ival, float* fval) {
@@ -730,6 +729,10 @@ static void Cvar_Op(funcType_t ftype, int* ival, float* fval) {
 	GetValue(2, &imod, &fmod);
 
 	switch(ftype) {
+        case FT_SET:
+			*ival = imod;
+			*fval = fmod;
+			break;
 		case FT_ADD:
 			*ival += imod;
 			*fval += fmod;
@@ -804,27 +807,43 @@ static void Cvar_Rand(int* ival, float* fval) {
 
 qboolean Cvar_Command(void) {
 	cvar_t* v;
+	qboolean notExist = qfalse;
 	funcType_t ftype;
 	char value[MAX_CVAR_VALUE_STRING];
 	int ival;
 	float fval;
 
 	v = Cvar_FindVar(Cmd_Argv(0));
-	if(!v) {
-		return qfalse;
-	}
 
-	if(Cmd_Argc() == 1) {
+	if(Cmd_Argc() == 1 && v) {
 		Cvar_Print(v);
 		return qtrue;
+	} else if(Cmd_Argc() >= 2) {
+	    ftype = GetFuncType();
+        if(ftype == FT_CREATE) {
+		    Cvar_Set2(Cmd_Argv(0), Cmd_ArgsFrom(2), qfalse);
+		    return qtrue;
+	    } else if ((ftype == FT_SAVE) {
+	        v = Cvar_Set2(Cmd_Argv(0), Cmd_ArgsFrom(2), qfalse);
+	        if(v && !(v->flags & CVAR_ARCHIVE)) {
+				v->flags |= CVAR_ARCHIVE;
+				cvar_modifiedFlags |= CVAR_ARCHIVE;
+			}
+			return qtrue;
+	    } else if(ftype == FT_RESET && v) {
+	        Cvar_Set2(v->name, NULL, qfalse);
+		    return qtrue;
+	    } else if(ftype == FT_UNSET && v) {
+		    Cvar_Unset(v);
+		    return qtrue;
+	    }
 	}
+	
+	if(!v) return qfalse;
 
 	ftype = GetFuncType();
 	if(ftype == FT_BAD) {
 		Cvar_Set2(v->name, Cmd_ArgsFrom(1), qfalse);
-		return qtrue;
-	} else if(ftype == FT_SET) {
-		Cvar_Set2(v->name, Cmd_ArgsFrom(2), qfalse);
 		return qtrue;
 	} else {
 	    ival = v->integer;
@@ -882,45 +901,6 @@ static void Cvar_Toggle_f(void) {
 
 	// fallback
 	Cvar_Set2(Cmd_Argv(1), Cmd_Argv(2), qfalse);
-}
-
-static void Cvar_Set_f(void) {
-	int c;
-	const char* cmd;
-	cvar_t* v;
-
-	c = Cmd_Argc();
-	cmd = Cmd_Argv(0);
-
-	if(c < 2) {
-		Com_Printf("usage: %s <variable> <value>\n", cmd);
-		return;
-	}
-
-	v = Cvar_Set2(Cmd_Argv(1), Cmd_ArgsFrom(2), qfalse);
-	if(!v) {
-		return;
-	}
-	switch(cmd[3]) {
-		case 'a':
-			if(!(v->flags & CVAR_ARCHIVE)) {
-				v->flags |= CVAR_ARCHIVE;
-				cvar_modifiedFlags |= CVAR_ARCHIVE;
-			}
-			break;
-		case 'u':
-			if(!(v->flags & CVAR_USERINFO)) {
-				v->flags |= CVAR_USERINFO;
-				cvar_modifiedFlags |= CVAR_USERINFO;
-			}
-			break;
-		case 's':
-			if(!(v->flags & CVAR_SERVERINFO)) {
-				v->flags |= CVAR_SERVERINFO;
-				cvar_modifiedFlags |= CVAR_SERVERINFO;
-			}
-			break;
-	}
 }
 
 static void Cvar_Reset_f(void) {
@@ -1470,14 +1450,6 @@ void Cvar_Init(void) {
 
 	Cmd_AddCommand("toggle", Cvar_Toggle_f);
 	Cmd_SetCommandCompletionFunc("toggle", Cvar_CompleteCvarName);
-	Cmd_AddCommand("set", Cvar_Set_f);
-	Cmd_SetCommandCompletionFunc("set", Cvar_CompleteCvarName);
-	Cmd_AddCommand("sets", Cvar_Set_f);
-	Cmd_SetCommandCompletionFunc("sets", Cvar_CompleteCvarName);
-	Cmd_AddCommand("setu", Cvar_Set_f);
-	Cmd_SetCommandCompletionFunc("setu", Cvar_CompleteCvarName);
-	Cmd_AddCommand("seta", Cvar_Set_f);
-	Cmd_SetCommandCompletionFunc("seta", Cvar_CompleteCvarName);
 	Cmd_AddCommand("reset", Cvar_Reset_f);
 	Cmd_SetCommandCompletionFunc("reset", Cvar_CompleteCvarName);
 	Cmd_AddCommand("unset", Cvar_Unset_f);
