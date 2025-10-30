@@ -805,9 +805,39 @@ static void Cvar_Rand(int* ival, float* fval) {
 	}
 }
 
+static cvar_t* Cvar_Unset(cvar_t* cv) {
+	cvar_t* next = cv->next;
+
+	// note what types of cvars have been modified (userinfo, archive, serverinfo, systeminfo)
+	cvar_modifiedFlags |= cv->flags;
+
+	if(cv->name) Z_Free(cv->name);
+	if(cv->string) Z_Free(cv->string);
+	if(cv->latchedString) Z_Free(cv->latchedString);
+	if(cv->resetString) Z_Free(cv->resetString);
+	if(cv->description) Z_Free(cv->description);
+	if(cv->mins) Z_Free(cv->mins);
+	if(cv->maxs) Z_Free(cv->maxs);
+
+	if(cv->prev)
+		cv->prev->next = cv->next;
+	else
+		cvar_vars = cv->next;
+	if(cv->next) cv->next->prev = cv->prev;
+
+	if(cv->hashPrev)
+		cv->hashPrev->hashNext = cv->hashNext;
+	else
+		hashTable[cv->hashIndex] = cv->hashNext;
+	if(cv->hashNext) cv->hashNext->hashPrev = cv->hashPrev;
+
+	Com_Memset(cv, '\0', sizeof(*cv));
+
+	return next;
+}
+
 qboolean Cvar_Command(void) {
 	cvar_t* v;
-	qboolean notExist = qfalse;
 	funcType_t ftype;
 	char value[MAX_CVAR_VALUE_STRING];
 	int ival;
@@ -1087,37 +1117,6 @@ static void Cvar_ListModified_f(void) {
 	}
 
 	Com_Printf("\n%i total modified cvars\n", totalModified);
-}
-
-static cvar_t* Cvar_Unset(cvar_t* cv) {
-	cvar_t* next = cv->next;
-
-	// note what types of cvars have been modified (userinfo, archive, serverinfo, systeminfo)
-	cvar_modifiedFlags |= cv->flags;
-
-	if(cv->name) Z_Free(cv->name);
-	if(cv->string) Z_Free(cv->string);
-	if(cv->latchedString) Z_Free(cv->latchedString);
-	if(cv->resetString) Z_Free(cv->resetString);
-	if(cv->description) Z_Free(cv->description);
-	if(cv->mins) Z_Free(cv->mins);
-	if(cv->maxs) Z_Free(cv->maxs);
-
-	if(cv->prev)
-		cv->prev->next = cv->next;
-	else
-		cvar_vars = cv->next;
-	if(cv->next) cv->next->prev = cv->prev;
-
-	if(cv->hashPrev)
-		cv->hashPrev->hashNext = cv->hashNext;
-	else
-		hashTable[cv->hashIndex] = cv->hashNext;
-	if(cv->hashNext) cv->hashNext->hashPrev = cv->hashPrev;
-
-	Com_Memset(cv, '\0', sizeof(*cv));
-
-	return next;
 }
 
 static void Cvar_Unset_f(void) {
