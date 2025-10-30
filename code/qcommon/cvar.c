@@ -805,7 +805,6 @@ static void Cvar_Rand(int* ival, float* fval) {
 qboolean Cvar_Command(void) {
 	cvar_t* v;
 	funcType_t ftype;
-	const char* cvar_name;
 	char value[MAX_CVAR_VALUE_STRING];
 	int ival;
 	float fval;
@@ -845,7 +844,7 @@ qboolean Cvar_Command(void) {
 				sprintf(value, "%f", fval);
 		}
 
-		Cvar_Set2(cvar_name, value, qfalse);
+		Cvar_Set2(Cmd_Argv(0), value, qfalse);
 	}
 }
 
