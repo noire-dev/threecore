@@ -1305,17 +1305,17 @@ vm_t *VM_Create( vmIndex_t index, syscall_t systemCalls ) {
 
 	vm->compiled = qfalse;
 
-	Com_Printf( "Compiling qvm%i - %s.\n", vm->index, vm->name );
+	Com_Printf( "Compiling qvm%i - %s\n", vm->index, vm->name );
 	if ( VM_Compile( vm, header ) ) {
 		vm->compiled = qtrue;
-		Com_Printf( "Compiling qvm%i - %s done.\n", vm->index, vm->name );
+		Com_Printf( "Compiling qvm%i - %s done\n", vm->index, vm->name );
 	}
 
 	// VM_Compile may have reset vm->compiled if compilation failed
 	if ( !vm->compiled ) {
-		Com_Printf( "Failed to compile qvm%i - %s. Using interpreter.\n", vm->index, vm->name );
+		Com_Printf( "Failed to compile qvm%i - %s. Using interpreter\n", vm->index, vm->name );
 		if ( !VM_PrepareInterpreter( vm, header ) ) {
-			Com_Printf( "Failed to interpret qvm.\n" );
+			Com_Printf( "Failed to interpret qvm\n" );
 			FS_FreeFile( header );	// free the original file
 			VM_Free( vm );
 			return NULL;
