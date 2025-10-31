@@ -1373,7 +1373,6 @@ void IN_Init( void )
 
 	// mouse variables
 	in_mouse = Cvar_Get( "in_mouse", "1", CVAR_ARCHIVE );
-	Cvar_CheckRange( in_mouse, "-1", "1", CV_INTEGER );
 	Cvar_SetDescription( in_mouse,
 		"Mouse data input source:\n" \
 		"  0 - disable mouse input\n" \
@@ -1398,19 +1397,14 @@ void IN_Init( void )
 	Cvar_SetDescription( j_up, "Joystick up movement speed/direction." );
 
 	j_pitch_axis =   Cvar_Get( "j_pitch_axis",   "3", CVAR_ARCHIVE_ND );
-	Cvar_CheckRange( j_pitch_axis,   "0", va("%i",MAX_JOYSTICK_AXIS-1), CV_INTEGER );
 	Cvar_SetDescription( j_pitch_axis, "Selects which joystick axis controls pitch." );
 	j_yaw_axis =     Cvar_Get( "j_yaw_axis",     "2", CVAR_ARCHIVE_ND );
-	Cvar_CheckRange( j_yaw_axis,     "0", va("%i",MAX_JOYSTICK_AXIS-1), CV_INTEGER );
 	Cvar_SetDescription( j_yaw_axis, "Selects which joystick axis controls yaw." );
 	j_forward_axis = Cvar_Get( "j_forward_axis", "1", CVAR_ARCHIVE_ND );
-	Cvar_CheckRange( j_forward_axis, "0", va("%i",MAX_JOYSTICK_AXIS-1), CV_INTEGER );
 	Cvar_SetDescription( j_forward_axis, "Selects which joystick axis controls forward/back." );
 	j_side_axis =    Cvar_Get( "j_side_axis",    "0", CVAR_ARCHIVE_ND );
-	Cvar_CheckRange( j_side_axis,    "0", va("%i",MAX_JOYSTICK_AXIS-1), CV_INTEGER );
 	Cvar_SetDescription( j_side_axis, "Selects which joystick axis controls left/right." );
 	j_up_axis =      Cvar_Get( "j_up_axis",      "4", CVAR_ARCHIVE_ND );
-	Cvar_CheckRange( j_up_axis,      "0", va("%i",MAX_JOYSTICK_AXIS-1), CV_INTEGER );
 	Cvar_SetDescription( j_up_axis, "Selects which joystick axis controls up/down." );
 #endif
 

@@ -158,11 +158,9 @@ qboolean SNDDMA_Init( void )
 	//if ( !s_sdlBits )
 	{
 		s_sdlBits = Cvar_Get( "s_sdlBits", "16", CVAR_ARCHIVE_ND | CVAR_LATCH );
-		Cvar_CheckRange( s_sdlBits, "8", "16", CV_INTEGER );
 		Cvar_SetDescription( s_sdlBits, "Bits per-sample to request for SDL audio output (possible options: 8 or 16). When set to 0 it uses 16." );
 
 		s_sdlChannels = Cvar_Get( "s_sdlChannels", "2", CVAR_ARCHIVE_ND | CVAR_LATCH );
-		Cvar_CheckRange( s_sdlChannels, "1", "2", CV_INTEGER );
 		Cvar_SetDescription( s_sdlChannels, "Number of audio channels to request for SDL audio output. The Quake 3 audio mixer only supports mono and stereo. Additional channels are silent." );
 
 		s_sdlDevSamps = Cvar_Get( "s_sdlDevSamps", "0", CVAR_ARCHIVE_ND | CVAR_LATCH );
