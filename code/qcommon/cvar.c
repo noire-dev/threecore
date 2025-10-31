@@ -623,8 +623,6 @@ static cvar_t* Cvar_Unset(cvar_t* cv) {
 	if(cv->latchedString) Z_Free(cv->latchedString);
 	if(cv->resetString) Z_Free(cv->resetString);
 	if(cv->description) Z_Free(cv->description);
-	if(cv->mins) Z_Free(cv->mins);
-	if(cv->maxs) Z_Free(cv->maxs);
 
 	if(cv->prev)
 		cv->prev->next = cv->next;
