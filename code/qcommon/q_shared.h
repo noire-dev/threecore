@@ -946,14 +946,6 @@ default values.
 #define CVAR_NONEXISTENT	0x80000000	// Cvar doesn't exist.
 
 typedef enum {
-	CV_NONE = 0,
-	CV_FLOAT,
-	CV_INTEGER,
-	CV_FSPATH,
-	CV_MAX,
-} cvarValidator_t;
-
-typedef enum {
 	CVG_NONE = 0,
 	CVG_RENDERER,
 	CVG_SERVER,
@@ -973,8 +965,6 @@ struct cvar_s {
 	int			modificationCount;	// incremented each time the cvar is changed
 	float		value;				// Q_atof( string )
 	int			integer;			// atoi( string )
-	char		*mins;
-	char		*maxs;
 	char		*description;
 
 	cvar_t		*next;

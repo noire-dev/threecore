@@ -159,19 +159,6 @@ void Cvar_CommandCompletion(void (*callback)(const char* s)) {
 	}
 }
 
-static qboolean Cvar_IsIntegral(const char* s) {
-	if(*s == '-' && *(s + 1) != '\0') s++;
-
-	while(*s != '\0') {
-		if(*s < '0' || *s > '9') {
-			return qfalse;
-		}
-		s++;
-	}
-
-	return qtrue;
-}
-
 cvar_t* Cvar_Get(const char* var_name, const char* var_value, int flags) {
 	cvar_t* var;
 	long hash;
@@ -546,17 +533,6 @@ static funcType_t GetFuncType(void) {
 	if(!Q_stricmp(cmd, ":=")) return FT_RAND;
 
 	return FT_BAD;
-}
-
-static qboolean AllowEmptyCvar(funcType_t ftype) {
-	switch(ftype) {
-		case FT_ADD:
-		case FT_SUB:
-		case FT_MUL:
-		case FT_DIV:
-		case FT_MOD: return qfalse;
-		default: return qtrue;
-	};
 }
 
 static const char* GetValue(int index, float* val) {
