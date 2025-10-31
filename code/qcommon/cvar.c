@@ -36,7 +36,6 @@ static int cvar_group[CVG_MAX];
 
 #define FILE_HASH_SIZE 256
 static cvar_t* hashTable[FILE_HASH_SIZE];
-static qboolean cvar_sort = qfalse;
 
 static long generateHashValue(const char* fname) {
 	int i;
@@ -173,83 +172,6 @@ static qboolean Cvar_IsIntegral(const char* s) {
 	return qtrue;
 }
 
-static const char* Cvar_Validate(cvar_t* var, const char* value, qboolean warn) {
-	static char intbuf[32];
-	const char* limit;
-	float valuef;
-	int valuei;
-
-	if(var->validator == CV_NONE) return value;
-
-	if(!value) return value;
-
-	limit = NULL;
-
-	if(var->validator == CV_INTEGER || var->validator == CV_FLOAT) {
-		if(!Q_isanumber(value)) {
-			if(warn) Com_Printf("WARNING: cvar '%s' must be numeric", var->name);
-			limit = var->resetString;
-		} else {
-			if(var->validator == CV_INTEGER) {
-				if(!Cvar_IsIntegral(value)) {
-					if(warn) Com_Printf("WARNING: cvar '%s' must be integral", var->name);
-					sprintf(intbuf, "%i", atoi(value));
-					value = intbuf;  // new value
-				}
-				valuei = atoi(value);
-				if(var->mins && valuei < atoi(var->mins)) {
-					limit = var->mins;
-				} else if(var->maxs && valuei > atoi(var->maxs)) {
-					limit = var->maxs;
-				}
-			} else {  // CV_FLOAT
-				valuef = Q_atof(value);
-				if(var->mins && valuef < Q_atof(var->mins)) {
-					limit = var->mins;
-				} else if(var->maxs && valuef > Q_atof(var->maxs)) {
-					limit = var->maxs;
-				}
-			}
-
-			if(warn) {
-				if(limit && (limit == var->mins || limit == var->maxs)) {
-					if(value == intbuf) {  // cast to integer
-						Com_Printf(" and");
-					} else {
-						Com_Printf("WARNING: cvar '%s'", var->name);
-					}
-					Com_Printf(" is out of range (%s '%s')", (limit == var->mins) ? "min" : "max", limit);
-				}
-			}
-		}  // Q_isanumber
-	}  // CV_INTEGER || CV_FLOAT
-	// TODO: stringlist
-	else if(var->validator == CV_FSPATH) {
-		// check for directory traversal patterns
-		if(FS_InvalidGameDir(value)) {
-			if(warn) {
-				Com_Printf("WARNING: cvar '%s' contains invalid patterns", var->name);
-			}
-			// try to use current value if it is valid
-			if(!FS_InvalidGameDir(var->string)) {
-				if(warn) {
-					Com_Printf("\n");
-				}
-				return var->string;
-			}
-			limit = var->resetString;
-		}
-	}
-
-	if(limit || value == intbuf) {
-		if(!limit) limit = value;
-		if(warn) Com_Printf(", setting to '%s'\n", limit);
-		return limit;
-	} else {
-		return value;
-	}
-}
-
 cvar_t* Cvar_Get(const char* var_name, const char* var_value, int flags) {
 	cvar_t* var;
 	long hash;
@@ -268,7 +190,6 @@ cvar_t* Cvar_Get(const char* var_name, const char* var_value, int flags) {
 
 	if(var) {
 		int vm_created = (flags & CVAR_VM_CREATED);
-		var_value = Cvar_Validate(var, var_value, qfalse);
 
 		// Make sure the game code cannot mark engine-added variables as gamecode vars
 		if(var->flags & CVAR_VM_CREATED) {
@@ -366,7 +287,6 @@ cvar_t* Cvar_Get(const char* var_name, const char* var_value, int flags) {
 	var->value = Q_atof(var->string);
 	var->integer = atoi(var->string);
 	var->resetString = CopyString(var_value);
-	var->validator = CV_NONE;
 	var->description = NULL;
 	var->group = CVG_NONE;
 	cvar_group[var->group] = 1;
@@ -391,69 +311,7 @@ cvar_t* Cvar_Get(const char* var_name, const char* var_value, int flags) {
 	var->hashPrev = NULL;
 	hashTable[hash] = var;
 
-	// sort on write
-	cvar_sort = qtrue;
-
 	return var;
-}
-
-static void Cvar_QSortByName(cvar_t** a, int n) {
-	cvar_t* temp;
-	cvar_t* m;
-	int i, j;
-
-	i = 0;
-	j = n;
-	m = a[n >> 1];
-
-	do {
-		// sort in descending order
-		while(strcmp(a[i]->name, m->name) > 0) i++;
-		while(strcmp(a[j]->name, m->name) < 0) j--;
-
-		if(i <= j) {
-			temp = a[i];
-			a[i] = a[j];
-			a[j] = temp;
-			i++;
-			j--;
-		}
-	} while(i <= j);
-
-	if(j > 0) Cvar_QSortByName(a, j);
-	if(n > i) Cvar_QSortByName(a + i, n - i);
-}
-
-static void Cvar_Sort(void) {
-	cvar_t *list[MAX_CVARS], *var;
-	int count;
-	int i;
-
-	for(count = 0, var = cvar_vars; var; var = var->next) {
-		if(var->name) {
-			list[count++] = var;
-		} else {
-			Com_Error(ERR_FATAL, "%s: NULL cvar name", __func__);
-		}
-	}
-
-	if(count < 2) {
-		return;  // nothing to sort
-	}
-
-	Cvar_QSortByName(&list[0], count - 1);
-
-	cvar_vars = NULL;
-
-	// relink cvars
-	for(i = 0; i < count; i++) {
-		var = list[i];
-		// link the variable in
-		var->next = cvar_vars;
-		if(cvar_vars) cvar_vars->prev = var;
-		var->prev = NULL;
-		cvar_vars = var;
-	}
 }
 
 static void Cvar_Print(const cvar_t* v) {
@@ -513,8 +371,6 @@ cvar_t* Cvar_Set2(const char* var_name, const char* value, qboolean force) {
 	}
 
 	if(!value) value = var->resetString;
-
-	value = Cvar_Validate(var, value, qtrue);
 
 	if((var->flags & CVAR_LATCH) && var->latchedString) {
 		if(strcmp(value, var->string) == 0) {
@@ -703,99 +559,82 @@ static qboolean AllowEmptyCvar(funcType_t ftype) {
 	};
 }
 
-static const char* GetValue(int index, int* ival, float* fval) {
+static const char* GetValue(int index, float* val) {
 	static char buf[MAX_CVAR_VALUE_STRING];
 	const char* cmd;
 
 	cmd = Cmd_Argv(index);
 
 	if((*cmd == '-' && *(cmd + 1) == '\0') || *cmd == '\0') {
-		*ival = 0;
 		*fval = 0.0f;
 		buf[0] = '\0';
 		return NULL;
 	}
 
-	*ival = atoi(cmd);
-	*fval = Q_atof(cmd);
+	*val = Q_atof(cmd);
 	Q_strncpyz(buf, cmd, sizeof(buf));
 	return buf;
 }
 
-static void Cvar_Op(funcType_t ftype, int* ival, float* fval) {
-	int icap, imod;
-	float fcap, fmod;
+static void Cvar_Op(funcType_t ftype, float* val) {
+	float cap, mod;
 
-	GetValue(2, &imod, &fmod);
+	GetValue(2, &mod);
 
 	switch(ftype) {
 		case FT_ADD:
-			*ival += imod;
-			*fval += fmod;
+			*val += mod;
 			break;
 		case FT_SUB:
-			*ival -= imod;
-			*fval -= fmod;
+			*val -= mod;
 			break;
 		case FT_MUL:
-			*ival *= imod;
-			*fval *= fmod;
+			*val *= mod;
 			break;
 		case FT_DIV:
-			if(imod) *ival /= imod;
-			if(fmod) *fval /= fmod;
+			if(mod) *val /= mod;
 			break;
 		case FT_MOD:
-			if(imod) {
-				*ival %= imod;
-				*fval = (float)((int)*fval % imod);  // FIXME: use float
-			}
+			if(mod) *val = (float)((int)*val % mod);  // FIXME: use float
 			break;
 
 		case FT_SIN:
-			*ival = sin(imod);
-			*fval = sin(fmod);
+			*val = sin(mod);
 			break;
 
 		case FT_COS:
-			*ival = cos(imod);
-			*fval = cos(fmod);
+			*val = cos(mod);
 			break;
 		default: break;
 	}
 
 	if(Cmd_Argc() > 3) {  // low bound
-		if(GetValue(3, &icap, &fcap)) {
-			if(*ival < icap) *ival = icap;
-			if(*fval < fcap) *fval = fcap;
+		if(GetValue(3, &cap)) {
+			if(*val < cap) *val = cap;
 		}
 	}
 	if(Cmd_Argc() > 4) {  // high bound
-		if(GetValue(4, &icap, &fcap)) {
-			if(*ival > icap) *ival = icap;
-			if(*fval > fcap) *fval = fcap;
+		if(GetValue(4, &cap)) {
+			if(*val > cap) *val = cap;
+			if(*val > cap) *val = cap;
 		}
 	}
 }
 
-static void Cvar_Rand(int* ival, float* fval) {
-	int icap;
-	float fcap;
+static void Cvar_Rand(int* val) {
+	int cap;
 
-	*ival = rand();
-	*fval = *ival;
+	*val = rand();
 
 	if(Cmd_Argc() > 2) {  // base
-		if(GetValue(2, &icap, &fcap)) {
-			*ival += icap;
-			*fval = *ival;
+		if(GetValue(2, &cap)) {
+			*val += cap;
 		}
 	}
 	if(Cmd_Argc() > 3) {  // modulus
-		if(GetValue(3, &icap, &fcap)) {
-			if(icap) {
-				*ival %= icap;
-				*fval = *ival;
+		if(GetValue(3, &cap)) {
+			if(cap) {
+				*val %= cap;
 			}
 		}
 	}
@@ -836,8 +675,7 @@ qboolean Cvar_Command(void) {
 	cvar_t* v;
 	funcType_t ftype;
 	char value[MAX_CVAR_VALUE_STRING];
-	int ival;
-	float fval;
+	float val;
 
 	v = Cvar_FindVar(Cmd_Argv(0));
 
@@ -879,22 +717,14 @@ qboolean Cvar_Command(void) {
 		Cvar_Set2(v->name, Cmd_ArgsFrom(1), qfalse);
 		return qtrue;
 	} else {
-	    ival = v->integer;
-		fval = v->value;
+		val = v->value;
 
 		if(ftype == FT_RAND)
-			Cvar_Rand(&ival, &fval);
+			Cvar_Rand(&val);
 		else
-			Cvar_Op(ftype, &ival, &fval);
+			Cvar_Op(ftype, &val);
 
-		if(v && v->validator == CV_INTEGER) {
-			sprintf(value, "%i", ival);
-		} else {
-			if((int)fval == fval)
-				sprintf(value, "%i", (int)fval);
-			else
-				sprintf(value, "%f", fval);
-		}
+		sprintf(value, "%g", val); 
 
 		Cvar_Set2(v->name, value, qfalse);
 		return qtrue;
@@ -941,11 +771,6 @@ void Cvar_WriteVariables(fileHandle_t f) {
 	char buffer[MAX_CMD_LINE];
 	const char* value;
 
-	if(cvar_sort) {
-		cvar_sort = qfalse;
-		Cvar_Sort();
-	}
-
 	for(var = cvar_vars; var; var = var->next) {
 		if(var->flags & CVAR_ARCHIVE) {
 			int len;
@@ -968,22 +793,10 @@ void Cvar_WriteVariables(fileHandle_t f) {
 static void Cvar_List_f(void) {
 	cvar_t* var;
 	int i;
-	const char* match;
-
-	if(cvar_sort) {     // sort to get more predictable output
-		cvar_sort = qfalse;
-		Cvar_Sort();
-	}
-
-	if(Cmd_Argc() > 1) {
-		match = Cmd_Argv(1);
-	} else {
-		match = NULL;
-	}
 
 	i = 0;
 	for(var = cvar_vars; var; var = var->next, i++) {
-		if(!var->name || (match && !Com_Filter(match, var->name))) continue;
+		if(!var->name) continue;
 
 		if(var->flags & CVAR_SERVERINFO) Com_Printf("S");
 		if(var->flags & CVAR_USERINFO) Com_Printf("U");
@@ -1027,12 +840,6 @@ const char* Cvar_InfoString(int bit, qboolean* truncated) {
 	int vm_count;
 	int i;
 	qboolean allSet;
-
-	// sort to get more predictable output
-	if(cvar_sort) {
-		cvar_sort = qfalse;
-		Cvar_Sort();
-	}
 
 	info[0] = '\0';
 	user_count = 0;
@@ -1092,33 +899,6 @@ const char* Cvar_InfoString_Big(int bit, qboolean* truncated) {
 }
 
 void Cvar_InfoStringBuffer(int bit, char* buff, int buffsize) { Q_strncpyz(buff, Cvar_InfoString(bit, NULL), buffsize); }
-
-void Cvar_CheckRange(cvar_t* var, const char* mins, const char* maxs, cvarValidator_t type) {
-	if(type >= CV_MAX) {
-		Com_Printf(S_COLOR_YELLOW "Invalid validation type %i for %s\n", type, var->name);
-		return;
-	}
-
-	if(var->mins) {
-		Z_Free(var->mins);
-		var->mins = NULL;
-	}
-	if(var->maxs) {
-		Z_Free(var->maxs);
-		var->maxs = NULL;
-	}
-
-	var->validator = type;
-
-	if(type == CV_NONE) return;
-
-	if(mins) var->mins = CopyString(mins);
-
-	if(maxs) var->maxs = CopyString(maxs);
-
-	// Force an initial range check
-	Cvar_Set(var->name, var->string);
-}
 
 void Cvar_SetDescription(cvar_t* var, const char* var_description) {
 	if(var_description && var_description[0] != '\0') {

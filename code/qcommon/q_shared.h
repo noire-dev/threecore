@@ -973,7 +973,6 @@ struct cvar_s {
 	int			modificationCount;	// incremented each time the cvar is changed
 	float		value;				// Q_atof( string )
 	int			integer;			// atoi( string )
-	cvarValidator_t validator;
 	char		*mins;
 	char		*maxs;
 	char		*description;
