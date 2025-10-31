@@ -659,9 +659,9 @@ typedef enum {
 	FT_BAD = 0,
     FT_CREATE,
     FT_SAVE,
+    FT_UNSAVE,
     FT_RESET,
     FT_UNSET,
-	FT_SET,
 	FT_ADD,
 	FT_SUB,
 	FT_MUL,
@@ -675,11 +675,11 @@ typedef enum {
 static funcType_t GetFuncType(void) {
 	const char* cmd;
 	cmd = Cmd_Argv(1);
-	if(!Q_stricmp(cmd, "-")) return FT_CREATE;
-	if(!Q_stricmp(cmd, "+")) return FT_SAVE;
+	if(!Q_stricmp(cmd, "=")) return FT_CREATE;
+	if(!Q_stricmp(cmd, "-")) return FT_SAVE;
+	if(!Q_stricmp(cmd, "--")) return FT_UNSAVE;
 	if(!Q_stricmp(cmd, "*")) return FT_RESET;
-	if(!Q_stricmp(cmd, "/")) return FT_UNSET;
-	if(!Q_stricmp(cmd, "=")) return FT_SET;
+	if(!Q_stricmp(cmd, "**")) return FT_UNSET;
 	if(!Q_stricmp(cmd, "+=")) return FT_ADD;
 	if(!Q_stricmp(cmd, "-=")) return FT_SUB;
 	if(!Q_stricmp(cmd, "*=")) return FT_MUL;
@@ -729,10 +729,6 @@ static void Cvar_Op(funcType_t ftype, int* ival, float* fval) {
 	GetValue(2, &imod, &fmod);
 
 	switch(ftype) {
-        case FT_SET:
-			*ival = imod;
-			*fval = fmod;
-			break;
 		case FT_ADD:
 			*ival += imod;
 			*fval += fmod;
@@ -860,6 +856,13 @@ qboolean Cvar_Command(void) {
 				cvar_modifiedFlags |= CVAR_ARCHIVE;
 			}
 			return qtrue;
+	    } else if (ftype == FT_UNSAVE) {
+	        v = Cvar_Set2(Cmd_Argv(0), Cmd_ArgsFrom(2), qfalse);
+	        if(v && (v->flags & CVAR_ARCHIVE)) {
+				v->flags &= ~CVAR_ARCHIVE;
+				cvar_modifiedFlags |= CVAR_ARCHIVE;
+			}
+			return qtrue;
 	    } else if(ftype == FT_RESET && v) {
 	        Cvar_Set2(v->name, NULL, qfalse);
 		    return qtrue;
@@ -933,14 +936,6 @@ static void Cvar_Toggle_f(void) {
 	Cvar_Set2(Cmd_Argv(1), Cmd_Argv(2), qfalse);
 }
 
-static void Cvar_Reset_f(void) {
-	if(Cmd_Argc() != 2) {
-		Com_Printf("usage: reset <variable>\n");
-		return;
-	}
-	Cvar_Reset(Cmd_Argv(1));
-}
-
 void Cvar_WriteVariables(fileHandle_t f) {
 	cvar_t* var;
 	char buffer[MAX_CMD_LINE];
@@ -975,8 +970,7 @@ static void Cvar_List_f(void) {
 	int i;
 	const char* match;
 
-	// sort to get more predictable output
-	if(cvar_sort) {
+	if(cvar_sort) {     // sort to get more predictable output
 		cvar_sort = qfalse;
 		Cvar_Sort();
 	}
@@ -991,147 +985,16 @@ static void Cvar_List_f(void) {
 	for(var = cvar_vars; var; var = var->next, i++) {
 		if(!var->name || (match && !Com_Filter(match, var->name))) continue;
 
-		if(var->flags & CVAR_SERVERINFO) {
-			Com_Printf("S");
-		} else {
-			Com_Printf(" ");
-		}
-		if(var->flags & CVAR_SYSTEMINFO) {
-			Com_Printf("s");
-		} else {
-			Com_Printf(" ");
-		}
-		if(var->flags & CVAR_USERINFO) {
-			Com_Printf("U");
-		} else {
-			Com_Printf(" ");
-		}
-		if(var->flags & CVAR_ROM) {
-			Com_Printf("R");
-		} else {
-			Com_Printf(" ");
-		}
-		if(var->flags & CVAR_INIT) {
-			Com_Printf("I");
-		} else {
-			Com_Printf(" ");
-		}
-		if(var->flags & CVAR_ARCHIVE) {
-			Com_Printf("A");
-		} else {
-			Com_Printf(" ");
-		}
-		if(var->flags & CVAR_LATCH) {
-			Com_Printf("L");
-		} else {
-			Com_Printf(" ");
-		}
-		if(var->flags & CVAR_CHEAT) {
-			Com_Printf("C");
-		} else {
-			Com_Printf(" ");
-		}
-		if(var->flags & CVAR_USER_CREATED) {
-			Com_Printf("?");
-		} else {
-			Com_Printf(" ");
-		}
+		if(var->flags & CVAR_SERVERINFO) Com_Printf("S");
+		if(var->flags & CVAR_USERINFO) Com_Printf("U");
+		if(var->flags & CVAR_ARCHIVE) Com_Printf("A");
+		if(var->flags & CVAR_CHEAT) Com_Printf("C");
+		if(Q_stricmp(var->string, var->resetString)) Com_Printf("*");
 
 		Com_Printf(" %s \"%s\"\n", var->name, var->string);
 	}
 
 	Com_Printf("\n%i total cvars\n", i);
-	Com_Printf("%i cvar indexes\n", cvar_numIndexes);
-}
-
-static void Cvar_ListModified_f(void) {
-	cvar_t* var;
-	int totalModified;
-	const char* value;
-	const char* match;
-
-	if(Cmd_Argc() > 1) {
-		match = Cmd_Argv(1);
-	} else {
-		match = NULL;
-	}
-
-	totalModified = 0;
-	for(var = cvar_vars; var; var = var->next) {
-		if(!var->name || !var->modificationCount) continue;
-
-		value = var->latchedString ? var->latchedString : var->string;
-		if(!strcmp(value, var->resetString)) continue;
-
-		totalModified++;
-
-		if(match && !Com_Filter(match, var->name)) continue;
-
-		if(var->flags & CVAR_SERVERINFO) {
-			Com_Printf("S");
-		} else {
-			Com_Printf(" ");
-		}
-		if(var->flags & CVAR_SYSTEMINFO) {
-			Com_Printf("s");
-		} else {
-			Com_Printf(" ");
-		}
-		if(var->flags & CVAR_USERINFO) {
-			Com_Printf("U");
-		} else {
-			Com_Printf(" ");
-		}
-		if(var->flags & CVAR_ROM) {
-			Com_Printf("R");
-		} else {
-			Com_Printf(" ");
-		}
-		if(var->flags & CVAR_INIT) {
-			Com_Printf("I");
-		} else {
-			Com_Printf(" ");
-		}
-		if(var->flags & CVAR_ARCHIVE) {
-			Com_Printf("A");
-		} else {
-			Com_Printf(" ");
-		}
-		if(var->flags & CVAR_LATCH) {
-			Com_Printf("L");
-		} else {
-			Com_Printf(" ");
-		}
-		if(var->flags & CVAR_CHEAT) {
-			Com_Printf("C");
-		} else {
-			Com_Printf(" ");
-		}
-		if(var->flags & CVAR_USER_CREATED) {
-			Com_Printf("?");
-		} else {
-			Com_Printf(" ");
-		}
-
-		Com_Printf(" %s \"%s\", default \"%s\"\n", var->name, value, var->resetString);
-	}
-
-	Com_Printf("\n%i total modified cvars\n", totalModified);
-}
-
-static void Cvar_Unset_f(void) {
-	cvar_t* cv;
-
-	if(Cmd_Argc() != 2) {
-		Com_Printf("Usage: %s <varname>\n", Cmd_Argv(0));
-		return;
-	}
-
-	cv = Cvar_FindVar(Cmd_Argv(1));
-
-	if(!cv) return;
-
-	Cvar_Unset(cv);
 }
 
 void Cvar_Restart(qboolean unsetVM) {
@@ -1153,61 +1016,7 @@ void Cvar_Restart(qboolean unsetVM) {
 	}
 }
 
-static void Cvar_Trim(qboolean verbose) {
-	cvar_t* curvar = cvar_vars;
-	while(curvar) {
-		if(curvar->flags & CVAR_USER_CREATED) {
-			// throw out any variables the user created
-			if(verbose) Com_Printf("unset cvar" S_COLOR_YELLOW " %s\n", curvar->name);
-
-			curvar = Cvar_Unset(curvar);
-			continue;
-		}
-
-		curvar = curvar->next;
-	}
-}
-
 static void Cvar_Restart_f(void) { Cvar_Restart(qfalse); }
-
-static void Cvar_Trim_f(void) {
-	qboolean forced = qfalse;
-	qboolean verbose = qtrue;
-	int i;
-
-	for(i = 1; i < Cmd_Argc(); i++) {
-		const char* s = Cmd_Argv(i);
-		if(*s == '-') {
-			s++;
-			while(*s != '\0') {
-				if(*s == 'f')  // force cleanup
-					forced = qtrue;
-				else if(*s == 's')  // silent mode
-					verbose = qfalse;
-				s++;
-			}
-		}
-	}
-
-#ifdef DEDICATED
-	if((com_sv_running && com_sv_running->integer) || forced)
-#else
-	if((com_cl_running && com_cl_running->integer && com_sv_running && com_sv_running->integer) || forced)
-#endif
-	{
-		Cvar_Trim(verbose);
-		return;
-	}
-
-#ifdef DEDICATED
-	Com_Printf(S_COLOR_YELLOW " You're not running a server, so not all subsystems/VMs are loaded.\n");
-#else
-	Com_Printf(S_COLOR_YELLOW " You're not running a listen server, so not all subsystems/VMs are loaded.\n");
-#endif
-	Com_Printf(S_COLOR_YELLOW " This means you'd remove cvars that are probably best kept around.\n");
-	Com_Printf(S_COLOR_YELLOW " If you don't care, you can force the call by running '\\%s -f'.\n", Cmd_Argv(0));
-	Com_Printf(S_COLOR_YELLOW " You've been warned.\n");
-}
 
 const char* Cvar_InfoString(int bit, qboolean* truncated) {
 	static char info[MAX_INFO_STRING];
@@ -1350,40 +1159,13 @@ void Cvar_ResetGroup(cvarGroup_t group, qboolean resetModifiedFlags) {
 	}
 }
 
-#define INVALID_FLAGS (CVAR_USER_CREATED | CVAR_SERVER_CREATED | CVAR_PROTECTED | CVAR_PRIVATE | CVAR_MODIFIED | CVAR_NONEXISTENT)
 void Cvar_Register(vmCvar_t* vmCvar, const char* varName, const char* defaultValue, int flags, int privateFlag) {
 	cvar_t* cv;
-
-	// There is code in Cvar_Get to prevent CVAR_ROM cvars being changed by the
-	// user. In other words CVAR_ARCHIVE and CVAR_ROM are mutually exclusive
-	// flags. Unfortunately some historical game code (including single player
-	// baseq3) sets both flags. We unset CVAR_ROM for such cvars.
-	if((flags & (CVAR_ARCHIVE | CVAR_ROM)) == (CVAR_ARCHIVE | CVAR_ROM)) {
-		Com_DPrintf(S_COLOR_YELLOW "WARNING: Unsetting CVAR_ROM from cvar '%s', "
-		                           "since it is also CVAR_ARCHIVE\n",
-		            varName);
-		flags &= ~CVAR_ROM;
-	}
-
-	// Don't allow VM to specify a different creator or other internal flags.
-	if(flags & INVALID_FLAGS) {
-		Com_DPrintf(S_COLOR_YELLOW "WARNING: VM tried to set invalid flags 0x%02x on cvar '%s'\n", (flags & INVALID_FLAGS), varName);
-		flags &= ~INVALID_FLAGS;
-	}
 
 	cv = Cvar_FindVar(varName);
 
 	// Don't modify cvar if it's protected.
-	if(cv && (cv->flags & (CVAR_PROTECTED | CVAR_PRIVATE))) {
-		Com_DPrintf(S_COLOR_YELLOW "WARNING: VM tried to register protected cvar '%s' with value '%s'%s\n", varName, defaultValue, (flags & ~cv->flags) != 0 ? " and new flags" : "");
-		if(cv->flags & CVAR_PRIVATE) {
-			if(privateFlag) {
-				return;
-			}
-		}
-	} else {
-		cv = Cvar_Get(varName, defaultValue, flags | CVAR_VM_CREATED);
-	}
+	cv = Cvar_Get(varName, defaultValue, flags | CVAR_VM_CREATED);
 
 	if(!vmCvar) return;
 
@@ -1449,13 +1231,7 @@ void Cvar_Init(void) {
 
 	Cmd_AddCommand("toggle", Cvar_Toggle_f);
 	Cmd_SetCommandCompletionFunc("toggle", Cvar_CompleteCvarName);
-	Cmd_AddCommand("reset", Cvar_Reset_f);
-	Cmd_SetCommandCompletionFunc("reset", Cvar_CompleteCvarName);
-	Cmd_AddCommand("unset", Cvar_Unset_f);
-	Cmd_SetCommandCompletionFunc("unset", Cvar_CompleteCvarName);
 
 	Cmd_AddCommand("cvarlist", Cvar_List_f);
-	Cmd_AddCommand("cvar_modified", Cvar_ListModified_f);
 	Cmd_AddCommand("cvar_restart", Cvar_Restart_f);
-	Cmd_AddCommand("cvar_trim", Cvar_Trim_f);
 }
