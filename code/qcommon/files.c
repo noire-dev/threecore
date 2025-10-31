@@ -2146,7 +2146,7 @@ Check if file should NOT be added to hash search table
 */
 static qboolean FS_BannedPakFile( const char *filename )
 {
-	if ( !strcmp( filename, "autoexec.cfg" ) || !strcmp( filename, Q3CONFIG_CFG ) )
+	if ( !strcmp( filename, "autoexec.cfg" ) || !strcmp( filename, CONFIG_CFG ) )
 		return qtrue;
 	else
 		return qfalse;
@@ -4669,7 +4669,7 @@ void FS_Restart( int checksumFeed ) {
 	if ( Q_stricmp(fs_gamedirvar->string, lastValidGame) && execConfig ) {
 		// skip the q3config.cfg if "safe" is on the command line
 		if ( !Com_SafeMode() ) {
-			Cbuf_AddText( "exec " Q3CONFIG_CFG "\n" );
+			Cbuf_AddText( "exec " CONFIG_CFG "\n" );
 		}
 	}
 	execConfig = qfalse;
