@@ -566,7 +566,7 @@ static const char* GetValue(int index, float* val) {
 	cmd = Cmd_Argv(index);
 
 	if((*cmd == '-' && *(cmd + 1) == '\0') || *cmd == '\0') {
-		*fval = 0.0f;
+		*val = 0.0f;
 		buf[0] = '\0';
 		return NULL;
 	}
