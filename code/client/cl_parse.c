@@ -420,7 +420,7 @@ void CL_SystemInfoChanged( qboolean onlyGame ) {
 				continue;
 			}
 
-			Cvar_SetSafe( key, value );
+			Cvar_Set( key, value );
 		}
 	}
 	while ( *s != '\0' );
