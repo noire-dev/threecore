@@ -547,16 +547,11 @@ void 	Cvar_Set( const char *var_name, const char *value );
 cvar_t	*Cvar_Set2(const char *var_name, const char *value, qboolean force);
 // same as Cvar_Set, but allows more control over setting of cvar
 
-void	Cvar_SetSafe( const char *var_name, const char *value );
-// sometimes we set variables from an untrusted source: fail if flags & CVAR_PROTECTED
-
 void	Cvar_SetLatched( const char *var_name, const char *value);
 // don't set the cvar immediately
 
 void	Cvar_SetValue( const char *var_name, float value );
 void	Cvar_SetIntegerValue( const char *var_name, int value );
-void	Cvar_SetValueSafe( const char *var_name, float value );
-// expands value to a string and calls Cvar_Set/Cvar_SetSafe
 
 qboolean Cvar_SetModified( const char *var_name, qboolean modified );
 

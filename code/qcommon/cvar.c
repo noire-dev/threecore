@@ -244,7 +244,6 @@ cvar_t* Cvar_Get(const char* var_name, const char* var_value, int flags) {
 		// ZOID--needs to be set so that cvars the game sets as
 		// SERVERINFO get sent to clients
 		cvar_modifiedFlags |= flags;
-
 		return var;
 	}
 
@@ -413,28 +412,6 @@ cvar_t* Cvar_Set2(const char* var_name, const char* value, qboolean force) {
 
 void Cvar_Set(const char* var_name, const char* value) { Cvar_Set2(var_name, value, qtrue); }
 
-void Cvar_SetSafe(const char* var_name, const char* value) {
-	unsigned flags = Cvar_Flags(var_name);
-	qboolean force = qtrue;
-
-	if(flags != CVAR_NONEXISTENT) {
-		if(flags & (CVAR_PROTECTED | CVAR_PRIVATE)) {
-			if(value)
-				Com_Printf(S_COLOR_YELLOW "Restricted source tried to set "
-				                          "\"%s\" to \"%s\"\n",
-				           var_name,
-				           value);
-			else
-				Com_Printf(S_COLOR_YELLOW "Restricted source tried to "
-				                          "modify \"%s\"\n",
-				           var_name);
-			return;
-		}
-	}
-
-	Cvar_Set2(var_name, value, force);
-}
-
 void Cvar_SetLatched(const char* var_name, const char* value) { Cvar_Set2(var_name, value, qfalse); }
 
 void Cvar_SetValue(const char* var_name, float value) {
@@ -453,16 +430,6 @@ void Cvar_SetIntegerValue(const char* var_name, int value) {
 
 	sprintf(val, "%i", value);
 	Cvar_Set(var_name, val);
-}
-
-void Cvar_SetValueSafe(const char* var_name, float value) {
-	char val[32];
-
-	if(Q_isintegral(value))
-		Com_sprintf(val, sizeof(val), "%i", (int)value);
-	else
-		Com_sprintf(val, sizeof(val), "%f", value);
-	Cvar_SetSafe(var_name, val);
 }
 
 qboolean Cvar_SetModified(const char* var_name, qboolean modified) {
@@ -500,11 +467,11 @@ void Cvar_SetCheatState(void) {
 
 typedef enum {
 	FT_BAD = 0,
-    FT_CREATE,
-    FT_SAVE,
-    FT_UNSAVE,
-    FT_RESET,
-    FT_UNSET,
+	FT_CREATE,
+	FT_SAVE,
+	FT_UNSAVE,
+	FT_RESET,
+	FT_UNSET,
 	FT_ADD,
 	FT_SUB,
 	FT_MUL,
@@ -558,15 +525,9 @@ static void Cvar_Op(funcType_t ftype, float* val) {
 	GetValue(2, &mod);
 
 	switch(ftype) {
-		case FT_ADD:
-			*val += mod;
-			break;
-		case FT_SUB:
-			*val -= mod;
-			break;
-		case FT_MUL:
-			*val *= mod;
-			break;
+		case FT_ADD: *val += mod; break;
+		case FT_SUB: *val -= mod; break;
+		case FT_MUL: *val *= mod; break;
 		case FT_DIV:
 			if(mod) *val /= mod;
 			break;
@@ -574,13 +535,9 @@ static void Cvar_Op(funcType_t ftype, float* val) {
 			if(mod) *val = fmodf(*val, mod);
 			break;
 
-		case FT_SIN:
-			*val = sin(mod);
-			break;
+		case FT_SIN: *val = sin(mod); break;
 
-		case FT_COS:
-			*val = cos(mod);
-			break;
+		case FT_COS: *val = cos(mod); break;
 		default: break;
 	}
 
@@ -653,33 +610,33 @@ qboolean Cvar_Command(void) {
 		Cvar_Print(v);
 		return qtrue;
 	} else if(Cmd_Argc() >= 2) {
-	    ftype = GetFuncType();
-        if(ftype == FT_CREATE) {
-		    Cvar_Set2(Cmd_Argv(0), Cmd_ArgsFrom(2), qfalse);
-		    return qtrue;
-	    } else if (ftype == FT_SAVE) {
-	        v = Cvar_Set2(Cmd_Argv(0), Cmd_ArgsFrom(2), qfalse);
-	        if(v && !(v->flags & CVAR_ARCHIVE)) {
+		ftype = GetFuncType();
+		if(ftype == FT_CREATE) {
+			Cvar_Set2(Cmd_Argv(0), Cmd_ArgsFrom(2), qfalse);
+			return qtrue;
+		} else if(ftype == FT_SAVE) {
+			v = Cvar_Set2(Cmd_Argv(0), Cmd_ArgsFrom(2), qfalse);
+			if(v && !(v->flags & CVAR_ARCHIVE)) {
 				v->flags |= CVAR_ARCHIVE;
 				cvar_modifiedFlags |= CVAR_ARCHIVE;
 			}
 			return qtrue;
-	    } else if (ftype == FT_UNSAVE) {
-	        v = Cvar_Set2(Cmd_Argv(0), Cmd_ArgsFrom(2), qfalse);
-	        if(v && (v->flags & CVAR_ARCHIVE)) {
+		} else if(ftype == FT_UNSAVE) {
+			v = Cvar_Set2(Cmd_Argv(0), Cmd_ArgsFrom(2), qfalse);
+			if(v && (v->flags & CVAR_ARCHIVE)) {
 				v->flags &= ~CVAR_ARCHIVE;
 				cvar_modifiedFlags |= CVAR_ARCHIVE;
 			}
 			return qtrue;
-	    } else if(ftype == FT_RESET && v) {
-	        Cvar_Set2(v->name, NULL, qfalse);
-		    return qtrue;
-	    } else if(ftype == FT_UNSET && v) {
-		    Cvar_Unset(v);
-		    return qtrue;
-	    }
+		} else if(ftype == FT_RESET && v) {
+			Cvar_Set2(v->name, NULL, qfalse);
+			return qtrue;
+		} else if(ftype == FT_UNSET && v) {
+			Cvar_Unset(v);
+			return qtrue;
+		}
 	}
-	
+
 	if(!v) return qfalse;
 
 	ftype = GetFuncType();
@@ -694,7 +651,7 @@ qboolean Cvar_Command(void) {
 		else
 			Cvar_Op(ftype, &val);
 
-		sprintf(value, "%g", val); 
+		sprintf(value, "%g", val);
 
 		Cvar_Set2(v->name, value, qfalse);
 		return qtrue;
