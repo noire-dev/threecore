@@ -962,7 +962,6 @@ struct cvar_s {
 	char		*latchedString;		// for CVAR_LATCH vars
 	int			flags;
 	qboolean	modified;			// set each time the cvar is changed
-	int			modificationCount;	// incremented each time the cvar is changed
 	float		value;				// Q_atof( string )
 	int			integer;			// atoi( string )
 	char		*description;
@@ -983,7 +982,6 @@ typedef int	cvarHandle_t;
 // so they must ask for structured updates
 typedef struct {
 	cvarHandle_t	handle;
-	int			modificationCount;
 	float		value;
 	int			integer;
 	char		string[MAX_CVAR_VALUE_STRING];

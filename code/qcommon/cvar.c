@@ -269,7 +269,6 @@ cvar_t* Cvar_Get(const char* var_name, const char* var_value, int flags) {
 	var->name = CopyString(var_name);
 	var->string = CopyString(var_value);
 	var->modified = qtrue;
-	var->modificationCount = 1;
 	var->value = Q_atof(var->string);
 	var->integer = atoi(var->string);
 	var->resetString = CopyString(var_value);
@@ -384,7 +383,6 @@ cvar_t* Cvar_Set2(const char* var_name, const char* value, qboolean force) {
 			Com_Printf("%s will be changed upon restarting.\n", var_name);
 			var->latchedString = CopyString(value);
 			var->modified = qtrue;
-			var->modificationCount++;
 			cvar_group[var->group] = 1;
 			return var;
 		}
@@ -398,7 +396,6 @@ cvar_t* Cvar_Set2(const char* var_name, const char* value, qboolean force) {
 	if(strcmp(value, var->string) == 0) return var;  // not changed
 
 	var->modified = qtrue;
-	var->modificationCount++;
 	cvar_group[var->group] = 1;
 
 	Z_Free(var->string);  // free the old value string
@@ -717,26 +714,6 @@ void Cvar_WriteVariables(fileHandle_t f) {
 	}
 }
 
-static void Cvar_List_f(void) {
-	cvar_t* var;
-	int i;
-
-	i = 0;
-	for(var = cvar_vars; var; var = var->next, i++) {
-		if(!var->name) continue;
-
-		if(var->flags & CVAR_SERVERINFO) Com_Printf("S");
-		if(var->flags & CVAR_USERINFO) Com_Printf("U");
-		if(var->flags & CVAR_ARCHIVE) Com_Printf("A");
-		if(var->flags & CVAR_CHEAT) Com_Printf("C");
-		if(Q_stricmp(var->string, var->resetString)) Com_Printf("*");
-
-		Com_Printf(" %s \"%s\"\n", var->name, var->string);
-	}
-
-	Com_Printf("\n%i total cvars\n", i);
-}
-
 void Cvar_Restart(qboolean unsetVM) {
 	cvar_t* curvar = cvar_vars;
 
@@ -877,7 +854,6 @@ void Cvar_Register(vmCvar_t* vmCvar, const char* varName, const char* defaultVal
 	if(!vmCvar) return;
 
 	vmCvar->handle = cv - cvar_indexes;
-	vmCvar->modificationCount = -1;
 
 	Cvar_Update(vmCvar, 0);
 }
@@ -887,25 +863,16 @@ void Cvar_Update(vmCvar_t* vmCvar, int privateFlag) {
 	cvar_t* cv = NULL;
 	assert(vmCvar);
 
-	if((unsigned)vmCvar->handle >= cvar_numIndexes) {
-		// Com_Printf( S_COLOR_YELLOW "Cvar_Update: handle out of range\n");
-		return;
-	}
+	if((unsigned)vmCvar->handle >= cvar_numIndexes) return;
 
 	cv = cvar_indexes + vmCvar->handle;
 
-	if(cv->modificationCount == vmCvar->modificationCount) {
-		return;
-	}
-	if(!cv->string) {
-		return;  // variable might have been cleared by a cvar_restart
-	}
+	if(!cv->modified) return;
+	if(!cv->string) return;  // variable might have been cleared by a cvar_restart
 	if(cv->flags & CVAR_PRIVATE) {
-		if(privateFlag) {
-			return;
-		}
+		if(privateFlag) return;
 	}
-	vmCvar->modificationCount = cv->modificationCount;
+	cv->modified = qfalse;
 
 	len = strlen(cv->string);
 	if(len + 1 > MAX_CVAR_VALUE_STRING) {
@@ -913,7 +880,6 @@ void Cvar_Update(vmCvar_t* vmCvar, int privateFlag) {
 	}
 
 	Q_strncpyz(vmCvar->string, cv->string, sizeof(vmCvar->string));
-
 	vmCvar->value = cv->value;
 	vmCvar->integer = cv->integer;
 }
@@ -939,6 +905,5 @@ void Cvar_Init(void) {
 	Cmd_AddCommand("toggle", Cvar_Toggle_f);
 	Cmd_SetCommandCompletionFunc("toggle", Cvar_CompleteCvarName);
 
-	Cmd_AddCommand("cvarlist", Cvar_List_f);
 	Cmd_AddCommand("cvar_restart", Cvar_Restart_f);
 }
