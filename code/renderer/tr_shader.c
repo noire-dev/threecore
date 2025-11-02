@@ -1490,186 +1490,6 @@ static void ParseSurfaceParm( const char **text ) {
 	}
 }
 
-
-typedef enum {
-	res_invalid = -1,
-	res_false = 0,
-	res_true = 1
-} resultType;
-
-typedef enum {
-	brIF,
-	brELIF,
-	brELSE
-} branchType;
-
-typedef enum {
-	maskOR,
-	maskAND
-} resultMask;
-
-
-static void derefVariable( const char *name, char *buf, int size )
-{
-	if ( !Q_stricmp( name, "vid_width" ) ) {
-		Com_sprintf( buf, size, "%i", glConfig.vidWidth );
-		return;
-	}
-	if ( !Q_stricmp( name, "vid_height" ) ) {
-		Com_sprintf( buf, size, "%i", glConfig.vidHeight );
-		return;
-	}
-	ri.Cvar_VariableStringBuffer( name, buf, size );
-}
-
-
-/*
-===============
-ParseCondition
-
-if ( $cvar|<integer value> [<condition> $cvar|<integer value> [ [ || .. ] && .. ] ] )
-{ shader stage }
-[ else
-{ shader stage } ]
-===============
-*/
-static qboolean ParseCondition( const char **text, resultType *res )
-{
-	char lval_str[ MAX_CVAR_VALUE_STRING ];
-	char rval_str[ MAX_CVAR_VALUE_STRING ];
-	tokenType_t lval_type;
-	tokenType_t rval_type;
-	const char *token;
-	tokenType_t op;
-	resultMask	rm;
-	qboolean	str;
-	int r, r0;
-
-	r = 0;			// resulting value
-	rm = maskOR;	// default mask
-
-	for ( ;; )
-	{
-		rval_str[0] = '\0';
-		rval_type = TK_GENEGIC;
-
-		// expect l-value at least
-		token = COM_ParseComplex( text, qfalse );
-		if ( token[0] == '\0' ) {
-			ri.Printf( PRINT_WARNING, "WARNING: expecting lvalue for condition in shader %s\n", shader.name );
-			return qfalse;
-		}
-
-		Q_strncpyz( lval_str, token, sizeof( lval_str ) );
-		lval_type = com_tokentype;
-
-		// get operator
-		token = COM_ParseComplex( text, qfalse );
-		if ( com_tokentype >= TK_EQ && com_tokentype <= TK_LTE )
-		{
-			op = com_tokentype;
-
-			// expect r-value
-			token = COM_ParseComplex( text, qfalse );
-			if ( token[0] == '\0' ) {
-				ri.Printf( PRINT_WARNING, "WARNING: expecting rvalue for condition in shader %s\n", shader.name );
-				return qfalse;
-			}
-
-			Q_strncpyz( rval_str, token, sizeof( rval_str ) );
-			rval_type = com_tokentype;
-
-			// read next token, expect '||', '&&' or ')', allow newlines
-			COM_ParseComplex( text, qtrue );
-		}
-		else if ( com_tokentype == TK_SCOPE_CLOSE || com_tokentype == TK_OR || com_tokentype == TK_AND )
-		{
-			// no r-value, assume 'not zero' comparison
-			op = TK_NEQ;
-		}
-		else
-		{
-			ri.Printf( PRINT_WARNING, "WARNING: unexpected operator '%s' for comparison in shader %s\n", token, shader.name );
-			return qfalse;
-		}
-
-		str = qfalse;
-
-		if ( lval_type == TK_QUOTED ) {
-			str = qtrue;
-		} else {
-			// dereference l-value
-			if ( lval_str[0] == '$' ) {
-				derefVariable( lval_str + 1, lval_str, sizeof( lval_str ) );
-			}
-		}
-
-		if ( rval_type == TK_QUOTED ) {
-			str = qtrue;
-		} else {
-			// dereference r-value
-			if ( rval_str[0] == '$' ) {
-				derefVariable( rval_str + 1, rval_str, sizeof( rval_str ) );
-			}
-		}
-
-		// evaluate expression
-		if ( str ) {
-			// string comparison
-			switch ( op ) {
-				case TK_EQ:  r0 = strcmp( lval_str, rval_str ) == 0; break;
-				case TK_NEQ: r0 = strcmp( lval_str, rval_str ) != 0; break;
-				case TK_GT:  r0 = strcmp( lval_str, rval_str ) >  0; break;
-				case TK_GTE: r0 = strcmp( lval_str, rval_str ) >= 0; break;
-				case TK_LT:  r0 = strcmp( lval_str, rval_str ) <  0; break;
-				case TK_LTE: r0 = strcmp( lval_str, rval_str ) <= 0; break;
-				default:     r0 = 0; break;
-			}
-		} else {
-			// integer comparison
-			int lval = atoi( lval_str );
-			int rval = atoi( rval_str );
-			switch ( op ) {
-				case TK_EQ:  r0 = ( lval == rval ); break;
-				case TK_NEQ: r0 = ( lval != rval ); break;
-				case TK_GT:  r0 = ( lval >  rval ); break;
-				case TK_GTE: r0 = ( lval >= rval ); break;
-				case TK_LT:  r0 = ( lval <  rval ); break;
-				case TK_LTE: r0 = ( lval <= rval ); break;
-				default:     r0 = 0; break;
-			}
-		}
-
-		if ( rm == maskOR )
-			r |= r0;
-		else
-			r &= r0;
-
-		if ( com_tokentype == TK_OR ) {
-			rm = maskOR;
-			continue;
-		}
-
-		if ( com_tokentype == TK_AND ) {
-			rm = maskAND;
-			continue;
-		}
-
-		if ( com_tokentype != TK_SCOPE_CLOSE ) {
-			ri.Printf( PRINT_WARNING, "WARNING: expecting ')' in shader %s\n", shader.name );
-			return qfalse;
-		}
-
-		break;
-	}
-
-	if ( res )
-		*res = r ? res_true : res_false;
-
-	return qtrue;
-}
-
-
 /*
 =================
 FinishStage
@@ -1754,8 +1574,6 @@ will optimize it.
 */
 static qboolean ParseShader( const char **text )
 {
-	resultType res;
-	branchType branch;
 	const char *token;
 	int numStages;
 
@@ -1767,8 +1585,6 @@ static qboolean ParseShader( const char **text )
 		ri.Printf( PRINT_WARNING, "WARNING: expecting '{', found '%s' instead in shader '%s'\n", token, shader.name );
 		return qfalse;
 	}
-
-	res = res_invalid;
 
 	while ( 1 )
 	{
@@ -1956,56 +1772,7 @@ static qboolean ParseShader( const char **text )
 		{
 			ParseSort( text );
 			continue;
-		}
-		// conditional stage definition
-		else if ( ( !Q_stricmp( token, "if" ) || !Q_stricmp( token, "else" ) || !Q_stricmp( token, "elif" ) ) )
-		{
-			if ( Q_stricmp( token, "if" ) == 0 ) {
-				branch = brIF;
-			} else {
-				if ( res == res_invalid  ) {
-					// we don't have any previous 'if' statements
-					ri.Printf( PRINT_WARNING, "WARNING: unexpected '%s' in '%s'\n", token, shader.name );
-					return qfalse;
-				}
-				if ( Q_stricmp( token, "else" ) == 0 )
-					branch = brELSE;
-				else
-					branch = brELIF;
-			}
-
-			if ( branch != brELSE ) { // we can set/update result
-				token = COM_ParseComplex( text, qfalse );
-				if ( com_tokentype != TK_SCOPE_OPEN ) {
-					ri.Printf( PRINT_WARNING, "WARNING: expecting '(' in '%s'\n", shader.name );
-					return qfalse;
-				}
-				if ( !ParseCondition( text, (branch == brIF || res == res_true) ? &res : NULL ) ) {
-					ri.Printf( PRINT_WARNING, "WARNING: error parsing condition in '%s'\n", shader.name );
-					return qfalse;
-				}
-			}
-
-			if ( res == res_false )	{
-				// skip next stage or keyword until newline
-				token = COM_ParseExt( text, qtrue );
-				if ( token[0] == '{' )
-					SkipBracedSection( text, 1 /* depth */ );
-				else
-					SkipRestOfLine( text );
-			} else {
-				// parse next tokens as usual
-			}
-
-			if ( branch == brELSE )
-				res = res_invalid; // finalize branch
-			else
-				res ^= 1; // or toggle for possible "elif" / "else" statements
-
-			continue;
-		}
-		else
-		{
+		} else {
 			ri.Printf( PRINT_WARNING, "WARNING: unknown general shader parameter '%s' in '%s'\n", token, shader.name );
 			return qfalse;
 		}

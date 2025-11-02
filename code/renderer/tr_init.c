@@ -34,8 +34,6 @@ glstate_t	glState;
 
 glstatic_t	gls;
 
-static void GfxInfo( void );
-static void VarInfo( void );
 static void GL_SetDefaultState( void );
 
 cvar_t	*r_znear;
@@ -1156,97 +1154,6 @@ static void R_PrintLongString(const char *string) {
 	}
 }
 
-
-/*
-================
-GfxInfo
-
-Prints persistent rendering configuration
-================
-*/
-static void GfxInfo( void )
-{
-	const char *enablestrings[] = { "disabled", "enabled" };
-	const char *fsstrings[] = { "windowed", "fullscreen" };
-	const char *fs;
-	int mode;
-
-	ri.Printf( PRINT_ALL, "\nGL_VENDOR: %s\n", glConfig.vendor_string );
-	ri.Printf( PRINT_ALL, "GL_RENDERER: %s\n", glConfig.renderer_string );
-	ri.Printf( PRINT_ALL, "GL_VERSION: %s\n", glConfig.version_string );
-	ri.Printf( PRINT_DEVELOPER, "GL_EXTENSIONS: " );
-	R_PrintLongString( glConfig.extensions_string );
-	ri.Printf( PRINT_ALL, "\n" );
-	ri.Printf( PRINT_ALL, "GL_MAX_TEXTURE_SIZE: %d\n", glConfig.maxTextureSize );
-	ri.Printf( PRINT_ALL, "GL_MAX_TEXTURE_UNITS_ARB: %d\n", glConfig.numTextureUnits );
-	ri.Printf( PRINT_ALL, "\nPIXELFORMAT: color(%d-bits) Z(%d-bit) stencil(%d-bits)\n", glConfig.colorBits, glConfig.depthBits, glConfig.stencilBits );
-
-	if ( glConfig.isFullscreen )
-	{
-		const char *modefs = ri.Cvar_VariableString( "r_modeFullscreen" );
-		if ( *modefs )
-			mode = atoi( modefs );
-		else
-			mode = ri.Cvar_VariableIntegerValue( "r_mode" );
-		fs = fsstrings[1];
-	}
-	else
-	{
-		mode = ri.Cvar_VariableIntegerValue( "r_mode" );
-		fs = fsstrings[0];
-	}
-
-	if ( glConfig.vidWidth != gls.windowWidth || glConfig.vidHeight != gls.windowHeight )
-	{
-		ri.Printf( PRINT_ALL, "RENDER: %d x %d, MODE: %d, %d x %d %s hz:", glConfig.vidWidth, glConfig.vidHeight, mode, gls.windowWidth, gls.windowHeight, fs );
-	}
-	else
-	{
-		ri.Printf( PRINT_ALL, "MODE: %d, %d x %d %s hz:", mode, gls.windowWidth, gls.windowHeight, fs );
-	}
-
-	if ( glConfig.displayFrequency )
-	{
-		ri.Printf( PRINT_ALL, "%d\n", glConfig.displayFrequency );
-	}
-	else
-	{
-		ri.Printf( PRINT_ALL, "N/A\n" );
-	}
-
-	ri.Printf( PRINT_ALL, "multitexture: %s\n", enablestrings[qglActiveTextureARB != 0] );
-	ri.Printf( PRINT_ALL, "compiled vertex arrays: %s\n", enablestrings[qglLockArraysEXT != 0 ] );
-	ri.Printf( PRINT_ALL, "texenv add: %s\n", enablestrings[glConfig.textureEnvAddAvailable != 0] );
-	ri.Printf( PRINT_ALL, "compressed textures: %s\n", enablestrings[glConfig.textureCompression!=TC_NONE] );
-}
-
-
-/*
-================
-VarInfo
-
-Prints info that may change every R_Init() call
-================
-*/
-static void VarInfo( void )
-{
-	ri.Printf( PRINT_ALL, "texturemode: %s\n", r_textureMode->string );
-	ri.Printf( PRINT_ALL, "picmip: %d%s\n", r_picmip->integer, r_nomip->integer ? ", worldspawn only" : "" );
-}
-
-
-/*
-===============
-GfxInfo_f
-===============
-*/
-static void GfxInfo_f( void )
-{
-	GfxInfo();
-	VarInfo();
-}
-
-
 /*
 ===============
 R_Register
@@ -1276,106 +1183,106 @@ static void R_Register( void )
 	r_colorMipLevels = ri.Cvar_Get ("r_colorMipLevels", "0", CVAR_LATCH );
 	ri.Cvar_SetDescription( r_colorMipLevels, "Debugging tool to artificially color different mipmap levels so that they are more apparent." );
 
-	r_mergeLightmaps = ri.Cvar_Get( "r_mergeLightmaps", "1", CVAR_ARCHIVE_ND | CVAR_LATCH );
+	r_mergeLightmaps = ri.Cvar_Get( "r_mergeLightmaps", "1", CVAR_ARCHIVE | CVAR_LATCH );
 	ri.Cvar_SetDescription( r_mergeLightmaps, "Merge built-in small lightmaps into bigger lightmaps (atlases)." );
 
-	r_subdivisions = ri.Cvar_Get( "r_subdivisions", "2", CVAR_ARCHIVE_ND | CVAR_LATCH );
+	r_subdivisions = ri.Cvar_Get( "r_subdivisions", "2", CVAR_ARCHIVE | CVAR_LATCH );
 	ri.Cvar_SetDescription(r_subdivisions, "Distance to subdivide bezier curved surfaces. Higher values mean less subdivision and less geometric complexity.");
 
 	//
 	// archived variables that can change at any time
 	//
-	r_lodCurveError = ri.Cvar_Get( "r_lodCurveError", "250", CVAR_ARCHIVE_ND );
+	r_lodCurveError = ri.Cvar_Get( "r_lodCurveError", "250", CVAR_ARCHIVE );
 	ri.Cvar_SetDescription( r_lodCurveError, "Level of detail error on curved surface grids. Higher values result in better quality at a distance." );
-	r_lodbias = ri.Cvar_Get( "r_lodbias", "-2", CVAR_ARCHIVE_ND );
+	r_lodbias = ri.Cvar_Get( "r_lodbias", "-2", CVAR_ARCHIVE );
 	ri.Cvar_SetDescription( r_lodbias, "Sets the level of detail of in-game models:\n -2: Ultra (further delays LOD transition in the distance)\n -1: Very High (delays LOD transition in the distance)\n 0: High\n 1: Medium\n 2: Low" );
 	r_znear = ri.Cvar_Get( "r_znear", "1", CVAR_CHEAT );
 	ri.Cvar_SetDescription( r_znear, "Viewport distance from view origin (how close objects can be to the player before they're clipped out of the scene)." );
-	r_zproj = ri.Cvar_Get( "r_zproj", "64", CVAR_ARCHIVE_ND );
+	r_zproj = ri.Cvar_Get( "r_zproj", "64", CVAR_ARCHIVE );
 	ri.Cvar_SetDescription( r_zproj, "Projected viewport frustum." );
-	r_ignoreGLErrors = ri.Cvar_Get( "r_ignoreGLErrors", "1", CVAR_ARCHIVE_ND );
+	r_ignoreGLErrors = ri.Cvar_Get( "r_ignoreGLErrors", "1", CVAR_ARCHIVE );
 	ri.Cvar_SetDescription( r_ignoreGLErrors, "Ignore OpenGL errors." );
-	r_fastsky = ri.Cvar_Get( "r_fastsky", "0", CVAR_ARCHIVE_ND );
+	r_fastsky = ri.Cvar_Get( "r_fastsky", "0", CVAR_ARCHIVE );
 	ri.Cvar_SetDescription( r_fastsky, "Draw flat colored skies." );
 	r_dlightMode = ri.Cvar_Get( "r_dlightMode", "1", CVAR_ARCHIVE );
 	ri.Cvar_SetDescription( r_dlightMode, "Dynamic light mode:\n 0: Off\n 1: High-quality per-pixel dynamic lights" );
 
-	r_ext_multisample = ri.Cvar_Get( "r_ext_multisample", "0", CVAR_ARCHIVE_ND );
+	r_ext_multisample = ri.Cvar_Get( "r_ext_multisample", "0", CVAR_ARCHIVE );
 	ri.Cvar_SetDescription( r_ext_multisample, "For anti-aliasing geometry edges, valid values: 0|2|4|6|8." );
 	ri.Cvar_SetGroup( r_ext_multisample, CVG_RENDERER );
-	r_hdr = ri.Cvar_Get( "r_hdr", "1", CVAR_ARCHIVE_ND );
+	r_hdr = ri.Cvar_Get( "r_hdr", "1", CVAR_ARCHIVE );
 	ri.Cvar_SetDescription(r_hdr, "Enables high dynamic range frame buffer texture format.\n -1: 4-bit, for testing purposes, heavy color banding, might not work on all systems\n  0: 8 bit, default, moderate color banding with multi-stage shaders\n  1: 16 bit, enhanced blending precision, no color banding, might decrease performance on AMD / Intel GPUs\n" );
 	ri.Cvar_SetGroup( r_hdr, CVG_RENDERER );
 	// bloom
-	r_bloom_threshold = ri.Cvar_Get( "r_bloom_threshold", "0.00", CVAR_ARCHIVE_ND );
+	r_bloom_threshold = ri.Cvar_Get( "r_bloom_threshold", "0.00", CVAR_ARCHIVE );
 	ri.Cvar_SetDescription(r_bloom_threshold, "Color level to extract to bloom texture, default is 0.6.");
 	ri.Cvar_SetGroup( r_bloom_threshold, CVG_RENDERER );
-	r_bloom_threshold_mode = ri.Cvar_Get( "r_bloom_threshold_mode", "0", CVAR_ARCHIVE_ND );
+	r_bloom_threshold_mode = ri.Cvar_Get( "r_bloom_threshold_mode", "0", CVAR_ARCHIVE );
 	ri.Cvar_SetDescription( r_bloom_threshold_mode, "Color extraction mode:\n 0: (r|g|b) >= threshold\n 1: (r + g + b ) / 3 >= threshold\n 2: luma(r, g, b) >= threshold" );
 	ri.Cvar_SetGroup( r_bloom_threshold_mode, CVG_RENDERER );
-	r_bloom_intensity = ri.Cvar_Get( "r_bloom_intensity", "0.10", CVAR_ARCHIVE_ND );
+	r_bloom_intensity = ri.Cvar_Get( "r_bloom_intensity", "0.10", CVAR_ARCHIVE );
 	ri.Cvar_SetDescription( r_bloom_intensity, "Final bloom blend factor, default is 0.5." );
-	r_bloom_passes = ri.Cvar_Get( "r_bloom_passes", "6", CVAR_ARCHIVE_ND | CVAR_LATCH );
+	r_bloom_passes = ri.Cvar_Get( "r_bloom_passes", "6", CVAR_ARCHIVE | CVAR_LATCH );
 	ri.Cvar_SetDescription( r_bloom_passes, "Count of downsampled passes (framebuffers) to blend on final bloom image, default is 5." );
-	r_bloom_blend_base = ri.Cvar_Get( "r_bloom_blend_base", "1", CVAR_ARCHIVE_ND );
+	r_bloom_blend_base = ri.Cvar_Get( "r_bloom_blend_base", "1", CVAR_ARCHIVE );
 	ri.Cvar_SetDescription( r_bloom_blend_base, "0-based, topmost downsampled framebuffer to use for final image, high values can be used for stronger haze effect, results in overall weaker intensity." );
 	ri.Cvar_SetGroup( r_bloom_blend_base, CVG_RENDERER );
-	r_bloom_modulate = ri.Cvar_Get( "r_bloom_modulate", "0", CVAR_ARCHIVE_ND );
+	r_bloom_modulate = ri.Cvar_Get( "r_bloom_modulate", "0", CVAR_ARCHIVE );
 	ri.Cvar_SetDescription( r_bloom_modulate, "Modulate extracted color:\n 0: off (color = color, i.e. no changes)\n 1: by itself (color = color * color)\n 2: by intensity (color = color * luma(color))" );
 	ri.Cvar_SetGroup( r_bloom_modulate, CVG_RENDERER );
-	r_bloom_filter_size = ri.Cvar_Get( "r_bloom_filter_size", "5", CVAR_ARCHIVE_ND );
+	r_bloom_filter_size = ri.Cvar_Get( "r_bloom_filter_size", "5", CVAR_ARCHIVE );
 	ri.Cvar_SetDescription( r_bloom_filter_size, "Filter size of Gaussian Blur effect for each pass, bigger filter size means stronger and wider blur, lower values are faster, default is 6." );
 	ri.Cvar_SetGroup( r_bloom_filter_size, CVG_RENDERER );
 
-	r_bloom_reflection = ri.Cvar_Get( "r_bloom_reflection", "0.05", CVAR_ARCHIVE_ND );
+	r_bloom_reflection = ri.Cvar_Get( "r_bloom_reflection", "0.05", CVAR_ARCHIVE );
 	ri.Cvar_SetDescription( r_bloom_reflection, "Bloom lens reflection effect, value is an intensity factor of the effect, negative value means blend only reflection and skip main bloom texture." );
 
 	r_textureMode = ri.Cvar_Get( "r_textureMode", "GL_LINEAR_MIPMAP_NEAREST", CVAR_ARCHIVE );
 	ri.Cvar_SetDescription( r_textureMode, "Texture interpolation mode:\n GL_NEAREST: Nearest neighbor interpolation and will therefore appear similar to Quake II except with the added colored lighting\n GL_LINEAR: Linear interpolation and will appear to blend in objects that are closer than the resolution that the textures are set as\n GL_NEAREST_MIPMAP_NEAREST: Nearest neighbor interpolation with mipmapping for bilinear hardware, mipmapping will blend objects that are farther away than the resolution that they are set as\n GL_LINEAR_MIPMAP_NEAREST: Linear interpolation with mipmapping for bilinear hardware\n GL_NEAREST_MIPMAP_LINEAR: Nearest neighbor interpolation with mipmapping for trilinear hardware\n GL_LINEAR_MIPMAP_LINEAR: Linear interpolation with mipmapping for trilinear hardware" );
 	ri.Cvar_SetGroup( r_textureMode, CVG_RENDERER );
-	r_gamma = ri.Cvar_Get( "r_gamma", "1.0", CVAR_ARCHIVE_ND );
+	r_gamma = ri.Cvar_Get( "r_gamma", "1.0", CVAR_ARCHIVE );
 	ri.Cvar_SetDescription( r_gamma, "Gamma correction factor." );
 	ri.Cvar_SetGroup( r_gamma, CVG_RENDERER );
 
 	//postFX
-	r_modernMode = ri.Cvar_Get( "r_modernMode", "1", CVAR_ARCHIVE_ND | CVAR_LATCH );
-	r_postfx = ri.Cvar_Get( "r_postfx", "1", CVAR_ARCHIVE_ND );
+	r_modernMode = ri.Cvar_Get( "r_modernMode", "1", CVAR_ARCHIVE | CVAR_LATCH );
+	r_postfx = ri.Cvar_Get( "r_postfx", "1", CVAR_ARCHIVE );
 	ri.Cvar_SetGroup( r_postfx, CVG_RENDERER );
-	r_postprocess = ri.Cvar_Get( "r_postprocess", "0", CVAR_ARCHIVE_ND );
+	r_postprocess = ri.Cvar_Get( "r_postprocess", "0", CVAR_ARCHIVE );
 	ri.Cvar_SetGroup( r_postprocess, CVG_RENDERER );
 
 	//colors
-	r_fx_greyscale = ri.Cvar_Get( "r_fx_greyscale", "-0.25", CVAR_ARCHIVE_ND );
+	r_fx_greyscale = ri.Cvar_Get( "r_fx_greyscale", "-0.25", CVAR_ARCHIVE );
 	ri.Cvar_SetGroup( r_fx_greyscale, CVG_RENDERER );
-	r_fx_sepia = ri.Cvar_Get( "r_fx_sepia", "1.0", CVAR_ARCHIVE_ND );
+	r_fx_sepia = ri.Cvar_Get( "r_fx_sepia", "1.0", CVAR_ARCHIVE );
 	ri.Cvar_SetGroup( r_fx_sepia, CVG_RENDERER );
-	r_fx_contrast = ri.Cvar_Get( "r_fx_contrast", "0.0", CVAR_ARCHIVE_ND );
+	r_fx_contrast = ri.Cvar_Get( "r_fx_contrast", "0.0", CVAR_ARCHIVE );
 	ri.Cvar_SetGroup( r_fx_contrast, CVG_RENDERER );
-	r_fx_brightness = ri.Cvar_Get( "r_fx_brightness", "0.0", CVAR_ARCHIVE_ND );
+	r_fx_brightness = ri.Cvar_Get( "r_fx_brightness", "0.0", CVAR_ARCHIVE );
 	ri.Cvar_SetGroup( r_fx_brightness, CVG_RENDERER );
-	r_fx_invert = ri.Cvar_Get( "r_fx_invert", "0.0", CVAR_ARCHIVE_ND );
+	r_fx_invert = ri.Cvar_Get( "r_fx_invert", "0.0", CVAR_ARCHIVE );
 	ri.Cvar_SetGroup( r_fx_invert, CVG_RENDERER );
-	r_fx_tint_r = ri.Cvar_Get( "r_fx_tint_r", "1.0", CVAR_ARCHIVE_ND );
+	r_fx_tint_r = ri.Cvar_Get( "r_fx_tint_r", "1.0", CVAR_ARCHIVE );
 	ri.Cvar_SetGroup( r_fx_tint_r, CVG_RENDERER );
-	r_fx_tint_g = ri.Cvar_Get( "r_fx_tint_g", "1.0", CVAR_ARCHIVE_ND );
+	r_fx_tint_g = ri.Cvar_Get( "r_fx_tint_g", "1.0", CVAR_ARCHIVE );
 	ri.Cvar_SetGroup( r_fx_tint_g, CVG_RENDERER );
-	r_fx_tint_b = ri.Cvar_Get( "r_fx_tint_b", "1.0", CVAR_ARCHIVE_ND );
+	r_fx_tint_b = ri.Cvar_Get( "r_fx_tint_b", "1.0", CVAR_ARCHIVE );
 	ri.Cvar_SetGroup( r_fx_tint_b, CVG_RENDERER );
-	r_fx_posterize = ri.Cvar_Get( "r_fx_posterize", "0.0", CVAR_ARCHIVE_ND );
+	r_fx_posterize = ri.Cvar_Get( "r_fx_posterize", "0.0", CVAR_ARCHIVE );
 	ri.Cvar_SetGroup( r_fx_posterize, CVG_RENDERER );
-	r_fx_glow = ri.Cvar_Get( "r_fx_glow", "0.0", CVAR_ARCHIVE_ND );
+	r_fx_glow = ri.Cvar_Get( "r_fx_glow", "0.0", CVAR_ARCHIVE );
 	ri.Cvar_SetGroup( r_fx_glow, CVG_RENDERER );
-	r_fx_filmic = ri.Cvar_Get( "r_fx_filmic", "0.0", CVAR_ARCHIVE_ND );
+	r_fx_filmic = ri.Cvar_Get( "r_fx_filmic", "0.0", CVAR_ARCHIVE );
 	ri.Cvar_SetGroup( r_fx_filmic, CVG_RENDERER );
-	r_fx_bloom = ri.Cvar_Get( "r_fx_bloom", "0.0", CVAR_ARCHIVE_ND );
+	r_fx_bloom = ri.Cvar_Get( "r_fx_bloom", "0.0", CVAR_ARCHIVE );
 	ri.Cvar_SetGroup( r_fx_bloom, CVG_RENDERER );
 
 	//fragment
-	r_fx_chromaticAberration = ri.Cvar_Get( "r_fx_chromaticAberration", "0.0", CVAR_ARCHIVE_ND );
+	r_fx_chromaticAberration = ri.Cvar_Get( "r_fx_chromaticAberration", "0.0", CVAR_ARCHIVE );
 	ri.Cvar_SetGroup( r_fx_chromaticAberration, CVG_RENDERER );
-	r_fx_chameleon = ri.Cvar_Get( "r_fx_chameleon", "0.0", CVAR_ARCHIVE_ND );
+	r_fx_chameleon = ri.Cvar_Get( "r_fx_chameleon", "0.0", CVAR_ARCHIVE );
 	ri.Cvar_SetGroup( r_fx_chameleon, CVG_RENDERER );
-	r_fx_ambientlight = ri.Cvar_Get( "r_fx_ambientlight", "0.0", CVAR_ARCHIVE_ND );
+	r_fx_ambientlight = ri.Cvar_Get( "r_fx_ambientlight", "0.0", CVAR_ARCHIVE );
 	ri.Cvar_SetGroup( r_fx_ambientlight, CVG_RENDERER );
 	r_fx_blur = ri.Cvar_Get( "r_fx_blur", "0.0", 0 );
 	ri.Cvar_SetGroup( r_fx_blur, CVG_RENDERER );
@@ -1400,9 +1307,9 @@ static void R_Register( void )
 	r_noportals = ri.Cvar_Get( "r_noportals", "0", 0 );
 	ri.Cvar_SetDescription(r_noportals, "Disables in-game portals, valid values: 0: Portals enabled\n 1: Portals disabled\n 2: Portals and mirrors disabled" );
 
-	r_aviMotionJpegQuality = ri.Cvar_Get( "r_aviMotionJpegQuality", "100", CVAR_ARCHIVE_ND );
+	r_aviMotionJpegQuality = ri.Cvar_Get( "r_aviMotionJpegQuality", "100", CVAR_ARCHIVE );
 	ri.Cvar_SetDescription( r_aviMotionJpegQuality, "Controls quality of Jpeg video capture when \\cl_aviMotionJpeg 1." );
-	r_screenshotJpegQuality = ri.Cvar_Get( "r_screenshotJpegQuality", "100", CVAR_ARCHIVE_ND );
+	r_screenshotJpegQuality = ri.Cvar_Get( "r_screenshotJpegQuality", "100", CVAR_ARCHIVE );
 	ri.Cvar_SetDescription( r_screenshotJpegQuality, "Controls quality of Jpeg screenshots when using screenshotJpeg." );
 
 	if ( glConfig.vidWidth )
@@ -1411,27 +1318,27 @@ static void R_Register( void )
 	//
 	// latched and archived variables that can only change over a vid_restart
 	//
-	r_allowExtensions = ri.Cvar_Get( "r_allowExtensions", "1", CVAR_ARCHIVE_ND | CVAR_LATCH | CVAR_DEVELOPER );
+	r_allowExtensions = ri.Cvar_Get( "r_allowExtensions", "1", CVAR_ARCHIVE | CVAR_LATCH | CVAR_DEVELOPER );
 	ri.Cvar_SetDescription( r_allowExtensions, "Use all of the OpenGL extensions your card is capable of." );
-	r_ext_compressed_textures = ri.Cvar_Get( "r_ext_compressed_textures", "0", CVAR_ARCHIVE_ND | CVAR_LATCH | CVAR_DEVELOPER );
+	r_ext_compressed_textures = ri.Cvar_Get( "r_ext_compressed_textures", "0", CVAR_ARCHIVE | CVAR_LATCH | CVAR_DEVELOPER );
 	ri.Cvar_SetDescription( r_ext_compressed_textures, "Enables texture compression." );
-	r_ext_multitexture = ri.Cvar_Get( "r_ext_multitexture", "1", CVAR_ARCHIVE_ND | CVAR_LATCH | CVAR_DEVELOPER );
+	r_ext_multitexture = ri.Cvar_Get( "r_ext_multitexture", "1", CVAR_ARCHIVE | CVAR_LATCH | CVAR_DEVELOPER );
 	ri.Cvar_SetDescription( r_ext_multitexture, "Enables hardware multi-texturing (0: off, 1: on)." );
-	r_ext_compiled_vertex_array = ri.Cvar_Get( "r_ext_compiled_vertex_array", "1", CVAR_ARCHIVE_ND | CVAR_LATCH | CVAR_DEVELOPER );
+	r_ext_compiled_vertex_array = ri.Cvar_Get( "r_ext_compiled_vertex_array", "1", CVAR_ARCHIVE | CVAR_LATCH | CVAR_DEVELOPER );
 	ri.Cvar_SetDescription( r_ext_compiled_vertex_array, "Enables hardware-compiled vertex array rendering method." );
-	r_ext_texture_env_add = ri.Cvar_Get( "r_ext_texture_env_add", "1", CVAR_ARCHIVE_ND | CVAR_LATCH | CVAR_DEVELOPER );
+	r_ext_texture_env_add = ri.Cvar_Get( "r_ext_texture_env_add", "1", CVAR_ARCHIVE | CVAR_LATCH | CVAR_DEVELOPER );
 	ri.Cvar_SetDescription( r_ext_texture_env_add, "Enables additive blending in multitexturing. Requires \\r_ext_multitexture 1." );
 
-	r_ext_texture_filter_anisotropic = ri.Cvar_Get( "r_ext_texture_filter_anisotropic",	"1", CVAR_ARCHIVE_ND | CVAR_LATCH );
+	r_ext_texture_filter_anisotropic = ri.Cvar_Get( "r_ext_texture_filter_anisotropic",	"1", CVAR_ARCHIVE | CVAR_LATCH );
 	ri.Cvar_SetDescription( r_ext_texture_filter_anisotropic, "Allow anisotropic filtering." );
 
-	r_ext_max_anisotropy = ri.Cvar_Get( "r_ext_max_anisotropy", "8", CVAR_ARCHIVE_ND | CVAR_LATCH );
+	r_ext_max_anisotropy = ri.Cvar_Get( "r_ext_max_anisotropy", "8", CVAR_ARCHIVE | CVAR_LATCH );
 	ri.Cvar_SetDescription( r_ext_max_anisotropy, "Sets maximum anisotropic level for your graphics driver. Requires \\r_ext_texture_filter_anisotropic." );
 
-	r_ignorehwgamma = ri.Cvar_Get( "r_ignorehwgamma", "0", CVAR_ARCHIVE_ND | CVAR_LATCH );
+	r_ignorehwgamma = ri.Cvar_Get( "r_ignorehwgamma", "0", CVAR_ARCHIVE | CVAR_LATCH );
 	ri.Cvar_SetDescription( r_ignorehwgamma, "Overrides hardware gamma capabilities." );
 
-	r_ext_supersample = ri.Cvar_Get( "r_ext_supersample", "0", CVAR_ARCHIVE_ND | CVAR_LATCH );
+	r_ext_supersample = ri.Cvar_Get( "r_ext_supersample", "0", CVAR_ARCHIVE | CVAR_LATCH );
 	ri.Cvar_SetDescription( r_ext_supersample, "Super-sample anti-aliasing." );
 }
 
@@ -1515,8 +1422,6 @@ void R_Init( void ) {
 	InitOpenGL();
 
 	R_InitImages();
-
-	VarInfo();
 
 	R_InitShaders();
 
