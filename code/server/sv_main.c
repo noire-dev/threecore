@@ -729,10 +729,6 @@ static void SVC_Info( const netadr_t *from ) {
 	Info_SetValueForKey( infostring, "g_maxClients", va( "%i", sv.maxclients - sv_privateClients->integer ) );
 	Info_SetValueForKey( infostring, "gametype", va( "%i", sv_gametype->integer ) );
 	Info_SetValueForKey( infostring, "g_needpass", va( "%d", Cvar_VariableIntegerValue( "g_needpass" ) ) );
-	gamedir = Cvar_VariableString( "fs_game" );
-	if ( *gamedir != '\0' ) {
-		Info_SetValueForKey( infostring, "game", gamedir );
-	}
 	
 	addondir = Cvar_VariableString( "cl_selectedmod" );
 	Info_SetValueForKey( infostring, "addonname", addondir );

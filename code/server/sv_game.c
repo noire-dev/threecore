@@ -317,10 +317,10 @@ static intptr_t SV_GameSystemCalls( intptr_t *args ) {
 	case G_MILLISECONDS:
 		return Sys_Milliseconds();
 	case G_CVAR_REGISTER:
-		Cvar_Register( VMA(1), VMA(2), VMA(3), args[4], gvm->privateFlag ); 
+		Cvar_Register( VMA(1), VMA(2), VMA(3), args[4] ); 
 		return 0;
 	case G_CVAR_UPDATE:
-		Cvar_Update( VMA(1), gvm->privateFlag );
+		Cvar_Update( VMA(1), args[2] );
 		return 0;
 	case G_CVAR_SET:
 		Cvar_Set( (const char *)VMA(1), (const char *)VMA(2) );
@@ -329,7 +329,7 @@ static intptr_t SV_GameSystemCalls( intptr_t *args ) {
 		return Cvar_VariableIntegerValue( (const char *)VMA(1) );
 	case G_CVAR_VARIABLE_STRING_BUFFER:
 		VM_CHECKBOUNDS( gvm, args[2], args[3] );
-		Cvar_VariableStringBufferSafe( VMA(1), VMA(2), args[3], gvm->privateFlag );
+		Cvar_VariableStringBufferSafe( VMA(1), VMA(2), args[3], 0 );
 		return 0;
 	case G_ARGC:
 		return Cmd_Argc();
