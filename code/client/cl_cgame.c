@@ -826,13 +826,9 @@ CL_FirstSnapshot
 */
 static void CL_FirstSnapshot( void ) {
 	// ignore snapshots that don't have entities
-	if ( cl.snap.snapFlags & SNAPFLAG_NOT_ACTIVE ) {
-		return;
-	}
+	if ( cl.snap.snapFlags & SNAPFLAG_NOT_ACTIVE ) return;
+	
 	cls.state = CA_ACTIVE;
-
-	// clear old game so we will not switch back to old mod on disconnect
-	CL_ResetOldGame();
 
 	// set the timedelta so we are exactly on this first frame
 	cl.serverTimeDelta = cl.snap.serverTime - cls.realtime;
