@@ -61,10 +61,6 @@ vm_t				*cgvm = NULL;
 
 netadr_t			rcon_address;
 
-char				cl_oldGame[ MAX_QPATH ];
-qboolean			cl_oldGameSet;
-static	qboolean	noGameRestart = qfalse;
-
 // Structure containing functions exported from refresh DLL
 refexport_t	re;
 
@@ -906,36 +902,6 @@ static void CL_UpdateGUID( const char *prefix, int prefix_len )
 
 /*
 =====================
-CL_ResetOldGame
-=====================
-*/
-void CL_ResetOldGame( void )
-{
-	cl_oldGameSet = qfalse;
-	cl_oldGame[0] = '\0';
-}
-
-/*
-=====================
-CL_RestoreOldGame
-
-change back to previous fs_game
-=====================
-*/
-static qboolean CL_RestoreOldGame( void )
-{
-	if ( cl_oldGameSet )
-	{
-		cl_oldGameSet = qfalse;
-		Cvar_Set( "fs_game", cl_oldGame );
-		FS_ConditionalRestart( clc.checksumFeed, qtrue );
-		return qtrue;
-	}
-	return qfalse;
-}
-
-/*
-=====================
 CL_Disconnect
 
 Called when a connection, demo, or cinematic is being terminated.
@@ -946,14 +912,13 @@ This is also called on Com_Error and Com_Quit, so it shouldn't cause any errors
 */
 qboolean CL_Disconnect( qboolean showMainMenu ) {
 	static qboolean cl_disconnecting = qfalse;
-	qboolean cl_restarted = qfalse;
 
 	if ( !com_cl_running || !com_cl_running->integer ) {
-		return cl_restarted;
+		return qfalse;
 	}
 
 	if ( cl_disconnecting ) {
-		return cl_restarted;
+		return qfalse;
 	}
 
 	cl_disconnecting = qtrue;
@@ -1024,14 +989,9 @@ qboolean CL_Disconnect( qboolean showMainMenu ) {
 
 	Cmd_RemoveCgameCommands();
 
-	if ( noGameRestart )
-		noGameRestart = qfalse;
-	else
-		cl_restarted = CL_RestoreOldGame();
-
 	cl_disconnecting = qfalse;
 
-	return cl_restarted;
+	return qfalse;
 }
 
 /*
@@ -1119,9 +1079,10 @@ void CL_Disconnect_f( void ) {
 				Com_Printf( "Disconnected from %s\n", cls.servername );
 			}
 			Cvar_Set( "com_errorMessage", "" );
-			if ( !CL_Disconnect( qfalse ) ) { // restart client if not done already
-				CL_FlushMemory();
-			}
+			    
+			CL_Disconnect( qfalse );
+		    CL_FlushMemory();
+		    
 			if ( uivm ) {
 				VM_Call( uivm, 1, UI_SET_ACTIVE_MENU, UIMENU_MAIN );
 			}
@@ -1232,7 +1193,6 @@ static void CL_Connect_f( void ) {
 	Cvar_Set( "sv_killserver", "1" );
 	SV_Frame( 0 );
 
-	noGameRestart = qtrue;
 	CL_Disconnect( qtrue );
 	Con_Close();
 
@@ -3368,8 +3328,6 @@ void CL_Init( void ) {
 	CL_ClearState();
 	cls.state = CA_DISCONNECTED;	// no longer CA_UNINITIALIZED
 
-	CL_ResetOldGame();
-
 	cls.realtime = 0;
 
 	CL_InitInput();
@@ -3503,7 +3461,6 @@ void CL_Shutdown( const char *finalmsg, qboolean quit ) {
 	}
 	recursive = qtrue;
 
-	noGameRestart = quit;
 	CL_Disconnect( qfalse );
 
 	// clear and mute all sounds until next registration

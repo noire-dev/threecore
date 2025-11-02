@@ -355,32 +355,6 @@ void CL_SystemInfoChanged( qboolean onlyGame ) {
 		return;
 	}
 
-	// parse/update fs_game in first place
-	s = Info_ValueForKey( systemInfo, "fs_game" );
-
-	if ( FS_InvalidGameDir( s ) ) {
-		Com_Printf( S_COLOR_YELLOW "WARNING: Server sent invalid fs_game value %s\n", s );
-	} else {
-		Cvar_Set( "fs_game", s );
-	}
-
-	// if game folder should not be set and it is set at the client side
-	if ( *s == '\0' && *Cvar_VariableString( "fs_game" ) != '\0' ) {
-		Cvar_Set( "fs_game", "" );
-	}
-
-	if ( onlyGame && Cvar_Flags( "fs_game" ) & CVAR_MODIFIED ) {
-		// game directory change is needed
-		// return early to avoid systeminfo-cvar pollution in current fs_game
-		return;
-	}
-
-	if ( CL_GameSwitch() ) {
-		// we just restored fs_game from saved systeminfo
-		// reset modified flag to avoid unwanted side-effecfs
-		Cvar_SetModified( "fs_game", qfalse );
-	}
-
 	s = Info_ValueForKey( systemInfo, "sv_cheats" );
 	cl_connectedToCheatServer = atoi( s );
 	if ( !cl_connectedToCheatServer ) {
@@ -403,10 +377,6 @@ void CL_SystemInfoChanged( qboolean onlyGame ) {
 		}
 		if ( !Q_stricmp( key, "sv_referencedPakNames" ) ) {
 			continue;
-		}
-
-		if ( !Q_stricmp( key, "fs_game" ) ) {
-			continue; // already processed
 		}
 
 		if ( ( cvar_flags = Cvar_Flags( key ) ) == CVAR_NONEXISTENT )
@@ -476,9 +446,6 @@ static void CL_ParseGamestate( msg_t *msg ) {
 	entityState_t	nullstate;
 	int				cmd;
 	const char		*s;
-	char			oldGame[ MAX_QPATH ];
-	char			reconnectArgs[ MAX_CVAR_VALUE_STRING ];
-	qboolean		gamedirModified;
 	const char 		*info, *mapname;	//for client switching
 
 	Con_Close();
@@ -558,9 +525,6 @@ static void CL_ParseGamestate( msg_t *msg ) {
 	// read the checksum feed
 	clc.checksumFeed = MSG_ReadLong( msg );
 
-	// save old gamedir
-	Cvar_VariableStringBuffer( "fs_game", oldGame, sizeof( oldGame ) );
-
 	// parse useful values out of CS_SERVERINFO
 	CL_ParseServerInfo();
 
@@ -572,32 +536,6 @@ static void CL_ParseGamestate( msg_t *msg ) {
 	Cbuf_AddText( "exec maps/default.cfg \n" );				//load default map script on client
 	Cbuf_AddText( va("exec maps/%s.cfg \n", mapname) );		//load map script on client
 	Cvar_Set("cl_changeqvm", mapname);						//load map fs on client
-
-	gamedirModified = ( Cvar_Flags( "fs_game" ) & CVAR_MODIFIED ) ? qtrue : qfalse;
-
-	if ( !cl_oldGameSet && gamedirModified ) {
-		cl_oldGameSet = qtrue;
-		Q_strncpyz( cl_oldGame, oldGame, sizeof( cl_oldGame ) );
-	}
-
-	// try to keep gamestate and connection state during game switch
-	cls.gameSwitch = gamedirModified;
-
-	// preserve \cl_reconnectAgrs between online game directory changes
-	// so after mod switch \reconnect will not restore old value from config but use new one
-	if ( gamedirModified ) {
-		Cvar_VariableStringBuffer( "cl_reconnectArgs", reconnectArgs, sizeof( reconnectArgs ) );
-	}
-
-	// reinitialize the filesystem if the game directory has changed
-	FS_ConditionalRestart( clc.checksumFeed, gamedirModified );
-
-	// restore \cl_reconnectAgrs
-	if ( gamedirModified ) {
-		Cvar_Set( "cl_reconnectArgs", reconnectArgs );
-	}
-
-	cls.gameSwitch = qfalse;
 
 	// This used to call CL_StartHunkUsers, but now we enter the download state before loading the cgame
 	CL_InitDownloads();

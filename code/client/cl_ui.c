@@ -430,11 +430,11 @@ static intptr_t CL_UISystemCalls( intptr_t *args ) {
 		return 0;
 
 	case UI_CVAR_REGISTER:
-		Cvar_Register( VMA(1), VMA(2), VMA(3), args[4], uivm->privateFlag );
+		Cvar_Register( VMA(1), VMA(2), VMA(3), args[4] );
 		return 0;
 
 	case UI_CVAR_UPDATE:
-		Cvar_Update( VMA(1), uivm->privateFlag );
+		Cvar_Update( VMA(1), args[2] );
 		return 0;
 
 	case UI_MEMORY_REMAINING:
