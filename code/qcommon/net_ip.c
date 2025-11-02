@@ -1589,11 +1589,11 @@ static qboolean NET_GetCvars( void ) {
 
 #if defined (DEDICATED) || !defined (USE_IPV6)
 	// I want server owners to explicitly turn on ipv6 support.
-	net_enabled = Cvar_Get( "net_enabled", "1", CVAR_LATCH | CVAR_ARCHIVE_ND | CVAR_NORESTART );
+	net_enabled = Cvar_Get( "net_enabled", "1", CVAR_LATCH | CVAR_ARCHIVE );
 #else
 	/* End users have it enabled so they can connect to ipv6-only hosts, but ipv4 will be
 	 * used if available due to ping */
-	net_enabled = Cvar_Get( "net_enabled", "3", CVAR_LATCH | CVAR_ARCHIVE_ND | CVAR_NORESTART );
+	net_enabled = Cvar_Get( "net_enabled", "3", CVAR_LATCH | CVAR_ARCHIVE );
 #endif
 
 	Cvar_SetDescription( net_enabled, "Networking options, bitmask:\n"
@@ -1613,7 +1613,7 @@ static qboolean NET_GetCvars( void ) {
 	modified += net_ip->modified;
 	net_ip->modified = qfalse;
 
-	net_port = Cvar_Get( "net_port", va( "%i", PORT_SERVER ), CVAR_LATCH | CVAR_NORESTART );
+	net_port = Cvar_Get( "net_port", va( "%i", PORT_SERVER ), CVAR_LATCH );
 	Cvar_SetDescription( net_port, "The network port to use (IPv4)." );
 	modified += net_port->modified;
 	net_port->modified = qfalse;
@@ -1624,53 +1624,53 @@ static qboolean NET_GetCvars( void ) {
 	modified += net_ip6->modified;
 	net_ip6->modified = qfalse;
 
-	net_port6 = Cvar_Get( "net_port6", va( "%i", PORT_SERVER ), CVAR_LATCH | CVAR_NORESTART );
+	net_port6 = Cvar_Get( "net_port6", va( "%i", PORT_SERVER ), CVAR_LATCH );
 	Cvar_SetDescription( net_port6, "The network port to use (IPv6)." );
 	modified += net_port6->modified;
 	net_port6->modified = qfalse;
 
 	// Some cvars for configuring multicast options which facilitates scanning for servers on local subnets.
-	net_mcast6addr = Cvar_Get( "net_mcast6addr", NET_MULTICAST_IP6, CVAR_LATCH | CVAR_ARCHIVE_ND );
+	net_mcast6addr = Cvar_Get( "net_mcast6addr", NET_MULTICAST_IP6, CVAR_LATCH | CVAR_ARCHIVE );
 	Cvar_SetDescription( net_mcast6addr, "Multicast address to use for scanning for IPv6 servers on the local network." );
 	modified += net_mcast6addr->modified;
 	net_mcast6addr->modified = qfalse;
 
 #ifdef _WIN32
-	net_mcast6iface = Cvar_Get( "net_mcast6iface", "0", CVAR_LATCH | CVAR_ARCHIVE_ND );
+	net_mcast6iface = Cvar_Get( "net_mcast6iface", "0", CVAR_LATCH | CVAR_ARCHIVE );
 #else
-	net_mcast6iface = Cvar_Get( "net_mcast6iface", "", CVAR_LATCH | CVAR_ARCHIVE_ND );
+	net_mcast6iface = Cvar_Get( "net_mcast6iface", "", CVAR_LATCH | CVAR_ARCHIVE );
 #endif
 	Cvar_SetDescription( net_mcast6iface, "Outgoing interface to use for scan." );
 	modified += net_mcast6iface->modified;
 	net_mcast6iface->modified = qfalse;
 #endif // USE_IPV6
 
-	net_socksEnabled = Cvar_Get( "net_socksEnabled", "0", CVAR_LATCH | CVAR_ARCHIVE_ND );
+	net_socksEnabled = Cvar_Get( "net_socksEnabled", "0", CVAR_LATCH | CVAR_ARCHIVE );
 	Cvar_SetDescription( net_socksEnabled, "Toggle the use of network socks 5 protocol enabling firewall access (can only be set at initialization time from the OS command line)." );
 	modified += net_socksEnabled->modified;
 	net_socksEnabled->modified = qfalse;
 
-	net_socksServer = Cvar_Get( "net_socksServer", "", CVAR_LATCH | CVAR_ARCHIVE_ND );
+	net_socksServer = Cvar_Get( "net_socksServer", "", CVAR_LATCH | CVAR_ARCHIVE );
 	Cvar_SetDescription( net_socksServer, "Set the address (name or IP number) of the SOCKS server (firewall machine), NOT a Q3ATEST server (can only be set at initialization time from the OS command line)." );
 	modified += net_socksServer->modified;
 	net_socksServer->modified = qfalse;
 
-	net_socksPort = Cvar_Get( "net_socksPort", "1080", CVAR_LATCH | CVAR_ARCHIVE_ND );
+	net_socksPort = Cvar_Get( "net_socksPort", "1080", CVAR_LATCH | CVAR_ARCHIVE );
 	Cvar_SetDescription( net_socksPort, "Set proxy and/or firewall port, default is 1080 (can only be set at initialization time from the OS command line)." );
 	modified += net_socksPort->modified;
 	net_socksPort->modified = qfalse;
 
-	net_socksUsername = Cvar_Get( "net_socksUsername", "", CVAR_LATCH | CVAR_ARCHIVE_ND );
+	net_socksUsername = Cvar_Get( "net_socksUsername", "", CVAR_LATCH | CVAR_ARCHIVE );
 	Cvar_SetDescription( net_socksUsername, "Variable holds username for socks firewall. Supports no authentication and username/password authentication method (RFC-1929). It does NOT support GSS-API method (RFC-1961) authentication (can only be set at initialization time from the OS command line)." );
 	modified += net_socksUsername->modified;
 	net_socksUsername->modified = qfalse;
 
-	net_socksPassword = Cvar_Get( "net_socksPassword", "", CVAR_LATCH | CVAR_ARCHIVE_ND );
+	net_socksPassword = Cvar_Get( "net_socksPassword", "", CVAR_LATCH | CVAR_ARCHIVE );
 	Cvar_SetDescription( net_socksPassword, "Variable holds password for socks firewall access. Supports no authentication and username/password authentication method (RFC-1929). It does NOT support GSS-API method (RFC-1961) authentication (can only be set at initialization time from the OS command line)." );
 	modified += net_socksPassword->modified;
 	net_socksPassword->modified = qfalse;
 
-	net_dropsim = Cvar_Get( "net_dropsim", "", CVAR_TEMP );
+	net_dropsim = Cvar_Get( "net_dropsim", "", 0 );
 	Cvar_SetDescription( net_dropsim, "Simulated packet drops." );
 
 	return modified ? qtrue : qfalse;

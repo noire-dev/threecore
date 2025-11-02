@@ -641,7 +641,7 @@ void CM_LoadMap( const char *name, qboolean clientload, int *checksum ) {
 	Cvar_SetDescription( cm_noAreas, "Do not use areaportals, all areas are connected." );
 	cm_noCurves = Cvar_Get( "cm_noCurves", "0", CVAR_CHEAT );
 	Cvar_SetDescription( cm_noCurves, "Do not collide against curves." );
-	cm_playerCurveClip = Cvar_Get( "cm_playerCurveClip", "1", CVAR_ARCHIVE_ND | CVAR_CHEAT );
+	cm_playerCurveClip = Cvar_Get( "cm_playerCurveClip", "1", CVAR_ARCHIVE | CVAR_CHEAT );
 	Cvar_SetDescription( cm_playerCurveClip, "Collide player against curves." );
 #endif
 #ifdef USE_BSP_COLMODELS
