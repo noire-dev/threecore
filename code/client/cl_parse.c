@@ -368,7 +368,7 @@ void CL_SystemInfoChanged( qboolean onlyGame ) {
 		if ( key[0] == '\0' ) break;
 
 		// we don't really need any of these server cvars to be set on client-side
-		if ( !Q_stricmp( key, "sv_serverid" ) || !Q_stricmp( key, "sv_fps" ) ||》!Q_stricmp( key, "sv_referencedPakNames" ) ) continue;
+		if ( !Q_stricmp( key, "sv_serverid" ) || !Q_stricmp( key, "sv_fps" ) || !Q_stricmp( key, "sv_referencedPakNames" ) ) continue;
 
 		Cvar_Set( key, value );
 	}
