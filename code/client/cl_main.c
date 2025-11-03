@@ -3252,7 +3252,7 @@ qboolean CL_GetModeInfo( int *width, int *height, float *windowAspect, const cha
 
 static void CL_InitGLimp_Cvars( void )  {
 	// shared with GLimp
-	r_swapInterval = Cvar_Get( "r_swapInterval", "1", CVAR_ARCHIVE_ND );
+	r_swapInterval = Cvar_Get( "r_swapInterval", "1", CVAR_ARCHIVE );
 	Cvar_SetDescription( r_swapInterval, "V-blanks to wait before swapping buffers.\n 0: No V-Sync\n 1: Synced to the monitor's refresh rate." );
 	r_resolution = Cvar_Get( "r_resolution", "640x480", CVAR_ARCHIVE | CVAR_LATCH );
 	Cvar_SetDescription( r_resolution, "Set resolution in [width]x[height] format" );
@@ -3290,11 +3290,11 @@ void CL_Init( void ) {
 	cl_timeout = Cvar_Get( "cl_timeout", "200", 0 );
 	Cvar_SetDescription( cl_timeout, "Duration of receiving nothing from server for client to decide it must be disconnected (in seconds)." );
 
-	cl_shownet = Cvar_Get ("cl_shownet", "0", CVAR_TEMP );
+	cl_shownet = Cvar_Get ("cl_shownet", "0", 0 );
 	Cvar_SetDescription( cl_shownet, "Toggle the display of current network status." );
-	rcon_client_password = Cvar_Get ("rconPassword", "", CVAR_TEMP );
+	rcon_client_password = Cvar_Get ("rconPassword", "", 0 );
 	Cvar_SetDescription( rcon_client_password, "Sets a remote console password so clients may change server settings without direct access to the server console." );
-	cl_activeAction = Cvar_Get( "activeAction", "", CVAR_TEMP );
+	cl_activeAction = Cvar_Get( "activeAction", "", 0 );
 	Cvar_SetDescription( cl_activeAction, "Contents of this variable will be executed upon first frame of play.\nNote: It is cleared every time it is executed." );
 
 	cl_aviFrameRate = Cvar_Get ("cl_aviFrameRate", "25", CVAR_ARCHIVE);
@@ -3311,34 +3311,32 @@ void CL_Init( void ) {
 	rconAddress = Cvar_Get ("rconAddress", "", 0);
 	Cvar_SetDescription( rconAddress, "The IP address of the remote console you wish to connect to." );
 
-	cl_allowDownload = Cvar_Get( "cl_allowDownload", "1", CVAR_ARCHIVE_ND );
+	cl_allowDownload = Cvar_Get( "cl_allowDownload", "1", CVAR_ARCHIVE );
 	Cvar_SetDescription( cl_allowDownload, "Enables downloading of content needed in server. Valid bitmask flags:\n 1: Downloading enabled\n 2: Do not use HTTP/FTP downloads\n 4: Do not use UDP downloads" );
 
 	cl_serverStatusResendTime = Cvar_Get ("cl_serverStatusResendTime", "750", 0);
 	Cvar_SetDescription( cl_serverStatusResendTime, "Time between re-sending server status requests if no response is received (in milliseconds)." );
 
-	cv = Cvar_Get( "cl_maxPing", "999", CVAR_ARCHIVE_ND );
+	cv = Cvar_Get( "cl_maxPing", "999", CVAR_ARCHIVE );
 	Cvar_SetDescription( cv, "Specify the maximum allowed ping to a server." );
 
-	cl_lanForcePackets = Cvar_Get( "cl_lanForcePackets", "1", CVAR_ARCHIVE_ND );
+	cl_lanForcePackets = Cvar_Get( "cl_lanForcePackets", "1", CVAR_ARCHIVE );
 	Cvar_SetDescription( cl_lanForcePackets, "Bypass \\cl_maxpackets for LAN games, send packets every frame." );
 
-	cl_reconnectArgs = Cvar_Get( "cl_reconnectArgs", "", CVAR_ARCHIVE_ND | CVAR_NOTABCOMPLETE );
-
 	// userinfo
-	Cvar_Get ("name", "Sandbox Player", CVAR_USERINFO | CVAR_ARCHIVE_ND );
+	Cvar_Get ("name", "Sandbox Player", CVAR_USERINFO | CVAR_ARCHIVE );
 	Cvar_Get ("rate", "125000", CVAR_USERINFO | CVAR_ARCHIVE );
 	Cvar_Get ("snaps", "60", CVAR_USERINFO | CVAR_ARCHIVE );
-	Cvar_Get ("model", "beret/default", CVAR_USERINFO | CVAR_ARCHIVE_ND );
-	Cvar_Get ("headmodel", "beret/default", CVAR_USERINFO | CVAR_ARCHIVE_ND );
-	Cvar_Get ("legsmodel", "beret/default", CVAR_USERINFO | CVAR_ARCHIVE_ND );
- 	Cvar_Get ("team_model", "beret/default", CVAR_USERINFO | CVAR_ARCHIVE_ND );
-	Cvar_Get ("team_headmodel", "beret/default", CVAR_USERINFO | CVAR_ARCHIVE_ND );
-	Cvar_Get ("team_legsmodel", "beret/default", CVAR_USERINFO | CVAR_ARCHIVE_ND );
-	Cvar_Get ("sex", "male", CVAR_USERINFO | CVAR_ARCHIVE_ND );
-	Cvar_Get ("cl_anonymous", "0", CVAR_USERINFO | CVAR_ARCHIVE_ND );
+	Cvar_Get ("model", "beret/default", CVAR_USERINFO | CVAR_ARCHIVE );
+	Cvar_Get ("headmodel", "beret/default", CVAR_USERINFO | CVAR_ARCHIVE );
+	Cvar_Get ("legsmodel", "beret/default", CVAR_USERINFO | CVAR_ARCHIVE );
+ 	Cvar_Get ("team_model", "beret/default", CVAR_USERINFO | CVAR_ARCHIVE );
+	Cvar_Get ("team_headmodel", "beret/default", CVAR_USERINFO | CVAR_ARCHIVE );
+	Cvar_Get ("team_legsmodel", "beret/default", CVAR_USERINFO | CVAR_ARCHIVE );
+	Cvar_Get ("sex", "male", CVAR_USERINFO | CVAR_ARCHIVE );
+	Cvar_Get ("cl_anonymous", "0", CVAR_USERINFO | CVAR_ARCHIVE );
 
-	Cvar_Get ("password", "", CVAR_USERINFO | CVAR_NORESTART);
+	Cvar_Get ("password", "", CVAR_USERINFO);
 
 	Cvar_Get ("viewdistance", "180", CVAR_USERINFO );
 
@@ -3380,7 +3378,7 @@ void CL_Init( void ) {
 
 	CL_GenerateQKey();
 
-	Cvar_Get( "cl_guid", "", CVAR_USERINFO | CVAR_ROM | CVAR_PROTECTED );
+	Cvar_Get( "cl_guid", "", CVAR_USERINFO | CVAR_ROM );
 	CL_UpdateGUID( NULL, 0 );
 
 	Com_Printf( "----- Client Initialization Complete -----\n" );

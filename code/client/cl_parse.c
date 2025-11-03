@@ -357,9 +357,7 @@ void CL_SystemInfoChanged( qboolean onlyGame ) {
 
 	s = Info_ValueForKey( systemInfo, "sv_cheats" );
 	cl_connectedToCheatServer = atoi( s );
-	if ( !cl_connectedToCheatServer ) {
-		Cvar_SetCheatState();
-	}
+	if ( !cl_connectedToCheatServer ) Cvar_SetCheatState();
 
 	// scan through all the variables in the systeminfo and locally set cvars to match
 	s = systemInfo;
@@ -367,31 +365,12 @@ void CL_SystemInfoChanged( qboolean onlyGame ) {
 		int cvar_flags;
 
 		s = Info_NextPair( s, key, value );
-		if ( key[0] == '\0' ) {
-			break;
-		}
+		if ( key[0] == '\0' ) break;
 
 		// we don't really need any of these server cvars to be set on client-side
-		if ( !Q_stricmp( key, "sv_serverid" ) || !Q_stricmp( key, "sv_fps" ) ) {
-			continue;
-		}
-		if ( !Q_stricmp( key, "sv_referencedPakNames" ) ) {
-			continue;
-		}
+		if ( !Q_stricmp( key, "sv_serverid" ) || !Q_stricmp( key, "sv_fps" ) ||》!Q_stricmp( key, "sv_referencedPakNames" ) ) continue;
 
-		if ( ( cvar_flags = Cvar_Flags( key ) ) == CVAR_NONEXISTENT )
-			Cvar_Get( key, value, CVAR_SERVER_CREATED | CVAR_ROM );
-		else
-		{
-			// If this cvar may not be modified by a server discard the value.
-			if ( !(cvar_flags & ( CVAR_SYSTEMINFO | CVAR_SERVER_CREATED | CVAR_USER_CREATED ) ) )
-			{
-				Com_Printf( S_COLOR_YELLOW "WARNING: server is not allowed to set %s=%s\n", key, value );
-				continue;
-			}
-
-			Cvar_Set( key, value );
-		}
+		Cvar_Set( key, value );
 	}
 	while ( *s != '\0' );
 }

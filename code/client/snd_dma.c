@@ -1478,7 +1478,7 @@ qboolean S_Base_Init( soundInterface_t *si ) {
 		default:
 			// anything else is illegal
 			Com_Printf( "WARNING: cvar 's_khz' must be one of (8, 11, 22, 44, 48), setting to '%s'\n", s_khz->resetString );
-			Cvar_ForceReset( "s_khz" );
+			Cvar_Reset( "s_khz" );
 			break;
 	}
 
