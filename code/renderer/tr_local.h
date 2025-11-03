@@ -1063,8 +1063,6 @@ typedef struct {
 	qboolean				mapLoading;
 	qboolean				needScreenMap;
 
-	qboolean				vertexLightingAllowed;
-
 } trGlobals_t;
 
 extern backEndState_t	backEnd;
@@ -1670,7 +1668,6 @@ void RE_FinishBloom( void );
 void RE_ThrottleBackend( void );
 qboolean RE_CanMinimize( void );
 const glconfig_t *RE_GetConfig( void );
-void RE_VertexLighting( qboolean allowed );
 
 
 //Bloom Stuff

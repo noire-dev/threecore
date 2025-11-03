@@ -392,9 +392,3 @@ const glconfig_t *RE_GetConfig( void )
 {
 	return &glConfig;
 }
-
-
-void RE_VertexLighting( qboolean allowed )
-{
-	tr.vertexLightingAllowed = allowed;
-}

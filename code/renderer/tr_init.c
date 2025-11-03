@@ -1545,7 +1545,6 @@ refexport_t *GetRefAPI ( int apiVersion, refimport_t *rimp ) {
 	re.FinishBloom = RE_FinishBloom;
 	re.CanMinimize = RE_CanMinimize;
 	re.GetConfig = RE_GetConfig;
-	re.VertexLighting = RE_VertexLighting;
 	re.SyncRender = RE_SyncRender;
 
 	return &re;
