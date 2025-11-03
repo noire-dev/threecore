@@ -223,7 +223,7 @@ static intptr_t SV_GameSystemCalls(intptr_t* args) {
 			}
 		}
 
-#include "../qcommon/q_sharedsyscalls.c"
+#include "../qcommon/q_sharedsyscalls.inc"
 
 		case BOTLIB_SETUP: return SV_BotLibSetup();
 		case BOTLIB_SHUTDOWN: return SV_BotLibShutdown();
