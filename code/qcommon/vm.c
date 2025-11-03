@@ -191,8 +191,6 @@ const char *opname[ 256 ] = {
 	"OP_CVFI"
 };
 
-cvar_t	*vm_rtChecks;
-
 // used by Com_Error to get rid of running vm's before longjmp
 static int forced_unload;
 
@@ -203,30 +201,6 @@ static const char *vmName[ VM_COUNT ] = {
 	"cgame",
 	"ui"
 };
-
-/*
-==============
-VM_CheckBounds
-==============
-*/
-void VM_CheckBounds( const vm_t *vm, unsigned int address, unsigned int length ) {
-	if ( (address | length) > vm->dataMask || (address + length) > vm->dataMask ) {
-		Com_Error( ERR_DROP, "program tried to bypass data segment bounds" );
-	}
-}
-
-
-/*
-==============
-VM_CheckBounds2
-==============
-*/
-void VM_CheckBounds2( const vm_t *vm, unsigned int addr1, unsigned int addr2, unsigned int length ) {
-	if ( (addr1 | addr2 | length) > vm->dataMask || (addr1 + length) > vm->dataMask || (addr2+length) > vm->dataMask ){
-		Com_Error( ERR_DROP, "program tried to bypass data segment bounds" );
-	}
-}
-
 
 /*
 ==============

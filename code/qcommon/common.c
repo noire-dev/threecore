@@ -472,12 +472,8 @@ void Com_StartupVariable( const char *match ) {
 		}
 
 		name = Cmd_Argv( 0 );
-		if ( !match || Q_stricmp( name, match ) == 0 ) {
-			if ( Cvar_Flags( name ) == CVAR_NONEXISTENT )
-				Cvar_Get( name, Cmd_ArgsFrom( 2 ), CVAR_USER_CREATED );
-			else
-				Cvar_Set2( name, Cmd_ArgsFrom( 2 ), qfalse );
-		}
+		if ( !match || Q_stricmp( name, match ) == 0 )
+			Cvar_Set( name, Cmd_ArgsFrom( 2 ) );
 	}
 }
 
@@ -3167,16 +3163,10 @@ void Com_Init( char *commandLine ) {
 
 	// get the developer cvar set as early as possible
 	Com_StartupVariable( "developer" );
-	com_developer = Cvar_Get( "developer", "0", CVAR_TEMP );
-
-	Com_StartupVariable( "vm_rtChecks" );
-	vm_rtChecks = Cvar_Get( "vm_rtChecks", "15", CVAR_INIT | CVAR_PROTECTED );
-	Cvar_SetDescription( vm_rtChecks,
-		"Runtime checks in compiled vm code, bitmask:\n 1 - program stack overflow\n" \
-		" 2 - opcode stack overflow\n 4 - jump target range\n 8 - data read/write range" );
+	com_developer = Cvar_Get( "developer", "0", 0 );
 
 	Com_StartupVariable( "journal" );
-	com_journal = Cvar_Get( "journal", "0", CVAR_INIT | CVAR_PROTECTED );
+	com_journal = Cvar_Get( "journal", "0", CVAR_INIT );
 	Cvar_SetDescription( com_journal, "When enabled, writes events and its data to 'journal.dat' and 'journaldata.dat'.");
 
 	Com_StartupVariable( "sv_master1" );
@@ -3217,7 +3207,7 @@ void Com_Init( char *commandLine ) {
 
 	FS_InitFilesystem();
 
-	com_logfile = Cvar_Get( "logfile", "0", CVAR_TEMP );
+	com_logfile = Cvar_Get( "logfile", "0", 0 );
 	Cvar_SetDescription( com_logfile, "System console logging:\n"
 		" 0 - disabled\n"
 		" 1 - overwrite mode, buffered\n"
@@ -3252,14 +3242,14 @@ void Com_Init( char *commandLine ) {
 #ifndef DEDICATED
 	com_maxfps = Cvar_Get( "com_maxfps", "60", 0 ); // try to force that in some light way
 	Cvar_SetDescription( com_maxfps, "Sets maximum frames per second." );
-	com_maxfpsUnfocused = Cvar_Get( "com_maxfpsUnfocused", "60", CVAR_ARCHIVE_ND );
+	com_maxfpsUnfocused = Cvar_Get( "com_maxfpsUnfocused", "60", CVAR_ARCHIVE );
 	Cvar_SetDescription( com_maxfpsUnfocused, "Sets maximum frames per second in unfocused game window." );
-	com_yieldCPU = Cvar_Get( "com_yieldCPU", "1", CVAR_ARCHIVE_ND );
+	com_yieldCPU = Cvar_Get( "com_yieldCPU", "1", CVAR_ARCHIVE );
 	Cvar_SetDescription( com_yieldCPU, "Attempt to sleep specified amount of time between rendered frames when game is active, this will greatly reduce CPU load. Use 0 only if you're experiencing some lag." );
 #endif
 
 #ifdef USE_AFFINITY_MASK
-	com_affinityMask = Cvar_Get( "com_affinityMask", "", CVAR_ARCHIVE_ND );
+	com_affinityMask = Cvar_Get( "com_affinityMask", "", CVAR_ARCHIVE );
 	Cvar_SetDescription( com_affinityMask, "Bind game process to bitmask-specified CPU core(s), special characters:\n A or a - all default cores\n P or p - performance cores\n E or e - efficiency cores\n 0x<value> - use hexadecimal notation\n + or - can be used to add or exclude particular cores" );
 	com_affinityMask->modified = qfalse;
 #endif
@@ -3280,17 +3270,17 @@ void Com_Init( char *commandLine ) {
 	Cvar_SetDescription( cl_paused, "Read-only CVAR to toggle functionality of paused games (the variable holds the status of the paused flag on the client side)." );
 	cl_packetdelay = Cvar_Get( "cl_packetdelay", "0", CVAR_CHEAT );
 	Cvar_SetDescription( cl_packetdelay, "Artificially set the client's latency. Simulates packet delay, which can lead to packet loss." );
-	com_cl_running = Cvar_Get( "cl_running", "0", CVAR_ROM | CVAR_NOTABCOMPLETE );
+	com_cl_running = Cvar_Get( "cl_running", "0", CVAR_ROM );
 	Cvar_SetDescription( com_cl_running, "Can be used to check the status of the client game." );
 #endif
 
 	sv_paused = Cvar_Get( "sv_paused", "0", CVAR_ROM );
 	sv_packetdelay = Cvar_Get( "sv_packetdelay", "0", CVAR_CHEAT );
 	Cvar_SetDescription( sv_packetdelay, "Simulates packet delay, which can lead to packet loss. Server side." );
-	com_sv_running = Cvar_Get( "sv_running", "0", CVAR_ROM | CVAR_NOTABCOMPLETE );
+	com_sv_running = Cvar_Get( "sv_running", "0", CVAR_ROM );
 	Cvar_SetDescription( com_sv_running, "Communicates to game modules if there is a server currently running." );
 
-	Cvar_Get( "com_errorMessage", "", CVAR_ROM | CVAR_NORESTART );
+	Cvar_Get( "com_errorMessage", "", CVAR_ROM );
 
 	if ( com_dedicated->integer ) {
 		if ( !com_viewlog->integer ) {
@@ -3314,16 +3304,13 @@ void Com_Init( char *commandLine ) {
 	Cmd_AddCommand( "game_restart", Com_GameRestart_f );
 
 	s = va( "%s %s %s", ENGINE_VERSION, PLATFORM_STRING, __DATE__ );
-	com_version = Cvar_Get( "version", s, CVAR_PROTECTED | CVAR_ROM | CVAR_SERVERINFO );
+	com_version = Cvar_Get( "version", s, CVAR_ROM | CVAR_SERVERINFO );
 	Cvar_SetDescription( com_version, "Read-only CVAR to see the version of the game." );
-
-	// this cvar is the single entry point of the entire extension system
-	Cvar_Get( "//trap_GetValue", va( "%i", COM_TRAP_GETVALUE ), CVAR_PROTECTED | CVAR_ROM | CVAR_NOTABCOMPLETE );
 
 	Sys_Init();
 
 	// CPU detection
-	Cvar_Get( "sys_cpustring", "detect", CVAR_PROTECTED | CVAR_ROM | CVAR_NORESTART );
+	Cvar_Get( "sys_cpustring", "detect", CVAR_ROM );
 	if ( !Q_stricmp( Cvar_VariableString( "sys_cpustring" ), "detect" ) ) {
 		char vendor[128];
 		Com_Printf( "...detecting CPU, found " );

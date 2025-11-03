@@ -2007,92 +2007,17 @@ static void emitFuncOffset( uint32_t comp, vm_t *vm, offset_t func )
 }
 
 
-static void emit_CheckReg( vm_t *vm, uint32_t reg, offset_t func )
-{
-	if ( vm->forceDataMask || !( vm_rtChecks->integer & VM_RTCHECK_DATA ) ) {
-		emit(AND(reg, rDATAMASK, reg));    // rN = rN & rDATAMASK
-		return;
-	}
-
-	emit( CMP( reg, rDATAMASK ) );
-	emitFuncOffset( HI, vm, func );
+static void emit_CheckReg( vm_t *vm, uint32_t reg, offset_t func ) {
+	emit(AND(reg, rDATAMASK, reg));    // rN = rN & rDATAMASK
+	return;
 }
-
-
-static void emit_CheckJump( vm_t *vm, uint32_t reg, int proc_base, int proc_len )
-{
-	if ( ( vm_rtChecks->integer & VM_RTCHECK_JUMP ) == 0 ) {
-		return;
-	}
-
-	if ( proc_base != -1 ) {
-		uint32_t rx[2];
-		// allow jump within local function scope only
-		// r2 = ip - proc_base
-		rx[0] = alloc_rx( R2 | TEMP );
-		if ( can_encode( proc_base ) )
-			emit(SUBi(rx[0], reg, proc_base)); // r2 = reg - procBase
-		else {
-			emit_MOVRxi(rx[0], proc_base);     // r2 = procBase
-			emit(SUB(rx[0], reg, rx[0]));      // r2 = reg - r2
-		}
-		// (ip > proc_len) ?
-		if ( can_encode( proc_len ) ) {
-			emit(CMPi(rx[0], proc_len));
-		} else {
-			rx[1] = alloc_rx_const( R1, proc_len ); // r1 = procLen
-			emit(CMP(rx[0], rx[1]));
-			unmask_rx( rx[1] );
-		}
-		emitFuncOffset( HI, vm, FUNC_OUTJ ); // error if unsigned higher
-		unmask_rx( rx[0] );
-	} else {
-		uint32_t rx = alloc_rx( R2 | TEMP );
-		// check if reg >= vm->instructionCount
-		emit_MOVRxi(rx, vm->instructionCount);
-		//emit(LDRai(rx, rVMBASE, offsetof(vm_t, instructionCount)));
-		emit(CMP(reg, rx));
-		emitFuncOffset( HS, vm, FUNC_OUTJ ); // error if unsigned higher or same
-		unmask_rx( rx );
-	}
-}
-
-
-static void emit_CheckProc( vm_t *vm, instruction_t *inst )
-{
-	// programStack overflow check
-	if ( vm_rtChecks->integer & VM_RTCHECK_PSTACK ) {
-		// check if pStack < vm->stackBottom
-		uint32_t rx = alloc_rx( R2 | TEMP );
-		emit(LDRai(rx, rVMBASE, offsetof(vm_t, stackBottom))); // r1 = vm->stackBottom
-		emit(CMP(rPSTACK, rx));
-		emitFuncOffset( LT, vm, FUNC_PSOF );
-		unmask_rx( rx );
-	}
-
-	// opStack overflow check
-	if ( vm_rtChecks->integer & VM_RTCHECK_OPSTACK ) {
-		uint32_t n = inst->opStack;          // proc->opStack carries max.used opStack value
-		uint32_t rx = alloc_rx( R2 | TEMP );
-		if ( can_encode( n ) ) {
-			emit(ADDi(rx, rOPSTACK, n)); // r2 = opstack + n;
-		} else {
-			emit_MOVRxi(rx, n);          // r2 = n
-			emit(ADD(rx, rOPSTACK, rx)); // r2 = opstack + r2;
-		}
-		emit(CMP(rx, rOPSTACKTOP));
-		emitFuncOffset( HI, vm, FUNC_OSOF ); // error if unsigned higher
-		unmask_rx( rx );
-	}
-}
-
 
 static void emitCallFunc( vm_t *vm )
 {
 	static int bytes_to_skip = -1;
 	static unsigned start_block = -1;
 
-	init_opstack(); // to avoid any side-effects on emit_CheckJump()
+	init_opstack();
 
 savedOffset[ FUNC_CALL ] = compiledOfs; // to jump from OP_CALL
 
@@ -2102,11 +2027,6 @@ savedOffset[ FUNC_CALL ] = compiledOfs; // to jump from OP_CALL
 		start_block = compiledOfs;
 
 	emit(cond(LT, Bi(encode_offset(bytes_to_skip))));
-
-	// check if R0 >= header->instructionCount
-	mask_rx( R0 );
-	emit_CheckJump( vm, R0, -1, 0 );
-	unmask_rx( R0 );
 
 	// local function call
 	emit(LDRa(R12, rINSPOINTERS, rLSL(2, R0))); // r12 = instructionPointers[r0]
@@ -2560,8 +2480,6 @@ __recompile:
 					unmask_rx( rx[0] );
 				}
 
-				emit_CheckProc( vm, ci );
-
 				emit(ADD(rPROCBASE, rPSTACK, rDATABASE));
 				break;
 
@@ -2616,7 +2534,6 @@ __recompile:
 			case OP_JUMP:
 				rx[0] = load_rx_opstack( R0 | RCONST ); dec_opstack(); // r0 = *opstack; opstack -= 4
 				flush_volatile();
-				emit_CheckJump( vm, rx[0], proc_base, proc_len ); // check if r0 is within current proc
 				rx[1] = alloc_rx( R12 );
 				emit(LDRa(rx[1], rINSPOINTERS, rLSL(2, rx[0]))); // r12 = instructionPointers[ r0 ]
 				emit(BX(rx[1]));

@@ -45,12 +45,6 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #define VM_DATA_GUARD_SIZE 256
 #endif
 
-// flags for vm_rtChecks cvar
-#define VM_RTCHECK_PSTACK  1
-#define VM_RTCHECK_OPSTACK 2
-#define VM_RTCHECK_JUMP    4
-#define VM_RTCHECK_DATA    8
-
 typedef enum {
 	OP_UNDEF,
 

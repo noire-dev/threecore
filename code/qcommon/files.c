@@ -141,7 +141,6 @@ typedef struct {
 	int			zipFilePos;
 	int			zipFileLen;
 	char		name[MAX_ZPATH];
-	handleOwner_t	owner;
 	int			pakIndex;
 	pack_t		*pak;
 } fileHandleData_t;
@@ -4089,19 +4088,6 @@ static void FS_ReorderSearchPaths( void ) {
 
 /*
 ================
-FS_OwnerName
-================
-*/
-static const char *FS_OwnerName( handleOwner_t owner ) 
-{
-	static const char *s[4]= { "SY", "QA", "CG", "UI" };
-	if ( owner < H_SYSTEM || owner > H_Q3UI )
-		return "??";
-	return s[owner];
-}
-
-/*
-================
 FS_ListOpenFiles
 ================
 */
@@ -4112,7 +4098,7 @@ static void FS_ListOpenFiles_f( void ) {
 	for ( i = 0; i < MAX_FILE_HANDLES; i++, fh++ ) {
 		if ( !fh->handleFiles.file.v )
 			continue;
-		Com_Printf( "%2i %2s %s\n", i, FS_OwnerName(fh->owner), fh->name );
+		Com_Printf( "%2i %s\n", i, fh->name );
 	}
 }
 
@@ -4131,9 +4117,9 @@ static void FS_Startup( void ) {
 	Cvar_SetDescription( fs_debug, "Debugging tool for the filesystem. Run the game in debug mode. Prints additional information regarding read files into the console." );
 	fs_copyfiles = Cvar_Get( "fs_copyfiles", "0", CVAR_INIT );
 	Cvar_SetDescription( fs_copyfiles, "Whether or not to copy files when loading them into the game. Every file found in the cdpath will be copied over." );
-	fs_basepath = Cvar_Get( "fs_basepath", Sys_DefaultBasePath(), CVAR_INIT | CVAR_PROTECTED | CVAR_PRIVATE );
+	fs_basepath = Cvar_Get( "fs_basepath", Sys_DefaultBasePath(), CVAR_INIT );
 	Cvar_SetDescription( fs_basepath, "Write-protected CVAR specifying the path to the installation folder of the game." );
-	fs_basegame = Cvar_Get( "fs_basegame", BASEGAME, CVAR_INIT | CVAR_PROTECTED );
+	fs_basegame = Cvar_Get( "fs_basegame", BASEGAME, CVAR_INIT );
 	Cvar_SetDescription( fs_basegame, "Write-protected CVAR specifying the path to the base game." );
 	
 	if ( fs_basegame->string[0] == '\0' ) Com_Error( ERR_FATAL, "* fs_basegame is not set *" );
@@ -4150,10 +4136,10 @@ static void FS_Startup( void ) {
 		homePath = fs_basepath->string;
 	}
 
-	fs_homepath = Cvar_Get( "fs_homepath", homePath, CVAR_INIT | CVAR_PROTECTED | CVAR_PRIVATE );
+	fs_homepath = Cvar_Get( "fs_homepath", homePath, CVAR_INIT );
 	Cvar_SetDescription( fs_homepath, "Directory to store user configuration and downloaded files." );
 
-	fs_excludeReference = Cvar_Get( "fs_excludeReference", "", CVAR_ARCHIVE_ND | CVAR_LATCH );
+	fs_excludeReference = Cvar_Get( "fs_excludeReference", "", CVAR_ARCHIVE | CVAR_LATCH );
 	Cvar_SetDescription( fs_excludeReference,
 		"Exclude specified pak files from download list on client side.\n"
 		"Format is <moddir>/<pakname> (without .pk3 suffix), you may list multiple entries separated by space." );
@@ -4170,7 +4156,7 @@ static void FS_Startup( void ) {
 		FS_AddGameDirectory( fs_basepath->string, fs_basegame->string );
 
 #ifdef __APPLE__
-	fs_apppath = Cvar_Get( "fs_apppath", Sys_DefaultAppPath(), CVAR_INIT | CVAR_PROTECTED );
+	fs_apppath = Cvar_Get( "fs_apppath", Sys_DefaultAppPath(), CVAR_INIT );
 	// Make MacOSX also include the base path included with the .app bundle
 	if ( fs_apppath->string[0] )
 		FS_AddGameDirectory( fs_apppath->string, fs_basegame->string );
@@ -4561,64 +4547,47 @@ void	FS_FilenameCompletion( const char *dir, const char *ext,
 	Secure VM functions
 */
 
-int FS_VM_OpenFile( const char *qpath, fileHandle_t *f, fsMode_t mode, handleOwner_t owner ) {
+int FS_VM_OpenFile( const char *qpath, fileHandle_t *f, fsMode_t mode ) {
 	int r;
 
 	r = FS_FOpenFileByMode( qpath, f, mode );
-
-	if ( f && *f != FS_INVALID_HANDLE )
-		fsh[ *f ].owner = owner;
 
 	return r;
 }
 
 
-int FS_VM_ReadFile( void *buffer, int len, fileHandle_t f, handleOwner_t owner ) {
+int FS_VM_ReadFile( void *buffer, int len, fileHandle_t f ) {
 
 	if ( f <= 0 || f >= MAX_FILE_HANDLES )
 		return 0;
 
-	if ( fsh[f].owner != owner || !fsh[f].handleFiles.file.v )
+	if ( !fsh[f].handleFiles.file.v )
 		return 0; 
 
 	return FS_Read( buffer, len, f );
 }
 
 
-void FS_VM_WriteFile( void *buffer, int len, fileHandle_t f, handleOwner_t owner ) {
+void FS_VM_WriteFile( void *buffer, int len, fileHandle_t f ) {
 
 	if ( f <= 0 || f >= MAX_FILE_HANDLES )
 		return;
 
-	if ( fsh[f].owner != owner || !fsh[f].handleFiles.file.v )
+	if ( !fsh[f].handleFiles.file.v )
 		return;
 
 	FS_Write( buffer, len, f );
 }
 
-void FS_VM_CloseFile( fileHandle_t f, handleOwner_t owner ) {
+void FS_VM_CloseFile( fileHandle_t f ) {
 
 	if ( f <= 0 || f >= MAX_FILE_HANDLES )
 		return;
 
-	if ( fsh[f].owner != owner || !fsh[f].handleFiles.file.v )
+	if ( !fsh[f].handleFiles.file.v )
 		return;
 
 	FS_FCloseFile( f );
-}
-
-
-void FS_VM_CloseFiles( handleOwner_t owner ) 
-{
-	int i;
-	for ( i = 1; i < MAX_FILE_HANDLES; i++ ) 
-	{
-		if ( fsh[i].owner != owner )
-			continue;
-		Com_Printf( S_COLOR_YELLOW"%s:%i:%s leaked filehandle\n", 
-			FS_OwnerName( owner ), i, fsh[i].name );
-		FS_FCloseFile( i );
-	}
 }
 
 const char *FS_GetBaseGameDir( void ) { return fs_basegame->string; }

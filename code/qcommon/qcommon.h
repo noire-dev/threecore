@@ -342,16 +342,6 @@ VIRTUAL MACHINE
 typedef struct vm_s vm_t;
 
 typedef enum {
-	TRAP_MEMSET = 1000,
-	TRAP_MEMCPY,
-	TRAP_STRNCPY,
-	TRAP_SIN,
-	TRAP_COS,
-	TRAP_ATAN2,
-	TRAP_SQRT,
-} sharedTraps_t;
-
-typedef enum {
 	VM_BAD = -1,
 	VM_GAME = 0,
 #ifndef USE_DEDICATED
@@ -378,17 +368,6 @@ void	VM_Forced_Unload_Done(void);
 vm_t	*VM_Restart( vm_t *vm );
 
 intptr_t	QDECL VM_Call( vm_t *vm, int nargs, int callNum, ... );
-
-void	VM_CheckBounds( const vm_t *vm, unsigned int address, unsigned int length );
-void	VM_CheckBounds2( const vm_t *vm, unsigned int addr1, unsigned int addr2, unsigned int length );
-
-#if 1
-#define VM_CHECKBOUNDS VM_CheckBounds
-#define VM_CHECKBOUNDS2 VM_CheckBounds2
-#else // for performance evaluation purposes
-#define VM_CHECKBOUNDS(vm,a,b)
-#define VM_CHECKBOUNDS2(vm,a,b,c)
-#endif
 
 void	*GVM_ArgPtr( intptr_t intValue );
 
@@ -541,10 +520,7 @@ void	Cvar_Register( vmCvar_t *vmCvar, const char *varName, const char *defaultVa
 void	Cvar_Update( vmCvar_t *vmCvar, int cvarID );
 // updates an interpreted modules' version of a cvar
 
-void 	Cvar_Set( const char *var_name, const char *value );
-// will create the variable with no flags if it doesn't exist
-
-cvar_t	*Cvar_Set2(const char *var_name, const char *value, qboolean force);
+cvar_t	*Cvar_Set(const char *var_name, const char *value);
 // same as Cvar_Set, but allows more control over setting of cvar
 
 void	Cvar_SetLatched( const char *var_name, const char *value);
@@ -562,14 +538,10 @@ int		Cvar_VariableIntegerValue( const char *var_name );
 
 const char *Cvar_VariableString( const char *var_name );
 
-unsigned Cvar_Flags( const char *var_name );
-// returns CVAR_NONEXISTENT if cvar doesn't exist or the flags of that particular CVAR.
-
 void	Cvar_CommandCompletion( void(*callback)(const char *s) );
 // callback with each valid string
 
 void 	Cvar_Reset( const char *var_name );
-void 	Cvar_ForceReset(const char *var_name);
 
 void	Cvar_SetCheatState( void );
 // reset all testing vars to a safe value
@@ -624,13 +596,6 @@ issues.
 #define FS_GENERAL_REF	0x01
 #define FS_UI_REF		0x02
 #define FS_CGAME_REF	0x04
-
-typedef enum {
-	H_SYSTEM,
-	H_QAGAME,
-	H_CGAME,
-	H_Q3UI
-} handleOwner_t;
 
 #define FS_MATCH_EXTERN (1<<0)
 #define FS_MATCH_PURE   (1<<1)
@@ -787,11 +752,10 @@ void FS_HomeRemove( const char *homePath );
 
 void	FS_FilenameCompletion( const char *dir, const char *ext, qboolean stripExt, void(*callback)(const char *s), int flags );
 
-int FS_VM_OpenFile( const char *qpath, fileHandle_t *f, fsMode_t mode, handleOwner_t owner );
-int FS_VM_ReadFile( void *buffer, int len, fileHandle_t f, handleOwner_t owner );
-void FS_VM_WriteFile( void *buffer, int len, fileHandle_t f, handleOwner_t owner );
-void FS_VM_CloseFile( fileHandle_t f, handleOwner_t owner );
-void FS_VM_CloseFiles( handleOwner_t owner );
+int FS_VM_OpenFile( const char *qpath, fileHandle_t *f, fsMode_t mode );
+int FS_VM_ReadFile( void *buffer, int len, fileHandle_t f );
+void FS_VM_WriteFile( void *buffer, int len, fileHandle_t f );
+void FS_VM_CloseFile( fileHandle_t f );
 
 const char *FS_GetBaseGameDir( void );
 
@@ -958,7 +922,6 @@ extern	cvar_t	*com_cl_running;
 extern	cvar_t	*com_yieldCPU;
 #endif
 
-extern	cvar_t	*vm_rtChecks;
 #ifdef USE_AFFINITY_MASK
 extern	cvar_t	*com_affinityMask;
 #endif
@@ -1259,8 +1222,5 @@ int HuffmanGetSymbol( unsigned int* symbol, const byte* buffer, int bitIndex );
 #define	DLF_NO_REDIRECT	2
 #define	DLF_NO_UDP		4
 #define	DLF_NO_DISCONNECT 8
-
-// functional gate syscall number
-#define COM_TRAP_GETVALUE 700
 
 #endif // _QCOMMON_H_

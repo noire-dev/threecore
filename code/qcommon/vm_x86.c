@@ -2961,91 +2961,14 @@ static void EmitCallOffset( func_t Func )
 }
 
 
-static void emit_CheckReg( vm_t *vm, uint32_t reg, func_t func )
-{
-	if ( vm->forceDataMask || !( vm_rtChecks->integer & VM_RTCHECK_DATA ) )
-	{
+static void emit_CheckReg( vm_t *vm, uint32_t reg, func_t func ) {
 #if idx64
-		emit_and_rx( reg, R_DATAMASK );					// reg = reg & dataMask
+	emit_and_rx( reg, R_DATAMASK );					// reg = reg & dataMask
 #else
-		emit_op_rx_imm32( X_AND, reg, vm->dataMask );	// reg = reg & vm->dataMask
+	emit_op_rx_imm32( X_AND, reg, vm->dataMask );	// reg = reg & vm->dataMask
 #endif
-		return;
-	}
-
-#if idx64
-	emit_cmp_rx( reg, R_DATAMASK );					// cmp reg, dataMask
-#else
-	emit_op_rx_imm32( X_CMP, reg, vm->dataMask );	// cmp reg, vm->dataMask
-#endif
-
-	// error reporting
-	EmitString( "0F 87" );			// ja +errorFunction
-	Emit4( funcOffset[ func ] - compiledOfs - 6 );
+	return;
 }
-
-
-static void emit_CheckJump( vm_t *vm, uint32_t reg, int32_t proc_base, int32_t proc_len )
-{
-	if ( ( vm_rtChecks->integer & VM_RTCHECK_JUMP ) == 0 ) {
-		return;
-	}
-
-	if ( proc_base != -1 ) {
-		uint32_t rx;
-
-		// allow jump within local function scope only
-		// check if (reg - proc_base) > proc_len
-		rx = alloc_rx( R_EDX | TEMP );
-		emit_lea( rx, reg, -proc_base );			// lea edx, [reg - procBase]
-		emit_op_rx_imm32( X_CMP, rx, proc_len );	// cmp edx, proc_len
-		unmask_rx( rx );
-
-		EmitString( "0F 87" );						// ja +funcOffset[FUNC_BADJ]
-		Emit4( funcOffset[ FUNC_BADJ ] - compiledOfs - 6 );
-	} else {
-		// check if reg >= instructionCount
-		emit_op_rx_imm32( X_CMP, reg, vm->instructionCount );	// cmp reg, vm->instructionCount
-		EmitString( "0F 83" );									// jae +funcOffset[ FUNC_ERRJ ]
-		Emit4( funcOffset[ FUNC_ERRJ ] - compiledOfs - 6 );
-	}
-}
-
-
-static void emit_CheckProc( vm_t *vm, instruction_t *ins )
-{
-	// programStack overflow check
-	if ( vm_rtChecks->integer & VM_RTCHECK_PSTACK ) {
-#if idx64
-		emit_cmp_rx( R_PSTACK, R_STACKBOTTOM );	// cmp programStack, stackBottom
-#else
-		emit_op_rx_imm32( X_CMP, R_PSTACK, vm->stackBottom ); // cmp programStack, vm->stackBottom
-#endif
-		EmitString( "0F 8C" );					// jl +funcOffset[ FUNC_PSOF ]
-		Emit4( funcOffset[ FUNC_PSOF ] - compiledOfs - 6 );
-	}
-
-	// opStack overflow check
-	if ( vm_rtChecks->integer & VM_RTCHECK_OPSTACK ) {
-		uint32_t rx = alloc_rx( R_EDX | TEMP );
-
-		// proc->opStack carries max.used opStack value
-		emit_lea( rx | R_REX, R_OPSTACK, ins->opStack ); // rdx = opStack + max.opStack
-		
-		// check if rdx > opstackTop
-#if idx64
-		emit_cmp_rx( rx | R_REX, R_OPSTACKTOP );			// cmp rdx, opStackTop
-#else
-		emit_cmp_rx_mem( rx, (intptr_t) &vm->opStackTop );	// cmp edx, [&vm->opStackTop]
-#endif
-
-		EmitString( "0F 87" );			// ja +funcOffset[FUNC_OSOF]
-		Emit4( funcOffset[ FUNC_OSOF ] - compiledOfs - 6 );
-
-		unmask_rx( rx );
-	}
-}
-
 
 #ifdef _WIN32
 #define SHADOW_BASE 40
@@ -3062,17 +2985,12 @@ static void EmitCallFunc( vm_t *vm )
 {
 	static int sysCallOffset = 0;
 
-	init_opstack(); // to avoid any side-effects on emit_CheckJump()
+	init_opstack();
 
 	emit_test_rx( R_EAX, R_EAX );		// test eax, eax
 	EmitString( "7C" );					// jl +offset (SystemCall)
 	Emit1( sysCallOffset );				// will be valid after first pass
 	sysCallOffset = compiledOfs;
-
-	// jump target range check
-	mask_rx( R_EAX );
-	emit_CheckJump( vm, R_EAX, -1, 0 );
-	unmask_rx( R_EAX );
 
 	// calling another vm function
 #if idx64
@@ -3204,23 +3122,6 @@ static void EmitBCPYFunc( vm_t *vm )
 
 	emit_mov_rx( R_ESI, R_EDX );			// mov esi, edx // top of opstack
 	emit_mov_rx( R_EDI, R_EAX );			// mov edi, eax // bottom of opstack
-
-	if ( vm_rtChecks->integer & VM_RTCHECK_DATA )
-	{
-		mov_rx_imm32( R_EAX, vm->dataMask );	// mov eax, datamask
-
-		emit_and_rx( R_ESI, R_EAX );			// and esi, eax
-		emit_and_rx( R_EDI, R_EAX );			// and edi, eax
-
-		emit_lea_base_index( R_EDX, R_ESI, R_ECX ); // lea edx, [esi + ecx]
-		emit_and_rx( R_EDX, R_EAX );			// and edx, eax - apply data mask
-		emit_sub_rx( R_EDX, R_ESI );			// sub edx, esi - source-adjusted counter
-
-		emit_add_rx( R_EDX, R_EDI );			// add edx, edi
-		emit_and_rx( R_EDX, R_EAX );			// and edx, eax - apply data mask
-		emit_sub_rx( R_EDX, R_EDI );			// sub edx, edi - destination-adjusted counter
-		emit_mov_rx( R_ECX, R_EDX );			// mov ecx, edx
-	}
 
 	emit_add_rx( R_ESI | R_REX, R_EBX );	// add rsi, rbx
 	emit_add_rx( R_EDI | R_REX, R_EBX );	// add rdi, rbx
@@ -3951,8 +3852,6 @@ __compile:
 				emit_op_rx_imm32( X_SUB, R_PSTACK, ci->value );	// sub programStack, 0x12
 
 				emit_lea_base_index( R_PROCBASE | R_REX, R_DATABASE, R_PSTACK ); // procBase = dataBase + programStack
-
-				emit_CheckProc( vm, ci );
 				break;
 
 			case OP_LEAVE:
@@ -4022,7 +3921,6 @@ __compile:
 			case OP_JUMP:
 				rx[0] = load_rx_opstack( R_EAX | RCONST ); dec_opstack(); // eax = *opstack; opstack -= 4
 				flush_volatile();
-				emit_CheckJump( vm, rx[0], proc_base, proc_len );		// check if eax is within current proc
 #if idx64
 				emit_jump_index( R_INSPOINTERS, rx[0] );				// jmp qword ptr [instructionPointers + rax*8]
 #else

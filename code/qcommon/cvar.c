@@ -1,24 +1,6 @@
-/*
-===========================================================================
-Copyright (C) 1999-2005 Id Software, Inc.
-
-This file is part of Quake III Arena source code.
-
-Quake III Arena source code is free software; you can redistribute it
-and/or modify it under the terms of the GNU General Public License as
-published by the Free Software Foundation; either version 2 of the License,
-or (at your option) any later version.
-
-Quake III Arena source code is distributed in the hope that it will be
-useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with Quake III Arena source code; if not, write to the Free Software
-Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-===========================================================================
-*/
+// Copyright (C) 1999-2005 ID Software, Inc.
+// Copyright (C) 2023-2025 Noire.dev
+// SourceTech — GPLv2; see LICENSE for details.
 
 #include "q_shared.h"
 #include "qcommon.h"
@@ -26,7 +8,6 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 static cvar_t* cvar_vars = NULL;
 static cvar_t* cvar_cheats;
 static cvar_t* cvar_developer;
-int cvar_modifiedFlags;
 
 static cvar_t cvar_indexes[MAX_CVARS];
 static int cvar_numIndexes;
@@ -101,7 +82,7 @@ void Cvar_CommandCompletion(void (*callback)(const char* s)) {
 	const cvar_t* cvar;
 
 	for(cvar = cvar_vars; cvar; cvar = cvar->next) {
-		if(cvar->name) callback(cvar->name);
+		if(cvar->name) callback(va("%s%s = %s (%s)%s", cvar->name, (strcmp(cvar->string, cvar->resetString) ? "*" : ""), cvar->string, cvar->resetString, (cvar->flags & CVAR_ARCHIVE ? "   [Saved]" : "")));
 	}
 }
 
@@ -156,8 +137,6 @@ cvar_t* Cvar_Get(const char* var_name, const char* var_value, int flags) {
 	cvar_vars = var;
 
 	var->flags = flags;
-	// note what types of cvars have been modified (userinfo, archive, serverinfo, systeminfo)
-	cvar_modifiedFlags |= var->flags;
 
 	hash = generateHashValue(var_name);
 	var->hashIndex = hash;
@@ -174,20 +153,14 @@ cvar_t* Cvar_Get(const char* var_name, const char* var_value, int flags) {
 static void Cvar_Print(const cvar_t* v) {
 	Com_Printf("\"%s\" \"%s" S_COLOR_WHITE "\"", v->name, v->string);
 
-	if(!(v->flags & CVAR_ROM)) {
-		Com_Printf(" default:\"%s" S_COLOR_WHITE "\"\n", v->resetString);
-	}
+	if(!(v->flags & CVAR_ROM)) Com_Printf(" default:\"%s" S_COLOR_WHITE "\"\n", v->resetString);
 
-	if(v->latchedString) {
-		Com_Printf("latched: \"%s\"\n", v->latchedString);
-	}
+	if(v->latchedString) Com_Printf("latched: \"%s\"\n", v->latchedString);
 
-	if(v->description) {
-		Com_Printf("%s\n", v->description);
-	}
+	if(v->description) Com_Printf("%s\n", v->description);
 }
 
-cvar_t* Cvar_Set2(const char* var_name, const char* value, qboolean force) {
+cvar_t* Cvar_Set(const char* var_name, const char* value) {
 	cvar_t* var;
 
 	if(!Cvar_ValidateName(var_name)) {
@@ -198,29 +171,27 @@ cvar_t* Cvar_Set2(const char* var_name, const char* value, qboolean force) {
 	var = Cvar_FindVar(var_name);
 	if(!var) {
 		if(!value) return NULL;
-		return Cvar_Get(var_name, value, 0);	// create it
+		return Cvar_Get(var_name, value, 0);  // create it
 	}
 
-	if(var->flags & (CVAR_ROM | CVAR_INIT | CVAR_CHEAT | CVAR_DEVELOPER) && !force) {
-		if(var->flags & CVAR_ROM) {
-			Com_Printf("%s is read only.\n", var_name);
-			return var;
-		}
+	if(var->flags & CVAR_ROM) {
+		Com_Printf("%s is read only.\n", var_name);
+		return var;
+	}
 
-		if(var->flags & CVAR_INIT) {
-			Com_Printf("%s is write protected.\n", var_name);
-			return var;
-		}
+	if(var->flags & CVAR_INIT) {
+		Com_Printf("%s is write protected.\n", var_name);
+		return var;
+	}
 
-		if((var->flags & CVAR_CHEAT) && !cvar_cheats->integer) {
-			Com_Printf("%s is cheat protected.\n", var_name);
-			return var;
-		}
+	if((var->flags & CVAR_CHEAT) && !cvar_cheats->integer) {
+		Com_Printf("%s is cheat protected.\n", var_name);
+		return var;
+	}
 
-		if((var->flags & CVAR_DEVELOPER) && !cvar_developer->integer) {
-			Com_Printf("%s can be set only in developer mode.\n", var_name);
-			return var;
-		}
+	if((var->flags & CVAR_DEVELOPER) && !cvar_developer->integer) {
+		Com_Printf("%s can be set only in developer mode.\n", var_name);
+		return var;
 	}
 
 	if(!value) value = var->resetString;
@@ -236,9 +207,6 @@ cvar_t* Cvar_Set2(const char* var_name, const char* value, qboolean force) {
 	} else if(strcmp(value, var->string) == 0)
 		return var;
 
-	// note what types of cvars have been modified (userinfo, archive, serverinfo, systeminfo)
-	cvar_modifiedFlags |= var->flags;
-
 	if(var->flags & CVAR_LATCH) {
 		if(var->latchedString) {
 			if(strcmp(value, var->latchedString) == 0) return var;
@@ -246,7 +214,7 @@ cvar_t* Cvar_Set2(const char* var_name, const char* value, qboolean force) {
 		} else {
 			if(strcmp(value, var->string) == 0) return var;
 		}
-        
+
 		Com_Printf("%s will be changed upon restarting.\n", var_name);
 		var->latchedString = CopyString(value);
 		var->modified = qtrue;
@@ -268,10 +236,6 @@ cvar_t* Cvar_Set2(const char* var_name, const char* value, qboolean force) {
 	return var;
 }
 
-void Cvar_Set(const char* var_name, const char* value) { Cvar_Set2(var_name, value, qtrue); }
-
-void Cvar_SetLatched(const char* var_name, const char* value) { Cvar_Set2(var_name, value, qfalse); }
-
 void Cvar_SetValue(const char* var_name, float value) {
 	char val[32];
 
@@ -290,9 +254,7 @@ void Cvar_SetIntegerValue(const char* var_name, int value) {
 	Cvar_Set(var_name, val);
 }
 
-void Cvar_Reset(const char* var_name) { Cvar_Set2(var_name, NULL, qfalse); }
-
-void Cvar_ForceReset(const char* var_name) { Cvar_Set2(var_name, NULL, qtrue); }
+void Cvar_Reset(const char* var_name) { Cvar_Set(var_name, NULL); }
 
 void Cvar_SetCheatState(void) {
 	cvar_t* var;
@@ -418,9 +380,6 @@ static void Cvar_Rand(float* val) {
 static cvar_t* Cvar_Unset(cvar_t* cv) {
 	cvar_t* next = cv->next;
 
-	// note what types of cvars have been modified (userinfo, archive, serverinfo, systeminfo)
-	cvar_modifiedFlags |= cv->flags;
-
 	if(cv->name) Z_Free(cv->name);
 	if(cv->string) Z_Free(cv->string);
 	if(cv->latchedString) Z_Free(cv->latchedString);
@@ -458,24 +417,22 @@ qboolean Cvar_Command(void) {
 	} else if(Cmd_Argc() >= 2) {
 		ftype = GetFuncType();
 		if(ftype == FT_CREATE) {
-			Cvar_Set2(Cmd_Argv(0), Cmd_ArgsFrom(2), qfalse);
+			Cvar_Set(Cmd_Argv(0), Cmd_ArgsFrom(2));
 			return qtrue;
 		} else if(ftype == FT_SAVE) {
-			v = Cvar_Set2(Cmd_Argv(0), Cmd_ArgsFrom(2), qfalse);
+			v = Cvar_Set(Cmd_Argv(0), Cmd_ArgsFrom(2));
 			if(v && !(v->flags & CVAR_ARCHIVE)) {
 				v->flags |= CVAR_ARCHIVE;
-				cvar_modifiedFlags |= CVAR_ARCHIVE;
 			}
 			return qtrue;
 		} else if(ftype == FT_UNSAVE) {
-			v = Cvar_Set2(Cmd_Argv(0), Cmd_ArgsFrom(2), qfalse);
+			v = Cvar_Set(Cmd_Argv(0), Cmd_ArgsFrom(2));
 			if(v && (v->flags & CVAR_ARCHIVE)) {
 				v->flags &= ~CVAR_ARCHIVE;
-				cvar_modifiedFlags |= CVAR_ARCHIVE;
 			}
 			return qtrue;
 		} else if(ftype == FT_RESET && v) {
-			Cvar_Set2(v->name, NULL, qfalse);
+			Cvar_Set(v->name, NULL);
 			return qtrue;
 		} else if(ftype == FT_UNSET && v) {
 			Cvar_Unset(v);
@@ -487,7 +444,7 @@ qboolean Cvar_Command(void) {
 
 	ftype = GetFuncType();
 	if(ftype == FT_BAD) {
-		Cvar_Set2(v->name, Cmd_ArgsFrom(1), qfalse);
+		Cvar_Set(v->name, Cmd_ArgsFrom(1));
 		return qtrue;
 	} else {
 		val = v->value;
@@ -499,7 +456,7 @@ qboolean Cvar_Command(void) {
 
 		sprintf(value, "%g", val);
 
-		Cvar_Set2(v->name, value, qfalse);
+		Cvar_Set(v->name, value);
 		return qtrue;
 	}
 }
@@ -515,7 +472,7 @@ static void Cvar_Toggle_f(void) {
 	}
 
 	if(c == 2) {
-		Cvar_Set2(Cmd_Argv(1), va("%d", !Cvar_VariableValue(Cmd_Argv(1))), qfalse);
+		Cvar_Set(Cmd_Argv(1), va("%d", !Cvar_VariableValue(Cmd_Argv(1))));
 		return;
 	}
 
@@ -530,13 +487,13 @@ static void Cvar_Toggle_f(void) {
 	// behaviour is the same as no match (set to the first argument)
 	for(i = 2; i + 1 < c; i++) {
 		if(strcmp(curval, Cmd_Argv(i)) == 0) {
-			Cvar_Set2(Cmd_Argv(1), Cmd_Argv(i + 1), qfalse);
+			Cvar_Set(Cmd_Argv(1), Cmd_Argv(i + 1));
 			return;
 		}
 	}
 
 	// fallback
-	Cvar_Set2(Cmd_Argv(1), Cmd_Argv(2), qfalse);
+	Cvar_Set(Cmd_Argv(1), Cmd_Argv(2));
 }
 
 void Cvar_WriteVariables(fileHandle_t f) {
@@ -565,12 +522,12 @@ void Cvar_Restart(qboolean unsetVM) {
 	cvar_t* curvar = cvar_vars;
 
 	while(curvar) {
-	    if(curvar->resetString[0]) {
-	        Cvar_Set2(curvar->name, curvar->resetString, qfalse);
-	    } else {
-	        curvar = Cvar_Unset(curvar);
-	        continue;
-	    }
+		if(curvar->resetString[0]) {
+			Cvar_Set(curvar->name, curvar->resetString);
+		} else {
+			curvar = Cvar_Unset(curvar);
+			continue;
+		}
 
 		curvar = curvar->next;
 	}
@@ -653,7 +610,7 @@ void Cvar_Update(vmCvar_t* vmCvar, int cvarID) {
 
 void Cvar_CompleteCvarName(const char* args, int argNum) {
 	if(argNum == 2) {
-		const char* p = Com_SkipTokens(args, 1, " ");   // Skip "<cmd> "
+		const char* p = Com_SkipTokens(args, 1, " ");  // Skip "<cmd> "
 
 		if(p > args) Field_CompleteCommand(p, qfalse, qtrue);
 	}
