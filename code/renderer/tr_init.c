@@ -529,9 +529,6 @@ static void InitOpenGL( void )
 		if ( r_ignorehwgamma->integer )
 			glConfig.deviceSupportsGamma = qfalse;
 
-		// print info
-		GfxInfo();
-
 		gls.initTime = ri.Milliseconds();
 	}
 
@@ -543,9 +540,6 @@ static void InitOpenGL( void )
 		R_InitExtensions();
 
 		QGL_InitARB();
-
-		// print info
-		GfxInfo();
 
 		gls.initTime = ri.Milliseconds();
 	}
@@ -1169,7 +1163,6 @@ static void R_Register( void )
 	ri.Cmd_AddCommand( "screenshot", R_ScreenShot_f );
 	ri.Cmd_AddCommand( "screenshotJPEG", R_ScreenShot_f );
 	ri.Cmd_AddCommand( "screenshotBMP", R_ScreenShot_f );
-	ri.Cmd_AddCommand( "gfxinfo", GfxInfo_f );
 
 	//
 	// temporary latched variables that can only change over a restart
@@ -1453,7 +1446,6 @@ static void RE_Shutdown( refShutdownCode_t code ) {
 	ri.Cmd_RemoveCommand( "imagelist" );
 	ri.Cmd_RemoveCommand( "shaderlist" );
 	ri.Cmd_RemoveCommand( "skinlist" );
-	ri.Cmd_RemoveCommand( "gfxinfo" );
 	ri.Cmd_RemoveCommand( "shaderstate" );
 
 	if ( tr.registered ) {
