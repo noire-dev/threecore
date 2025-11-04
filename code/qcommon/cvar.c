@@ -632,6 +632,11 @@ void Cvar_Update(vmCvar_t* vmCvar, int cvarID) {
 	vmCvar->integer = cv->integer;
 }
 
+int Cvar_ID(const char* name) {
+    cvar_t* cv = Cvar_FindVar(name);
+    return cv ? cv - cvar_indexes : -1;
+}
+
 void Cvar_CompleteCvarName(const char* args, int argNum) {
 	if(argNum == 2) {
 		const char* p = Com_SkipTokens(args, 1, " ");  // Skip "<cmd> "

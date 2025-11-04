@@ -354,6 +354,7 @@ typedef enum {
 	TRAP_ERROR,
 	TRAP_MILLISECONDS,
 	TRAP_CVAR_REGISTER,
+	TRAP_CVAR_ID,
 	TRAP_CVAR_UPDATE,
 	TRAP_CVAR_SET,
 	TRAP_CVAR_SETVALUE,
@@ -565,6 +566,8 @@ cvar_t *Cvar_Get( const char *var_name, const char *value, int flags );
 
 void	Cvar_Update( vmCvar_t *vmCvar, int cvarID );
 // updates an interpreted modules' version of a cvar
+
+int Cvar_ID(const char* name);
 
 cvar_t	*Cvar_Set(const char *var_name, const char *value);
 // same as Cvar_Set, but allows more control over setting of cvar
