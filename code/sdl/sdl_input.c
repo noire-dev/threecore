@@ -1368,7 +1368,7 @@ void IN_Init( void )
 
 	in_keyboardDebug = Cvar_Get( "in_keyboardDebug", "0", CVAR_ARCHIVE );
 	Cvar_SetDescription( in_keyboardDebug, "Print keyboard debug info." );
-	in_forceCharset = Cvar_Get( "in_forceCharset", "1", CVAR_ARCHIVE_ND );
+	in_forceCharset = Cvar_Get( "in_forceCharset", "1", CVAR_ARCHIVE );
 	Cvar_SetDescription( in_forceCharset, "Try to translate non-ASCII chars in keyboard input or force EN/US keyboard layout." );
 
 	// mouse variables
@@ -1385,26 +1385,26 @@ void IN_Init( void )
 	in_joystickThreshold = Cvar_Get( "joy_threshold", "0.15", CVAR_ARCHIVE );
 	Cvar_SetDescription( in_joystickThreshold, "Threshold of joystick moving distance." );
 
-	j_pitch =        Cvar_Get( "j_pitch",        "0.022", CVAR_ARCHIVE_ND );
+	j_pitch =        Cvar_Get( "j_pitch",        "0.022", CVAR_ARCHIVE );
 	Cvar_SetDescription( j_pitch, "Joystick pitch rotation speed/direction." );
-	j_yaw =          Cvar_Get( "j_yaw",          "-0.022", CVAR_ARCHIVE_ND );
+	j_yaw =          Cvar_Get( "j_yaw",          "-0.022", CVAR_ARCHIVE );
 	Cvar_SetDescription( j_yaw, "Joystick yaw rotation speed/direction." );
-	j_forward =      Cvar_Get( "j_forward",      "-0.25", CVAR_ARCHIVE_ND );
+	j_forward =      Cvar_Get( "j_forward",      "-0.25", CVAR_ARCHIVE );
 	Cvar_SetDescription( j_forward, "Joystick forward movement speed/direction." );
-	j_side =         Cvar_Get( "j_side",         "0.25", CVAR_ARCHIVE_ND );
+	j_side =         Cvar_Get( "j_side",         "0.25", CVAR_ARCHIVE );
 	Cvar_SetDescription( j_side, "Joystick side movement speed/direction." );
-	j_up =           Cvar_Get( "j_up",           "0", CVAR_ARCHIVE_ND );
+	j_up =           Cvar_Get( "j_up",           "0", CVAR_ARCHIVE );
 	Cvar_SetDescription( j_up, "Joystick up movement speed/direction." );
 
-	j_pitch_axis =   Cvar_Get( "j_pitch_axis",   "3", CVAR_ARCHIVE_ND );
+	j_pitch_axis =   Cvar_Get( "j_pitch_axis",   "3", CVAR_ARCHIVE );
 	Cvar_SetDescription( j_pitch_axis, "Selects which joystick axis controls pitch." );
-	j_yaw_axis =     Cvar_Get( "j_yaw_axis",     "2", CVAR_ARCHIVE_ND );
+	j_yaw_axis =     Cvar_Get( "j_yaw_axis",     "2", CVAR_ARCHIVE );
 	Cvar_SetDescription( j_yaw_axis, "Selects which joystick axis controls yaw." );
-	j_forward_axis = Cvar_Get( "j_forward_axis", "1", CVAR_ARCHIVE_ND );
+	j_forward_axis = Cvar_Get( "j_forward_axis", "1", CVAR_ARCHIVE );
 	Cvar_SetDescription( j_forward_axis, "Selects which joystick axis controls forward/back." );
-	j_side_axis =    Cvar_Get( "j_side_axis",    "0", CVAR_ARCHIVE_ND );
+	j_side_axis =    Cvar_Get( "j_side_axis",    "0", CVAR_ARCHIVE );
 	Cvar_SetDescription( j_side_axis, "Selects which joystick axis controls left/right." );
-	j_up_axis =      Cvar_Get( "j_up_axis",      "4", CVAR_ARCHIVE_ND );
+	j_up_axis =      Cvar_Get( "j_up_axis",      "4", CVAR_ARCHIVE );
 	Cvar_SetDescription( j_up_axis, "Selects which joystick axis controls up/down." );
 #endif
 
