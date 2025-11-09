@@ -188,35 +188,18 @@ cvar_t* Cvar_Set(const char* var_name, const char* value) {
 	}
 
 	if(!value) value = var->resetString;
-
-	if((var->flags & CVAR_LATCH) && var->latchedString) {
-		if(strcmp(value, var->string) == 0) {
-			Z_Free(var->latchedString);
-			var->latchedString = NULL;
-			return var;
-		}
-
-		if(strcmp(value, var->latchedString) == 0) return var;
-	} else if(strcmp(value, var->string) == 0) return var;
 		
 	cvar_modifiedFlags |= var->flags;
 
-	if(var->flags & CVAR_LATCH) {
-		if(var->latchedString) {
-			if(strcmp(value, var->latchedString) == 0) return var;
-			Z_Free(var->latchedString);
-		} else {
-			if(strcmp(value, var->string) == 0) return var;
-		}
+    if(strcmp(value, var->string) == 0) return var;  // not changed
 
+	if(var->flags & CVAR_LATCH) {
 		Com_Printf("%s will be changed upon restarting.\n", var_name);
 		var->latchedString = CopyString(value);
 		var->modified = qtrue;
 		cvar_group[var->group] = 1;
 		return var;
 	}
-
-	if(strcmp(value, var->string) == 0) return var;  // not changed
 
 	var->modified = qtrue;
 	cvar_group[var->group] = 1;
