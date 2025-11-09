@@ -104,6 +104,13 @@ cvar_t* Cvar_Get(const char* var_name, const char* var_value, int flags) {
 	if(var) {
 		var->flags = flags;
 		cvar_modifiedFlags |= flags;
+		if (var->latchedString) {
+		    var->string = CopyString(var->latchedString);
+		    var->latchedString = NULL;
+	        var->modified = qtrue;
+	        var->value = Q_atof(var->string);
+	        var->integer = atoi(var->string);
+	    }
 		return var;
 	}
 
