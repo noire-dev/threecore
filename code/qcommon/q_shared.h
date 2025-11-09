@@ -1083,11 +1083,11 @@ typedef enum {
 // also be in this range
 #define	ENTITYNUM_NONE		(MAX_GENTITIES-1)
 #define	ENTITYNUM_WORLD		(MAX_GENTITIES-2)
-#define	ENTITYNUM_MAX_NORMAL	(MAX_GENTITIES-2)
+#define	ENTITYNUM_MAX_NORMAL	(MAX_GENTITIES-3)
 
 #define	MAX_CONFIGSTRINGS	1600
-#define	MAX_GAMESTATE_CHARS	65535
-#define MAX_CVARS           65535
+#define	MAX_GAMESTATE_CHARS	32768
+#define MAX_CVARS           32768
 
 // these are the only configstrings that the system reserves, all the
 // other ones are strictly for servergame to clientgame communication
