@@ -29,7 +29,7 @@ playerState_t* SV_GameClientNum(int num) {
 }
 
 svEntity_t* SV_SvEntityForGentity(sharedEntity_t* gEnt) {
-	if(!gEnt || gEnt->s.number < 0 || gEnt->s.number >= MAX_GENTITIES) Com_Error(ERR_DROP, "SV_SvEntityForGentity: bad gEnt");
+	if(!gEnt || gEnt->s.number < 0 || gEnt->s.number >= MAX_GENTITIES) return NULL;
 
 	return &sv.svEntities[gEnt->s.number];
 }
@@ -110,6 +110,10 @@ static void SV_AdjustAreaPortalState(sharedEntity_t* ent, qboolean open) {
 	svEntity_t* svEnt;
 
 	svEnt = SV_SvEntityForGentity(ent);
+	if(!svEnt){
+	    Com_Printf("SV_AdjustAreaPortalState: bad gEnt");
+	    return;
+	}
 	if(svEnt->areanum2 == -1) return;
 	CM_AdjustAreaPortalState(svEnt->areanum, svEnt->areanum2, open);
 }
