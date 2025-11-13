@@ -3561,11 +3561,6 @@ void Com_Frame( qboolean noDelay ) {
 	timeBeforeClient = 0;
 	timeAfter = 0;
 
-	// write config file if anything changed
-#ifndef DELAY_WRITECONFIG
-	Com_WriteConfiguration();
-#endif
-
 	// if "viewlog" has been modified, show or hide the log console
 	if ( com_viewlog->modified ) {
 		com_viewlog->modified = qfalse;
