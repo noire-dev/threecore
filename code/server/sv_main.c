@@ -1162,7 +1162,7 @@ void SV_TrackCvarChanges( void )
 		Com_DPrintf( "sv_minRate adjusted to 1000\n" );
 	}
 
-	Cvar_ResetGroup( CVG_SERVER, qfalse );
+	Cvar_ResetGroup( CVG_SERVER );
 
 	if ( sv.state == SS_DEAD || !svs.clients )
 		return;

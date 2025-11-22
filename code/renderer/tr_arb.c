@@ -2279,7 +2279,7 @@ void QGL_InitARB( void )
 {
 	ARB_UpdatePrograms();
 	QGL_InitFBO();
-	ri.Cvar_ResetGroup( CVG_RENDERER, qtrue );
+	ri.Cvar_ResetGroup( CVG_RENDERER );
 }
 
 

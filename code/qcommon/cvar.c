@@ -108,7 +108,7 @@ cvar_t* Cvar_Get(const char* var_name, const char* var_value, int flags) {
 		    var->string = CopyString(var->latchedString);
 		    var->latchedString = NULL;
 	        var->modified = qtrue;
-	        var->value = Q_atof(var->string);
+	        var->value = atof(var->string);
 	        var->integer = atoi(var->string);
 	    }
 	    var->resetString = CopyString(var_value);
@@ -132,7 +132,7 @@ cvar_t* Cvar_Get(const char* var_name, const char* var_value, int flags) {
 	var->name = CopyString(var_name);
 	var->string = CopyString(var_value);
 	var->modified = qtrue;
-	var->value = Q_atof(var->string);
+	var->value = atof(var->string);
 	var->integer = atoi(var->string);
 	var->resetString = CopyString(var_value);
 	var->description = NULL;
@@ -215,7 +215,7 @@ cvar_t* Cvar_Set(const char* var_name, const char* value) {
 	Z_Free(var->string);  // free the old value string
 
 	var->string = CopyString(value);
-	var->value = Q_atof(var->string);
+	var->value = atof(var->string);
 	var->integer = atoi(var->string);
 
 	return var;
@@ -317,7 +317,7 @@ static const char* GetValue(int index, float* val) {
 		return NULL;
 	}
 
-	*val = Q_atof(cmd);
+	*val = atof(cmd);
 	Q_strncpyz(buf, cmd, sizeof(buf));
 	return buf;
 }
@@ -592,18 +592,8 @@ int Cvar_CheckGroup(cvarGroup_t group) {
 	}
 }
 
-void Cvar_ResetGroup(cvarGroup_t group, qboolean resetModifiedFlags) {
-	if(group < CVG_MAX) {
-		cvar_group[group] = 0;
-		if(resetModifiedFlags) {
-			int i;
-			for(i = 0; i < cvar_numIndexes; i++) {
-				if(cvar_indexes[i].group == group && cvar_indexes[i].name) {
-					cvar_indexes[i].modified = qfalse;
-				}
-			}
-		}
-	}
+void Cvar_ResetGroup(cvarGroup_t group) {
+	if(group < CVG_MAX) cvar_group[group] = 0;
 }
 
 void Cvar_Update(vmCvar_t* vmCvar, int cvarID) {

@@ -155,7 +155,7 @@ typedef struct {
 
 	void	(*Cvar_SetGroup)( cvar_t *var, cvarGroup_t group );
 	int		(*Cvar_CheckGroup)( cvarGroup_t group );
-	void	(*Cvar_ResetGroup)( cvarGroup_t group, qboolean resetModifiedFlags );
+	void	(*Cvar_ResetGroup)( cvarGroup_t group );
 
 	const char *(*Cvar_VariableString)( const char *var_name );
 	int		(*Cvar_VariableIntegerValue)( const char *var_name );

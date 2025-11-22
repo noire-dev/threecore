@@ -326,7 +326,7 @@ void RE_EndFrame( int *frontEndMsec, int *backEndMsec ) {
 		if ( r_gamma->modified )
 			R_SetColorMappings();
 
-		ri.Cvar_ResetGroup( CVG_RENDERER, qtrue );
+		ri.Cvar_ResetGroup( CVG_RENDERER );
 	}
 }
 
