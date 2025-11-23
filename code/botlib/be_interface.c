@@ -182,9 +182,7 @@ static int Export_BotLibLoadMap(const char *mapname)
 	//startup AAS for the current map, model and sound index
 	errnum = AAS_LoadMap(mapname);
 	if (errnum != BLERR_NOERROR) return errnum;
-	//initialize the items in the level
-	BotSetBrushModelTypes();	//be_ai_move.h
-	//
+
 	botimport.Print(PRT_MESSAGE, "-------------------------------------\n");
 #ifdef DEBUG
 	botimport.Print(PRT_MESSAGE, "map loaded in %d msec\n", Sys_MilliSeconds() - starttime);

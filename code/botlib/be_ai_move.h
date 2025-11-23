@@ -67,6 +67,5 @@ void BotResetMoveState(int movestate);
 int BotAllocMoveState(void);
 void BotFreeMoveState(int handle);
 void BotInitMoveState(int handle, bot_initmove_t *initmove);
-void BotSetBrushModelTypes(void);
 int BotSetupMoveAI(void);
 void BotShutdownMoveAI(void);

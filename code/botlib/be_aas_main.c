@@ -108,8 +108,6 @@ void AAS_ContinueInit(float time)
 	if (aasworld.initialized) return;
 	//calculate reachability, if not finished return
 	if (AAS_ContinueInitReachability(time)) return;
-	//initialize clustering for the new map
-	AAS_InitClustering();
 	//if reachability has been calculated and an AAS file should be written
 	//or there is a forced data optimization
 	if (aasworld.savefile)
@@ -279,8 +277,6 @@ int AAS_Setup(void)
 void AAS_Shutdown(void)
 {
 	AAS_ShutdownAlternativeRouting();
-	//
-	AAS_DumpBSPData();
 	//free routing caches
 	AAS_FreeRoutingCaches();
 	//free aas link heap

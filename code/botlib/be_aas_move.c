@@ -642,7 +642,6 @@ static int AAS_ClientMovementPrediction( aas_clientmove_t *move,
 			if (visualize)
 			{
 				if (trace.startsolid) botimport.Print(PRT_MESSAGE, "PredictMovement: start solid\n");
-				AAS_DebugLine(org, trace.endpos, LINECOLOR_RED);
 			} //end if
 //#endif //AAS_MOVE_DEBUG
 			//
@@ -790,7 +789,6 @@ static int AAS_ClientMovementPrediction( aas_clientmove_t *move,
 								{
 									VectorCopy(org, start);
 									start[2] = steptrace.endpos[2];
-									AAS_DebugLine(org, start, LINECOLOR_BLUE);
 								} //end if
 							} //end if
 //#endif //AAS_MOVE_DEBUG
