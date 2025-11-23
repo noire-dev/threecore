@@ -47,23 +47,6 @@ static int sv_gravity;
 
 static bot_movestate_t* botmovestates[MAX_CLIENTS + 1];
 
-void AAS_PresenceTypeBoundingBox(int presencetype, vec3_t mins, vec3_t maxs) {
-	int index;
-	//bounding box size for each presence type
-	static const vec3_t boxmins[3] = {{0, 0, 0}, {-15, -15, -24}, {-15, -15, -24}};
-	static const vec3_t boxmaxs[3] = {{0, 0, 0}, { 15,  15,  32}, { 15,  15,   8}};
-
-	if (presencetype == PRESENCE_NORMAL) index = 1;
-	else if (presencetype == PRESENCE_CROUCH) index = 2;
-	else
-	{
-		botimport.Print(PRT_FATAL, "AAS_PresenceTypeBoundingBox: unknown presence type\n");
-		index = 2;
-	} //end if
-	VectorCopy(boxmins[index], mins);
-	VectorCopy(boxmaxs[index], maxs);
-}
-
 int BotAllocMoveState(void) {
 	int i;
 
