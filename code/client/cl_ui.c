@@ -66,7 +66,7 @@ static void CL_GetClipboardData(char* buf, int buflen) {
 
 	Q_strncpyz(buf, cbd, buflen);
 
-	free(cbd);
+	Z_Free(cbd);
 }
 
 static void Key_KeynumToStringBuf(int keynum, char* buf, int buflen) { Q_strncpyz(buf, Key_KeynumToString(keynum), buflen); }
@@ -129,6 +129,7 @@ static intptr_t CL_UISystemCalls(intptr_t* args) {
 		case UI_LAN_CLEARPING: LAN_ClearPing(args[1]); return 0;
 		case UI_LAN_GETPING: LAN_GetPing(args[1], VMA(2), args[3], VMA(4)); return 0;
 		case UI_LAN_GETPINGINFO: LAN_GetPingInfo(args[1], VMA(2), args[3]); return 0;
+		case UI_MEMORY_REMAINING: return Hunk_MemoryRemaining();
 		case UI_LAN_GETSERVERCOUNT: return LAN_GetServerCount(args[1]);
 		case UI_LAN_GETSERVERADDRESSSTRING: LAN_GetServerAddressString(args[1], args[2], VMA(3), args[4]); return 0;
 

@@ -230,7 +230,7 @@ snd_stream_t *S_CodecUtilOpen( const char *filename, snd_codec_t *codec )
 	}
 
 	// Allocate a stream
-	stream = malloc( sizeof( snd_stream_t ) );
+	stream = Z_Malloc( sizeof( snd_stream_t ) );
 	if ( !stream )
 	{
 		FS_FCloseFile( hnd );
@@ -252,6 +252,6 @@ S_CodecUtilClose
 void S_CodecUtilClose( snd_stream_t **stream )
 {
 	FS_FCloseFile( ( *stream )->file );
-	free( *stream );
+	Z_Free( *stream );
 	*stream = NULL;
 }

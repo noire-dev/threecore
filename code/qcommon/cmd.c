@@ -522,9 +522,9 @@ void Cmd_RemoveCommand(const char* cmd_name) {
 		if(!Q_stricmp(cmd_name, cmd->name)) {
 			*back = cmd->next;
 			if(cmd->name) {
-				free(cmd->name);
+				Z_Free(cmd->name);
 			}
-			free(cmd);
+			Z_Free(cmd);
 			return;
 		}
 		back = &cmd->next;

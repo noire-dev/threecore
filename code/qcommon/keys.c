@@ -391,7 +391,7 @@ void Key_SetBinding( int keynum, const char *binding ) {
 
 	// free old bindings
 	if ( keys[ keynum ].binding ) {
-		free( keys[ keynum ].binding );
+		Z_Free( keys[ keynum ].binding );
 	}
 
 	// allocate memory for new binding

@@ -204,7 +204,7 @@ void CL_LoadJPG( const char *filename, unsigned char **pic, int *width, int *hei
   memcount = pixelcount * 4;
   row_stride = cinfo.output_width * cinfo.output_components;
 
-  out = malloc( memcount );
+  out = Z_Malloc( memcount );
 
   *width = cinfo.output_width;
   *height = cinfo.output_height;
@@ -468,10 +468,10 @@ void CL_SaveJPG( const char *filename, int quality, int image_width, int image_h
 	size_t bufSize;
 
 	bufSize = image_width * image_height * 4;
-	out = malloc(bufSize);
+	out = Hunk_AllocateTempMemory(bufSize);
 
 	bufSize = CL_SaveJPGToBuffer( out, bufSize, quality, image_width, image_height, image_buffer, padding );
 	FS_WriteFile( filename, out, bufSize );
 
-	free(out);
+	Hunk_FreeTempMemory(out);
 }

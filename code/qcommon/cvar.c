@@ -212,7 +212,7 @@ cvar_t* Cvar_Set(const char* var_name, const char* value) {
 	var->modified = qtrue;
 	cvar_group[var->group] = 1;
 
-	free(var->string);  // free the old value string
+	Z_Free(var->string);  // free the old value string
 
 	var->string = CopyString(value);
 	var->value = atof(var->string);
@@ -256,7 +256,7 @@ void Cvar_SetCheatState(void) {
 	for(var = cvar_vars; var; var = var->next) {
 		if(var->flags & CVAR_CHEAT) {
 			if(var->latchedString) {
-				free(var->latchedString);
+				Z_Free(var->latchedString);
 				var->latchedString = NULL;
 			}
 			if(strcmp(var->resetString, var->string)) Cvar_Set(var->name, var->resetString);
@@ -377,11 +377,11 @@ static cvar_t* Cvar_Unset(cvar_t* cv) {
 	
 	cvar_modifiedFlags |= cv->flags;
 
-	if(cv->name) free(cv->name);
-	if(cv->string) free(cv->string);
-	if(cv->latchedString) free(cv->latchedString);
-	if(cv->resetString) free(cv->resetString);
-	if(cv->description) free(cv->description);
+	if(cv->name) Z_Free(cv->name);
+	if(cv->string) Z_Free(cv->string);
+	if(cv->latchedString) Z_Free(cv->latchedString);
+	if(cv->resetString) Z_Free(cv->resetString);
+	if(cv->description) Z_Free(cv->description);
 
 	if(cv->prev)
 		cv->prev->next = cv->next;
@@ -570,7 +570,7 @@ void Cvar_InfoStringBuffer(int bit, char* buff, int buffsize) { Q_strncpyz(buff,
 void Cvar_SetDescription(cvar_t* var, const char* var_description) {
 	if(var_description && var_description[0] != '\0') {
 		if(var->description != NULL) {
-			free(var->description);
+			Z_Free(var->description);
 		}
 		var->description = CopyString(var_description);
 	}

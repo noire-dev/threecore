@@ -50,7 +50,7 @@ static winding_t *AllocWinding( int points )
 		c_peak_windings = c_active_windings;
 
 	s = sizeof( *w ) - sizeof( w->p ) + sizeof( w->p[0] ) * points;
-	w = malloc( s );
+	w = Z_Malloc( s );
 	Com_Memset( w, 0, s );
 	return w;
 }
@@ -63,7 +63,7 @@ void FreeWinding (winding_t *w)
 	*(unsigned *)w = 0xdeaddead;
 
 	c_active_windings--;
-	free (w);
+	Z_Free (w);
 }
 
 /*

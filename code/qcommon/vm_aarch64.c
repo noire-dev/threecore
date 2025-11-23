@@ -230,12 +230,12 @@ static void VM_FreeBuffers( void )
 {
 	// should be freed in reversed allocation order
 	//if ( instructionOffsets ) {
-	//	free( instructionOffsets );
+	//	Z_Free( instructionOffsets );
 	//	instructionOffsets = NULL;
 	//}
 
 	if ( inst ) {
-		free( inst );
+		Z_Free( inst );
 		inst = NULL;
 	}
 }
@@ -2628,8 +2628,8 @@ qboolean VM_Compile( vm_t *vm, vmHeader_t *header )
 	reg_t *reg;
 	int i;
 
-	inst = (instruction_t*)malloc( (header->instructionCount + 8 ) * sizeof( instruction_t ) );
-	//instructionOffsets = (uint32_t*)malloc( header->instructionCount * sizeof( uint32_t ) );
+	inst = (instruction_t*)Z_Malloc( (header->instructionCount + 8 ) * sizeof( instruction_t ) );
+	//instructionOffsets = (uint32_t*)Z_Malloc( header->instructionCount * sizeof( uint32_t ) );
 
 	errMsg = VM_LoadInstructions( (byte *) header + header->codeOffset, header->codeLength, header->instructionCount, inst );
 	if ( !errMsg ) {
@@ -2643,7 +2643,7 @@ qboolean VM_Compile( vm_t *vm, vmHeader_t *header )
 	}
 
 	if ( !vm->instructionPointers ) {
-		vm->instructionPointers = malloc( header->instructionCount * sizeof(vm->instructionPointers[0]), h_high );
+		vm->instructionPointers = Hunk_Alloc( header->instructionCount * sizeof(vm->instructionPointers[0]), h_high );
 	}
 
 	litBase = NULL;

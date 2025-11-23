@@ -250,7 +250,7 @@ snd_stream_t *S_OGG_CodecOpenStream(const char *filename)
 	}
 
 	// alloctate the OggVorbis_File
-	vf = malloc(sizeof(OggVorbis_File));
+	vf = Z_Malloc(sizeof(OggVorbis_File));
 	if (!vf)
 	{
 		S_CodecUtilClose(&stream);
@@ -261,7 +261,7 @@ snd_stream_t *S_OGG_CodecOpenStream(const char *filename)
 	// open the codec with our callbacks and stream as the generic pointer
 	if (ov_open_callbacks(stream, vf, NULL, 0, S_OGG_Callbacks) != 0)
 	{
-		free(vf);
+		Z_Free(vf);
 
 		S_CodecUtilClose(&stream);
 
@@ -273,7 +273,7 @@ snd_stream_t *S_OGG_CodecOpenStream(const char *filename)
 	{
 		ov_clear(vf);
 
-		free(vf);
+		Z_Free(vf);
 
 		S_CodecUtilClose(&stream);
 
@@ -285,7 +285,7 @@ snd_stream_t *S_OGG_CodecOpenStream(const char *filename)
 	{
 		ov_clear(vf);
 
-		free(vf);
+		Z_Free(vf);
 
 		S_CodecUtilClose(&stream);
 
@@ -298,7 +298,7 @@ snd_stream_t *S_OGG_CodecOpenStream(const char *filename)
 	{
 		ov_clear(vf);
 
-		free(vf);
+		Z_Free(vf);
 
 		S_CodecUtilClose(&stream);
 
@@ -342,7 +342,7 @@ void S_OGG_CodecCloseStream(snd_stream_t *stream)
 	ov_clear((OggVorbis_File *) stream->ptr);
 
 	// free the OGG codec control struct
-	free(stream->ptr);
+	Z_Free(stream->ptr);
 
 	// close the stream
 	S_CodecUtilClose(&stream);
@@ -447,7 +447,7 @@ void *S_OGG_CodecLoad(const char *filename, snd_info_t *info)
 
 	// allocate a buffer
 	// this buffer must be free-ed by the caller of this function
-    buffer = malloc(info->size);
+    buffer = Hunk_AllocateTempMemory(info->size);
 	if (!buffer)
 	{
 		S_OGG_CodecCloseStream(stream);
@@ -461,7 +461,7 @@ void *S_OGG_CodecLoad(const char *filename, snd_info_t *info)
 	// we don't even have read a single byte
 	if (bytesRead <= 0)
 	{
-		free(buffer);
+		Hunk_FreeTempMemory(buffer);
 		S_OGG_CodecCloseStream(stream);
 
 		return NULL;	

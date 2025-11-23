@@ -419,10 +419,10 @@ qboolean CL_OpenAVIForWriting( const char *fileName, qboolean pipe, qboolean reo
 		// Allocate a bit more space for the capture buffer to account for possible
 		// padding at the end of pixel lines, and padding for alignment
 		#define MAX_PACK_LEN 16
-		//afd.cBuffer = malloc((afd.width * 3 + MAX_PACK_LEN - 1) * afd.height + MAX_PACK_LEN - 1);
-		afd.cBuffer = malloc( (afd.width * afd.height * 4) + MAX_PACK_LEN - 1 ); // allocate for RGBA storage
+		//afd.cBuffer = Z_Malloc((afd.width * 3 + MAX_PACK_LEN - 1) * afd.height + MAX_PACK_LEN - 1);
+		afd.cBuffer = Z_Malloc( (afd.width * afd.height * 4) + MAX_PACK_LEN - 1 ); // allocate for RGBA storage
 		// raw avi files have pixel lines start on 4-byte boundaries
-		afd.eBuffer = malloc( PAD( afd.width * 3, AVI_LINE_PADDING ) * afd.height );
+		afd.eBuffer = Z_Malloc( PAD( afd.width * 3, AVI_LINE_PADDING ) * afd.height );
 	}
 
 	afd.a.rate = dma.speed;
@@ -678,8 +678,8 @@ qboolean CL_CloseAVI( qboolean reopen )
 
 	if ( !reopen )
 	{
-		free( afd.cBuffer );
-		free( afd.eBuffer );
+		Z_Free( afd.cBuffer );
+		Z_Free( afd.eBuffer );
 	}
 
 	if ( afd.pipe )

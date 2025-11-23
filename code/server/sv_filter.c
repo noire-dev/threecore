@@ -107,7 +107,7 @@ static void free_nodes( filter_node_t *node )
 		{
 			free_nodes( node->child );
 		}
-		free( node );
+		Z_Free( node );
 		node = next;
 	}
 }
@@ -456,7 +456,7 @@ static filter_node_t *new_node( const char *p1, const char *p2, filter_op fop, i
 		len2 = 0; // integer or null value
 
 	len = len1 + len2 + sizeof( *node );
-	node = (filter_node_t *) malloc( len );
+	node = (filter_node_t *) Z_Malloc( len );
 	memset( node, 0, len );
 
 	node->fop = fop;
@@ -690,10 +690,10 @@ static qboolean parse_file( const char *filename )
 	size = ftell( f );
 	fseek( f, 0, SEEK_SET );
 
-	data = (char*) malloc( size + 1 );
+	data = (char*) Z_Malloc( size + 1 );
 	if ( fread( data, size, 1, f ) != 1 )
 	{
-		free( data );
+		Z_Free( data );
 		fclose( f );
 		return qfalse;
 	}
@@ -711,7 +711,7 @@ static qboolean parse_file( const char *filename )
 		nodes = NULL;
 	}
 
-	free( data );
+	Z_Free( data );
 
 	if ( text == NULL )
 		return qfalse;

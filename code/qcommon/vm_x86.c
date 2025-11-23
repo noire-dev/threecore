@@ -2676,8 +2676,8 @@ static void( *const badDataWritePtr )( void ) = BadDataWrite;
 static void VM_FreeBuffers( void )
 {
 	// should be freed in reversed allocation order
-	free( instructionOffsets );
-	free( inst );
+	Z_Free( instructionOffsets );
+	Z_Free( inst );
 }
 
 
@@ -3657,8 +3657,8 @@ qboolean VM_Compile( vm_t *vm, vmHeader_t *header ) {
 	int num_compress;
 #endif
 
-	inst = (instruction_t*)malloc( (header->instructionCount + 8 ) * sizeof( instruction_t ) );
-	instructionOffsets = (int*)malloc( header->instructionCount * sizeof( int ) );
+	inst = (instruction_t*)Z_Malloc( (header->instructionCount + 8 ) * sizeof( instruction_t ) );
+	instructionOffsets = (int*)Z_Malloc( header->instructionCount * sizeof( int ) );
 
 	errMsg = VM_LoadInstructions( (byte *) header + header->codeOffset, header->codeLength, header->instructionCount, inst );
 	if ( !errMsg ) {

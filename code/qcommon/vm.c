@@ -465,7 +465,7 @@ static vmHeader_t *VM_LoadQVM( vm_t *vm, qboolean alloc ) {
 
 	if ( alloc ) {
 		// allocate zero filled space for initialized and uninitialized data
-		vm->dataBase = malloc( dataAlloc, h_high );
+		vm->dataBase = Hunk_Alloc( dataAlloc, h_high );
 		vm->dataMask = dataLength - 1;
 		vm->dataAlloc = dataAlloc;
 	} else {
@@ -495,7 +495,7 @@ static vmHeader_t *VM_LoadQVM( vm_t *vm, qboolean alloc ) {
 		Com_Printf( "Loading %d jump table targets\n", vm->numJumpTableTargets );
 
 		if ( alloc ) {
-			vm->jumpTableTargets = (int32_t *) malloc( header->jtrgLength, h_high );
+			vm->jumpTableTargets = (int32_t *) Hunk_Alloc( header->jtrgLength, h_high );
 		} else {
 			if ( vm->numJumpTableTargets != previousNumJumpTableTargets ) {
 				VM_Free( vm );
@@ -1228,6 +1228,7 @@ If image ends in .qvm it will be compiled or interpreted
 ================
 */
 vm_t *VM_Create( vmIndex_t index, syscall_t systemCalls ) {
+	int			remaining;
 	const char	*name;
 	vmHeader_t	*header;
 	vm_t		*vm;
@@ -1239,6 +1240,8 @@ vm_t *VM_Create( vmIndex_t index, syscall_t systemCalls ) {
 	if ( (unsigned)index >= VM_COUNT ) {
 		Com_Error( ERR_DROP, "VM_Create: bad vm index %i", index );
 	}
+
+	remaining = Hunk_MemoryRemaining();
 
 	vm = &vmTable[ index ];
 
@@ -1295,7 +1298,7 @@ vm_t *VM_Create( vmIndex_t index, syscall_t systemCalls ) {
 	// free the original file
 	FS_FreeFile( header );
 
-	Com_Printf( "%s loaded\n", vm->name );
+	Com_Printf( "%s loaded in %d bytes on the hunk\n", vm->name, remaining - Hunk_MemoryRemaining() );
 
 	return vm;
 }

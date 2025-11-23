@@ -119,7 +119,7 @@ void SND_setup( void )
 	// allocate the stack based hunk allocator
 	// -EC-
 	if ( sfxScratchBuffer == NULL ) {
-		sfxScratchBuffer = malloc( sz );	//malloc(SND_CHUNK_SIZE * sizeof(short) * 4);
+		sfxScratchBuffer = malloc( sz );	//Hunk_Alloc(SND_CHUNK_SIZE * sizeof(short) * 4);
 	}
 
 	// clear scratch buffer -EC-
@@ -282,7 +282,7 @@ qboolean S_LoadSound( sfx_t *sfx )
 		Com_DPrintf(S_COLOR_YELLOW "WARNING: %s is a 8 bit audio file\n", sfx->soundName);
 	}
 
-	samples = malloc(info.samples * sizeof(short) * 2);
+	samples = Hunk_AllocateTempMemory(info.samples * sizeof(short) * 2);
 
 	sfx->lastTimeUsed = s_soundtime + 1; // Com_Milliseconds()+1
 
@@ -305,8 +305,8 @@ qboolean S_LoadSound( sfx_t *sfx )
 
 	sfx->soundChannels = info.channels;
 	
-	free(samples);
-	free(data);
+	Hunk_FreeTempMemory(samples);
+	Hunk_FreeTempMemory(data);
 
 	return qtrue;
 }

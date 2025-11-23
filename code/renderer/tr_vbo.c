@@ -866,11 +866,11 @@ void R_BuildWorldVBO( msurface_t *surf, int surfCount )
 	ibo_size = PAD( ibo_size, 32 );
 
 	// 0 item is unused
-	vbo->items = malloc( ( numStaticSurfaces + 1 ) * sizeof( vbo_item_t ), h_low );
+	vbo->items = ri.Hunk_Alloc( ( numStaticSurfaces + 1 ) * sizeof( vbo_item_t ), h_low );
 	vbo->items_count = numStaticSurfaces;
 
 	// last item will be used for run length termination
-	vbo->items_queue = malloc( ( numStaticSurfaces + 1 ) * sizeof( int ), h_low );
+	vbo->items_queue = ri.Hunk_Alloc( ( numStaticSurfaces + 1 ) * sizeof( int ), h_low );
 	vbo->items_queue_count = 0;
 
 	ri.Printf( PRINT_ALL, "...found %i VBO surfaces (%i vertexes, %i indexes)\n",
@@ -880,24 +880,24 @@ void R_BuildWorldVBO( msurface_t *surf, int surfCount )
 	//Com_Printf( S_COLOR_CYAN "IBO size: %i\n", ibo_size );
 
 	// vertex buffer
-	vbo->vbo_buffer = malloc( vbo_size );
+	vbo->vbo_buffer = ri.Hunk_AllocateTempMemory( vbo_size );
 	vbo->vbo_offset = 0;
 	vbo->vbo_size = vbo_size;
 
 	// index buffer
-	vbo->ibo_buffer = malloc( ibo_size, h_low );	
+	vbo->ibo_buffer = ri.Hunk_Alloc( ibo_size, h_low );	
 	vbo->ibo_offset = 0;
 	vbo->ibo_size = ibo_size;
 
 	// soft index buffer
-	vbo->soft_buffer = malloc( ibo_size, h_low );
+	vbo->soft_buffer = ri.Hunk_Alloc( ibo_size, h_low );
 	vbo->soft_buffer_indexes = 0;
 
 	// ibo runs buffer
-	vbo->ibo_items = malloc( ( (numStaticIndexes / MIN_IBO_RUN) + 1 ) * sizeof( ibo_item_t ), h_low );
+	vbo->ibo_items = ri.Hunk_Alloc( ( (numStaticIndexes / MIN_IBO_RUN) + 1 ) * sizeof( ibo_item_t ), h_low );
 	vbo->ibo_items_count = 0;
 
-	surfList = mallocateTempMemory( numStaticSurfaces * sizeof( msurface_t* ) );
+	surfList = ri.Hunk_AllocateTempMemory( numStaticSurfaces * sizeof( msurface_t* ) );
 
 	for ( i = 0, n = 0, sf = surf; i < surfCount; i++, sf++ ) {
 		face = (srfSurfaceFace_t *) sf->data;
@@ -968,7 +968,7 @@ void R_BuildWorldVBO( msurface_t *surf, int surfCount )
 		tess.numVertexes = 0;
 	}
 
-	free( surfList );
+	ri.Hunk_FreeTempMemory( surfList );
 
 	// reset error state
 	qglGetError();
@@ -1002,7 +1002,7 @@ void R_BuildWorldVBO( msurface_t *surf, int surfCount )
 	}
 
 	VBO_UnBind();
-	free( vbo->vbo_buffer );
+	ri.Hunk_FreeTempMemory( vbo->vbo_buffer );
 	vbo->vbo_buffer = NULL;
 	return;
 
@@ -1035,7 +1035,7 @@ __fail:
 	VBO_UnBind();
 
 	// release host memory
-	free( vbo->vbo_buffer );
+	ri.Hunk_FreeTempMemory( vbo->vbo_buffer );
 	vbo->vbo_buffer = NULL;
 
 	// release GPU resources

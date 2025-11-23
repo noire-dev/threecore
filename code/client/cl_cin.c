@@ -1600,13 +1600,13 @@ void CIN_DrawCinematic( int handle ) {
 	if (cinTable[handle].dirty && (cinTable[handle].CIN_WIDTH != cinTable[handle].drawX || cinTable[handle].CIN_HEIGHT != cinTable[handle].drawY)) {
 		int *buf2;
 
-		buf2 = malloc( 256*256*4 );
+		buf2 = Hunk_AllocateTempMemory( 256*256*4 );
 
 		CIN_ResampleCinematic(handle, buf2);
 
 		re.DrawStretchRaw( x, y, w, h, 256, 256, (byte *)buf2, handle, qtrue);
 		cinTable[handle].dirty = qfalse;
-		free(buf2);
+		Hunk_FreeTempMemory(buf2);
 		return;
 	}
 
@@ -1689,13 +1689,13 @@ void CIN_UploadCinematic( int handle ) {
 		if (cinTable[handle].dirty && (cinTable[handle].CIN_WIDTH != cinTable[handle].drawX || cinTable[handle].CIN_HEIGHT != cinTable[handle].drawY))  {
 			int *buf2;
 
-			buf2 = malloc( 256*256*4 );
+			buf2 = Hunk_AllocateTempMemory( 256*256*4 );
 
 			CIN_ResampleCinematic(handle, buf2);
 
 			re.UploadCinematic( cinTable[handle].CIN_WIDTH, cinTable[handle].CIN_HEIGHT, 256, 256, (byte *)buf2, handle, qtrue);
 			cinTable[handle].dirty = qfalse;
-			free(buf2);
+			Hunk_FreeTempMemory(buf2);
 		} else {
 			// Upload video at normal resolution
 			re.UploadCinematic( cinTable[handle].CIN_WIDTH, cinTable[handle].CIN_HEIGHT, cinTable[handle].drawX, cinTable[handle].drawY,

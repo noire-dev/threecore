@@ -121,7 +121,7 @@ void SV_SetConfigstring (int index, const char *val) {
 	}
 
 	// change the string in sv
-	free( sv.configstrings[index] );
+	Z_Free( sv.configstrings[index] );
 	sv.configstrings[index] = CopyString( val );
 
 	// send it to all the clients if we aren't
@@ -254,7 +254,7 @@ SV_AllocClients
 */
 static void SV_AllocClients( int count )
 {
-	svs.clients = malloc( count * sizeof( client_t ) );
+	svs.clients = Z_TagMalloc( count * sizeof( client_t ), TAG_CLIENTS );
 	Com_Memset( svs.clients, 0x0, count * sizeof( client_t ) );
 	sv.maxclients = count;
 	SV_SetSnapshotParams();
@@ -303,7 +303,7 @@ static void SV_ClearServer( void ) {
 
 	for ( i = 0; i < MAX_CONFIGSTRINGS; i++ ) {
 		if ( sv.configstrings[i] ) {
-			free( sv.configstrings[i] );
+			Z_Free( sv.configstrings[i] );
 		}
 	}
 
@@ -356,7 +356,7 @@ void SV_SpawnServer( const char *mapname ) {
 	FS_ClearPakReferences( 0 );
 
 	// allocate the snapshot entities on the hunk
-	svs.snapshotEntities = malloc( sizeof(entityState_t)*svs.numSnapshotEntities, h_high );
+	svs.snapshotEntities = Hunk_Alloc( sizeof(entityState_t)*svs.numSnapshotEntities, h_high );
 
 	// initialize snapshot storage
 	SV_InitSnapshotStorage();
@@ -506,6 +506,8 @@ void SV_SpawnServer( const char *mapname ) {
 
 	// send a heartbeat now so the master will get up to date info
 	SV_Heartbeat_f();
+
+	Hunk_SetMark();
 
 	Com_Printf ("-----------------------------------\n");
 
@@ -687,7 +689,7 @@ void SV_Shutdown( const char *finalmsg ) {
 		for ( index = 0; index < sv.maxclients; index++ )
 			SV_FreeClient( &svs.clients[ index ] );
 
-		free( svs.clients );
+		Z_Free( svs.clients );
 	}
 	Com_Memset( &svs, 0, sizeof( svs ) );
 	sv.time = 0;

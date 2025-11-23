@@ -623,7 +623,7 @@ static packetQueue_t *list_process( packetQueue_t *head, const int time_diff )
 #endif
 				Sys_SendPacket( item->length, item->data, &item->to );
 			head = list_remove( head, item );
-			free( item );
+			Z_Free( item );
 			item = next;
 		} else {
 			item = item->next;

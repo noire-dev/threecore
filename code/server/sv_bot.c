@@ -242,6 +242,39 @@ static void BotImport_BSPModelMinsMaxsOrigin(int modelnum, vec3_t angles, vec3_t
 
 /*
 ==================
+BotImport_GetMemory
+==================
+*/
+static void *BotImport_GetMemory(int size) {
+	void *ptr;
+
+	ptr = Z_TagMalloc( size, TAG_BOTLIB );
+	return ptr;
+}
+
+/*
+==================
+BotImport_FreeMemory
+==================
+*/
+static void BotImport_FreeMemory(void *ptr) {
+	Z_Free(ptr);
+}
+
+/*
+=================
+BotImport_HunkAlloc
+=================
+*/
+static void *BotImport_HunkAlloc( int size ) {
+	if( Hunk_CheckMark() ) {
+		Com_Error( ERR_DROP, "%s(): Alloc with marks already set", __func__ );
+	}
+	return Hunk_Alloc( size, h_high );
+}
+
+/*
+==================
 SV_BotClientCommand
 ==================
 */
@@ -336,9 +369,9 @@ SV_BotInitBotLib
 void SV_BotInitBotLib(void) {
 	botlib_import_t	botlib_import;
 
-	if (debugpolygons) free(debugpolygons);
+	if (debugpolygons) Z_Free(debugpolygons);
 	bot_maxdebugpolys = 2;
-	debugpolygons = malloc(sizeof(bot_debugpoly_t) * bot_maxdebugpolys);
+	debugpolygons = Z_Malloc(sizeof(bot_debugpoly_t) * bot_maxdebugpolys);
 
 	botlib_import.Print = BotImport_Print;
 	botlib_import.Trace = BotImport_Trace;
