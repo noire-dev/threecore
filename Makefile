@@ -20,7 +20,7 @@ BUILD_SERVER        = 1
 MOUNT_DIR           = code
 
 # General
-USE_LOCAL_HEADERS   = 0
+USE_LOCAL_HEADERS   = 1
 
 # Audio
 USE_OGG_VORBIS      = 1
@@ -306,13 +306,13 @@ ifdef MINGW
 
   BASE_CFLAGS += -DUSE_LOCAL_HEADERS=1 -I$(SDLHDIR)
   ifeq ($(ARCH),x86)
-    CLIENT_LDFLAGS += -L$(MOUNT_DIR)/libsdl/windows/mingw/lib32
+    CLIENT_LDFLAGS += -L$(MOUNT_DIR)/libsdl/windows/lib32
     CLIENT_LDFLAGS += -lSDL2
-    CLIENT_EXTRA_FILES += $(MOUNT_DIR)/libsdl/windows/mingw/lib32/SDL2.dll
+    CLIENT_EXTRA_FILES += $(MOUNT_DIR)/libsdl/windows/lib32/SDL2.dll
   else
-    CLIENT_LDFLAGS += -L$(MOUNT_DIR)/libsdl/windows/mingw/lib64
-    CLIENT_LDFLAGS += -lSDL264
-    CLIENT_EXTRA_FILES += $(MOUNT_DIR)/libsdl/windows/mingw/lib64/SDL264.dll
+    CLIENT_LDFLAGS += -L$(MOUNT_DIR)/libsdl/windows/lib64
+    CLIENT_LDFLAGS += -lSDL2
+    CLIENT_EXTRA_FILES += $(MOUNT_DIR)/libsdl/windows/lib64/SDL2.dll
   endif
 
   ifeq ($(USE_OGG_VORBIS),1)
@@ -357,10 +357,10 @@ ifeq ($(COMPILE_PLATFORM),darwin)
   endif
 
   ifeq ($(USE_LOCAL_HEADERS),1)
-    MACLIBSDIR=$(MOUNT_DIR)/libsdl/macosx
+    MACLIBSDIR=$(MOUNT_DIR)/libsdl/macos
     BASE_CFLAGS += -I$(SDLHDIR)
-    CLIENT_LDFLAGS += $(MACLIBSDIR)/libSDL2-2.0.0.dylib
-    CLIENT_EXTRA_FILES += $(MACLIBSDIR)/libSDL2-2.0.0.dylib
+    CLIENT_LDFLAGS += $(MACLIBSDIR)/SDL2.dylib
+    CLIENT_EXTRA_FILES += $(MACLIBSDIR)/SDL2.dylib
   else
   ifneq ($(SDL_INCLUDE),)
     BASE_CFLAGS += $(SDL_INCLUDE)
