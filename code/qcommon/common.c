@@ -32,7 +32,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #include <winsock.h>
 #endif
 
-#include "../client/keys.h
+#include "../client/keys.h"
 
 #ifndef DEDICATED
 #include <SDL.h>
