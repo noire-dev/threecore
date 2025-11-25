@@ -420,8 +420,8 @@ static void Console_Key( int key ) {
 		g_consoleField.widthInChars = g_console_field_width;
 
 		if ( cls.state == CA_DISCONNECTED ) {
-			//SCR_UpdateScreen ();	// THREADING
-		}
+			SCR_UpdateScreen ();	// force an update, because the command
+		}							// may take some time
 		return;
 	}
 
