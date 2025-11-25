@@ -96,7 +96,10 @@ int renderThreadEnabled = 0;
 int renderThreadRendering = 0;
 int renderThread(void* data) {
     while (renderThreadEnabled) {
-        if(renderThreadRendering) SCR_UpdateScreen();
+        if(renderThreadRendering){ 
+            SCR_UpdateScreen();
+            renderThreadRendering = 0;
+        }
         SDL_Delay(1);
     }
     return 0;
