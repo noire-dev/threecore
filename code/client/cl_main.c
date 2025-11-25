@@ -24,6 +24,8 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #include "client.h"
 #include <limits.h>
 
+#include <SDL.h>
+
 cvar_t	*cl_noprint;
 cvar_t	*cl_debugMove;
 
@@ -89,6 +91,16 @@ static void CL_Ping_f( void );
 static void CL_InitRef( void );
 static void CL_ShutdownRef( refShutdownCode_t code );
 static void CL_InitGLimp_Cvars( void );
+
+int renderThreadEnabled = 0;
+int renderThreadRendering = 0;
+int renderThread(void* data) {
+    while (renderThreadEnabled) {
+        if(renderThreadRendering) SCR_UpdateScreen();
+        SDL_Delay(1);
+    }
+    return 0;
+}
 
 /*
 =======================================================================
@@ -817,7 +829,7 @@ void CL_MapLoading( void ) {
 		Com_Memset( &cl.gameState, 0, sizeof( cl.gameState ) );
 		clc.lastPacketSentTime = cls.realtime - 9999;  // send packet immediately
 		cls.framecount++;
-		SCR_UpdateScreen();
+		//SCR_UpdateScreen(); //THREADING
 	} else {
 		// clear nextmap so the cinematic shutdown doesn't execute it
 		Cvar_Set( "nextmap", "" );
@@ -826,7 +838,7 @@ void CL_MapLoading( void ) {
 		cls.state = CA_CHALLENGING;		// so the connect screen is drawn
 		Key_SetCatcher( 0 );
 		cls.framecount++;
-		SCR_UpdateScreen();
+		//SCR_UpdateScreen(); //THREADING
 		clc.connectTime = -RETRANSMIT_TIMEOUT;
 		NET_StringToAdr( cls.servername, &clc.serverAddress, NA_UNSPEC );
 		// we don't need a challenge on the localhost
@@ -916,7 +928,7 @@ qboolean CL_Disconnect( qboolean showMainMenu ) {
 	if ( CL_VideoRecording() ) {
 		// Finish rendering current frame
 		cls.framecount++;
-		SCR_UpdateScreen();
+		//SCR_UpdateScreen(); //THREADING
 		CL_CloseAVI( qfalse );
 	}
 
@@ -2299,7 +2311,7 @@ void CL_Frame( int msec, int realMsec ) {
 
 	// update the screen
 	cls.framecount++;
-	SCR_UpdateScreen();
+	renderThreadRendering = 1;
 
 	// update audio
 	S_Update( realMsec );
@@ -3261,6 +3273,9 @@ void CL_Init( void ) {
 	cls.realtime = 0;
 
 	CL_InitInput();
+	
+	renderThreadEnabled = 1;
+	SDL_Thread* render_thread = SDL_CreateThread(renderThread, "RenderThread", NULL);
 
 	//
 	// register client variables
