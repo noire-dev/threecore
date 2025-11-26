@@ -882,7 +882,7 @@ int main( int argc, const char* argv[] ) {
 
 #ifdef DEDICATED
 		// run the game
-		Com_Frame( qfalse );
+		Com_Frame();
 #else
 		// check for other input devices
 		IN_Frame();

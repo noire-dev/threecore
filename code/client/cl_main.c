@@ -1144,7 +1144,7 @@ static void CL_Connect_f( void ) {
 
 	// make sure a local server is killed
 	Cvar_Set( "sv_killserver", "1" );
-	SV_Frame( 0 );
+	SV_Frame();
 
 	CL_Disconnect( qtrue );
 	Con_Close();
