@@ -3521,7 +3521,7 @@ SDL_Thread* serverThread = NULL;
 qboolean threadServerEnabled = qfalse;
 
 int serverThread_main(void* data) {
-    int minMsec, sleepMsec, realMsec timeVal, timeValSV, sv_frameTime;
+    int minMsec, sleepMsec, realMsec, timeVal, timeValSV, sv_frameTime;
     while(1) {
         
 	minMsec = 16;
