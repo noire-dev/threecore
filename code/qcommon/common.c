@@ -3519,9 +3519,11 @@ qboolean threadServerEnabled = qfalse;
 int serverThread_main(void* data) {
     int	msec, realMsec;
     while(1) {
-        realMsec = com_frameTime - lastTime;
-	    msec = Com_ModifyMsec( realMsec );
-        SV_Frame(msec);
+        if(threadServerEnabled){
+            realMsec = com_frameTime - lastTime;
+	        msec = Com_ModifyMsec( realMsec );
+            SV_Frame(msec);
+        }
         SDL_Delay(1);
     }
     
@@ -3669,7 +3671,7 @@ void Com_Frame( qboolean noDelay ) {
 //#ifndef DEDICATED
 //	threadServerEnabled = qtrue;
 //#else
-    Com_Printf("Server old tick: %d ms\n", msec);
+    Com_Printf("Server single-thread tick: %d ms\n", msec);
     SV_Frame(msec);
 //#endif	
 
