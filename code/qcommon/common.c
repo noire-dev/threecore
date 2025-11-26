@@ -3539,7 +3539,9 @@ Com_FrameInit
 void Com_FrameInit( void )
 {
 	lastTime = com_frameTime = Com_Milliseconds();
+#ifndef DEDICATED
 	serverThread = SDL_CreateThread(serverThread_main, "server", NULL);
+#endif
 }
 
 /*
