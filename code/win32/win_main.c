@@ -609,7 +609,7 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLin
 		// make sure mouse and joystick are only called once a frame
 		IN_Frame();
 		// run the game
-		Com_Frame();
+		Com_Frame( CL_NoDelay() );
 	}
 
 	// never gets here

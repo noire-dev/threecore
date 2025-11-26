@@ -958,8 +958,6 @@ extern 	cvar_t	*os_linux;
 extern 	cvar_t	*os_windows;
 extern 	cvar_t	*os_macos;
 
-extern  cvar_t  *c_serverThread;
-
 // both client and server must agree to pause
 extern	cvar_t	*sv_paused;
 extern	cvar_t	*sv_packetdelay;
@@ -1062,7 +1060,7 @@ unsigned int Com_TouchMemory( void );
 // commandLine should not include the executable name (argv[0])
 void Com_Init( char *commandLine );
 void Com_FrameInit( void );
-void Com_Frame( void );
+void Com_Frame( qboolean noDelay );
 
 /*
 ==============================================================
@@ -1141,11 +1139,15 @@ void CL_StartConvertOBJ(const char *name);
 //
 void SV_Init( void );
 void SV_Shutdown( const char *finalmsg );
-void SV_Frame( void );
+void SV_Frame( int msec );
 void SV_TrackCvarChanges( void );
 void SV_PacketEvent( const netadr_t *from, msg_t *msg );
+int SV_FrameMsec( void );
 qboolean SV_GameCommand( void );
 int SV_SendQueuedPackets( void );
+
+void SV_AddDedicatedCommands( void );
+void SV_RemoveDedicatedCommands( void );
 
 
 //

@@ -882,12 +882,12 @@ int main( int argc, const char* argv[] ) {
 
 #ifdef DEDICATED
 		// run the game
-		Com_Frame();
+		Com_Frame( qfalse );
 #else
 		// check for other input devices
 		IN_Frame();
 		// run the game
-		Com_Frame();
+		Com_Frame( CL_NoDelay() );
 #endif
 	}
 	// never gets here

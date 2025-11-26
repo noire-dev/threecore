@@ -1144,7 +1144,7 @@ static void CL_Connect_f( void ) {
 
 	// make sure a local server is killed
 	Cvar_Set( "sv_killserver", "1" );
-	SV_Frame();
+	SV_Frame( 0 );
 
 	CL_Disconnect( qtrue );
 	Con_Close();
@@ -2180,6 +2180,21 @@ qboolean CL_CheckPaused( void )
 
 	return qfalse;
 }
+
+
+/*
+==================
+CL_NoDelay
+==================
+*/
+qboolean CL_NoDelay( void )
+{
+	if (CL_VideoRecording())
+		return qtrue;
+
+	return qfalse;
+}
+
 
 /*
 ==================
