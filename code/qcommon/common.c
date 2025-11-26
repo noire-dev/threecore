@@ -102,7 +102,6 @@ int		time_backend;		// renderer backend time
 
 static int	lastTime;
 int			com_frameTime;
-int         com_frameTime_serverThread;
 static int	com_frameNumber;
 
 qboolean	com_errorEntered = qfalse;
@@ -3519,17 +3518,10 @@ qboolean threadServerEnabled = qfalse;
 
 int serverThread_main(void* data) {
     int	msec, realMsec;
-    Com_Printf("Server thread started!\n");
     while(1) {
-        if(threadServerEnabled){
-            Com_Printf("Server running: on\n");
-            lastTime = com_frameTime_serverThread = Com_Milliseconds();
-            com_frameTime_serverThread = Com_EventLoop();
-            realMsec = com_frameTime_serverThread - lastTime;
-	        msec = Com_ModifyMsec( realMsec );
-	        Com_Printf("Server tick: %d ms\n", msec);
-            SV_Frame(msec);
-        }
+        realMsec = com_frameTime - lastTime;
+	    msec = Com_ModifyMsec( realMsec );
+        SV_Frame(msec);
         SDL_Delay(1);
     }
     
@@ -3674,12 +3666,12 @@ void Com_Frame( qboolean noDelay ) {
 		timeBeforeServer = Sys_Milliseconds();
 	}
 
-#ifndef DEDICATED
-    Com_Printf("Old server tick: %d ms\n", msec);
-	threadServerEnabled = qtrue;
-#else
+//#ifndef DEDICATED
+//	threadServerEnabled = qtrue;
+//#else
+    Com_Printf("Server old tick: %d ms\n", msec);
     SV_Frame(msec);
-#endif	
+//#endif	
 
 	// if "dedicated" has been modified, start up
 	// or shut down the client system.
