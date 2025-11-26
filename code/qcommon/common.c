@@ -90,6 +90,8 @@ cvar_t	*os_linux;
 cvar_t	*os_windows;
 cvar_t	*os_macos;
 
+cvar_t  *c_serverThread;
+
 cvar_t	*com_cameraMode;
 #if defined(_WIN32) && defined(_DEBUG)
 cvar_t	*com_noErrorInterrupt;
@@ -3208,6 +3210,8 @@ void Com_Init( char *commandLine ) {
 	#else
 	os_macos = Cvar_Get("os_macos", "0", CVAR_ARCHIVE);
 	#endif
+	
+	c_serverThread = Cvar_Get("c_serverThread", "0", 0);
 
 	FS_InitFilesystem();
 
@@ -3669,7 +3673,12 @@ void Com_Frame( qboolean noDelay ) {
 	}
 
 #ifndef DEDICATED
-	threadServerEnabled = qtrue;
+    if(c_serverThread->integer) {
+	    threadServerEnabled = qtrue;
+    } else {
+        threadServerEnabled = qfalse;
+        SV_Frame(msec);
+    }
 #else
     SV_Frame(msec);
 #endif	

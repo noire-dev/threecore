@@ -958,6 +958,8 @@ extern 	cvar_t	*os_linux;
 extern 	cvar_t	*os_windows;
 extern 	cvar_t	*os_macos;
 
+extern  cvar_t  *c_serverThread;
+
 // both client and server must agree to pause
 extern	cvar_t	*sv_paused;
 extern	cvar_t	*sv_packetdelay;

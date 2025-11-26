@@ -1234,7 +1234,7 @@ void SV_Frame( int msec ) {
 	
 	Com_Printf("Server thread: killserver check\n");
 
-	if (!com_sv_running->integer || gvm == NULL){
+	if (!com_sv_running->integer){
 		if (com_dedicated->integer) {
 			// Block indefinitely until something interesting happens
 			// on STDIN.
