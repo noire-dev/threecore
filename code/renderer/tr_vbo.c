@@ -1492,18 +1492,7 @@ static void RB_IterateStagesVBO( const shaderCommands_t *input )
 		qglEnable( GL_TEXTURE_2D );
 	}
 
-	if ( qglUnlockArraysEXT ) {
-		qglUnlockArraysEXT();
-	}
-
-	if ( r_speeds->integer == 1 ) {
-		// update performance stats
-		backEnd.pc.c_totalIndexes += world_vbo.items_queue_indexes;
-		backEnd.pc.c_indexes += world_vbo.items_queue_indexes;
-		backEnd.pc.c_vertexes += world_vbo.items_queue_vertexes;
-		backEnd.pc.c_shaders++;
-	}
-	//VBO_UnBind();
+	if ( qglUnlockArraysEXT ) qglUnlockArraysEXT();
 }
 
 

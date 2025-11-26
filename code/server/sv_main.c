@@ -1216,7 +1216,6 @@ happen before SV_Frame is called
 #define RESTART_BUFFER_MS 10000
 void SV_Frame( int msec ) {
 	int		frameMsec;
-	int		startTime;
 
 	if ( Cvar_CheckGroup( CVG_SERVER ) )
 		SV_TrackCvarChanges(); // update rate settings, etc.
@@ -1290,12 +1289,6 @@ void SV_Frame( int msec ) {
 		cvar_modifiedFlags &= ~CVAR_SYSTEMINFO;
 	}
 
-	if ( com_speeds->integer ) {
-		startTime = Sys_Milliseconds();
-	} else {
-		startTime = 0;	// quite a compiler warning
-	}
-
 	// update ping based on the all received frames
 	SV_CalcPings();
 
@@ -1309,10 +1302,6 @@ void SV_Frame( int msec ) {
 
 		// let everything in the world think and move
 		VM_Call( gvm, 1, GAME_RUN_FRAME, sv.time );
-	}
-
-	if ( com_speeds->integer ) {
-		time_game = Sys_Milliseconds () - startTime;
 	}
 
 	// check timeouts

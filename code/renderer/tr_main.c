@@ -1361,8 +1361,6 @@ void R_AddLitSurf( surfaceType_t *surface, shader_t *shader, int fogIndex )
 	if ( tr.refdef.numLitSurfs >= ARRAY_LEN( backEndData->litSurfs ) )
 		return;
 
-	tr.pc.c_lit_surfs++;
-
 	litsurf = &tr.refdef.litSurfs[ tr.refdef.numLitSurfs++ ];
 
 	litsurf->sort = (shader->sortedIndex << QSORT_SHADERNUM_SHIFT) 

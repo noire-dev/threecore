@@ -501,8 +501,6 @@ static void RB_RenderDrawSurfList( drawSurf_t *drawSurfs, int numDrawSurfs ) {
 	oldShaderSort = -1;
 	depthRange = qfalse;
 
-	backEnd.pc.c_surfaces += numDrawSurfs;
-
 	for (i = 0, drawSurf = drawSurfs ; i < numDrawSurfs ; i++, drawSurf++) {
 		if ( drawSurf->sort == oldSort ) {
 			// fast path, same as previous sort
@@ -1140,9 +1138,6 @@ static const void *RB_SwapBuffers( const void *data ) {
 		FBO_PostProcess();
 	}
 
-	// buffer swap may take undefined time to complete, we can't measure it in a reliable way
-	backEnd.pc.msec = ri.Milliseconds() - backEnd.pc.msec;
-
 	if ( backEnd.screenshotMask && tr.frameCount > 1 ) {
 		if ( superSampled ) {
 			qglScissor( 0, 0, gls.captureWidth, gls.captureHeight );
@@ -1195,8 +1190,6 @@ RB_ExecuteRenderCommands
 ====================
 */
 void RB_ExecuteRenderCommands( const void *data ) {
-
-	backEnd.pc.msec = ri.Milliseconds();
 
 	while ( 1 ) {
 		data = PADP(data, sizeof(void *));

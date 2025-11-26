@@ -945,7 +945,6 @@ static ID_INLINE unsigned int log2pad( unsigned int v, int roundup )
 
 extern	cvar_t	*com_developer;
 extern	cvar_t	*com_dedicated;
-extern	cvar_t	*com_speeds;
 extern	cvar_t	*com_timescale;
 extern	cvar_t	*com_viewlog;			// 0 = hidden, 1 = visible, 2 = minimized
 extern	cvar_t	*com_version;
@@ -973,11 +972,6 @@ extern	cvar_t	*com_yieldCPU;
 #ifdef USE_AFFINITY_MASK
 extern	cvar_t	*com_affinityMask;
 #endif
-
-// com_speeds times
-extern	int		time_game;
-extern	int		time_frontend;
-extern	int		time_backend;		// renderer backend time
 
 extern	int		com_frameTime;
 

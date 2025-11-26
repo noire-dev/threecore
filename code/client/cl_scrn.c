@@ -588,12 +588,7 @@ void SCR_UpdateScreen( void ) {
 	if ( uivm ) {
 		// if running in stereo, we need to draw the frame twice
 		SCR_DrawScreenField();
-
-		if ( com_speeds->integer ) {
-			re.EndFrame( &time_frontend, &time_backend );
-		} else {
-			re.EndFrame( NULL, NULL );
-		}
+		re.EndFrame();
 	}
 
 	recursive = 0;

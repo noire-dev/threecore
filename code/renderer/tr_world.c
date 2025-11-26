@@ -60,36 +60,10 @@ static qboolean	R_CullGrid( srfGridMesh_t *cv ) {
 		sphereCull = R_CullPointAndRadius( cv->localOrigin, cv->meshRadius );
 	}
 	
-	// check for trivial reject
-	if ( sphereCull == CULL_OUT )
-	{
-		tr.pc.c_sphere_cull_patch_out++;
-		return qtrue;
-	}
-	// check bounding box if necessary
-	else if ( sphereCull == CULL_CLIP )
-	{
-		tr.pc.c_sphere_cull_patch_clip++;
-
+	if ( sphereCull == CULL_OUT ) return qtrue; // check for trivial reject
+	else if ( sphereCull == CULL_CLIP ) { // check bounding box if necessary
 		boxCull = R_CullLocalBox( cv->meshBounds );
-
-		if ( boxCull == CULL_OUT ) 
-		{
-			tr.pc.c_box_cull_patch_out++;
-			return qtrue;
-		}
-		else if ( boxCull == CULL_IN )
-		{
-			tr.pc.c_box_cull_patch_in++;
-		}
-		else
-		{
-			tr.pc.c_box_cull_patch_clip++;
-		}
-	}
-	else
-	{
-		tr.pc.c_sphere_cull_patch_in++;
+		if ( boxCull == CULL_OUT ) return qtrue;
 	}
 
 	return qfalse;
@@ -279,10 +253,7 @@ static void R_AddLitSurface( msurface_t *surf, const dlight_t *light )
 
 	surf->lightCount = tr.lightCount;
 
-	if ( R_LightCullSurface( surf->data, light ) ) {
-		tr.pc.c_lit_culls++;
-		return;
-	}
+	if ( R_LightCullSurface( surf->data, light ) ) return;
 
 	R_AddLitSurf( surf->data, surf->shader, surf->fogIndex );
 }
@@ -338,8 +309,6 @@ static void R_RecursiveLightNode( const mnode_t* node )
 		}
 
 	} while ( 1 );
-
-	tr.pc.c_lit_leafs++;
 
 	// add the individual surfaces
 	c = node->nummarksurfaces;
@@ -498,8 +467,6 @@ static void R_RecursiveWorldNode( mnode_t *node, unsigned int planeBits, unsigne
 		// leaf node, so add mark surfaces
 		int			c;
 		msurface_t	*surf, **mark;
-
-		tr.pc.c_leafs++;
 
 		// add to z buffer bounds
 		if ( node->mins[0] < tr.viewParms.visBounds[0][0] ) {
@@ -712,11 +679,7 @@ void R_AddWorldSurfaces( void ) {
 	{
 		dl = &tr.viewParms.dlights[i];	
 		dl->head = dl->tail = NULL;
-		if ( R_CullDlight( dl ) == CULL_OUT ) {
-			tr.pc.c_light_cull_out++;
-			continue;
-		}
-		tr.pc.c_light_cull_in++;
+		if ( R_CullDlight( dl ) == CULL_OUT ) continue;
 		tr.lightCount++;
 		tr.light = dl;
 		R_RecursiveLightNode( tr.world->nodes );

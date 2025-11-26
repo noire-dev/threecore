@@ -851,26 +851,6 @@ the bits are allocated as follows:
 
 extern	int			gl_filter_min, gl_filter_max;
 
-/*
-** performanceCounters_t
-*/
-typedef struct {
-	int		c_sphere_cull_patch_in, c_sphere_cull_patch_clip, c_sphere_cull_patch_out;
-	int		c_box_cull_patch_in, c_box_cull_patch_clip, c_box_cull_patch_out;
-	int		c_sphere_cull_md3_in, c_sphere_cull_md3_clip, c_sphere_cull_md3_out;
-	int		c_box_cull_md3_in, c_box_cull_md3_clip, c_box_cull_md3_out;
-
-	int		c_leafs;
-	int		c_dlightSurfaces;
-	int		c_dlightSurfacesCulled;
-	int		c_light_cull_out;
-	int		c_light_cull_in;
-	int		c_lit_leafs;
-	int		c_lit_surfs;
-	int		c_lit_culls;
-	int		c_lit_masks;
-} frontEndCounters_t;
-
 #define	FOG_TABLE_SIZE		256
 #define FUNCTABLE_SIZE		1024
 #define FUNCTABLE_SIZE2		10
@@ -937,7 +917,6 @@ typedef struct {
 	trRefdef_t	refdef;
 	viewParms_t	viewParms;
 	orientationr_t	or;
-	backEndCounters_t	pc;
 	const trRefEntity_t *currentEntity;
 	qboolean	skyRenderedThisView;	// flag for drawing sun
 
@@ -1029,9 +1008,6 @@ typedef struct {
 	dlight_t				*light;				// current light during R_RecursiveLightNode
 	vec3_t					sunLight;			// from the sky shader for this level
 	vec3_t					sunDirection;
-
-	frontEndCounters_t		pc;
-	int						frontEndMsec;		// not in pc due to clearing issue
 
 	//
 	// put large tables at the end, so most elements will be
@@ -1660,7 +1636,7 @@ void RE_SetColor( const float *rgba );
 void RE_StretchPic ( float x, float y, float w, float h, 
 					  float s1, float t1, float s2, float t2, qhandle_t hShader );
 void RE_BeginFrame( void );
-void RE_EndFrame( int *frontEndMsec, int *backEndMsec );
+void RE_EndFrame( void );
 void RE_TakeVideoFrame( int width, int height,
 		byte *captureBuffer, byte *encodeBuffer, qboolean motionJpeg );
 

@@ -52,7 +52,6 @@ static fileHandle_t com_journalFile = FS_INVALID_HANDLE ; // events are written 
 fileHandle_t com_journalDataFile = FS_INVALID_HANDLE; // config files are written here
 
 cvar_t	*com_viewlog;
-cvar_t	*com_speeds;
 cvar_t	*com_developer;
 cvar_t	*com_dedicated;
 cvar_t	*com_timescale;
@@ -67,7 +66,6 @@ cvar_t	*com_yieldCPU;
 cvar_t	*com_affinityMask;
 #endif
 static cvar_t *com_logfile;		// 1 = buffer log, 2 = flush after each print
-static cvar_t *com_showtrace;
 cvar_t	*com_version;
 
 #ifndef DEDICATED
@@ -90,11 +88,6 @@ cvar_t	*com_cameraMode;
 #if defined(_WIN32) && defined(_DEBUG)
 cvar_t	*com_noErrorInterrupt;
 #endif
-
-// com_speeds times
-int		time_game;
-int		time_frontend;		// renderer frontend time
-int		time_backend;		// renderer backend time
 
 static int	lastTime;
 int			com_frameTime;
@@ -2500,19 +2493,7 @@ void Com_RunAndTimeServerPacket( const netadr_t *evFrom, msg_t *buf ) {
 
 	t1 = 0;
 
-	if ( com_speeds->integer ) {
-		t1 = Sys_Milliseconds ();
-	}
-
 	SV_PacketEvent( evFrom, buf );
-
-	if ( com_speeds->integer ) {
-		t2 = Sys_Milliseconds ();
-		msec = t2 - t1;
-		if ( com_speeds->integer == 3 ) {
-			Com_Printf( "SV_PacketEvent time: %i\n", msec );
-		}
-	}
 }
 
 
@@ -3257,12 +3238,8 @@ void Com_Init( char *commandLine ) {
 	Cvar_SetDescription( com_timescale, "System timing factor:\n < 1: Slows the game down\n = 1: Regular speed\n > 1: Speeds the game up" );
 	com_fixedtime = Cvar_Get( "fixedtime", "0", CVAR_CHEAT );
 	Cvar_SetDescription( com_fixedtime, "Toggle the rendering of every frame the game will wait until each frame is completely rendered before sending the next frame." );
-	com_showtrace = Cvar_Get( "com_showtrace", "0", CVAR_CHEAT );
-	Cvar_SetDescription( com_showtrace, "Debugging tool that prints out trace information." );
 	com_viewlog = Cvar_Get( "viewlog", "0", 0 );
 	Cvar_SetDescription( com_viewlog, "Toggle the display of the startup console window over the game screen." );
-	com_speeds = Cvar_Get( "com_speeds", "0", 0 );
-	Cvar_SetDescription( com_speeds, "Prints speed information per frame to the console. Used for debugging." );
 	com_cameraMode = Cvar_Get( "com_cameraMode", "0", CVAR_CHEAT );
 
 #ifndef DEDICATED
@@ -3565,13 +3542,6 @@ void Com_Frame( qboolean noDelay ) {
 	}
 #endif
 
-	//
-	// main event loop
-	//
-	if ( com_speeds->integer ) {
-		timeBeforeFirstEvents = Sys_Milliseconds();
-	}
-
 	// we may want to spin here if things are going too fast
 	if ( com_dedicated->integer ) {
 		minMsec = SV_FrameMsec();
@@ -3635,13 +3605,6 @@ void Com_Frame( qboolean noDelay ) {
 	// mess with msec if needed
 	msec = Com_ModifyMsec( realMsec );
 
-	//
-	// server side
-	//
-	if ( com_speeds->integer ) {
-		timeBeforeServer = Sys_Milliseconds();
-	}
-
 	SV_Frame( msec );
 
 	// if "dedicated" has been modified, start up
@@ -3673,11 +3636,7 @@ void Com_Frame( qboolean noDelay ) {
 	}
 
 #ifdef DEDICATED
-	if ( com_speeds->integer ) {
-		timeAfter = Sys_Milliseconds ();
-		timeBeforeEvents = timeAfter;
-		timeBeforeClient = timeAfter;
-	}
+
 #else
 	//
 	// client system
@@ -3687,64 +3646,17 @@ void Com_Frame( qboolean noDelay ) {
 		// run event loop a second time to get server to client packets
 		// without a frame of latency
 		//
-		if ( com_speeds->integer ) {
-			timeBeforeEvents = Sys_Milliseconds();
-		}
 		Com_EventLoop();
 
 		Cbuf_Execute();
 
-		//
-		// client side
-		//
-		if ( com_speeds->integer ) {
-			timeBeforeClient = Sys_Milliseconds();
-		}
-
 		CL_Frame( msec, realMsec );
-
-		if ( com_speeds->integer ) {
-			timeAfter = Sys_Milliseconds();
-		}
 	}
 #endif
 
 	NET_FlushPacketQueue( 0 );
 
 	Cbuf_Wait();
-
-	//
-	// report timing information
-	//
-	if ( com_speeds->integer ) {
-		int			all, sv, ev, cl;
-
-		all = timeAfter - timeBeforeServer;
-		sv = timeBeforeEvents - timeBeforeServer;
-		ev = timeBeforeServer - timeBeforeFirstEvents + timeBeforeClient - timeBeforeEvents;
-		cl = timeAfter - timeBeforeClient;
-		sv -= time_game;
-		cl -= time_frontend + time_backend;
-
-		Com_Printf ("frame:%i all:%3i sv:%3i ev:%3i cl:%3i gm:%3i rf:%3i bk:%3i\n",
-					 com_frameNumber, all, sv, ev, cl, time_game, time_frontend, time_backend );
-	}
-
-	//
-	// trace optimization tracking
-	//
-	if ( com_showtrace->integer ) {
-
-		extern	int c_traces, c_brush_traces, c_patch_traces;
-		extern	int	c_pointcontents;
-
-		Com_Printf ("%4i traces  (%ib %ip) %4i points\n", c_traces,
-			c_brush_traces, c_patch_traces, c_pointcontents);
-		c_traces = 0;
-		c_brush_traces = 0;
-		c_patch_traces = 0;
-		c_pointcontents = 0;
-	}
 
 	com_frameNumber++;
 }

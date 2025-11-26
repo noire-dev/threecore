@@ -797,20 +797,6 @@ void RB_EndSurface( void ) {
 	}
 
 	//
-	// update performance counters
-	//
-	if ( tess.dlightPass ) {
-		backEnd.pc.c_lit_batches++;
-		backEnd.pc.c_lit_vertices += tess.numVertexes;
-		backEnd.pc.c_lit_indices += tess.numIndexes;
-	} else {
-		backEnd.pc.c_shaders++;
-		backEnd.pc.c_vertexes += tess.numVertexes;
-		backEnd.pc.c_indexes += tess.numIndexes;
-	}
-	backEnd.pc.c_totalIndexes += tess.numIndexes * tess.numPasses;
-
-	//
 	// call off to shader specific tess end function
 	//
 	tess.shader->optimalStageIteratorFunc();

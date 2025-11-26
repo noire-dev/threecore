@@ -142,8 +142,6 @@ static void ARB_Lighting( const shaderStage_t* pStage )
 	int numIndexes;
 	int clip;
 	int i;
-	
-	backEnd.pc.c_lit_vertices_lateculltest += tess.numVertexes;
 
 	dl = tess.light;
 
@@ -193,9 +191,6 @@ static void ARB_Lighting( const shaderStage_t* pStage )
 		hitIndexes[numIndexes+2] = c;
 		numIndexes += 3;
 	}
-
-	backEnd.pc.c_lit_indices_latecull_in += numIndexes;
-	backEnd.pc.c_lit_indices_latecull_out += tess.numIndexes - numIndexes;
 
 	if ( !numIndexes )
 		return;

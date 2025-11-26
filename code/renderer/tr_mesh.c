@@ -92,17 +92,9 @@ static int R_CullModel( md3Header_t *header, const trRefEntity_t *ent, vec3_t bo
 	if ( !ent->e.nonNormalizedAxes ) {
 		if ( ent->e.frame == ent->e.oldframe ) {
 			switch ( R_CullLocalPointAndRadius( newFrame->localOrigin, newFrame->radius ) ) {
-			case CULL_OUT:
-				tr.pc.c_sphere_cull_md3_out++;
-				return CULL_OUT;
-
-			case CULL_IN:
-				tr.pc.c_sphere_cull_md3_in++;
-				return CULL_IN;
-
-			case CULL_CLIP:
-				tr.pc.c_sphere_cull_md3_clip++;
-				break;
+			case CULL_OUT: return CULL_OUT;
+			case CULL_IN: return CULL_IN;
+			case CULL_CLIP: break;
 			}
 		} else {
 			int sphereCull, sphereCullB;
@@ -115,30 +107,16 @@ static int R_CullModel( md3Header_t *header, const trRefEntity_t *ent, vec3_t bo
 			}
 
 			if ( sphereCull == sphereCullB ) {
-				if ( sphereCull == CULL_OUT ) {
-					tr.pc.c_sphere_cull_md3_out++;
-					return CULL_OUT;
-				} else if ( sphereCull == CULL_IN ) {
-					tr.pc.c_sphere_cull_md3_in++;
-					return CULL_IN;
-				}  else {
-					tr.pc.c_sphere_cull_md3_clip++;
-				}
+				if ( sphereCull == CULL_OUT ) return CULL_OUT;
+				else if ( sphereCull == CULL_IN ) return CULL_IN;
 			}
 		}
 	}
 
 	switch ( R_CullLocalBox( bounds ) ) {
-	case CULL_IN:
-		tr.pc.c_box_cull_md3_in++;
-		return CULL_IN;
-	case CULL_CLIP:
-		tr.pc.c_box_cull_md3_clip++;
-		return CULL_CLIP;
-	case CULL_OUT:
-	default:
-		tr.pc.c_box_cull_md3_out++;
-		return CULL_OUT;
+	case CULL_IN: return CULL_IN;
+	case CULL_CLIP: return CULL_CLIP;
+	default: return CULL_OUT;
 	}
 }
 
