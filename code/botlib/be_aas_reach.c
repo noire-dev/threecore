@@ -194,83 +194,6 @@ static int AAS_BestReachableLinkArea(aas_link_t *areas)
 } //end of the function AAS_BestReachableLinkArea
 //===========================================================================
 //
-// Parameter:			-
-// Returns:				-
-// Changes Globals:		-
-//===========================================================================
-static int AAS_GetJumpPadInfo(int ent, vec3_t areastart, vec3_t absmins, vec3_t absmaxs, vec3_t velocity)
-{
-	int modelnum, ent2;
-	float speed, height, gravity, time, dist, forward;
-	vec3_t origin, angles, teststart, ent2origin;
-	aas_trace_t trace;
-	char model[MAX_EPAIRKEY];
-	char target[MAX_EPAIRKEY], targetname[MAX_EPAIRKEY];
-
-	//
-	AAS_FloatForBSPEpairKey(ent, "speed", &speed);
-	if (!speed) speed = 1000;
-	VectorClear(angles);
-	//get the mins, maxs and origin of the model
-	AAS_ValueForBSPEpairKey(ent, "model", model, MAX_EPAIRKEY);
-	if (model[0]) modelnum = atoi(model+1);
-	else modelnum = 0;
-	AAS_BSPModelMinsMaxsOrigin(modelnum, angles, absmins, absmaxs, origin);
-	VectorAdd(origin, absmins, absmins);
-	VectorAdd(origin, absmaxs, absmaxs);
-	VectorAdd(absmins, absmaxs, origin);
-	VectorScale (origin, 0.5, origin);
-
-	//get the start areas
-	VectorCopy(origin, teststart);
-	teststart[2] += 64;
-	trace = AAS_TraceClientBBox(teststart, origin, PRESENCE_CROUCH, -1);
-	if (trace.startsolid)
-	{
-		botimport.Print(PRT_MESSAGE, "trigger_push start solid\n");
-		VectorCopy(origin, areastart);
-	} //end if
-	else
-	{
-		VectorCopy(trace.endpos, areastart);
-	} //end else
-	areastart[2] += 0.125;
-	//
-	//AAS_DrawPermanentCross(origin, 4, 4);
-	//get the target entity
-	AAS_ValueForBSPEpairKey(ent, "target", target, MAX_EPAIRKEY);
-	for (ent2 = AAS_NextBSPEntity(0); ent2; ent2 = AAS_NextBSPEntity(ent2))
-	{
-		if (!AAS_ValueForBSPEpairKey(ent2, "targetname", targetname, MAX_EPAIRKEY)) continue;
-		if (!strcmp(targetname, target)) break;
-	} //end for
-	if (!ent2)
-	{
-		botimport.Print(PRT_MESSAGE, "trigger_push without target entity %s\n", target);
-		return qfalse;
-	} //end if
-	AAS_VectorForBSPEpairKey(ent2, "origin", ent2origin);
-	//
-	height = ent2origin[2] - origin[2];
-	gravity = aassettings.phys_gravity;
-	time = sqrt( height / ( 0.5 * gravity ) );
-	if (!time)
-	{
-		botimport.Print(PRT_MESSAGE, "trigger_push without time\n");
-		return qfalse;
-	} //end if
-	// set s.origin2 to the push velocity
-	VectorSubtract ( ent2origin, origin, velocity);
-	dist = VectorNormalize( velocity);
-	forward = dist / time;
-	//FIXME: why multiply by 1.1
-	forward *= 1.1f;
-	VectorScale(velocity, forward, velocity);
-	velocity[2] = time * gravity;
-	return qtrue;
-} //end of the function AAS_GetJumpPadInfo
-//===========================================================================
-//
 // Parameter:				-
 // Returns:					-
 // Changes Globals:		-
@@ -476,23 +399,6 @@ static void AAS_FaceCenter(int facenum, vec3_t center)
 	scale = 0.5 / face->numedges;
 	VectorScale(center, scale, center);
 } //end of the function AAS_FaceCenter
-//===========================================================================
-// returns the maximum distance a player can fall before being damaged
-// damage = deltavelocity*deltavelocity  * 0.0001
-//
-// Parameter:				-
-// Returns:					-
-// Changes Globals:		-
-//===========================================================================
-static int AAS_FallDamageDistance(void)
-{
-	float maxzvelocity, gravity, t;
-
-	maxzvelocity = sqrt(30 * 10000);
-	gravity = aassettings.phys_gravity;
-	t = maxzvelocity / gravity;
-	return 0.5 * gravity * t * t;
-} //end of the function AAS_FallDamageDistance
 //===========================================================================
 // distance = 0.5 * gravity * t * t
 // vel = t * gravity
