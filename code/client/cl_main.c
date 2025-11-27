@@ -796,12 +796,6 @@ memory on the hunk from cgame, ui, and renderer
 =====================
 */
 void CL_MapLoading( void ) {
-	if ( com_dedicated->integer ) {
-		cls.state = CA_DISCONNECTED;
-		Key_SetCatcher( KEYCATCH_CONSOLE );
-		return;
-	}
-
 	if ( !com_cl_running->integer ) {
 		return;
 	}
@@ -2180,21 +2174,6 @@ qboolean CL_CheckPaused( void )
 
 	return qfalse;
 }
-
-
-/*
-==================
-CL_NoDelay
-==================
-*/
-qboolean CL_NoDelay( void )
-{
-	if (CL_VideoRecording())
-		return qtrue;
-
-	return qfalse;
-}
-
 
 /*
 ==================

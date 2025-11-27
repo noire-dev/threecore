@@ -808,17 +808,3 @@ void SV_AddOperatorCommands( void ) {
 	Cmd_AddCommand( "filter", SV_AddFilter_f );
 	Cmd_AddCommand( "filtercmd", SV_AddFilterCmd_f );
 }
-
-void SV_AddDedicatedCommands( void ) {
-	Cmd_AddCommand( "serverinfo", SV_Serverinfo_f );
-	Cmd_AddCommand( "systeminfo", SV_Systeminfo_f );
-	Cmd_AddCommand( "tell", SV_ConTell_f );
-	Cmd_AddCommand( "say", SV_ConSay_f );
-}
-
-void SV_RemoveDedicatedCommands( void ) {
-	Cmd_RemoveCommand( "serverinfo" );
-	Cmd_RemoveCommand( "systeminfo" );
-	Cmd_RemoveCommand( "tell" );
-	Cmd_RemoveCommand( "say" );
-}

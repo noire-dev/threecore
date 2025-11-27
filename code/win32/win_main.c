@@ -432,8 +432,9 @@ Platform-dependent event handling
 =================
 */
 void Sys_SendKeyEvents( void ) {
-	if (!com_dedicated->integer)
-		HandleEvents();
+#ifdef DEDICATED
+	HandleEvents();
+#endif	
 }
 
 /*
@@ -511,15 +512,15 @@ Restore gamma and hide fullscreen window in case of crash
 ==================
 */
 static LONG WINAPI ExceptionFilter( struct _EXCEPTION_POINTERS *ExceptionInfo ) {
-	if (com_dedicated->integer == 0) {
-		extern cvar_t *com_cl_running;
-		if ( com_cl_running  && com_cl_running->integer ) {
-			// assume we can restart client module
-		} else {
-			GLW_RestoreGamma();
-			GLW_HideFullscreenWindow();
-		}
+#ifndef DEDICATED
+	extern cvar_t *com_cl_running;
+	if ( com_cl_running  && com_cl_running->integer ) {
+		// assume we can restart client module
+	} else {
+		GLW_RestoreGamma();
+		GLW_HideFullscreenWindow();
 	}
+#endif
 
 	if ( ExceptionInfo->ExceptionRecord->ExceptionCode != EXCEPTION_BREAKPOINT ) {
 		char msg[128], name[MAX_OSPATH];
@@ -609,7 +610,7 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLin
 		// make sure mouse and joystick are only called once a frame
 		IN_Frame();
 		// run the game
-		Com_Frame( CL_NoDelay() );
+		Com_Frame();
 	}
 
 	// never gets here

@@ -59,11 +59,9 @@ export PLATFORM
 
 ifeq ($(PLATFORM),mingw32)
   MINGW=1
-  BUILD_SERVER=0
 endif
 ifeq ($(PLATFORM),mingw64)
   MINGW=1
-  BUILD_SERVER=0
 endif
 
 ifeq ($(COMPILE_ARCH),i86pc)

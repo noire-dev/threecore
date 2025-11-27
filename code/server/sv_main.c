@@ -158,11 +158,6 @@ void QDECL SV_SendServerCommand( client_t *cl, const char *fmt, ... ) {
 		return;
 	}
 
-	// hack to echo broadcast prints to console
-	if ( com_dedicated->integer && !strncmp( message, "print", 5 ) ) {
-		Com_Printf( "broadcast: %s\n", SV_ExpandNewlines( message ) );
-	}
-
 	// send the data to all relevant clients
 	for ( j = 0, client = svs.clients; j < sv.maxclients; j++, client++ ) {
 		if ( len <= 1022 ){
@@ -202,9 +197,7 @@ static void SV_MasterHeartbeat( const char *message )
 
 	netenabled = Cvar_VariableIntegerValue("net_enabled");
 
-	// "dedicated 1" is for lan play, "dedicated 2" is for inet public play
-	if (!com_dedicated || com_dedicated->integer != 2 || !(netenabled & (NET_ENABLEV4 | NET_ENABLEV6)))
-		return;		// only dedicated servers send heartbeats
+	if (!(netenabled & (NET_ENABLEV4 | NET_ENABLEV6))) return;
 
 	// if not time yet, don't send anything
 	if ( svs.nextHeartbeatTime - svs.time > 0 )
@@ -1082,39 +1075,7 @@ SV_CheckPaused
 ==================
 */
 static qboolean SV_CheckPaused( void ) {
-
-#ifdef DEDICATED
-	// can't pause on dedicated servers
 	return qfalse;
-#else
-	const client_t *cl;
-	int	count;
-	int	i;
-
-	if ( !cl_paused->integer ) {
-		return qfalse;
-	}
-
-	// only pause if there is just a single client connected
-	count = 0;
-	for ( i = 0, cl = svs.clients ; i < sv.maxclients; i++, cl++ ) {
-		if ( cl->state >= CS_CONNECTED && cl->netchan.remoteAddress.type != NA_BOT ) {
-			count++;
-		}
-	}
-
-	if ( count > 1 ) {
-		// don't pause
-		if (sv_paused->integer)
-			Cvar_Set("sv_paused", "0");
-		return qfalse;
-	}
-
-	if (!sv_paused->integer)
-		Cvar_Set("sv_paused", "1");
-
-	return qtrue;
-#endif // !DEDICATED
 }
 
 
@@ -1227,14 +1188,10 @@ void SV_Frame( int msec ) {
 		return;
 	}
 
-	if ( !com_sv_running->integer )
-	{
-		if ( com_dedicated->integer )
-		{
-			// Block indefinitely until something interesting happens
-			// on STDIN.
+	if ( !com_sv_running->integer ) {
+#ifdef DEDICATED
 			Sys_Sleep( -1 );
-		}
+#endif
 		return;
 	}
 
@@ -1255,9 +1212,6 @@ void SV_Frame( int msec ) {
 	}
 
 	sv.timeResidual += msec;
-
-	if ( !com_dedicated->integer )
-		SV_BotFrame( sv.time + sv.timeResidual );
 
 	// if time is about to hit the 32nd bit, kick all clients
 	// and clear sv.time, rather
@@ -1292,7 +1246,7 @@ void SV_Frame( int msec ) {
 	// update ping based on the all received frames
 	SV_CalcPings();
 
-	if (com_dedicated->integer) SV_BotFrame (sv.time);
+	SV_BotFrame (sv.time);
 
 	// run the game simulation in chunks
 	while ( sv.timeResidual >= frameMsec ) {

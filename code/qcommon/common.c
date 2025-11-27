@@ -51,9 +51,7 @@ static fileHandle_t logfile = FS_INVALID_HANDLE;
 static fileHandle_t com_journalFile = FS_INVALID_HANDLE ; // events are written here
 fileHandle_t com_journalDataFile = FS_INVALID_HANDLE; // config files are written here
 
-cvar_t	*com_viewlog;
 cvar_t	*com_developer;
-cvar_t	*com_dedicated;
 cvar_t	*com_timescale;
 static cvar_t *com_fixedtime;
 cvar_t	*com_journal;
@@ -176,10 +174,7 @@ void FORMAT_PRINTF(1, 2) QDECL Com_Printf( const char *fmt, ... ) {
 	}
 
 #ifndef DEDICATED
-	// echo to client console if we're not a dedicated server
-	if ( !com_dedicated || !com_dedicated->integer ) {
-		CL_ConsolePrint( msg );
-	}
+    CL_ConsolePrint( msg );
 #endif
 
 	// echo to dedicated console and early console
@@ -3203,13 +3198,6 @@ void Com_Init( char *commandLine ) {
 	// override anything from the config files with command line args
 	Com_StartupVariable( NULL );
 
-	// get dedicated here for proper hunk megs initialization
-#ifdef DEDICATED
-	com_dedicated = Cvar_Get( "dedicated", "1", CVAR_INIT );
-#else
-	com_dedicated = Cvar_Get( "dedicated", "0", CVAR_LATCH );
-#endif
-	Cvar_SetDescription( com_dedicated, "Enables dedicated server mode.\n 0: Listen server\n 1: Unlisted dedicated server \n 2: Listed dedicated server" );
 	// allocate the stack based hunk allocator
 	Com_InitHunkMemory();
 
@@ -3238,8 +3226,6 @@ void Com_Init( char *commandLine ) {
 	Cvar_SetDescription( com_timescale, "System timing factor:\n < 1: Slows the game down\n = 1: Regular speed\n > 1: Speeds the game up" );
 	com_fixedtime = Cvar_Get( "fixedtime", "0", CVAR_CHEAT );
 	Cvar_SetDescription( com_fixedtime, "Toggle the rendering of every frame the game will wait until each frame is completely rendered before sending the next frame." );
-	com_viewlog = Cvar_Get( "viewlog", "0", 0 );
-	Cvar_SetDescription( com_viewlog, "Toggle the display of the startup console window over the game screen." );
 	com_cameraMode = Cvar_Get( "com_cameraMode", "0", CVAR_CHEAT );
 
 #ifndef DEDICATED
@@ -3259,14 +3245,7 @@ void Com_Init( char *commandLine ) {
 
 	Cvar_Get( "com_errorMessage", "", CVAR_ROM );
 
-	if ( com_dedicated->integer ) {
-		if ( !com_viewlog->integer ) {
-			Cvar_Set( "viewlog", "1" );
-		}
-		gw_minimized = qtrue;
-	} else {
-		gw_minimized = qfalse;
-	}
+	gw_minimized = qfalse;
 
 	if ( com_developer->integer ) {
 		Cmd_AddCommand( "error", Com_Error_f );
@@ -3313,17 +3292,12 @@ void Com_Init( char *commandLine ) {
 	Netchan_Init( qport & 0xffff );
 
 	VM_Init();
+#ifdef DEDICATED
 	SV_Init();
-
-	com_dedicated->modified = qfalse;
-
-#ifndef DEDICATED
-	if ( !com_dedicated->integer ) {
-		CL_Init();
-	}
 #endif
 
 #ifndef DEDICATED
+	CL_Init();
 	CL_StartHunkUsers();
 #endif
 
@@ -3422,9 +3396,7 @@ Com_ModifyMsec
 static int Com_ModifyMsec( int msec ) {
 	int		clampTime;
 
-	//
 	// modify time for debugging values
-	//
 	if ( com_fixedtime->integer ) {
 		msec = com_fixedtime->integer;
 	} else if ( com_timescale->value ) {
@@ -3434,33 +3406,11 @@ static int Com_ModifyMsec( int msec ) {
 	}
 
 	// don't let it scale below 1 msec
-	if ( msec < 1 && com_timescale->value) {
-		msec = 1;
-	}
+	if ( msec < 1 && com_timescale->value) msec = 1;
 
-	if ( com_dedicated->integer ) {
-		// dedicated servers don't want to clamp for a much longer
-		// period, because it would mess up all the client's views
-		// of time.
-		if (com_sv_running->integer && msec > 500)
-			Com_Printf( "Hitch warning: %i msec frame time\n", msec );
+	clampTime = 5000;
 
-		clampTime = 5000;
-	} else
-	if ( !com_sv_running->integer ) {
-		// clients of remote servers do not want to clamp time, because
-		// it would skew their view of the server's time temporarily
-		clampTime = 5000;
-	} else {
-		// for local single player gaming
-		// we may want to clamp the time to prevent players from
-		// flying off edges when something hitches.
-		clampTime = 200;
-	}
-
-	if ( msec > clampTime ) {
-		msec = clampTime;
-	}
+	if ( msec > clampTime ) msec = clampTime;
 
 	return msec;
 }
@@ -3500,8 +3450,7 @@ void Com_FrameInit( void )
 Com_Frame
 =================
 */
-void Com_Frame( qboolean noDelay ) {
-
+void Com_Frame( void ) {
 #ifndef DEDICATED
 	static int bias = 0;
 #endif
@@ -3510,30 +3459,9 @@ void Com_Frame( qboolean noDelay ) {
 	int	timeVal;
 	int	timeValSV;
 
-	int	timeBeforeFirstEvents;
-	int	timeBeforeServer;
-	int	timeBeforeEvents;
-	int	timeBeforeClient;
-	int	timeAfter;
-
-	if ( Q_setjmp( abortframe ) ) {
-		return;			// an ERR_DROP was thrown
-	}
+	if ( Q_setjmp( abortframe ) ) return;			// an ERR_DROP was thrown
 
 	minMsec = 0; // silent compiler warning
-
-	// bk001204 - init to zero.
-	//  also:  might be clobbered by `longjmp' or `vfork'
-	timeBeforeFirstEvents = 0;
-	timeBeforeServer = 0;
-	timeBeforeEvents = 0;
-	timeBeforeClient = 0;
-	timeAfter = 0;
-
-	// if "viewlog" has been modified, show or hide the log console
-	if ( com_viewlog->modified ) {
-		com_viewlog->modified = qfalse;
-	}
 
 #ifdef USE_AFFINITY_MASK
 	if ( com_affinityMask->modified ) {
@@ -3543,37 +3471,29 @@ void Com_Frame( qboolean noDelay ) {
 #endif
 
 	// we may want to spin here if things are going too fast
-	if ( com_dedicated->integer ) {
-		minMsec = SV_FrameMsec();
-#ifndef DEDICATED
+#ifdef DEDICATED
+	minMsec = SV_FrameMsec();
+#else
+	if ( noDelay ) {
+		minMsec = 0;
 		bias = 0;
-#endif
 	} else {
-#ifndef DEDICATED
-		if ( noDelay ) {
-			minMsec = 0;
-			bias = 0;
-		} else {
-			if ( !gw_active && com_maxfpsUnfocused->integer > 0 )
-				minMsec = 1000 / com_maxfpsUnfocused->integer;
-			else
-			if ( com_maxfps->integer > 0 )
-				minMsec = 1000 / com_maxfps->integer;
-			else
-				minMsec = 1;
+		if ( !gw_active && com_maxfpsUnfocused->integer > 0 )
+			minMsec = 1000 / com_maxfpsUnfocused->integer;
+		else if ( com_maxfps->integer > 0 )
+			minMsec = 1000 / com_maxfps->integer;
+		else
+			minMsec = 1;
 
-			timeVal = com_frameTime - lastTime;
-			bias += timeVal - minMsec;
+		timeVal = com_frameTime - lastTime;
+		bias += timeVal - minMsec;
 
-			if ( bias > minMsec )
-				bias = minMsec;
+		if ( bias > minMsec )
+			bias = minMsec;
 
-			// Adjust minMsec if previous frame took too long to render so
-			// that framerate is stable at the requested value.
-			minMsec -= bias;
-		}
-#endif
+		minMsec -= bias;
 	}
+#endif
 
 	// waiting for incoming packets
 	if ( noDelay == qfalse )
@@ -3605,59 +3525,19 @@ void Com_Frame( qboolean noDelay ) {
 	// mess with msec if needed
 	msec = Com_ModifyMsec( realMsec );
 
-	SV_Frame( msec );
-
-	// if "dedicated" has been modified, start up
-	// or shut down the client system.
-	// Do this after the server may have started,
-	// but before the client tries to auto-connect
-	if ( com_dedicated->modified ) {
-		// get the latched value
-		Cvar_Get( "dedicated", "0", 0 );
-		com_dedicated->modified = qfalse;
-		if ( !com_dedicated->integer ) {
-			SV_Shutdown( "dedicated set to 0" );
-			SV_RemoveDedicatedCommands();
-#ifndef DEDICATED
-			CL_Init();
-#endif
-#ifndef DEDICATED
-			gw_minimized = qfalse;
-			CL_StartHunkUsers();
-#endif
-		} else {
-#ifndef DEDICATED
-			CL_Shutdown( "", qfalse );
-			CL_ClearMemory();
-#endif
-			SV_AddDedicatedCommands();
-			gw_minimized = qtrue;
-		}
-	}
-
 #ifdef DEDICATED
+	SV_Frame( msec );
+#endif
 
-#else
-	//
+#ifndef DEDICATED
 	// client system
-	//
-	if ( !com_dedicated->integer ) {
-		//
-		// run event loop a second time to get server to client packets
-		// without a frame of latency
-		//
-		Com_EventLoop();
-
-		Cbuf_Execute();
-
-		CL_Frame( msec, realMsec );
-	}
+	Com_EventLoop();
+	Cbuf_Execute();
+	CL_Frame( msec, realMsec );
 #endif
 
 	NET_FlushPacketQueue( 0 );
-
 	Cbuf_Wait();
-
 	com_frameNumber++;
 }
 

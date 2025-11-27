@@ -529,9 +529,6 @@ void SV_Init( void )
 
 	SV_AddOperatorCommands();
 
-	if ( com_dedicated->integer )
-		SV_AddDedicatedCommands();
-
 	// serverinfo vars
 	sv_gametype = Cvar_Get ("g_gametype", "0", CVAR_SERVERINFO | CVAR_LATCH );
 	Cvar_SetDescription( sv_gametype, "Set the gametype to mod." );

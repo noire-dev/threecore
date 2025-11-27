@@ -397,7 +397,6 @@ void CL_ClearState( void );
 int CL_ServerStatus( const char *serverAddress, char *serverStatusString, int maxLen );
 
 qboolean CL_CheckPaused( void );
-qboolean CL_NoDelay( void );
 
 qboolean CL_GetModeInfo( int *width, int *height, float *windowAspect, const char *resolution, int dw, int dh, int fullscreen );
 

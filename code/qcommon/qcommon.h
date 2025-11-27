@@ -944,9 +944,7 @@ static ID_INLINE unsigned int log2pad( unsigned int v, int roundup )
 
 
 extern	cvar_t	*com_developer;
-extern	cvar_t	*com_dedicated;
 extern	cvar_t	*com_timescale;
-extern	cvar_t	*com_viewlog;			// 0 = hidden, 1 = visible, 2 = minimized
 extern	cvar_t	*com_version;
 extern	cvar_t	*com_journal;
 extern	cvar_t	*com_cameraMode;
@@ -1054,7 +1052,7 @@ unsigned int Com_TouchMemory( void );
 // commandLine should not include the executable name (argv[0])
 void Com_Init( char *commandLine );
 void Com_FrameInit( void );
-void Com_Frame( qboolean noDelay );
+void Com_Frame( void );
 
 /*
 ==============================================================
@@ -1139,9 +1137,6 @@ void SV_PacketEvent( const netadr_t *from, msg_t *msg );
 int SV_FrameMsec( void );
 qboolean SV_GameCommand( void );
 int SV_SendQueuedPackets( void );
-
-void SV_AddDedicatedCommands( void );
-void SV_RemoveDedicatedCommands( void );
 
 
 //

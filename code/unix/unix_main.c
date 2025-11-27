@@ -465,7 +465,8 @@ char *Sys_ConsoleInput( void ) {
 			write( STDOUT_FILENO, &key, 1 );
 		}
 		return NULL;
-	} else if ( stdin_active && com_dedicated->integer ) {
+	} else if ( stdin_active ) {
+#ifdef DEDICATED
 		int len;
 		fd_set fdset;
 		struct timeval timeout;
@@ -495,6 +496,7 @@ char *Sys_ConsoleInput( void ) {
 			s++;
 
 		return s;
+#endif
 	}
 
 	return NULL;
@@ -880,15 +882,10 @@ int main( int argc, const char* argv[] ) {
 		Sys_ConfigureFPU();
 #endif
 
-#ifdef DEDICATED
-		// run the game
-		Com_Frame( qfalse );
-#else
-		// check for other input devices
+#ifndef DEDICATED
 		IN_Frame();
-		// run the game
-		Com_Frame( CL_NoDelay() );
 #endif
+		Com_Frame();
 	}
 	// never gets here
 	return 0;

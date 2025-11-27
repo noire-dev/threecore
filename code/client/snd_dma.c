@@ -1432,12 +1432,7 @@ static void S_Base_Shutdown( void ) {
 	}
 
 	SNDDMA_Shutdown();
-
-	// release sound buffers only when switching to dedicated 
-	// to avoid redundant reallocation at client restart
-	if ( com_dedicated->integer )
-		SND_shutdown();
-
+	
 	s_soundStarted = qfalse;
 
 	s_numSfx = 0; // clean up sound cache -EC-

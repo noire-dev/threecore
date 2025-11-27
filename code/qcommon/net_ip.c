@@ -1833,7 +1833,7 @@ static void NET_Event( const fd_set *fdr )
 #ifdef DEDICATED
 			Com_RunAndTimeServerPacket( &from, &netmsg );
 #else
-			if ( com_sv_running->integer || com_dedicated->integer )
+			if ( com_sv_running->integer )
 				Com_RunAndTimeServerPacket( &from, &netmsg );
 			else
 				CL_PacketEvent( &from, &netmsg );
