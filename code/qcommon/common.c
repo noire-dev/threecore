@@ -3474,29 +3474,23 @@ void Com_Frame( void ) {
 #ifdef DEDICATED
 	minMsec = SV_FrameMsec();
 #else
-	if ( noDelay ) {
-		minMsec = 0;
-		bias = 0;
-	} else {
-		if ( !gw_active && com_maxfpsUnfocused->integer > 0 )
-			minMsec = 1000 / com_maxfpsUnfocused->integer;
-		else if ( com_maxfps->integer > 0 )
-			minMsec = 1000 / com_maxfps->integer;
-		else
-			minMsec = 1;
+	if ( !gw_active && com_maxfpsUnfocused->integer > 0 )
+		minMsec = 1000 / com_maxfpsUnfocused->integer;
+	else if ( com_maxfps->integer > 0 )
+		minMsec = 1000 / com_maxfps->integer;
+	else 
+	    minMsec = 1;
 
-		timeVal = com_frameTime - lastTime;
-		bias += timeVal - minMsec;
+	timeVal = com_frameTime - lastTime;
+	bias += timeVal - minMsec;
 
-		if ( bias > minMsec )
-			bias = minMsec;
-
-		minMsec -= bias;
-	}
+	if ( bias > minMsec )
+		bias = minMsec;
+		
+	minMsec -= bias;
 #endif
 
 	// waiting for incoming packets
-	if ( noDelay == qfalse )
 	do {
 		if ( com_sv_running->integer ) {
 			timeValSV = SV_SendQueuedPackets();
