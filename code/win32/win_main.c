@@ -23,7 +23,9 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 #include "../qcommon/q_shared.h"
 #include "../qcommon/qcommon.h"
+#ifndef DEDICATED
 #include "../client/client.h"
+#endif
 #include "win_local.h"
 #include "resource.h"
 #include <sys/types.h>
@@ -64,7 +66,9 @@ void NORETURN FORMAT_PRINTF(1, 2) QDECL Sys_Error( const char *error, ... ) {
 	Q_vsnprintf( text, sizeof( text ), error, argptr );
 	va_end( argptr );
 
-	CL_Shutdown( text, qtrue );
+#ifndef DEDICATED
+    CL_Shutdown( text, qtrue );
+#endif
 
 	timeEndPeriod( 1 );
 
@@ -432,7 +436,7 @@ Platform-dependent event handling
 =================
 */
 void Sys_SendKeyEvents( void ) {
-#ifdef DEDICATED
+#ifndef DEDICATED
 	HandleEvents();
 #endif	
 }
@@ -607,9 +611,9 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLin
 
 	// main game loop
 	while ( 1 ) {
-		// make sure mouse and joystick are only called once a frame
+#ifndef DEDICATED
 		IN_Frame();
-		// run the game
+#endif
 		Com_Frame();
 	}
 
