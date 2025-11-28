@@ -405,36 +405,6 @@ int BotMoveInDirection(int movestate, vec3_t dir, float speed, int type) {
 	}  
 }
 
-static void BotCheckBlocked(bot_movestate_t* ms, vec3_t dir, int checkbottom, bot_moveresult_t* result) {
-	vec3_t mins, maxs, end, up = {0, 0, 1};
-	bsp_trace_t trace;
-
-	// test for entities obstructing the bot's path
-	AAS_PresenceTypeBoundingBox(ms->presencetype, mins, maxs);
-	//
-	if(fabs(DotProduct(dir, up)) < 0.7) {
-		mins[2] += sv_maxstep;  // if the bot can step on
-		maxs[2] -= 10;                 // a little lower to avoid low ceiling
-	}  
-	VectorMA(ms->origin, 3, dir, end);
-	trace = AAS_Trace(ms->origin, mins, maxs, end, ms->entitynum, CONTENTS_SOLID | CONTENTS_PLAYERCLIP | CONTENTS_BODY);
-	// if not started in solid and not hitting the world entity
-	if(!trace.startsolid && (trace.ent != ENTITYNUM_WORLD && trace.ent != ENTITYNUM_NONE)) {
-		result->blocked = qtrue;
-		result->blockentity = trace.ent;
-	} else if(checkbottom && !AAS_AreaReachability(ms->areanum)) {
-		// check if the bot is standing on something
-		AAS_PresenceTypeBoundingBox(ms->presencetype, mins, maxs);
-		VectorMA(ms->origin, -3, up, end);
-		trace = AAS_Trace(ms->origin, mins, maxs, end, ms->entitynum, CONTENTS_SOLID | CONTENTS_PLAYERCLIP);
-		if(!trace.startsolid && (trace.ent != ENTITYNUM_WORLD && trace.ent != ENTITYNUM_NONE)) {
-			result->blocked = qtrue;
-			result->blockentity = trace.ent;
-			result->flags |= MOVERESULT_ONTOPOFOBSTACLE;
-		}  
-	}  
-}
-
 static bot_moveresult_t BotTravel_Walk(bot_movestate_t* ms, aas_reachability_t* reach) {
 	float dist, speed;
 	vec3_t hordir;
@@ -445,9 +415,7 @@ static bot_moveresult_t BotTravel_Walk(bot_movestate_t* ms, aas_reachability_t* 
 	hordir[1] = reach->start[1] - ms->origin[1];
 	hordir[2] = 0;
 	dist = VectorNormalize(hordir);
-	//
-	//BotCheckBlocked(ms, hordir, qtrue, &result);
-	//
+	
 	if(dist < 10) {
 		// walk straight to the reachability end
 		hordir[0] = reach->end[0] - ms->origin[0];
@@ -495,8 +463,7 @@ static bot_moveresult_t BotTravel_Crouch(bot_movestate_t* ms, aas_reachability_t
 	hordir[1] = reach->end[1] - ms->origin[1];
 	hordir[2] = 0;
 	VectorNormalize(hordir);
-	//
-	BotCheckBlocked(ms, hordir, qtrue, &result);
+
 	// elementary actions
 	EA_Crouch(ms->client);
 	EA_Move(ms->client, hordir, speed);
@@ -516,8 +483,7 @@ static bot_moveresult_t BotTravel_BarrierJump(bot_movestate_t* ms, aas_reachabil
 	hordir[1] = reach->start[1] - ms->origin[1];
 	hordir[2] = 0;
 	dist = VectorNormalize(hordir);
-	//
-	BotCheckBlocked(ms, hordir, qtrue, &result);
+
 	// if pretty close to the barrier
 	if(dist < 9) {
 		EA_Jump(ms->client);
@@ -541,8 +507,7 @@ static bot_moveresult_t BotFinishTravel_BarrierJump(bot_movestate_t* ms, aas_rea
 		hordir[0] = reach->end[0] - ms->origin[0];
 		hordir[1] = reach->end[1] - ms->origin[1];
 		hordir[2] = 0;
-		//
-		BotCheckBlocked(ms, hordir, qtrue, &result);
+		
 		//
 		EA_Move(ms->client, hordir, 400);
 		VectorCopy(hordir, result.movedir);
@@ -1137,7 +1102,7 @@ void BotMoveToGoal(bot_moveresult_t* result, int movestate, bot_goal_t* goal, in
 			//
 			switch(reach.traveltype & TRAVELTYPE_MASK) {
 				case TRAVEL_WALK: *result = BotTravel_Walk(ms, &reach); break;  // BotFinishTravel_Walk(ms, &reach); break;
-				/*case TRAVEL_CROUCH: break;
+				case TRAVEL_CROUCH: break;
 				case TRAVEL_BARRIERJUMP: *result = BotFinishTravel_BarrierJump(ms, &reach); break;
 				case TRAVEL_LADDER: *result = BotTravel_Ladder(ms, &reach); break;
 				case TRAVEL_WALKOFFLEDGE: *result = BotFinishTravel_WalkOffLedge(ms, &reach); break;
@@ -1145,7 +1110,7 @@ void BotMoveToGoal(bot_moveresult_t* result, int movestate, bot_goal_t* goal, in
 				case TRAVEL_SWIM: *result = BotTravel_Swim(ms, &reach); break;
 				case TRAVEL_WATERJUMP: *result = BotFinishTravel_WaterJump(ms, &reach); break;
 				case TRAVEL_TELEPORT: break;
-				case TRAVEL_JUMPPAD: *result = BotFinishTravel_JumpPad(ms, &reach); break;*/
+				case TRAVEL_JUMPPAD: *result = BotFinishTravel_JumpPad(ms, &reach); break;
 				default: {
 					botimport.Print(PRT_FATAL, "(last) travel type %d not implemented yet\n", (reach.traveltype & TRAVELTYPE_MASK));
 					break;
