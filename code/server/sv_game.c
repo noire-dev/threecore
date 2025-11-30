@@ -229,7 +229,7 @@ static intptr_t SV_GameSystemCalls(intptr_t* args) {
 		case BOTLIB_SHUTDOWN: return SV_BotLibShutdown();
 		case BOTLIB_START_FRAME: return botlib_export->BotLibStartFrame(VMF(1));
 		case BOTLIB_LOAD_MAP: return botlib_export->BotLibLoadMap(VMA(1));
-		case BOTLIB_UPDATENTITY: return;
+		case BOTLIB_UPDATENTITY: return 0;
 		case BOTLIB_GET_CONSOLE_MESSAGE: return SV_BotGetConsoleMessage(args[1], VMA(2), args[3]);
 		case BOTLIB_USER_COMMAND: {
 			unsigned clientNum = args[1];

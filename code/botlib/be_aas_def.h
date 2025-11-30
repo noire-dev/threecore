@@ -34,11 +34,6 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 //debugging on
 #define AAS_DEBUG
 
-#define DF_AASENTNUMBER(x)		(x - aasworld.entities)
-#define DF_NUMBERAASENT(x)		(&aasworld.entities[x])
-#define DF_AASENTCLIENT(x)		(x - aasworld.entities - 1)
-#define DF_CLIENTAASENT(x)		(&aasworld.entities[x + 1])
-
 #ifndef MAX_PATH
 	#define MAX_PATH				MAX_QEXTENDEDPATH
 #endif
