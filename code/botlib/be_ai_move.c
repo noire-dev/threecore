@@ -946,35 +946,22 @@ void BotMoveToGoal(bot_moveresult_t* result, int movestate, bot_goal_t* goal, in
 	if(!ms) return;
 
 	if(!goal) {
-#ifdef DEBUG
-		botimport.Print(PRT_MESSAGE, "client %d: movetogoal -> no goal\n", ms->client);
-#endif  // DEBUG
 		result->failure = qtrue;
 		return;
 	}  
-	botimport.Print(PRT_MESSAGE, "moveDEBUG: begin\n");
 	// remove some of the move flags
 	ms->moveflags &= ~(MFL_SWIMMING | MFL_AGAINSTLADDER);
 	// set some of the move flags
 	// NOTE: the MFL_ONGROUND flag is also set in the higher AI
-	//if(AAS_OnGround(ms->origin, ms->presencetype, ms->entitynum)) ms->moveflags |= MFL_ONGROUND;
-	botimport.Print(PRT_MESSAGE, "moveDEBUG: AAS_OnGround\n");
 	// if swimming
 	if(AAS_Swimming(ms->origin)) ms->moveflags |= MFL_SWIMMING;
-	botimport.Print(PRT_MESSAGE, "moveDEBUG: AAS_Swimming\n");
 	// if against a ladder
 	if(AAS_AgainstLadder(ms->origin)) ms->moveflags |= MFL_AGAINSTLADDER;
-	botimport.Print(PRT_MESSAGE, "moveDEBUG: AAS_AgainstLadder\n");
 	// if the bot is on the ground, swimming or against a ladder
 	if(ms->moveflags & (MFL_ONGROUND | MFL_SWIMMING | MFL_AGAINSTLADDER)) {
-		// botimport.Print(PRT_MESSAGE, "%s: onground, swimming or against ladder\n", ClientName(ms->entitynum-1));
-		//
 		AAS_ReachabilityFromNum(ms->lastreachnum, &lastreach);
-		botimport.Print(PRT_MESSAGE, "moveDEBUG: AAS_ReachabilityFromNum\n");
 		// reachability area the bot is in
 		ms->areanum = BotFuzzyPointReachabilityArea(ms->origin);
-		botimport.Print(PRT_MESSAGE, "moveDEBUG: BotFuzzyPointReachabilityArea\n");
-		//
 		if(!ms->areanum) {
 			result->failure = qtrue;
 			result->blocked = qtrue;
@@ -998,13 +985,9 @@ void BotMoveToGoal(bot_moveresult_t* result, int movestate, bot_goal_t* goal, in
 			} else {
 				// if the goal area changed or the reachability timed out
 				// or the area changed
-				if(ms->lastgoalareanum != goal->areanum || ms->reachability_time < AAS_Time() || ms->lastareanum != ms->areanum) {
-					reachnum = 0;
-					// botimport.Print(PRT_MESSAGE, "area change or timeout\n");
-				}
+				if(ms->lastgoalareanum != goal->areanum || ms->reachability_time < AAS_Time() || ms->lastareanum != ms->areanum) reachnum = 0;
 			}  
 		}
-		botimport.Print(PRT_MESSAGE, "moveDEBUG: reachnum if after\n");
 		resultflags = 0;
 		// if the bot needs a new reachability
 		if(!reachnum) {
@@ -1022,8 +1005,7 @@ void BotMoveToGoal(bot_moveresult_t* result, int movestate, bot_goal_t* goal, in
 				//
 			}  
 		}
-		botimport.Print(PRT_MESSAGE, "moveDEBUG: !reachnum if after\n");
-		//
+		
 		ms->lastreachnum = reachnum;
 		ms->lastgoalareanum = goal->areanum;
 		ms->lastareanum = ms->areanum;
@@ -1035,7 +1017,7 @@ void BotMoveToGoal(bot_moveresult_t* result, int movestate, bot_goal_t* goal, in
 			//
 			switch(reach.traveltype & TRAVELTYPE_MASK) {
 				case TRAVEL_WALK: *result = BotTravel_Walk(ms, &reach); break;
-				/*case TRAVEL_CROUCH: *result = BotTravel_Crouch(ms, &reach); break;
+				case TRAVEL_CROUCH: *result = BotTravel_Crouch(ms, &reach); break;
 				case TRAVEL_BARRIERJUMP: *result = BotTravel_BarrierJump(ms, &reach); break;
 				case TRAVEL_LADDER: *result = BotTravel_Ladder(ms, &reach); break;
 				case TRAVEL_WALKOFFLEDGE: *result = BotTravel_WalkOffLedge(ms, &reach); break;
@@ -1043,7 +1025,7 @@ void BotMoveToGoal(bot_moveresult_t* result, int movestate, bot_goal_t* goal, in
 				case TRAVEL_SWIM: *result = BotTravel_Swim(ms, &reach); break;
 				case TRAVEL_WATERJUMP: *result = BotTravel_WaterJump(ms, &reach); break;
 				case TRAVEL_TELEPORT: *result = BotTravel_Teleport(ms, &reach); break;
-				case TRAVEL_JUMPPAD: *result = BotTravel_JumpPad(ms, &reach); break;*/
+				case TRAVEL_JUMPPAD: *result = BotTravel_JumpPad(ms, &reach); break;
 				default: {
 					botimport.Print(PRT_FATAL, "travel type %d not implemented yet\n", (reach.traveltype & TRAVELTYPE_MASK));
 					break;
@@ -1088,7 +1070,6 @@ void BotMoveToGoal(bot_moveresult_t* result, int movestate, bot_goal_t* goal, in
 				}  
 			}  
 		}  
-		botimport.Print(PRT_MESSAGE, "moveDEBUG: 1\n");
 		if(ms->lastreachnum) {
 			// botimport.Print(PRT_MESSAGE, "%s: NOT onground, swimming or against ladder\n", ClientName(ms->entitynum-1));
 			AAS_ReachabilityFromNum(ms->lastreachnum, &reach);
