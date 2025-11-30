@@ -2483,13 +2483,7 @@ static sysEvent_t Com_GetEvent( void ) {
 Com_RunAndTimeServerPacket
 =================
 */
-void Com_RunAndTimeServerPacket( const netadr_t *evFrom, msg_t *buf ) {
-	int		t1, t2, msec;
-
-	t1 = 0;
-
-	SV_PacketEvent( evFrom, buf );
-}
+void Com_RunAndTimeServerPacket( const netadr_t *evFrom, msg_t *buf ) { SV_PacketEvent( evFrom, buf ); }
 
 
 /*

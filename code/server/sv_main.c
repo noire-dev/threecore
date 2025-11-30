@@ -63,32 +63,6 @@ EVENT MESSAGES
 */
 
 /*
-===============
-SV_ExpandNewlines
-
-Converts newlines to "\n" so a line prints nicer
-===============
-*/
-static const char *SV_ExpandNewlines( const char *in ) {
-	static char string[MAX_STRING_CHARS*2];
-	int		l;
-
-	l = 0;
-	while ( *in && l < sizeof(string) - 3 ) {
-		if ( *in == '\n' ) {
-			string[l++] = '\\';
-			string[l++] = 'n';
-		} else {
-			string[l++] = *in;
-		}
-		in++;
-	}
-	string[l] = '\0';
-
-	return string;
-}
-
-/*
 ======================
 SV_AddServerCommand
 

@@ -68,7 +68,6 @@ static int reach_ladder;		//climb or descent a ladder
 static int reach_teleport;		//teleport
 static int reach_elevator;		//use an elevator
 static int reach_funcbob;		//use a func bob
-static int reach_grapple;		//grapple hook
 static int reach_rocketjump;	//rocket jump
 static int reach_jumppad;		//jump pads
 //linked reachability
@@ -3660,24 +3659,6 @@ int AAS_ContinueInitReachability(float time)
 		AAS_Reachability_Elevator();
 		//create func_bobbing reachabilities
 		AAS_Reachability_FuncBobbing();
-		//
-#ifdef DEBUG
-		botimport.Print(PRT_MESSAGE, "%6d reach swim\n", reach_swim);
-		botimport.Print(PRT_MESSAGE, "%6d reach equal floor\n", reach_equalfloor);
-		botimport.Print(PRT_MESSAGE, "%6d reach step\n", reach_step);
-		botimport.Print(PRT_MESSAGE, "%6d reach barrier\n", reach_barrier);
-		botimport.Print(PRT_MESSAGE, "%6d reach waterjump\n", reach_waterjump);
-		botimport.Print(PRT_MESSAGE, "%6d reach walkoffledge\n", reach_walkoffledge);
-		botimport.Print(PRT_MESSAGE, "%6d reach jump\n", reach_jump);
-		botimport.Print(PRT_MESSAGE, "%6d reach ladder\n", reach_ladder);
-		botimport.Print(PRT_MESSAGE, "%6d reach walk\n", reach_walk);
-		botimport.Print(PRT_MESSAGE, "%6d reach teleport\n", reach_teleport);
-		botimport.Print(PRT_MESSAGE, "%6d reach funcbob\n", reach_funcbob);
-		botimport.Print(PRT_MESSAGE, "%6d reach elevator\n", reach_elevator);
-		botimport.Print(PRT_MESSAGE, "%6d reach grapple\n", reach_grapple);
-		botimport.Print(PRT_MESSAGE, "%6d reach rocketjump\n", reach_rocketjump);
-		botimport.Print(PRT_MESSAGE, "%6d reach jumppad\n", reach_jumppad);
-#endif
 		//*/
 		//store all the reachabilities
 		AAS_StoreReachability();
