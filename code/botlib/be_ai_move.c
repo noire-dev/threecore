@@ -957,7 +957,7 @@ void BotMoveToGoal(bot_moveresult_t* result, int movestate, bot_goal_t* goal, in
 	ms->moveflags &= ~(MFL_SWIMMING | MFL_AGAINSTLADDER);
 	// set some of the move flags
 	// NOTE: the MFL_ONGROUND flag is also set in the higher AI
-	if(AAS_OnGround(ms->origin, ms->presencetype, ms->entitynum)) ms->moveflags |= MFL_ONGROUND;
+	//if(AAS_OnGround(ms->origin, ms->presencetype, ms->entitynum)) ms->moveflags |= MFL_ONGROUND;
 	botimport.Print(PRT_MESSAGE, "moveDEBUG: AAS_OnGround\n");
 	// if swimming
 	if(AAS_Swimming(ms->origin)) ms->moveflags |= MFL_SWIMMING;
