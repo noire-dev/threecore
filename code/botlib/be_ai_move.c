@@ -523,8 +523,7 @@ static bot_moveresult_t BotTravel_Swim(bot_movestate_t* ms, aas_reachability_t* 
 	// swim straight to reachability end
 	VectorSubtract(reach->start, ms->origin, dir);
 	VectorNormalize(dir);
-	//
-	BotCheckBlocked(ms, dir, qtrue, &result);
+
 	// elementary actions
 	EA_Move(ms->client, dir, 400);
 	//
@@ -598,7 +597,6 @@ static bot_moveresult_t BotTravel_WalkOffLedge(bot_movestate_t* ms, aas_reachabi
 	// check if the bot is blocked by anything
 	VectorSubtract(reach->start, ms->origin, dir);
 	VectorNormalize(dir);
-	BotCheckBlocked(ms, dir, qtrue, &result);
 	// if the reachability start and end are practically above each other
 	VectorSubtract(reach->end, reach->start, dir);
 	dir[2] = 0;
@@ -631,8 +629,6 @@ static bot_moveresult_t BotTravel_WalkOffLedge(bot_movestate_t* ms, aas_reachabi
 			speed = 400;
 		}  
 	}  
-	//
-	BotCheckBlocked(ms, hordir, qtrue, &result);
 	// elementary action
 	EA_Move(ms->client, hordir, speed);
 	VectorCopy(hordir, result.movedir);
@@ -675,8 +671,6 @@ static bot_moveresult_t BotFinishTravel_WalkOffLedge(bot_movestate_t* ms, aas_re
 
 	//
 	VectorSubtract(reach->end, ms->origin, dir);
-	BotCheckBlocked(ms, dir, qtrue, &result);
-	//
 	VectorSubtract(reach->end, ms->origin, v);
 	v[2] = 0;
 	dist = VectorNormalize(v);
@@ -832,8 +826,6 @@ static bot_moveresult_t BotTravel_Teleport(bot_movestate_t* ms, aas_reachability
 	VectorSubtract(reach->start, ms->origin, hordir);
 	if(!(ms->moveflags & MFL_SWIMMING)) hordir[2] = 0;
 	dist = VectorNormalize(hordir);
-	//
-	BotCheckBlocked(ms, hordir, qtrue, &result);
 
 	if(dist < 30)
 		EA_Move(ms->client, hordir, 200);
@@ -854,8 +846,7 @@ static bot_moveresult_t BotTravel_JumpPad(bot_movestate_t* ms, aas_reachability_
 	hordir[0] = reach->start[0] - ms->origin[0];
 	hordir[1] = reach->start[1] - ms->origin[1];
 	hordir[2] = 0;
-	//
-	BotCheckBlocked(ms, hordir, qtrue, &result);
+
 	// elementary action move in direction
 	EA_Move(ms->client, hordir, 400);
 	VectorCopy(hordir, result.movedir);
@@ -874,8 +865,8 @@ static bot_moveresult_t BotFinishTravel_JumpPad(bot_movestate_t* ms, aas_reachab
 		hordir[2] = 0;
 		VectorNormalize(hordir);
 		speed = 400;
-	}  
-	BotCheckBlocked(ms, hordir, qtrue, &result);
+	}
+	
 	// elementary action move in direction
 	EA_Move(ms->client, hordir, speed);
 	VectorCopy(hordir, result.movedir);
@@ -922,8 +913,6 @@ static bot_moveresult_t BotMoveInGoalArea(bot_movestate_t* ms, bot_goal_t* goal)
 	if(dist > 100) dist = 100;
 	speed = 400 - (400 - 4 * dist);
 	if(speed < 10) speed = 0;
-
-	BotCheckBlocked(ms, dir, qtrue, &result);
 
 	EA_Move(ms->client, dir, speed);
 	VectorCopy(dir, result.movedir);
