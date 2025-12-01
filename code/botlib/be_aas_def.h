@@ -235,7 +235,6 @@ typedef struct aas_s
 	aas_link_t *freelinks;						//first free link
 	aas_link_t **arealinkedentities;			//entities linked into areas
 	//entities
-	int maxentities;
 	int maxclients;
 	aas_entity_t *entities;
 	//index to retrieve travel flag for a travel type

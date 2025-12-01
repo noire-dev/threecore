@@ -99,7 +99,6 @@ static int Export_BotLibSetup( void )
 	botimport.Print( PRT_MESSAGE, "------- BotLib Initialization -------\n" );
 
 	botlibglobals.maxclients = 128;
-	botlibglobals.maxentities = 4096;
 
 	errnum = AAS_Setup();			//be_aas_main.c
 	if (errnum != BLERR_NOERROR) return errnum;
