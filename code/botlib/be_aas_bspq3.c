@@ -66,7 +66,6 @@ typedef struct bsp_s
 	//entity data
 	int entdatasize;
 	char *dentdata;
-	//bsp entities
 	int numentities;
 	bsp_entity_t entities[MAX_BSPENTITIES];
 } bsp_t;

@@ -137,10 +137,7 @@ void AAS_ContinueInit(float time)
 int AAS_StartFrame(float time)
 {
 	aasworld.time = time;
-	//unlink all entities that were not updated last frame
-	AAS_UnlinkInvalidEntities();
-	//invalidate the entities
-	AAS_InvalidateEntities();
+
 	//initialize AAS
 	AAS_ContinueInit(time);
 	//
@@ -188,10 +185,7 @@ static int AAS_LoadFiles(const char *mapname)
 //	char bspfile[MAX_PATH];
 
 	Q_strncpyz(aasworld.mapname, mapname, sizeof(aasworld.mapname));
-	//NOTE: first reset the entity links into the AAS areas and BSP leaves
-	// the AAS link heap and BSP link heap are reset after respectively the
-	// AAS file and BSP file are loaded
-	AAS_ResetEntityLinks();
+	
 	// load bsp info
 	AAS_LoadBSPFile();
 
@@ -257,14 +251,8 @@ int AAS_LoadMap(const char *mapname)
 int AAS_Setup(void)
 {
 	aasworld.maxclients = 128;
-	aasworld.maxentities = 4096;
 	// as soon as it's set to 1 the routing cache will be saved
 	saveroutingcache = 0;
-	//allocate memory for the entities
-	if (aasworld.entities) free(aasworld.entities);
-	aasworld.entities = (aas_entity_t *) malloc(aasworld.maxentities * sizeof(aas_entity_t));
-	//invalidate all the entities
-	AAS_InvalidateEntities();
 	aasworld.numframes = 0;
 	return BLERR_NOERROR;
 } //end of the function AAS_Setup
@@ -285,8 +273,6 @@ void AAS_Shutdown(void)
 	AAS_FreeAASLinkedEntities();
 	//free the aas data
 	AAS_DumpAASData();
-	//free the entities
-	if (aasworld.entities) free(aasworld.entities);
 	//clear the aasworld structure
 	Com_Memset(&aasworld, 0, sizeof(aas_t));
 	//aas has not been initialized

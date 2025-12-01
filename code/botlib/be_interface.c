@@ -73,22 +73,6 @@ int Sys_MilliSeconds(void)
 // Returns:					-
 // Changes Globals:		-
 //===========================================================================
-static qboolean ValidEntityNumber(int num, const char *str)
-{
-	if ( /*num < 0 || */ (unsigned)num > botlibglobals.maxentities )
-	{
-		botimport.Print(PRT_ERROR, "%s: invalid entity number %d, [0, %d]\n",
-										str, num, botlibglobals.maxentities);
-		return qfalse;
-	} //end if
-	return qtrue;
-} //end of the function BotValidateClientNumber
-//===========================================================================
-//
-// Parameter:				-
-// Returns:					-
-// Changes Globals:		-
-//===========================================================================
 static qboolean BotLibSetup(const char *str)
 {
 	if (!botlibglobals.botlibsetup)

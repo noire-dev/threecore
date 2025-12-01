@@ -36,7 +36,6 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 typedef struct botlib_globals_s
 {
 	int botlibsetup;						//true when the bot library has been setup
-	int maxentities;						//maximum number of entities
 	int maxclients;							//maximum number of clients
 	float time;								//the global time
 #ifdef DEBUG
