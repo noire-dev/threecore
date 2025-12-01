@@ -98,7 +98,7 @@ int AAS_AlternativeRouteGoals(vec3_t start, int startareanum, vec3_t goal, int g
 	return 0;
 #else
 	int i, j, bestareanum;
-	int numaltroutegoals, nummidrangeareas;
+	int numaltroutegoals;
 	int starttime, goaltime, goaltraveltime;
 	float dist, bestdist;
 	vec3_t mid, dir;
@@ -115,9 +115,6 @@ int AAS_AlternativeRouteGoals(vec3_t start, int startareanum, vec3_t goal, int g
 	//clear the midrange areas
 	Com_Memset(midrangeareas, 0, aasworld.numareas * sizeof(midrangearea_t));
 	numaltroutegoals = 0;
-	//
-	nummidrangeareas = 0;
-	//
 	for (i = 1; i < aasworld.numareas; i++)
 	{
 		//
@@ -147,7 +144,6 @@ int AAS_AlternativeRouteGoals(vec3_t start, int startareanum, vec3_t goal, int g
 		midrangeareas[i].valid = qtrue;
 		midrangeareas[i].starttime = starttime;
 		midrangeareas[i].goaltime = goaltime;
-		nummidrangeareas++;
 	} //end for
 	//
 	for (i = 1; i < aasworld.numareas; i++)

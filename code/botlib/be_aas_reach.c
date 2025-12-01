@@ -69,7 +69,6 @@ static int reach_teleport;		//teleport
 static int reach_elevator;		//use an elevator
 static int reach_funcbob;		//use a func bob
 static int reach_rocketjump;	//rocket jump
-static int reach_jumppad;		//jump pads
 //linked reachability
 typedef struct aas_lreachability_s
 {
