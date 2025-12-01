@@ -1029,18 +1029,14 @@ void BotMoveToGoal(bot_moveresult_t* result, int movestate, bot_goal_t* goal, in
 		vec3_t end;
 
 		// special handling of jump pads when the bot uses a jump pad without knowing it
-		foundjumppad = qfalse;
 		VectorMA(ms->origin, -2 * ms->thinktime, ms->velocity, end);
 		numareas = AAS_TraceAreas(ms->origin, end, areas, NULL, 16);
 		for(i = numareas - 1; i >= 0; i--) {
 			if(AAS_AreaJumpPad(areas[i])) {
-				// botimport.Print(PRT_MESSAGE, "client %d used a jumppad without knowing, area %d\n", ms->client, areas[i]);
-				foundjumppad = qtrue;
 				lastreachnum = BotGetReachabilityToGoal(end, areas[i], ms->lastgoalareanum, ms->lastareanum, goal, TFL_JUMPPAD, NULL);
 				if(lastreachnum) {
 					ms->lastreachnum = lastreachnum;
 					ms->lastareanum = areas[i];
-					// botimport.Print(PRT_MESSAGE, "found jumppad reachability\n");
 					break;
 				} else {
 					for(lastreachnum = AAS_NextAreaReachability(areas[i], 0); lastreachnum; lastreachnum = AAS_NextAreaReachability(areas[i], lastreachnum)) {
