@@ -163,7 +163,7 @@ static int BotValidTravel(vec3_t origin, aas_reachability_t* reach, int travelfl
 }
 
 int BotGetReachabilityToGoal(vec3_t origin, int areanum, int lastgoalareanum, int lastareanum, bot_goal_t* goal, int travelflags, int* flags) {
-	int i, t, besttime, bestreachnum, reachnum;
+	int t, besttime, bestreachnum, reachnum;
 	aas_reachability_t reach;
 
 	// if not in a valid area
@@ -388,20 +388,6 @@ static int BotWalkInDirection(bot_movestate_t* ms, vec3_t dir, float speed, int 
 		}  
 		// FIXME: do air control to avoid hazards
 		return qtrue;
-	}  
-}
-
-int BotMoveInDirection(int movestate, vec3_t dir, float speed, int type) {
-	bot_movestate_t* ms;
-
-	ms = BotMoveStateFromHandle(movestate);
-	if(!ms) return qfalse;
-	// if swimming
-	if(AAS_Swimming(ms->origin)) {
-		return BotSwimInDirection(ms, dir, speed, type);
-	}  
-	else {
-		return BotWalkInDirection(ms, dir, speed, type);
 	}  
 }
 
@@ -930,7 +916,7 @@ static bot_moveresult_t BotMoveInGoalArea(bot_movestate_t* ms, bot_goal_t* goal)
 }
 
 void BotMoveToGoal(bot_moveresult_t* result, int movestate, bot_goal_t* goal, int travelflags) {
-	int reachnum, lastreachnum, foundjumppad, ent, resultflags;
+	int reachnum, lastreachnum, resultflags;
 	aas_reachability_t reach, lastreach;
 	bot_movestate_t* ms;
 

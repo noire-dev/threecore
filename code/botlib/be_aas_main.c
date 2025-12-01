@@ -107,7 +107,7 @@ void AAS_ContinueInit(float time)
 	//if AAS is already initialized
 	if (aasworld.initialized) return;
 	//calculate reachability, if not finished return
-	//if (AAS_ContinueInitReachability(time)) return;
+	if (AAS_ContinueInitReachability(time)) return;
 	//if reachability has been calculated and an AAS file should be written
 	//or there is a forced data optimization
 	if (aasworld.savefile)

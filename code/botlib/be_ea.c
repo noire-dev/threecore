@@ -157,14 +157,12 @@ void EA_GetInput(int client, float thinktime, bot_input_t* input) {
 
 void EA_ResetInput(int client) {
 	bot_input_t* bi;
-	int jumped;
 
 	bi = &botinputs[client];
 
 	bi->thinktime = 0;
 	VectorClear(bi->dir);
 	bi->speed = 0;
-	jumped = bi->actionflags & ACTION_JUMP;
 	bi->actionflags = 0;
 }
 
