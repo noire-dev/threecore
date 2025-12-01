@@ -229,7 +229,6 @@ static intptr_t SV_GameSystemCalls(intptr_t* args) {
 		case BOTLIB_SHUTDOWN: return SV_BotLibShutdown();
 		case BOTLIB_START_FRAME: return botlib_export->BotLibStartFrame(VMF(1));
 		case BOTLIB_LOAD_MAP: return botlib_export->BotLibLoadMap(VMA(1));
-		case BOTLIB_UPDATENTITY: return 0;
 		case BOTLIB_GET_CONSOLE_MESSAGE: return SV_BotGetConsoleMessage(args[1], VMA(2), args[3]);
 		case BOTLIB_USER_COMMAND: {
 			unsigned clientNum = args[1];
@@ -238,7 +237,6 @@ static intptr_t SV_GameSystemCalls(intptr_t* args) {
 			}
 		}
 			return 0;
-		case BOTLIB_AAS_ENTITY_INFO: botlib_export->aas.AAS_EntityInfo(args[1], VMA(2)); return 0;
 		case BOTLIB_AAS_INITIALIZED: return botlib_export->aas.AAS_Initialized();
 		case BOTLIB_AAS_TIME: return FloatAsInt(botlib_export->aas.AAS_Time());
 		case BOTLIB_AAS_POINT_AREA_NUM: return botlib_export->aas.AAS_PointAreaNum(VMA(1));

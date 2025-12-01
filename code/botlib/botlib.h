@@ -205,7 +205,6 @@ typedef struct botlib_import_s
 } botlib_import_t;
 
 typedef struct aas_export_s {
-	void		(*AAS_EntityInfo)(int entnum, struct aas_entityinfo_s *info);
 	int			(*AAS_Initialized)(void);
 	float		(*AAS_Time)(void);
 	int			(*AAS_PointAreaNum)(vec3_t point);

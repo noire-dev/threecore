@@ -205,7 +205,6 @@ Init_AAS_Export
 ============
 */
 static void Init_AAS_Export( aas_export_t *aas ) {
-	aas->AAS_EntityInfo = AAS_EntityInfo;
 	aas->AAS_Initialized = AAS_Initialized;
 	aas->AAS_Time = AAS_Time;
 	aas->AAS_PointAreaNum = AAS_PointAreaNum;
