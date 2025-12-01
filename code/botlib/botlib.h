@@ -225,7 +225,7 @@ typedef struct ea_export_s {
 
 typedef struct ai_export_s {
 	int		(*BotTouchingGoal)(const vec3_t origin, const struct bot_goal_s *goal);
-    void	(*BotMoveToGoal)(struct bot_moveresult_s *result, int movestate, struct bot_goal_s *goal, int travelflags);
+    void	(*BotMoveToGoal)(int movestate, struct bot_goal_s *goal, int travelflags);
 	void	(*BotResetMoveState)(int movestate);
 	int		(*BotAllocMoveState)(void);
 	void	(*BotFreeMoveState)(int handle);

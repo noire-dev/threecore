@@ -62,7 +62,7 @@ typedef struct bot_moveresult_s
 #define bot_moveresult_t_cleared(x) bot_moveresult_t (x) = {0, 0, 0, 0, 0, 0, 0, {0, 0, 0}, {0, 0, 0}}
 
 void AAS_PresenceTypeBoundingBox(int presencetype, vec3_t mins, vec3_t maxs);
-void BotMoveToGoal(bot_moveresult_t *result, int movestate, bot_goal_t *goal, int travelflags);
+void BotMoveToGoal(int movestate, bot_goal_t *goal, int travelflags);
 void BotResetMoveState(int movestate);
 int BotAllocMoveState(void);
 void BotFreeMoveState(int handle);

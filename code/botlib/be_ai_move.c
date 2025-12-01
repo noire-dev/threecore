@@ -940,7 +940,7 @@ void BotMoveToGoal(int movestate, bot_goal_t* goal, int travelflags) {
 		if(!ms->areanum) return;
 		// if the bot is in the goal area
 		if(ms->areanum == goal->areanum) {
-			*result = BotMoveInGoalArea(ms, goal);
+			BotMoveInGoalArea(ms, goal);
 			return;
 		}  
 		// assume we can use the reachability from the last frame
@@ -982,16 +982,15 @@ void BotMoveToGoal(int movestate, bot_goal_t* goal, int travelflags) {
 		if(reachnum) {
 			// get the reachability from the number
 			AAS_ReachabilityFromNum(reachnum, &reach);
-			result->traveltype = reach.traveltype;
 			//
 			switch(reach.traveltype & TRAVELTYPE_MASK) {
-				case TRAVEL_WALK: *result = BotTravel_Walk(ms, &reach); break;
+				case TRAVEL_WALK: BotTravel_Walk(ms, &reach); break;
 				//case TRAVEL_CROUCH: *result = BotTravel_Crouch(ms, &reach); break;
 				//case TRAVEL_BARRIERJUMP: *result = BotTravel_BarrierJump(ms, &reach); break;
 				//case TRAVEL_LADDER: *result = BotTravel_Ladder(ms, &reach); break;
 				//case TRAVEL_WALKOFFLEDGE: *result = BotTravel_WalkOffLedge(ms, &reach); break;
 				//case TRAVEL_JUMP: *result = BotTravel_Jump(ms, &reach); break;
-				case TRAVEL_SWIM: *result = BotTravel_Swim(ms, &reach); break;
+				case TRAVEL_SWIM: BotTravel_Swim(ms, &reach); break;
 				//case TRAVEL_WATERJUMP: *result = BotTravel_WaterJump(ms, &reach); break;
 				//case TRAVEL_TELEPORT: *result = BotTravel_Teleport(ms, &reach); break;
 				//case TRAVEL_JUMPPAD: *result = BotTravel_JumpPad(ms, &reach); break;
@@ -1000,11 +999,7 @@ void BotMoveToGoal(int movestate, bot_goal_t* goal, int travelflags) {
 					break;
 				}  
 			}  
-			result->traveltype = reach.traveltype;
-			result->flags |= resultflags;
 		} else {
-			result->failure = qtrue;
-			result->flags |= resultflags;
 			Com_Memset(&reach, 0, sizeof(aas_reachability_t));
 		}  
 	} else {
@@ -1038,16 +1033,15 @@ void BotMoveToGoal(int movestate, bot_goal_t* goal, int travelflags) {
 		if(ms->lastreachnum) {
 			// botimport.Print(PRT_MESSAGE, "%s: NOT onground, swimming or against ladder\n", ClientName(ms->entitynum-1));
 			AAS_ReachabilityFromNum(ms->lastreachnum, &reach);
-			result->traveltype = reach.traveltype;
 			//
 			switch(reach.traveltype & TRAVELTYPE_MASK) {
-				case TRAVEL_WALK: *result = BotTravel_Walk(ms, &reach); break;  // BotFinishTravel_Walk(ms, &reach); break;
+				case TRAVEL_WALK: BotTravel_Walk(ms, &reach); break;  // BotFinishTravel_Walk(ms, &reach); break;
 				//case TRAVEL_CROUCH: break;
 				//case TRAVEL_BARRIERJUMP: *result = BotFinishTravel_BarrierJump(ms, &reach); break;
 				//case TRAVEL_LADDER: *result = BotTravel_Ladder(ms, &reach); break;
 				//case TRAVEL_WALKOFFLEDGE: *result = BotFinishTravel_WalkOffLedge(ms, &reach); break;
 				//case TRAVEL_JUMP: *result = BotFinishTravel_Jump(ms, &reach); break;
-				case TRAVEL_SWIM: *result = BotTravel_Swim(ms, &reach); break;
+				case TRAVEL_SWIM: BotTravel_Swim(ms, &reach); break;
 				//case TRAVEL_WATERJUMP: *result = BotFinishTravel_WaterJump(ms, &reach); break;
 				//case TRAVEL_TELEPORT: break;
 				//case TRAVEL_JUMPPAD: *result = BotFinishTravel_JumpPad(ms, &reach); break;
@@ -1056,11 +1050,8 @@ void BotMoveToGoal(int movestate, bot_goal_t* goal, int travelflags) {
 					break;
 				}  
 			}  
-			result->traveltype = reach.traveltype;
 		}  
 	}  
-	// FIXME: is it right to do this here?
-	if(result->blocked) ms->reachability_time -= 10 * ms->thinktime;
 	// copy the last origin
 	VectorCopy(ms->origin, ms->lastorigin);
 }
