@@ -985,15 +985,15 @@ void BotMoveToGoal(int movestate, bot_goal_t* goal, int travelflags) {
 			//
 			switch(reach.traveltype & TRAVELTYPE_MASK) {
 				case TRAVEL_WALK: BotTravel_Walk(ms, &reach); break;
-				case TRAVEL_CROUCH: *result = BotTravel_Crouch(ms, &reach); break;
-				case TRAVEL_BARRIERJUMP: *result = BotTravel_BarrierJump(ms, &reach); break;
-				case TRAVEL_LADDER: *result = BotTravel_Ladder(ms, &reach); break;
-				case TRAVEL_WALKOFFLEDGE: *result = BotTravel_WalkOffLedge(ms, &reach); break;
-				case TRAVEL_JUMP: *result = BotTravel_Jump(ms, &reach); break;
+				case TRAVEL_CROUCH: BotTravel_Crouch(ms, &reach); break;
+				case TRAVEL_BARRIERJUMP: BotTravel_BarrierJump(ms, &reach); break;
+				case TRAVEL_LADDER: BotTravel_Ladder(ms, &reach); break;
+				case TRAVEL_WALKOFFLEDGE: BotTravel_WalkOffLedge(ms, &reach); break;
+				case TRAVEL_JUMP: BotTravel_Jump(ms, &reach); break;
 				case TRAVEL_SWIM: BotTravel_Swim(ms, &reach); break;
-				case TRAVEL_WATERJUMP: *result = BotTravel_WaterJump(ms, &reach); break;
-				case TRAVEL_TELEPORT: *result = BotTravel_Teleport(ms, &reach); break;
-				case TRAVEL_JUMPPAD: *result = BotTravel_JumpPad(ms, &reach); break;
+				case TRAVEL_WATERJUMP: BotTravel_WaterJump(ms, &reach); break;
+				case TRAVEL_TELEPORT: BotTravel_Teleport(ms, &reach); break;
+				case TRAVEL_JUMPPAD: BotTravel_JumpPad(ms, &reach); break;
 				default: {
 					botimport.Print(PRT_FATAL, "travel type %d not implemented yet\n", (reach.traveltype & TRAVELTYPE_MASK));
 					break;
@@ -1037,14 +1037,14 @@ void BotMoveToGoal(int movestate, bot_goal_t* goal, int travelflags) {
 			switch(reach.traveltype & TRAVELTYPE_MASK) {
 				case TRAVEL_WALK: BotTravel_Walk(ms, &reach); break;  // BotFinishTravel_Walk(ms, &reach); break;
 				case TRAVEL_CROUCH: break;
-				case TRAVEL_BARRIERJUMP: *result = BotFinishTravel_BarrierJump(ms, &reach); break;
-				case TRAVEL_LADDER: *result = BotTravel_Ladder(ms, &reach); break;
-				case TRAVEL_WALKOFFLEDGE: *result = BotFinishTravel_WalkOffLedge(ms, &reach); break;
-				case TRAVEL_JUMP: *result = BotFinishTravel_Jump(ms, &reach); break;
+				case TRAVEL_BARRIERJUMP: BotFinishTravel_BarrierJump(ms, &reach); break;
+				case TRAVEL_LADDER: BotTravel_Ladder(ms, &reach); break;
+				case TRAVEL_WALKOFFLEDGE: BotFinishTravel_WalkOffLedge(ms, &reach); break;
+				case TRAVEL_JUMP: BotFinishTravel_Jump(ms, &reach); break;
 				case TRAVEL_SWIM: BotTravel_Swim(ms, &reach); break;
-				case TRAVEL_WATERJUMP: *result = BotFinishTravel_WaterJump(ms, &reach); break;
+				case TRAVEL_WATERJUMP: BotFinishTravel_WaterJump(ms, &reach); break;
 				case TRAVEL_TELEPORT: break;
-				case TRAVEL_JUMPPAD: *result = BotFinishTravel_JumpPad(ms, &reach); break;
+				case TRAVEL_JUMPPAD: BotFinishTravel_JumpPad(ms, &reach); break;
 				default: {
 					botimport.Print(PRT_FATAL, "(last) travel type %d not implemented yet\n", (reach.traveltype & TRAVELTYPE_MASK));
 					break;
