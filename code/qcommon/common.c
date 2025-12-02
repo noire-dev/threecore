@@ -788,7 +788,7 @@ void* Z_TagMalloc(int size, int tag) {
     total_size += size;
     num_allocations++;
     
-    printf("Allocating %.2fmb for %p, total alloc = %.2fmb\n",
+    Com_Printf("Allocating %.2fmb for %p, total alloc = %.2fmb\n",
            (float)size / (1024.0f * 1024.0f),
            ptr,
            (float)total_size / (1024.0f * 1024.0f));
