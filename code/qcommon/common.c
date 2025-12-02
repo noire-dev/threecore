@@ -35,11 +35,11 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #include "../client/keys.h"
 
 #if ARCH == x86
-    #define DEF_COMHUNKMEGS 1023
+    #define DEF_COMHUNKMEGS 800
 #elif ARCH == x86_64
-    #define DEF_COMHUNKMEGS 2047
+    #define DEF_COMHUNKMEGS 800
 #else
-    #define DEF_COMHUNKMEGS 2047  // defaults
+    #define DEF_COMHUNKMEGS 800   // defaults
 #endif
 #define DEF_COMZONEMEGS			12
 
@@ -1723,11 +1723,11 @@ void *Hunk_Alloc( int size, ha_pref preference ) {
 
 	size = PAD( size, 64 ); // round to cacheline
 
-	if ( s_hunkUsed + size > s_hunkTotal ) Com_Error(ERR_DROP, "Hunk_Alloc failed on %i (used=%dmb, total=%dmb)", size, s_hunkUsed/1024/1024, s_hunkTotal/1024/1024);
+	if ( s_hunkUsed + size > s_hunkTotal ) Com_Error(ERR_DROP, "Hunk_Alloc failed on %i (used=%dmb, total=%dmb) \n", size, s_hunkUsed/1024/1024, s_hunkTotal/1024/1024);
     
     buf = (void *)(s_hunkData + s_hunkUsed);
     s_hunkUsed += size;
-    Com_Printf("Hunk_Alloc: allocating %ikb. (used=%dmb, total=%dmb)", size/1024, s_hunkUsed/1024/1024, s_hunkTotal/1024/1024);
+    Com_Printf("Hunk_Alloc: allocating %i. (used=%dmb, total=%dmb) \n", size, s_hunkUsed/1024/1024, s_hunkTotal/1024/1024);
 
     Com_Memset( buf, 0, size );
 	return buf;
