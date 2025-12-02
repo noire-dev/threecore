@@ -1798,7 +1798,6 @@ void Com_Init( char *commandLine ) {
 	// bk001129 - do this before anything else decides to push events
 	Com_InitPushEvent();
 
-	Com_InitSmallZoneMemory();
 	Cvar_Init();
 
 #if defined(_WIN32) && defined(_DEBUG)
@@ -1815,7 +1814,6 @@ void Com_Init( char *commandLine ) {
 	// override anything from the config files with command line args
 	Com_StartupVariable( NULL );
 
-	Com_InitZoneMemory();
 	Cmd_Init();
 
 	// get the developer cvar set as early as possible
@@ -1878,9 +1876,6 @@ void Com_Init( char *commandLine ) {
 
 	// override anything from the config files with command line args
 	Com_StartupVariable( NULL );
-
-	// allocate the stack based hunk allocator
-	Com_InitHunkMemory();
 
 	// if any archived cvars are modified after this, we will trigger a writing
 	// of the config file
