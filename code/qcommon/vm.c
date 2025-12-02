@@ -401,12 +401,12 @@ static vmHeader_t *VM_LoadQVM( vm_t *vm, qboolean alloc ) {
 
 	// load the image
 	Com_sprintf( filename, sizeof(filename), "qvm/%s/%s.qvm", cl_changeqvm->string, vm->name );
-	Com_Printf( "Loading vm file %s...\n", filename );
+	Com_Printf( "Loading vm file for map %s \n", filename );
 	length = FS_ReadFile( filename, (void **)&header );
 
 	if ( !header ) {
 		Com_sprintf( filename, sizeof(filename), "qvm/%s.qvm", vm->name );
-		Com_Printf( "Loading vm file %s...\n", filename );
+		Com_Printf( "Loading default vm file %s", filename );
 		length = FS_ReadFile( filename, (void **)&header );
 		if ( !header ) {
 			Com_Printf( "Failed.\n" );
@@ -428,7 +428,13 @@ static vmHeader_t *VM_LoadQVM( vm_t *vm, qboolean alloc ) {
 
 	vm->crc32sum = crc32sum;
 
-	Com_Printf( "...which has vmMagic VM_MAGIC_VER3\n" );
+	Com_Printf( " with VM_MAGIC_VER3\n" );
+	Com_Printf( "   instructionCount = %i \n", header->instructionCount );
+	Com_Printf( "   codeLength = %ikb \n", header->codeLength/1024 );
+	Com_Printf( "   dataLength = %ikb \n", header->dataLength/1024 );
+	Com_Printf( "   litLength = %ikb \n", header->litLength/1024 );
+	Com_Printf( "   bssLength = %ikb \n", header->bssLength/1024 );
+	Com_Printf( "   jtrgLength = %ikb \n", header->jtrgLength/1024 );
 
 	vm->exactDataLength = header->dataLength + header->litLength + header->bssLength;
 
@@ -492,7 +498,6 @@ static vmHeader_t *VM_LoadQVM( vm_t *vm, qboolean alloc ) {
 		header->jtrgLength &= ~0x03;
 
 		vm->numJumpTableTargets = header->jtrgLength >> 2;
-		Com_Printf( "Loading %d jump table targets\n", vm->numJumpTableTargets );
 
 		if ( alloc ) {
 			vm->jumpTableTargets = (int32_t *) Hunk_Alloc( header->jtrgLength, h_high );
@@ -1278,15 +1283,13 @@ vm_t *VM_Create( vmIndex_t index, syscall_t systemCalls ) {
 
 	vm->compiled = qfalse;
 
-	Com_Printf( "Compiling qvm%i - %s\n", vm->index, vm->name );
 	if ( VM_Compile( vm, header ) ) {
 		vm->compiled = qtrue;
-		Com_Printf( "Compiling qvm%i - %s done\n", vm->index, vm->name );
 	}
 
 	// VM_Compile may have reset vm->compiled if compilation failed
 	if ( !vm->compiled ) {
-		Com_Printf( "Failed to compile qvm%i - %s. Using interpreter\n", vm->index, vm->name );
+		Com_Printf( "Failed to compile qvm - %s. Using interpreter\n", vm->name );
 		if ( !VM_PrepareInterpreter( vm, header ) ) {
 			Com_Printf( "Failed to interpret qvm\n" );
 			FS_FreeFile( header );	// free the original file
@@ -1298,7 +1301,7 @@ vm_t *VM_Create( vmIndex_t index, syscall_t systemCalls ) {
 	// free the original file
 	FS_FreeFile( header );
 
-	Com_Printf( "%s loaded in %d bytes on the hunk\n", vm->name, remaining - Hunk_MemoryRemaining() );
+	Com_Printf("%s loaded! \n", vm->name);
 
 	return vm;
 }
