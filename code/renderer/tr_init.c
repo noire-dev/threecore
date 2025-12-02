@@ -629,7 +629,7 @@ alignment of packAlign to ensure efficient copying.
 
 Stores the length of padding after a line of pixels to address padlen
 
-Return value must be freed with ri.Z_Free()
+Return value must be freed with ri.Hunk_FreeTempMemory()
 ==================
 */
 static byte *RB_ReadPixels(int x, int y, int width, int height, size_t *offset, int *padlen, int lineAlign )
@@ -651,7 +651,7 @@ static byte *RB_ReadPixels(int x, int y, int width, int height, size_t *offset, 
 	bufAlign = MAX( packAlign, 16 ); // for SIMD
 
 	// Allocate a few more bytes so that we can choose an alignment we like
-	buffer = ri.Z_Malloc(padwidth * height + *offset + bufAlign - 1);
+	buffer = ri.Hunk_AllocateTempMemory(padwidth * height + *offset + bufAlign - 1);
 	bufstart = PADP((intptr_t) buffer + *offset, bufAlign);
 
 	qglReadPixels( x, y, width, height, GL_RGB, GL_UNSIGNED_BYTE, bufstart );
@@ -721,7 +721,7 @@ void RB_TakeScreenshot( int x, int y, int width, int height, const char *fileNam
 
 	ri.FS_WriteFile( fileName, buffer, memcount + header_size );
 
-	ri.Z_Free( allbuf );
+	ri.Hunk_FreeTempMemory( allbuf );
 }
 
 
@@ -743,7 +743,7 @@ void RB_TakeScreenshotJPEG( int x, int y, int width, int height, const char *fil
 	R_GammaCorrect( buffer + offset, memcount );
 
 	ri.CL_SaveJPG( fileName, r_screenshotJpegQuality->integer, width, height, buffer + offset, padlen );
-	ri.Z_Free( buffer );
+	ri.Hunk_FreeTempMemory( buffer );
 }
 
 
@@ -866,7 +866,7 @@ void RB_TakeScreenshotBMP( int x, int y, int width, int height, const char *file
 		ri.FS_WriteFile( fileName, buffer - header_size, memcount + header_size );
 	}
 
-	ri.Z_Free( allbuf );
+	ri.Hunk_FreeTempMemory( allbuf );
 }
 
 
@@ -1382,7 +1382,7 @@ void R_Init( void ) {
 	max_polys = MAX_POLYS;
 	max_polyverts = MAX_POLYVERTS;
 
-	ptr = ri.Z_Malloc( sizeof( *backEndData ) + sizeof(srfPoly_t) * max_polys + sizeof(polyVert_t) * max_polyverts);
+	ptr = ri.Hunk_Alloc( sizeof( *backEndData ) + sizeof(srfPoly_t) * max_polys + sizeof(polyVert_t) * max_polyverts, h_low);
 	backEndData = (backEndData_t *) ptr;
 	backEndData->polys = (srfPoly_t *) ((char *) ptr + sizeof( *backEndData ));
 	backEndData->polyVerts = (polyVert_t *) ((char *) ptr + sizeof( *backEndData ) + sizeof(srfPoly_t) * max_polys);

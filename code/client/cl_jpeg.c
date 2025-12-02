@@ -468,10 +468,10 @@ void CL_SaveJPG( const char *filename, int quality, int image_width, int image_h
 	size_t bufSize;
 
 	bufSize = image_width * image_height * 4;
-	out = Z_Malloc(bufSize);
+	out = Hunk_AllocateTempMemory(bufSize);
 
 	bufSize = CL_SaveJPGToBuffer( out, bufSize, quality, image_width, image_height, image_buffer, padding );
 	FS_WriteFile( filename, out, bufSize );
 
-	Z_Free(out);
+	Hunk_FreeTempMemory(out);
 }

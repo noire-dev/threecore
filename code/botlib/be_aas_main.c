@@ -197,6 +197,8 @@ int AAS_LoadMap(const char *mapname)
 	AAS_InitAASLinkHeap();
 	//initialize the AAS linked entities for the new map
 	AAS_InitAASLinkedEntities();
+	//initialize reachability for the new map
+	AAS_InitReachability();
 	//initialize the alternative routing
 	AAS_InitAlternativeRouting();
 	//everything went ok

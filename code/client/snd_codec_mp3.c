@@ -696,7 +696,7 @@ void *S_MP3_CodecLoad(const char *filename, snd_info_t *info)
         info->dataofs = stream->info.dataofs;
 
 	// allocate enough buffer for all pcm data
-	pcmbuffer = Z_Malloc(stream->info.size);
+	pcmbuffer = Hunk_AllocateTempMemory(stream->info.size);
 	if(!pcmbuffer)
 	{
 		S_MP3_CodecCloseStream(stream);
@@ -708,7 +708,7 @@ void *S_MP3_CodecLoad(const char *filename, snd_info_t *info)
 	if(info->size <= 0)
 	{
 		// we didn't read anything at all. darn.
-		Z_Free(pcmbuffer);
+		Hunk_FreeTempMemory(pcmbuffer);
 		pcmbuffer = NULL;
 	}
 

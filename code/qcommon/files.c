@@ -1810,7 +1810,7 @@ int FS_ReadFile( const char *qpath, void **buffer ) {
 				return len;
 			}
 
-			buf = Z_Malloc(len+1);
+			buf = Hunk_AllocateTempMemory(len+1);
 			*buffer = buf;
 
 			r = FS_Read( buf, len, com_journalDataFile );
@@ -1856,7 +1856,7 @@ int FS_ReadFile( const char *qpath, void **buffer ) {
 		return len;
 	}
 
-	buf = Z_Malloc( len + 1 );
+	buf = Hunk_AllocateTempMemory( len + 1 );
 	*buffer = buf;
 
 	FS_Read( buf, len, h );
@@ -1893,7 +1893,12 @@ void FS_FreeFile( void *buffer ) {
 	}
 	fs_loadStack--;
 
-	//Z_Free( buffer );
+	Hunk_FreeTempMemory( buffer );
+
+	// if all of our temp files are free, clear all of our space
+	if ( fs_loadStack == 0 ) {
+		Hunk_ClearTempMemory();
+	}
 }
 
 

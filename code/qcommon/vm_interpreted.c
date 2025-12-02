@@ -111,7 +111,7 @@ qboolean VM_PrepareInterpreter( vm_t *vm, vmHeader_t *header )
 {
 	const char *errMsg;
 	instruction_t *buf;
-	buf = ( instruction_t *) Z_Malloc( (vm->instructionCount + 8) * sizeof( instruction_t ) );
+	buf = ( instruction_t *) Hunk_Alloc( (vm->instructionCount + 8) * sizeof( instruction_t ), h_high );
 
 	errMsg = VM_LoadInstructions( (byte *) header + header->codeOffset, header->codeLength, header->instructionCount, buf );
 	if ( !errMsg ) {

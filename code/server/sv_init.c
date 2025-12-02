@@ -356,7 +356,7 @@ void SV_SpawnServer( const char *mapname ) {
 	FS_ClearPakReferences( 0 );
 
 	// allocate the snapshot entities on the hunk
-	svs.snapshotEntities = Z_Malloc( sizeof(entityState_t)*svs.numSnapshotEntities );
+	svs.snapshotEntities = Hunk_Alloc( sizeof(entityState_t)*svs.numSnapshotEntities, h_high );
 
 	// initialize snapshot storage
 	SV_InitSnapshotStorage();
@@ -506,6 +506,8 @@ void SV_SpawnServer( const char *mapname ) {
 
 	// send a heartbeat now so the master will get up to date info
 	SV_Heartbeat_f();
+
+	Hunk_SetMark();
 
 	Com_Printf ("-----------------------------------\n");
 
