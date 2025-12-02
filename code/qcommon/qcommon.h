@@ -994,8 +994,6 @@ typedef enum {
 	TAG_CLIENTS,
 	TAG_SMALL,
 	TAG_STATIC,
-	TAG_HUNK,
-	TAG_HUNKTEMP,
 	TAG_COUNT
 } memtag_t;
 
