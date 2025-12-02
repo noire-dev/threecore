@@ -1615,49 +1615,24 @@ Touch all known used data to make sure it is paged in
 ===============
 */
 unsigned int Com_TouchMemory( void ) {
-	const memblock_t *block;
-	const memzone_t *zone;
 	int		start, end;
-	int		i, j;
 	unsigned int sum;
 
+	start = Sys_Milliseconds();
+	sum = 0;
+	
 	Z_CheckHeap();
 
-	start = Sys_Milliseconds();
-
-	sum = 0;
-
-	j = hunk_low.permanent >> 2;
-	for ( i = 0 ; i < j ; i+=64 ) {			// only need to touch each page
-		sum += ((unsigned int *)s_hunkData)[i];
-	}
-
-	i = ( s_hunkTotal - hunk_high.permanent ) >> 2;
-	j = hunk_high.permanent >> 2;
-	for (  ; i < j ; i+=64 ) {			// only need to touch each page
-		sum += ((unsigned int *)s_hunkData)[i];
-	}
-
-	zone = mainzone;
-	for (block = zone->blocklist.next ; ; block = block->next) {
-		if ( block->tag != TAG_FREE ) {
-			j = block->size >> 2;
-			for ( i = 0 ; i < j ; i+=64 ) {				// only need to touch each page
-				sum += ((unsigned int *)block)[i];
-			}
-		}
-		if ( block->next == &zone->blocklist ) {
-			break; // all blocks have been hit
-		}
-	}
+    if (s_hunkData == NULL || s_hunkTotal == 0) {
+        Com_Printf("Com_TouchMemory: Hunk not initialized\n");
+        return 0;
+    }
 
 	end = Sys_Milliseconds();
 
 	Com_Printf( "Com_TouchMemory: %i msec\n", end - start );
-
 	return sum; // just to silent compiler warning
 }
-
 
 /*
 =================
