@@ -2898,10 +2898,10 @@ void ParseOBJ(const char *objData, vec3_t *vertices, vec2_t *texCoords, vec3_t *
             if (currentSurface == -1 && *numSurfaces < MD3_MAX_SURFACES) {
                 currentSurface = *numSurfaces;
                 Q_strncpyz(surfaces[currentSurface].materialName, materialName, sizeof(surfaces[currentSurface].materialName));
-                surfaces[currentSurface].vertices = malloc(MD3_MAX_VERTS * sizeof(vec3_t));
-                surfaces[currentSurface].texCoords = malloc(MD3_MAX_VERTS * sizeof(vec2_t));
-                surfaces[currentSurface].normals = malloc(MD3_MAX_VERTS * sizeof(vec3_t));
-                surfaces[currentSurface].triangles = malloc(MD3_MAX_TRIANGLES * sizeof(md3Triangle_t));
+                surfaces[currentSurface].vertices = Z_Malloc(MD3_MAX_VERTS * sizeof(vec3_t));
+                surfaces[currentSurface].texCoords = Z_Malloc(MD3_MAX_VERTS * sizeof(vec2_t));
+                surfaces[currentSurface].normals = Z_Malloc(MD3_MAX_VERTS * sizeof(vec3_t));
+                surfaces[currentSurface].triangles = Z_Malloc(MD3_MAX_TRIANGLES * sizeof(md3Triangle_t));
                 surfaces[currentSurface].vertCount = 0;
                 surfaces[currentSurface].texCoordCount = 0;
                 surfaces[currentSurface].normalCount = 0;
@@ -3124,10 +3124,10 @@ void WriteMD3(const char *name, const md3SurfaceData_t *surfaces, int numSurface
 
 void FreeSurfaceData(md3SurfaceData_t *surfaces, int numSurfaces) {
     for (int i = 0; i < numSurfaces; i++) {
-        free(surfaces[i].vertices);
-        free(surfaces[i].texCoords);
-        free(surfaces[i].normals);
-        free(surfaces[i].triangles);
+        Z_Free(surfaces[i].vertices);
+        Z_Free(surfaces[i].texCoords);
+        Z_Free(surfaces[i].normals);
+        Z_Free(surfaces[i].triangles);
     }
 }
 
@@ -3145,9 +3145,9 @@ void CL_StartConvertOBJ(const char *name) {
     int numShaders = 0;
     LoadMTR(name, shaders, &numShaders, materials, &numMaterials);
 
-    vec3_t *vertices = (vec3_t *)malloc(MD3_MAX_VERTS * sizeof(vec3_t));
-    vec2_t *texCoords = (vec2_t *)malloc(MD3_MAX_VERTS * sizeof(vec2_t));
-    vec3_t *normals = (vec3_t *)malloc(MD3_MAX_VERTS * sizeof(vec3_t));
+    vec3_t *vertices = (vec3_t *)Z_Malloc(MD3_MAX_VERTS * sizeof(vec3_t));
+    vec2_t *texCoords = (vec2_t *)Z_Malloc(MD3_MAX_VERTS * sizeof(vec2_t));
+    vec3_t *normals = (vec3_t *)Z_Malloc(MD3_MAX_VERTS * sizeof(vec3_t));
     int vCount = 0, vtCount = 0, vnCount = 0;
     
     md3SurfaceData_t surfaces[MD3_MAX_SURFACES];
@@ -3158,9 +3158,9 @@ void CL_StartConvertOBJ(const char *name) {
 
     WriteMD3(name, surfaces, numSurfaces, shaders, numShaders, materials, numMaterials);
 
-	free(vertices);
-    free(texCoords);
-    free(normals);
+	Z_Free(vertices);
+    Z_Free(texCoords);
+    Z_Free(normals);
     FreeSurfaceData(surfaces, numSurfaces);
     FS_FreeFile(objData);
 }

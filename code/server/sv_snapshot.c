@@ -392,19 +392,8 @@ static void SV_AddEntitiesVisibleFromPoint( const vec3_t origin, clientSnapshot_
 				continue;
 			}
 		}
-		
-		// 3. SourceTech Vector stage
-        VectorSubtract(ent->r.currentOrigin, origin, dir);
-        VectorNormalize(dir);
 
-        // Get player view vector
-        vec3_t viewForward;
-        AngleVectors(frame->ps.viewangles, viewForward, NULL, NULL);
-
-        float dotProduct = DotProduct(viewForward, dir);
-        if (dotProduct < 0.342f) continue; //140 fov (max in cgame)
-
-		// 4. SourceTech Trace stage
+		// 3. SourceTech Trace stage
 		if (sv_anticheatengine->integer && IsEntityVisibleType(ent)) {
 			trace_t trace;
 			vec3_t corners[8];

@@ -34,14 +34,8 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 #include "../client/keys.h"
 
-#if ARCH == x86
-    #define DEF_COMHUNKMEGS 800
-#elif ARCH == x86_64
-    #define DEF_COMHUNKMEGS 800
-#else
-    #define DEF_COMHUNKMEGS 800   // defaults
-#endif
-#define DEF_COMZONEMEGS			12
+#define DEF_COMHUNKMEGS 768
+#define DEF_COMZONEMEGS 32
 
 static jmp_buf abortframe;	// an ERR_DROP occurred, exit the entire frame
 
@@ -1667,6 +1661,10 @@ static void Com_InitZoneMemory( void ) {
 	Z_ClearZone( mainzone, mainzone, mainZoneSize, 1 );
 }
 
+static void Com_Meminfo_f( void ) {
+	Com_Printf("Hunk_Alloc (used=%dmb, total=%dmb) \n", s_hunkUsed/1024/1024, s_hunkTotal/1024/1024);
+}
+
 static void Com_InitHunkMemory( void ) {
 	if ( FS_LoadStack() != 0 ) Com_Error( ERR_FATAL, "Hunk initialization failed. File system load stack not zero" );
 
@@ -1678,6 +1676,8 @@ static void Com_InitHunkMemory( void ) {
 	// cacheline align
 	s_hunkData = PADP( s_hunkData, 64 );
 	s_hunkUsed = 0;
+	
+	Cmd_AddCommand( "meminfo", Com_Meminfo_f );
 }
 
 int	Hunk_MemoryRemaining( void ) {
@@ -1727,7 +1727,7 @@ void *Hunk_Alloc( int size, ha_pref preference ) {
     
     buf = (void *)(s_hunkData + s_hunkUsed);
     s_hunkUsed += size;
-    Com_Printf("Hunk_Alloc: allocating %.2fkb (used=%dmb, total=%dmb) \n", (float)size/1024.0f, s_hunkUsed/1024/1024, s_hunkTotal/1024/1024);
+    //Com_Printf("Hunk_Alloc: allocating %.2fkb (used=%dmb, total=%dmb) \n", (float)size/1024.0f, s_hunkUsed/1024/1024, s_hunkTotal/1024/1024);
 
     Com_Memset( buf, 0, size );
 	return buf;
