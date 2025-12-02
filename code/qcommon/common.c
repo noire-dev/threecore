@@ -741,7 +741,7 @@ int64_t Sys_Microseconds( void )
 #endif
 }
 
-#define MAX_ALLOCATIONS 16384
+#define MAX_ALLOCATIONS 65535
 
 typedef struct {
     void* ptr;
@@ -773,10 +773,14 @@ static int find_pointer_slot(void* ptr) {
 
 void* Z_TagMalloc(int size, int tag) {
     void* ptr = malloc(size);
-    if (!ptr) return NULL;
+    if (!ptr){
+        Com_Printf("Allocate ptr ERROR!\n");
+        return NULL;
+    }
     
     int slot = find_free_slot();
     if (slot == -1) {
+        Com_Printf("Allocate slot ERROR!\n");
         free(ptr);
         return NULL;
     }
@@ -788,10 +792,10 @@ void* Z_TagMalloc(int size, int tag) {
     total_size += size;
     num_allocations++;
     
-    Com_Printf("Allocating %.2fmb for %p, total alloc = %.2fmb\n",
+    Com_Printf("Allocating %.2fmb, total = %.2fmb, slot = %i\n",
            (float)size / (1024.0f * 1024.0f),
-           ptr,
-           (float)total_size / (1024.0f * 1024.0f));
+           (float)total_size / (1024.0f * 1024.0f),
+           slot);
     
     return ptr;
 }
