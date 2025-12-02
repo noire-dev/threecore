@@ -197,7 +197,7 @@ static int forced_unload;
 static struct vm_s vmTable[ VM_COUNT ];
 
 static const char *vmName[ VM_COUNT ] = {
-	"qagame",
+	"game",
 	"cgame",
 	"ui"
 };
