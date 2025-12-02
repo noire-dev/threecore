@@ -32,8 +32,6 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #ifdef AASINTERN
 //initialize calculating the reachabilities
 void AAS_InitReachability(void);
-//continue calculating the reachabilities
-int AAS_ContinueInitReachability(float time);
 #endif //AASINTERN
 
 //returns true if the are has reachabilities to other areas

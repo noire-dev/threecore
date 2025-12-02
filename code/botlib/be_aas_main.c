@@ -94,58 +94,21 @@ static void AAS_SetInitialized(void)
 	//AAS_RoutingInfo();
 #endif
 } //end of the function AAS_SetInitialized
-//===========================================================================
-//
-// Parameter:				-
-// Returns:					-
-// Changes Globals:		-
-//===========================================================================
-void AAS_ContinueInit(float time)
-{
-	//if no AAS file loaded
+void AAS_ContinueInit(float time) {
 	if (!aasworld.loaded) return;
-	//if AAS is already initialized
 	if (aasworld.initialized) return;
-	//calculate reachability, if not finished return
-	//if (AAS_ContinueInitReachability(time)) return;
-	//if reachability has been calculated and an AAS file should be written
-	//or there is a forced data optimization
-	if (aasworld.savefile)
-	{
-		//save the AAS file
-		if (AAS_WriteAASFile(aasworld.filename))
-		{
-			botimport.Print(PRT_MESSAGE, "%s written successfully\n", aasworld.filename);
-		} //end if
-		else
-		{
-			botimport.Print(PRT_ERROR, "couldn't write %s\n", aasworld.filename);
-		} //end else
-	} //end if
-	//initialize the routing
+	
 	AAS_InitRouting();
-	//at this point AAS is initialized
 	AAS_SetInitialized();
-} //end of the function AAS_ContinueInit
-//===========================================================================
-// called at the start of every frame
-//
-// Parameter:				-
-// Returns:					-
-// Changes Globals:		-
-//===========================================================================
-int AAS_StartFrame(float time)
-{
+}
+int AAS_StartFrame(float time) {
 	aasworld.time = time;
-
-	//initialize AAS
-	//AAS_ContinueInit(time);
-	//
+	AAS_ContinueInit(time);
+	
 	aasworld.frameroutingupdates = 0;
-	//
 	aasworld.numframes++;
 	return BLERR_NOERROR;
-} //end of the function AAS_StartFrame
+}
 //===========================================================================
 //
 // Parameter:				-
