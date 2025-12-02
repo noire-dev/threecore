@@ -157,7 +157,7 @@ model_t *R_AllocModel( void ) {
 		return NULL;
 	}
 
-	mod = ri.Z_Malloc( sizeof( *tr.models[tr.numModels] ), h_low );
+	mod = ri.Z_Malloc( sizeof( *tr.models[tr.numModels] ) );
 	mod->index = tr.numModels;
 	tr.models[tr.numModels] = mod;
 	tr.numModels++;
@@ -327,7 +327,7 @@ static qboolean R_LoadMD3( model_t *mod, int lod, void *buffer, int fileSize, co
 
 	mod->type = MOD_MESH;
 	mod->dataSize += size;
-	mod->md3[lod] = ri.Z_Malloc( size, h_low );
+	mod->md3[lod] = ri.Z_Malloc( size );
 
 	Com_Memcpy( mod->md3[lod], buffer, size );
 

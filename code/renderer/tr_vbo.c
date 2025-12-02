@@ -866,11 +866,11 @@ void R_BuildWorldVBO( msurface_t *surf, int surfCount )
 	ibo_size = PAD( ibo_size, 32 );
 
 	// 0 item is unused
-	vbo->items = ri.Z_Malloc( ( numStaticSurfaces + 1 ) * sizeof( vbo_item_t ), h_low );
+	vbo->items = ri.Z_Malloc( ( numStaticSurfaces + 1 ) * sizeof( vbo_item_t ) );
 	vbo->items_count = numStaticSurfaces;
 
 	// last item will be used for run length termination
-	vbo->items_queue = ri.Z_Malloc( ( numStaticSurfaces + 1 ) * sizeof( int ), h_low );
+	vbo->items_queue = ri.Z_Malloc( ( numStaticSurfaces + 1 ) * sizeof( int ) );
 	vbo->items_queue_count = 0;
 
 	ri.Printf( PRINT_ALL, "...found %i VBO surfaces (%i vertexes, %i indexes)\n",
@@ -885,16 +885,16 @@ void R_BuildWorldVBO( msurface_t *surf, int surfCount )
 	vbo->vbo_size = vbo_size;
 
 	// index buffer
-	vbo->ibo_buffer = ri.Z_Malloc( ibo_size, h_low );	
+	vbo->ibo_buffer = ri.Z_Malloc( ibo_size );	
 	vbo->ibo_offset = 0;
 	vbo->ibo_size = ibo_size;
 
 	// soft index buffer
-	vbo->soft_buffer = ri.Z_Malloc( ibo_size, h_low );
+	vbo->soft_buffer = ri.Z_Malloc( ibo_size );
 	vbo->soft_buffer_indexes = 0;
 
 	// ibo runs buffer
-	vbo->ibo_items = ri.Z_Malloc( ( (numStaticIndexes / MIN_IBO_RUN) + 1 ) * sizeof( ibo_item_t ), h_low );
+	vbo->ibo_items = ri.Z_Malloc( ( (numStaticIndexes / MIN_IBO_RUN) + 1 ) * sizeof( ibo_item_t ) );
 	vbo->ibo_items_count = 0;
 
 	surfList = ri.Z_Malloc( numStaticSurfaces * sizeof( msurface_t* ) );

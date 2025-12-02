@@ -465,7 +465,7 @@ static vmHeader_t *VM_LoadQVM( vm_t *vm, qboolean alloc ) {
 
 	if ( alloc ) {
 		// allocate zero filled space for initialized and uninitialized data
-		vm->dataBase = Z_Malloc( dataAlloc, h_high );
+		vm->dataBase = Z_Malloc( dataAlloc );
 		vm->dataMask = dataLength - 1;
 		vm->dataAlloc = dataAlloc;
 	} else {
@@ -495,7 +495,7 @@ static vmHeader_t *VM_LoadQVM( vm_t *vm, qboolean alloc ) {
 		Com_Printf( "Loading %d jump table targets\n", vm->numJumpTableTargets );
 
 		if ( alloc ) {
-			vm->jumpTableTargets = (int32_t *) Z_Malloc( header->jtrgLength, h_high );
+			vm->jumpTableTargets = (int32_t *) Z_Malloc( header->jtrgLength );
 		} else {
 			if ( vm->numJumpTableTargets != previousNumJumpTableTargets ) {
 				VM_Free( vm );
