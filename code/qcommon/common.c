@@ -1727,7 +1727,7 @@ void *Hunk_Alloc( int size, ha_pref preference ) {
     
     buf = (void *)(s_hunkData + s_hunkUsed);
     s_hunkUsed += size;
-    Com_Printf("Hunk_Alloc: allocating %ikb. (used=%dmb, total=%dmb) \n", size/1024, s_hunkUsed/1024/1024, s_hunkTotal/1024/1024);
+    Com_Printf("Hunk_Alloc: allocating %.2fkb. (used=%dmb, total=%dmb) \n", (float)size/1024.0f, s_hunkUsed/1024/1024, s_hunkTotal/1024/1024);
 
     Com_Memset( buf, 0, size );
 	return buf;
