@@ -1839,7 +1839,7 @@ void Hunk_FreeTempMemory( void *buf ) {
 }
 
 void Hunk_ClearTempMemory( void ) {
-	return Z_FreeTags(TAG_HUNKTEMP);
+	Z_FreeTags(TAG_HUNKTEMP);
 }
 
 /*
