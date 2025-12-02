@@ -762,9 +762,6 @@ void CL_ClearMemory( void ) {
 		Hunk_Clear();
 		// clear collision map data
 		CM_ClearMap();
-	} else {
-		// clear all the client data on the hunk
-		Hunk_ClearToMark();
 	}
 }
 
@@ -2514,11 +2511,6 @@ static void CL_InitRef( void ) {
 	rimp.Malloc = CL_RefMalloc;
 	rimp.FreeAll = CL_RefFreeAll;
 	rimp.Free = Z_Free;
-#ifdef HUNK_DEBUG
-	rimp.Hunk_AllocDebug = Hunk_AllocDebug;
-#else
-	rimp.Hunk_Alloc = Hunk_Alloc;
-#endif
 	rimp.Z_Malloc = Z_Malloc;
 	rimp.Z_Free = Z_Free;
 

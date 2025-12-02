@@ -119,7 +119,7 @@ void SND_setup( void )
 	// allocate the stack based hunk allocator
 	// -EC-
 	if ( sfxScratchBuffer == NULL ) {
-		sfxScratchBuffer = malloc( sz );	//Hunk_Alloc(SND_CHUNK_SIZE * sizeof(short) * 4);
+		sfxScratchBuffer = malloc( sz );	//Z_Malloc(SND_CHUNK_SIZE * sizeof(short) * 4);
 	}
 
 	// clear scratch buffer -EC-
