@@ -522,7 +522,7 @@ static void Upload32( byte *data, int x, int y, int width, int height, image_t *
 
 	if ( scaled_width != width || scaled_height != height ) {
 		if ( data ) {
-			resampledBuffer = ri.Hunk_AllocateTempMemory( scaled_width * scaled_height * 4 );
+			resampledBuffer = ri.Z_Malloc( scaled_width * scaled_height * 4 );
 			ResampleTexture( (unsigned*)data, width, height, (unsigned*)resampledBuffer, scaled_width, scaled_height );
 			data = resampledBuffer;
 		}
@@ -612,7 +612,7 @@ static void Upload32( byte *data, int x, int y, int width, int height, image_t *
 	}
 done:
 	if ( resampledBuffer != NULL )
-		ri.Hunk_FreeTempMemory( resampledBuffer );
+		ri.Z_Free( resampledBuffer );
 
 	GL_CheckErrors();
 }
@@ -1021,7 +1021,7 @@ static void R_CreateFogImage( void ) {
 	byte	*data;
 	float	d;
 
-	data = ri.Hunk_AllocateTempMemory( FOG_S * FOG_T * 4 );
+	data = ri.Z_Malloc( FOG_S * FOG_T * 4 );
 
 	// S is distance, T is depth
 	for (x=0 ; x<FOG_S ; x++) {
@@ -1035,7 +1035,7 @@ static void R_CreateFogImage( void ) {
 		}
 	}
 	tr.fogImage = R_CreateImage( "*fog", NULL, data, FOG_S, FOG_T, IMGFLAG_CLAMPTOEDGE );
-	ri.Hunk_FreeTempMemory( data );
+	ri.Z_Free( data );
 }
 
 /*

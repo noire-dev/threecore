@@ -282,7 +282,7 @@ qboolean S_LoadSound( sfx_t *sfx )
 		Com_DPrintf(S_COLOR_YELLOW "WARNING: %s is a 8 bit audio file\n", sfx->soundName);
 	}
 
-	samples = Hunk_AllocateTempMemory(info.samples * sizeof(short) * 2);
+	samples = Z_Malloc(info.samples * sizeof(short) * 2);
 
 	sfx->lastTimeUsed = s_soundtime + 1; // Com_Milliseconds()+1
 
@@ -305,8 +305,8 @@ qboolean S_LoadSound( sfx_t *sfx )
 
 	sfx->soundChannels = info.channels;
 	
-	Hunk_FreeTempMemory(samples);
-	Hunk_FreeTempMemory(data);
+	Z_Free(samples);
+	Z_Free(data);
 
 	return qtrue;
 }

@@ -447,7 +447,7 @@ void *S_OGG_CodecLoad(const char *filename, snd_info_t *info)
 
 	// allocate a buffer
 	// this buffer must be free-ed by the caller of this function
-    buffer = Hunk_AllocateTempMemory(info->size);
+    buffer = Z_Malloc(info->size);
 	if (!buffer)
 	{
 		S_OGG_CodecCloseStream(stream);
@@ -461,7 +461,7 @@ void *S_OGG_CodecLoad(const char *filename, snd_info_t *info)
 	// we don't even have read a single byte
 	if (bytesRead <= 0)
 	{
-		Hunk_FreeTempMemory(buffer);
+		Z_Free(buffer);
 		S_OGG_CodecCloseStream(stream);
 
 		return NULL;	

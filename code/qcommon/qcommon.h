@@ -991,6 +991,7 @@ typedef enum {
 	TAG_SEARCH_PACK,
 	TAG_SEARCH_DIR,
 	TAG_CLIENTS,
+	TAG_TEMP,
     TAG_MAX
 } memtag_t;
 

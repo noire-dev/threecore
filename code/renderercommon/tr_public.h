@@ -140,8 +140,8 @@ typedef struct {
 #else
 	void	*(*Hunk_Alloc)( int size, ha_pref pref );
 #endif
-	void	*(*Hunk_AllocateTempMemory)( int size );
-	void	(*Hunk_FreeTempMemory)( void *block );
+	void	*(*Z_Malloc)( int size );
+	void	(*Z_Free)( void *block );
 
 	// dynamic memory allocator for things that need to be freed
 	void	*(*Malloc)( int bytes );

@@ -2519,8 +2519,8 @@ static void CL_InitRef( void ) {
 #else
 	rimp.Hunk_Alloc = Hunk_Alloc;
 #endif
-	rimp.Hunk_AllocateTempMemory = Hunk_AllocateTempMemory;
-	rimp.Hunk_FreeTempMemory = Hunk_FreeTempMemory;
+	rimp.Z_Malloc = Z_Malloc;
+	rimp.Z_Free = Z_Free;
 
 	rimp.CM_ClusterPVS = CM_ClusterPVS;
 
