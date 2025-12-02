@@ -1893,7 +1893,7 @@ void FS_FreeFile( void *buffer ) {
 	}
 	fs_loadStack--;
 
-	Z_Free( buffer );
+	//Z_Free( buffer );
 }
 
 
