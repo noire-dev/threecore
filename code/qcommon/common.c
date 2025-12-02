@@ -743,13 +743,6 @@ int64_t Sys_Microseconds( void )
 
 #define MAX_ALLOCATIONS 16384
 
-typedef enum {
-    TAG_GENERAL = 0,
-    TAG_SMALL,
-    TAG_RENDERER,
-    TAG_MAX
-} memtag_t;
-
 typedef struct {
     void* ptr;
     int tag;
@@ -760,7 +753,7 @@ static allocation_t allocations[MAX_ALLOCATIONS];
 static int num_allocations = 0;
 static size_t total_size = 0;
 
-static int find_free_slot() {
+static int find_free_slot(void) {
     for (int i = 0; i < MAX_ALLOCATIONS; i++) {
         if (allocations[i].ptr == NULL) {
             return i;

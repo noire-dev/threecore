@@ -983,18 +983,10 @@ extern	qboolean	com_errorEntered;
 extern	fileHandle_t	com_journalDataFile;
 
 typedef enum {
-	TAG_FREE,
-	TAG_GENERAL,
-	TAG_PACK,
-	TAG_SEARCH_PATH,
-	TAG_SEARCH_PACK,
-	TAG_SEARCH_DIR,
-	TAG_BOTLIB,
-	TAG_RENDERER,
-	TAG_CLIENTS,
-	TAG_SMALL,
-	TAG_STATIC,
-	TAG_COUNT
+    TAG_GENERAL = 0,
+    TAG_SMALL,
+    TAG_RENDERER,
+    TAG_MAX
 } memtag_t;
 
 /*
