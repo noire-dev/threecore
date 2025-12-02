@@ -2441,7 +2441,7 @@ CL_RefFreeAll
 ============
 */
 static void CL_RefFreeAll( void ) {
-	Z_FreeTags( TAG_RENDERER );
+	Z_TagFree( TAG_RENDERER );
 }
 
 
