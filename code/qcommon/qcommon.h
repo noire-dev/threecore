@@ -986,6 +986,11 @@ typedef enum {
     TAG_GENERAL = 0,
     TAG_SMALL,
     TAG_RENDERER,
+    TAG_PACK,
+	TAG_SEARCH_PATH,
+	TAG_SEARCH_PACK,
+	TAG_SEARCH_DIR,
+	TAG_CLIENTS,
     TAG_MAX
 } memtag_t;
 
