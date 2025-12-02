@@ -445,18 +445,11 @@ static vmHeader_t *VM_LoadQVM( vm_t *vm, qboolean alloc ) {
 
 	vm->programStackExtra = PROGRAM_STACK_EXTRA;
 
-	// if rounding difference is larger than extra space we need then reuse it
-	if ( log2pad( dataLength, 1 ) - dataLength >= PROGRAM_STACK_EXTRA ) {
-		// reuse it all for release builds
-		vm->programStackExtra = log2pad( dataLength, 1 ) - dataLength;
-	} else {
-		dataLength += vm->programStackExtra;
-	}
-
+    dataLength += PROGRAM_STACK_EXTRA;
 	vm->dataLength = dataLength;
 
 	// round up to next power of 2 so all data operations can be mask protected
-	dataLength = log2pad( dataLength, 1 );
+	dataLength = PAD(dataLength, 4096);
 
 	// reserve some space for effective LOCAL+LOAD* checks
 	dataAlloc = dataLength + VM_DATA_GUARD_SIZE;
