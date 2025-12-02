@@ -312,8 +312,6 @@ void CL_InitCGame(void) {
 	t2 = Sys_Milliseconds();
 	Com_Printf("CL_InitCGame: %5.2f seconds\n", (t2 - t1) / 1000.0);
 
-	if(!Sys_LowPhysicalMemory()) Com_TouchMemory();
-
 	Con_ClearNotify();
 
 	cls.lastVidRestart = Sys_Milliseconds();

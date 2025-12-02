@@ -136,7 +136,6 @@ typedef struct {
 	// stack based memory allocation for per-level things that
 	// won't be freed
 	void	*(*Z_Malloc)( int size );
-	void	*(*Z_Malloc)( int size );
 	void	(*Z_Free)( void *block );
 
 	// dynamic memory allocator for things that need to be freed
