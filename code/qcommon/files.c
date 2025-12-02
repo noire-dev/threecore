@@ -1894,11 +1894,6 @@ void FS_FreeFile( void *buffer ) {
 	fs_loadStack--;
 
 	Z_Free( buffer );
-
-	// if all of our temp files are free, clear all of our space
-	if ( fs_loadStack == 0 ) {
-		Hunk_ClearTempMemory();
-	}
 }
 
 
