@@ -135,16 +135,11 @@ void AAS_ProjectPointOntoVector( vec3_t point, vec3_t vStart, vec3_t vEnd, vec3_
 // Returns:					-
 // Changes Globals:		-
 //===========================================================================
-static int AAS_LoadFiles(const char *mapname)
-{
+static int AAS_LoadFiles(const char *mapname) {
 	int errnum;
 	char aasfile[MAX_PATH];
-//	char bspfile[MAX_PATH];
 
 	Q_strncpyz(aasworld.mapname, mapname, sizeof(aasworld.mapname));
-	
-	// load bsp info
-	AAS_LoadBSPFile();
 
 	//load the aas file
 	Com_sprintf(aasfile, sizeof(aasfile), "maps/%s.aas", mapname);
@@ -182,14 +177,11 @@ int AAS_LoadMap(const char *mapname) {
 		aasworld.loaded = qfalse;
 		return errnum;
 	} //end if
-	//
-	AAS_InitSettings();
+	
 	//initialize the AAS link heap for the new map
 	AAS_InitAASLinkHeap();
 	//initialize the AAS linked entities for the new map
 	AAS_InitAASLinkedEntities();
-	//initialize the alternative routing
-	AAS_InitAlternativeRouting();
 	//everything went ok
 	return 0;
 } //end of the function AAS_LoadMap
@@ -214,9 +206,7 @@ int AAS_Setup(void)
 // Returns:					-
 // Changes Globals:		-
 //===========================================================================
-void AAS_Shutdown(void)
-{
-	AAS_ShutdownAlternativeRouting();
+void AAS_Shutdown(void) {
 	//free routing caches
 	AAS_FreeRoutingCaches();
 	//free aas link heap
