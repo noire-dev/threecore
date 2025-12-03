@@ -45,7 +45,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 int routingcachesize;
 int max_routingcachesize;
 
-static ID_INLINE int AAS_ClusterAreaNum(int cluster, int areanum)n{
+static ID_INLINE int AAS_ClusterAreaNum(int cluster, int areanum) {
 	int side, areacluster;
 
 	areacluster = aasworld.areasettings[areanum].cluster;
