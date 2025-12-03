@@ -39,6 +39,8 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 aas_t aasworld;
 
+int saveroutingcache;
+
 //===========================================================================
 //
 // Parameter:				-
@@ -165,7 +167,10 @@ int AAS_LoadMap(const char *mapname) {
 	} //end if
 	//
 	aasworld.initialized = qfalse;
-
+	//NOTE: free the routing caches before loading a new map because
+	// to free the caches the old number of areas, number of clusters
+	// and number of areas in a clusters must be available
+	AAS_FreeRoutingCaches();
 	//load the map
 	errnum = AAS_LoadFiles(mapname);
 	if (errnum != BLERR_NOERROR) {
@@ -190,6 +195,8 @@ int AAS_LoadMap(const char *mapname) {
 int AAS_Setup(void)
 {
 	aasworld.maxclients = 128;
+	// as soon as it's set to 1 the routing cache will be saved
+	saveroutingcache = 0;
 	aasworld.numframes = 0;
 	return BLERR_NOERROR;
 } //end of the function AAS_Setup
@@ -200,6 +207,8 @@ int AAS_Setup(void)
 // Changes Globals:		-
 //===========================================================================
 void AAS_Shutdown(void) {
+	//free routing caches
+	AAS_FreeRoutingCaches();
 	//free aas link heap
 	AAS_FreeAASLinkHeap();
 	//free aas linked entities

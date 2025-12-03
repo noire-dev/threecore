@@ -118,6 +118,26 @@ typedef struct aas_settings_s
 	float rs_maxjumpfallheight;
 } aas_settings_t;
 
+#define CACHETYPE_PORTAL		0
+#define CACHETYPE_AREA			1
+
+//routing cache
+typedef struct aas_routingcache_s
+{
+	byte type;									//portal or area cache
+	float time;									//last time accessed or updated
+	int size;									//size of the routing cache
+	int cluster;								//cluster the cache is for
+	int areanum;								//area the cache is created for
+	vec3_t origin;								//origin within the area
+	float starttraveltime;						//travel time to start with
+	int travelflags;							//combinations of the travel flags
+	struct aas_routingcache_s *prev, *next;
+	struct aas_routingcache_s *time_prev, *time_next;
+	unsigned char *reachabilities;				//reachabilities used for routing
+	unsigned short int traveltimes[1];			//travel time for every area (variable sized)
+} aas_routingcache_t;
+
 //fields for the routing algorithm
 typedef struct aas_routingupdate_s
 {
@@ -230,6 +250,12 @@ typedef struct aas_s
 	aas_reversedreachability_t *reversedreachability;
 	//travel times within the areas
 	unsigned short ***areatraveltimes;
+	//array of size numclusters with cluster cache
+	aas_routingcache_t ***clusterareacache;
+	aas_routingcache_t **portalcache;
+	//cache list sorted on time
+	aas_routingcache_t *oldestcache;		// start of cache list sorted on time
+	aas_routingcache_t *newestcache;		// end of cache list sorted on time
 	//maximum travel time through portal areas
 	int *portalmaxtraveltimes;
 	//areas the reachabilities go through

@@ -30,6 +30,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  *****************************************************************************/
 
 void AAS_InitRouting(void);
+void AAS_FreeRoutingCaches(void);
 unsigned short int AAS_AreaTravelTime(int areanum, vec3_t start, vec3_t end);
 int AAS_TravelFlagForType(int traveltype);
 int AAS_AreaContentsTravelFlags(int areanum);

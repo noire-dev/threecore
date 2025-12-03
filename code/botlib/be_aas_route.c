@@ -42,6 +42,9 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #define DISTANCEFACTOR_SWIM			1		//should be 0.66, swim speed = 150
 #define DISTANCEFACTOR_WALK			0.33f	//walk speed = 300
 
+int routingcachesize;
+int max_routingcachesize;
+
 static ID_INLINE int AAS_ClusterAreaNum(int cluster, int areanum) {
 	int side, areacluster;
 
@@ -99,6 +102,36 @@ static ID_INLINE int AAS_TravelFlagForType_inline(unsigned int traveltype) {
 
 int AAS_TravelFlagForType(int traveltype) {
 	return AAS_TravelFlagForType_inline(traveltype);
+}
+
+static void AAS_UnlinkCache(aas_routingcache_t *cache) {
+	if (cache->time_next) cache->time_next->time_prev = cache->time_prev;
+	else aasworld.newestcache = cache->time_prev;
+	if (cache->time_prev) cache->time_prev->time_next = cache->time_next;
+	else aasworld.oldestcache = cache->time_next;
+	cache->time_next = NULL;
+	cache->time_prev = NULL;
+}
+
+static void AAS_LinkCache(aas_routingcache_t *cache) {
+	if (aasworld.newestcache)
+	{
+		aasworld.newestcache->time_next = cache;
+		cache->time_prev = aasworld.newestcache;
+	} //end if
+	else
+	{
+		aasworld.oldestcache = cache;
+		cache->time_prev = NULL;
+	} //end else
+	cache->time_next = NULL;
+	aasworld.newestcache = cache;
+}
+
+void AAS_FreeRoutingCache(aas_routingcache_t *cache) {
+	AAS_UnlinkCache(cache);
+	routingcachesize -= cache->size;
+	free(cache);
 }
 
 static ID_INLINE float AAS_RoutingTime(void) {
@@ -306,6 +339,130 @@ static void AAS_InitPortalMaxTravelTimes(void) {
 	} //end for
 }
 
+static int AAS_FreeOldestCache(void) {
+	int clusterareanum;
+	aas_routingcache_t *cache;
+
+	for (cache = aasworld.oldestcache; cache; cache = cache->time_next) {
+		// never free area cache leading towards a portal
+		if (cache->type == CACHETYPE_AREA && aasworld.areasettings[cache->areanum].cluster < 0) {
+			continue;
+		}
+		break;
+	}
+	if (cache) {
+		// unlink the cache
+		if (cache->type == CACHETYPE_AREA) {
+			//number of the area in the cluster
+			clusterareanum = AAS_ClusterAreaNum(cache->cluster, cache->areanum);
+			// unlink from cluster area cache
+			if (cache->prev) cache->prev->next = cache->next;
+			else aasworld.clusterareacache[cache->cluster][clusterareanum] = cache->next;
+			if (cache->next) cache->next->prev = cache->prev;
+		}
+		else {
+			// unlink from portal cache
+			if (cache->prev) cache->prev->next = cache->next;
+			else aasworld.portalcache[cache->areanum] = cache->next;
+			if (cache->next) cache->next->prev = cache->prev;
+		}
+		AAS_FreeRoutingCache(cache);
+		return qtrue;
+	}
+	return qfalse;
+}
+
+static aas_routingcache_t *AAS_AllocRoutingCache(int numtraveltimes) {
+	aas_routingcache_t *cache;
+	int size;
+
+	//
+	size = sizeof(aas_routingcache_t)
+						+ numtraveltimes * sizeof(unsigned short int)
+						+ numtraveltimes * sizeof(unsigned char);
+	//
+	routingcachesize += size;
+	//
+	cache = (aas_routingcache_t *) malloc(size);
+	cache->reachabilities = (unsigned char *) cache + sizeof(aas_routingcache_t)
+								+ numtraveltimes * sizeof(unsigned short int);
+	cache->size = size;
+	return cache;
+}
+
+static void AAS_FreeAllClusterAreaCache(void) {
+	int i, j;
+	aas_routingcache_t *cache, *nextcache;
+	aas_cluster_t *cluster;
+
+	//free all cluster cache if existing
+	if (!aasworld.clusterareacache) return;
+	//free caches
+	for (i = 0; i < aasworld.numclusters; i++)
+	{
+		cluster = &aasworld.clusters[i];
+		for (j = 0; j < cluster->numareas; j++)
+		{
+			for (cache = aasworld.clusterareacache[i][j]; cache; cache = nextcache)
+			{
+				nextcache = cache->next;
+				AAS_FreeRoutingCache(cache);
+			} //end for
+			aasworld.clusterareacache[i][j] = NULL;
+		} //end for
+	} //end for
+	//free the cluster cache array
+	free(aasworld.clusterareacache);
+	aasworld.clusterareacache = NULL;
+}
+
+static void AAS_InitClusterAreaCache(void) {
+	int i, size;
+	char *ptr;
+
+	//
+	for (size = 0, i = 0; i < aasworld.numclusters; i++)
+	{
+		size += aasworld.clusters[i].numareas;
+	} //end for
+	//two dimensional array with pointers for every cluster to routing cache
+	//for every area in that cluster
+	ptr = (char *) malloc(
+				aasworld.numclusters * sizeof(aas_routingcache_t **) +
+				size * sizeof(aas_routingcache_t *));
+	aasworld.clusterareacache = (aas_routingcache_t ***) ptr;
+	ptr += aasworld.numclusters * sizeof(aas_routingcache_t **);
+	for (i = 0; i < aasworld.numclusters; i++)
+	{
+		aasworld.clusterareacache[i] = (aas_routingcache_t **) ptr;
+		ptr += aasworld.clusters[i].numareas * sizeof(aas_routingcache_t *);
+	} //end for
+}
+
+static void AAS_FreeAllPortalCache(void) {
+	int i;
+	aas_routingcache_t *cache, *nextcache;
+
+	//free all portal cache if existing
+	if (!aasworld.portalcache) return;
+	//free portal caches
+	for (i = 0; i < aasworld.numareas; i++)
+	{
+		for (cache = aasworld.portalcache[i]; cache; cache = nextcache)
+		{
+			nextcache = cache->next;
+			AAS_FreeRoutingCache(cache);
+		} //end for
+		aasworld.portalcache[i] = NULL;
+	} //end for
+	free(aasworld.portalcache);
+	aasworld.portalcache = NULL;
+}
+
+static void AAS_InitPortalCache(void) {
+	aasworld.portalcache = (aas_routingcache_t **) malloc(aasworld.numareas * sizeof(aas_routingcache_t *));
+}
+
 static void AAS_InitRoutingUpdate(void) {
 	int i, maxreachabilityareas;
 
@@ -405,12 +562,193 @@ void AAS_InitRouting(void) {
 	AAS_InitRoutingUpdate();
 	//create reversed reachability links used by the routing update algorithm
 	AAS_CreateReversedReachability();
+	//initialize the cluster cache
+	AAS_InitClusterAreaCache();
+	//initialize portal cache
+	AAS_InitPortalCache();
 	//initialize the area travel times
 	AAS_CalculateAreaTravelTimes();
 	//calculate the maximum travel times through portals
 	AAS_InitPortalMaxTravelTimes();
 	//get the areas reachabilities go through
 	AAS_InitReachabilityAreas();
+	
+	routingcachesize = 0;
+	max_routingcachesize = 1024 * 4096;
+	// read any routing cache if available
+	//AAS_ReadRouteCache();
+}
+
+void AAS_FreeRoutingCaches(void) {
+	// free all the existing cluster area cache
+	AAS_FreeAllClusterAreaCache();
+	// free all the existing portal cache
+	AAS_FreeAllPortalCache();
+	// free cached travel times within areas
+	if (aasworld.areatraveltimes) free(aasworld.areatraveltimes);
+	aasworld.areatraveltimes = NULL;
+	// free cached maximum travel time through cluster portals
+	if (aasworld.portalmaxtraveltimes) free(aasworld.portalmaxtraveltimes);
+	aasworld.portalmaxtraveltimes = NULL;
+	// free reversed reachability links
+	if (aasworld.reversedreachability) free(aasworld.reversedreachability);
+	aasworld.reversedreachability = NULL;
+	// free routing algorithm memory
+	if (aasworld.areaupdate) free(aasworld.areaupdate);
+	aasworld.areaupdate = NULL;
+	if (aasworld.portalupdate) free(aasworld.portalupdate);
+	aasworld.portalupdate = NULL;
+	// free lists with areas the reachabilities go through
+	if (aasworld.reachabilityareas) free(aasworld.reachabilityareas);
+	aasworld.reachabilityareas = NULL;
+	// free the reachability area index
+	if (aasworld.reachabilityareaindex) free(aasworld.reachabilityareaindex);
+	aasworld.reachabilityareaindex = NULL;
+	// free area contents travel flags look up table
+	if (aasworld.areacontentstravelflags) free(aasworld.areacontentstravelflags);
+	aasworld.areacontentstravelflags = NULL;
+}
+
+static void AAS_UpdateAreaRoutingCache(aas_routingcache_t *areacache) {
+	int i, nextareanum, cluster, badtravelflags, clusterareanum, linknum;
+	int numreachabilityareas;
+	unsigned short int t, startareatraveltimes[128]; //NOTE: not more than 128 reachabilities per area allowed
+	aas_routingupdate_t *updateliststart, *updatelistend, *curupdate, *nextupdate;
+	aas_reachability_t *reach;
+	const aas_reversedreachability_t *revreach;
+	const aas_reversedlink_t *revlink;
+
+	//number of reachability areas within this cluster
+	numreachabilityareas = aasworld.clusters[areacache->cluster].numreachabilityareas;
+	//
+	aasworld.frameroutingupdates++;
+	//clear the routing update fields
+//	Com_Memset(aasworld.areaupdate, 0, aasworld.numareas * sizeof(aas_routingupdate_t));
+	//
+	badtravelflags = ~areacache->travelflags;
+	//
+	clusterareanum = AAS_ClusterAreaNum(areacache->cluster, areacache->areanum);
+	if (clusterareanum >= numreachabilityareas) return;
+	//
+	Com_Memset(startareatraveltimes, 0, sizeof(startareatraveltimes));
+	//
+	curupdate = &aasworld.areaupdate[clusterareanum];
+	curupdate->areanum = areacache->areanum;
+	//VectorCopy(areacache->origin, curupdate->start);
+	curupdate->areatraveltimes = startareatraveltimes;
+	curupdate->tmptraveltime = areacache->starttraveltime;
+	//
+	areacache->traveltimes[clusterareanum] = areacache->starttraveltime;
+	//put the area to start with in the current read list
+	curupdate->next = NULL;
+	curupdate->prev = NULL;
+	updateliststart = curupdate;
+	updatelistend = curupdate;
+	//while there are updates in the current list
+	while (updateliststart)
+	{
+		curupdate = updateliststart;
+		//
+		if (curupdate->next) curupdate->next->prev = NULL;
+		else updatelistend = NULL;
+		updateliststart = curupdate->next;
+		//
+		curupdate->inlist = qfalse;
+		//check all reversed reachability links
+		revreach = &aasworld.reversedreachability[curupdate->areanum];
+		//
+		for (i = 0, revlink = revreach->first; revlink; revlink = revlink->next, i++)
+		{
+			linknum = revlink->linknum;
+			reach = &aasworld.reachability[linknum];
+			//if there is used an undesired travel type
+			if (AAS_TravelFlagForType_inline(reach->traveltype) & badtravelflags) continue;
+			//if not allowed to enter the next area
+			if (aasworld.areasettings[reach->areanum].areaflags & AREA_DISABLED) continue;
+			//if the next area has a not allowed travel flag
+			if (AAS_AreaContentsTravelFlags_inline(reach->areanum) & badtravelflags) continue;
+			//number of the area the reversed reachability leads to
+			nextareanum = revlink->areanum;
+			//get the cluster number of the area
+			cluster = aasworld.areasettings[nextareanum].cluster;
+			//don't leave the cluster
+			if (cluster > 0 && cluster != areacache->cluster) continue;
+			//get the number of the area in the cluster
+			clusterareanum = AAS_ClusterAreaNum(areacache->cluster, nextareanum);
+			if (clusterareanum >= numreachabilityareas) continue;
+			//time already travelled plus the traveltime through
+			//the current area plus the travel time from the reachability
+			t = curupdate->tmptraveltime +
+						//AAS_AreaTravelTime(curupdate->areanum, curupdate->start, reach->end) +
+						curupdate->areatraveltimes[i] +
+							reach->traveltime;
+			//
+			if (!areacache->traveltimes[clusterareanum] ||
+					areacache->traveltimes[clusterareanum] > t)
+			{
+				areacache->traveltimes[clusterareanum] = t;
+				areacache->reachabilities[clusterareanum] = linknum - aasworld.areasettings[nextareanum].firstreachablearea;
+				nextupdate = &aasworld.areaupdate[clusterareanum];
+				nextupdate->areanum = nextareanum;
+				nextupdate->tmptraveltime = t;
+				//VectorCopy(reach->start, nextupdate->start);
+				nextupdate->areatraveltimes = aasworld.areatraveltimes[nextareanum][linknum -
+													aasworld.areasettings[nextareanum].firstreachablearea];
+				if (!nextupdate->inlist)
+				{
+					// we add the update to the end of the list
+					// we could also use a B+ tree to have a real sorted list
+					// on travel time which makes for faster routing updates
+					nextupdate->next = NULL;
+					nextupdate->prev = updatelistend;
+					if (updatelistend) updatelistend->next = nextupdate;
+					else updateliststart = nextupdate;
+					updatelistend = nextupdate;
+					nextupdate->inlist = qtrue;
+				} //end if
+			} //end if
+		} //end for
+	} //end while
+}
+
+static aas_routingcache_t *AAS_GetAreaRoutingCache(int clusternum, int areanum, int travelflags) {
+	int clusterareanum;
+	aas_routingcache_t *cache, *clustercache;
+
+	//number of the area in the cluster
+	clusterareanum = AAS_ClusterAreaNum(clusternum, areanum);
+	//pointer to the cache for the area in the cluster
+	clustercache = aasworld.clusterareacache[clusternum][clusterareanum];
+	//find the cache without undesired travel flags
+	for (cache = clustercache; cache; cache = cache->next)
+	{
+		//if there aren't used any undesired travel types for the cache
+		if (cache->travelflags == travelflags) break;
+	} //end for
+	//if there was no cache
+	if (!cache)
+	{
+		cache = AAS_AllocRoutingCache(aasworld.clusters[clusternum].numreachabilityareas);
+		cache->cluster = clusternum;
+		cache->areanum = areanum;
+		VectorCopy(aasworld.areas[areanum].center, cache->origin);
+		cache->starttraveltime = 1;
+		cache->travelflags = travelflags;
+		cache->prev = NULL;
+		cache->next = clustercache;
+		if (clustercache) clustercache->prev = cache;
+		aasworld.clusterareacache[clusternum][clusterareanum] = cache;
+		AAS_UpdateAreaRoutingCache(cache);
+	} //end if
+	else
+	{
+		AAS_UnlinkCache(cache);
+	} //end else
+	//the cache has been accessed
+	cache->time = AAS_RoutingTime();
+	cache->type = CACHETYPE_AREA;
+	AAS_LinkCache(cache);
+	return cache;
 }
 
 static int AAS_AreaRouteToGoalArea(int areanum, vec3_t origin, int goalareanum, int travelflags, int *traveltime, int *reachnum) {
@@ -418,6 +756,7 @@ static int AAS_AreaRouteToGoalArea(int areanum, vec3_t origin, int goalareanum, 
 	unsigned short int t, besttime;
 	aas_portal_t *portal;
 	aas_cluster_t *cluster;
+	aas_routingcache_t *areacache, *portalcache;
 	aas_reachability_t *reach;
 
 	if (!aasworld.initialized) return qfalse;
@@ -450,6 +789,13 @@ static int AAS_AreaRouteToGoalArea(int areanum, vec3_t origin, int goalareanum, 
 		return qfalse;
 	} //end if
 
+	// make sure the routing cache doesn't grow to large
+	while ( routingcachesize > 12 * 1024 * 1024 ) {
+		if ( !AAS_FreeOldestCache() ) {
+			break;
+		}
+	}
+
 	//
 	if (AAS_AreaDoNotEnter(areanum) || AAS_AreaDoNotEnter(goalareanum))
 	{
@@ -479,13 +825,31 @@ static int AAS_AreaRouteToGoalArea(int areanum, vec3_t origin, int goalareanum, 
 	} //end if
 	//if both areas are in the same cluster
 	//NOTE: there might be a shorter route via another cluster!!! but we don't care
-	if (clusternum > 0 && goalclusternum > 0 && clusternum == goalclusternum) {
+	if (clusternum > 0 && goalclusternum > 0 && clusternum == goalclusternum)
+	{
+		//
+		areacache = AAS_GetAreaRoutingCache(clusternum, goalareanum, travelflags);
 		//the number of the area in the cluster
 		clusterareanum = AAS_ClusterAreaNum(clusternum, areanum);
 		//the cluster the area is in
 		cluster = &aasworld.clusters[clusternum];
 		//if the area is NOT a reachability area
 		if (clusterareanum >= cluster->numreachabilityareas) return 0;
+		//if it is possible to travel to the goal area through this cluster
+		if (areacache->traveltimes[clusterareanum] != 0)
+		{
+			*reachnum = aasworld.areasettings[areanum].firstreachablearea +
+							areacache->reachabilities[clusterareanum];
+			if (!origin) {
+				*traveltime = areacache->traveltimes[clusterareanum];
+				return qtrue;
+			}
+			reach = &aasworld.reachability[*reachnum];
+			*traveltime = areacache->traveltimes[clusterareanum] +
+							AAS_AreaTravelTime(areanum, origin, reach->start);
+			//
+			return qtrue;
+		} //end if
 	} //end if
 	//
 	clusternum = aasworld.areasettings[areanum].cluster;
@@ -497,7 +861,17 @@ static int AAS_AreaRouteToGoalArea(int areanum, vec3_t origin, int goalareanum, 
 		portal = &aasworld.portals[-goalclusternum];
 		goalclusternum = portal->frontcluster;
 	} //end if
-
+	//get the portal routing cache
+	portalcache = AAS_GetPortalRoutingCache(goalclusternum, goalareanum, travelflags);
+	//if the area is a cluster portal, read directly from the portal cache
+	if (clusternum < 0)
+	{
+		*traveltime = portalcache->traveltimes[-clusternum];
+		*reachnum = aasworld.areasettings[areanum].firstreachablearea +
+						portalcache->reachabilities[-clusternum];
+		return qtrue;
+	} //end if
+	//
 	besttime = 0;
 	bestreachnum = -1;
 	//the cluster the area is in
@@ -506,17 +880,32 @@ static int AAS_AreaRouteToGoalArea(int areanum, vec3_t origin, int goalareanum, 
 	for (i = 0; i < cluster->numportals; i++)
 	{
 		portalnum = aasworld.portalindex[cluster->firstportal + i];
+		//if the goal area isn't reachable from the portal
+		if (!portalcache->traveltimes[portalnum]) continue;
+		//
 		portal = &aasworld.portals[portalnum];
+		//get the cache of the portal area
+		areacache = AAS_GetAreaRoutingCache(clusternum, portal->areanum, travelflags);
 		//current area inside the current cluster
 		clusterareanum = AAS_ClusterAreaNum(clusternum, areanum);
 		//if the area is NOT a reachability area
 		if (clusterareanum >= cluster->numreachabilityareas) continue;
-
+		//if the portal is NOT reachable from this area
+		if (!areacache->traveltimes[clusterareanum]) continue;
+		//total travel time is the travel time the portal area is from
+		//the goal area plus the travel time towards the portal area
+		t = portalcache->traveltimes[portalnum] + areacache->traveltimes[clusterareanum];
+		//FIXME: add the exact travel time through the actual portal area
+		//NOTE: for now we just add the largest travel time through the portal area
+		//		because we can't directly calculate the exact travel time
+		//		to be more specific we don't know which reachability was used to travel
+		//		into the portal area
 		t += aasworld.portalmaxtraveltimes[portalnum];
 		//
 		if (origin)
 		{
-			*reachnum = aasworld.areasettings[areanum].firstreachablearea;
+			*reachnum = aasworld.areasettings[areanum].firstreachablearea +
+							areacache->reachabilities[clusterareanum];
 			reach = aasworld.reachability + *reachnum;
 			t += AAS_AreaTravelTime(areanum, origin, reach->start);
 		} //end if
