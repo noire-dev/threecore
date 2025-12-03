@@ -751,6 +751,128 @@ static aas_routingcache_t *AAS_GetAreaRoutingCache(int clusternum, int areanum, 
 	return cache;
 }
 
+static void AAS_UpdatePortalRoutingCache(aas_routingcache_t *portalcache) {
+	int i, portalnum, clusterareanum, clusternum;
+	unsigned short int t;
+	aas_portal_t *portal;
+	aas_cluster_t *cluster;
+	aas_routingcache_t *cache;
+	aas_routingupdate_t *updateliststart, *updatelistend, *curupdate, *nextupdate;
+
+	curupdate = &aasworld.portalupdate[aasworld.numportals];
+	curupdate->cluster = portalcache->cluster;
+	curupdate->areanum = portalcache->areanum;
+	curupdate->tmptraveltime = portalcache->starttraveltime;
+	//if the start area is a cluster portal, store the travel time for that portal
+	clusternum = aasworld.areasettings[portalcache->areanum].cluster;
+	if (clusternum < 0)
+	{
+		portalcache->traveltimes[-clusternum] = portalcache->starttraveltime;
+	} //end if
+	//put the area to start with in the current read list
+	curupdate->next = NULL;
+	curupdate->prev = NULL;
+	updateliststart = curupdate;
+	updatelistend = curupdate;
+	//while there are updates in the current list
+	while (updateliststart)
+	{
+		curupdate = updateliststart;
+		//remove the current update from the list
+		if (curupdate->next) curupdate->next->prev = NULL;
+		else updatelistend = NULL;
+		updateliststart = curupdate->next;
+		//current update is removed from the list
+		curupdate->inlist = qfalse;
+		//
+		cluster = &aasworld.clusters[curupdate->cluster];
+		//
+		cache = AAS_GetAreaRoutingCache(curupdate->cluster,
+								curupdate->areanum, portalcache->travelflags);
+		//take all portals of the cluster
+		for (i = 0; i < cluster->numportals; i++)
+		{
+			portalnum = aasworld.portalindex[cluster->firstportal + i];
+			portal = &aasworld.portals[portalnum];
+			//if this is the portal of the current update continue
+			if (portal->areanum == curupdate->areanum) continue;
+			//
+			clusterareanum = AAS_ClusterAreaNum(curupdate->cluster, portal->areanum);
+			if (clusterareanum >= cluster->numreachabilityareas) continue;
+			//
+			t = cache->traveltimes[clusterareanum];
+			if (!t) continue;
+			t += curupdate->tmptraveltime;
+			//
+			if (!portalcache->traveltimes[portalnum] ||
+					portalcache->traveltimes[portalnum] > t)
+			{
+				portalcache->traveltimes[portalnum] = t;
+				nextupdate = &aasworld.portalupdate[portalnum];
+				if (portal->frontcluster == curupdate->cluster)
+				{
+					nextupdate->cluster = portal->backcluster;
+				} //end if
+				else
+				{
+					nextupdate->cluster = portal->frontcluster;
+				} //end else
+				nextupdate->areanum = portal->areanum;
+				//add travel time through the actual portal area for the next update
+				nextupdate->tmptraveltime = t + aasworld.portalmaxtraveltimes[portalnum];
+				if (!nextupdate->inlist)
+				{
+					// we add the update to the end of the list
+					// we could also use a B+ tree to have a real sorted list
+					// on travel time which makes for faster routing updates
+					nextupdate->next = NULL;
+					nextupdate->prev = updatelistend;
+					if (updatelistend) updatelistend->next = nextupdate;
+					else updateliststart = nextupdate;
+					updatelistend = nextupdate;
+					nextupdate->inlist = qtrue;
+				} //end if
+			} //end if
+		} //end for
+	} //end while
+}
+
+static aas_routingcache_t *AAS_GetPortalRoutingCache(int clusternum, int areanum, int travelflags) {
+	aas_routingcache_t *cache;
+
+	//find the cached portal routing if existing
+	for (cache = aasworld.portalcache[areanum]; cache; cache = cache->next)
+	{
+		if (cache->travelflags == travelflags) break;
+	} //end for
+	//if the portal routing isn't cached
+	if (!cache)
+	{
+		cache = AAS_AllocRoutingCache(aasworld.numportals);
+		cache->cluster = clusternum;
+		cache->areanum = areanum;
+		VectorCopy(aasworld.areas[areanum].center, cache->origin);
+		cache->starttraveltime = 1;
+		cache->travelflags = travelflags;
+		//add the cache to the cache list
+		cache->prev = NULL;
+		cache->next = aasworld.portalcache[areanum];
+		if (aasworld.portalcache[areanum]) aasworld.portalcache[areanum]->prev = cache;
+		aasworld.portalcache[areanum] = cache;
+		//update the cache
+		AAS_UpdatePortalRoutingCache(cache);
+	} //end if
+	else
+	{
+		AAS_UnlinkCache(cache);
+	} //end else
+	//the cache has been accessed
+	cache->time = AAS_RoutingTime();
+	cache->type = CACHETYPE_PORTAL;
+	AAS_LinkCache(cache);
+	return cache;
+}
+
 static int AAS_AreaRouteToGoalArea(int areanum, vec3_t origin, int goalareanum, int travelflags, int *traveltime, int *reachnum) {
 	int clusternum, goalclusternum, portalnum, i, clusterareanum, bestreachnum;
 	unsigned short int t, besttime;
