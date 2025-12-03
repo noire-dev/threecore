@@ -1507,107 +1507,6 @@ static	int		s_hunkTotal;
 static  int     s_hunkUsed = 0;
 static  int     s_hunkMark = 0;
 
-static const char *tagName[ TAG_COUNT ] = {
-	"FREE",
-	"GENERAL",
-	"PACK",
-	"SEARCH-PATH",
-	"SEARCH-PACK",
-	"SEARCH-DIR",
-	"BOTLIB",
-	"RENDERER",
-	"CLIENTS",
-	"SMALL",
-	"STATIC"
-};
-
-typedef struct zone_stats_s {
-	int	zoneSegments;
-	int zoneBlocks;
-	int	zoneBytes;
-	int	botlibBytes;
-	int	rendererBytes;
-	int freeBytes;
-	int freeBlocks;
-	int freeSmallest;
-	int freeLargest;
-} zone_stats_t;
-
-
-static void Zone_Stats( const char *name, const memzone_t *z, qboolean printDetails, zone_stats_t *stats )
-{
-	const memblock_t *block;
-	const memzone_t *zone;
-	zone_stats_t st;
-
-	memset( &st, 0, sizeof( st ) );
-	zone = z;
-	st.zoneSegments = 1;
-	st.freeSmallest = 0x7FFFFFFF;
-
-	//if ( printDetails ) {
-	//	Com_Printf( "---------- %s zone segment #%i ----------\n", name, zone->segnum );
-	//}
-
-	for ( block = zone->blocklist.next ; ; ) {
-		if ( printDetails ) {
-			int tag = block->tag;
-			Com_Printf( "block:%p  size:%8i  tag: %s\n", (void *)block, block->size,
-				(unsigned)tag < TAG_COUNT ? tagName[ tag ] : va( "%i", tag ) );
-		}
-		if ( block->tag != TAG_FREE ) {
-			st.zoneBytes += block->size;
-			st.zoneBlocks++;
-			if ( block->tag == TAG_BOTLIB ) {
-				st.botlibBytes += block->size;
-			} else if ( block->tag == TAG_RENDERER ) {
-				st.rendererBytes += block->size;
-			}
-		} else {
-			st.freeBytes += block->size;
-			st.freeBlocks++;
-			if ( block->size > st.freeLargest )
-				st.freeLargest = block->size;
-			if ( block->size < st.freeSmallest )
-				st.freeSmallest = block->size;
-		}
-		if ( block->next == &zone->blocklist ) {
-			break; // all blocks have been hit
-		}
-		if ( (byte *)block + block->size != (byte *)block->next) {
-			const memblock_t *next = block->next;
-			if ( next->size == 0 && next->id == -ZONEID && next->tag == TAG_GENERAL ) {
-				st.zoneSegments++;
-				if ( printDetails ) {
-					Com_Printf( "---------- %s zone segment #%i ----------\n", name, st.zoneSegments );
-				}
-				block = next->next;
-				continue;
-			} else
-				Com_Printf( "ERROR: block size does not touch the next block\n" );
-		}
-		if ( block->next->prev != block) {
-			Com_Printf( "ERROR: next block doesn't have proper back link\n" );
-		}
-		if ( block->tag == TAG_FREE && block->next->tag == TAG_FREE ) {
-			Com_Printf( "ERROR: two consecutive free blocks\n" );
-		}
-		block = block->next;
-	}
-
-	// export stats
-	if ( stats ) {
-		memcpy( stats, &st, sizeof( *stats ) );
-	}
-}
-
-/*
-===============
-Com_TouchMemory
-
-Touch all known used data to make sure it is paged in
-===============
-*/
 unsigned int Com_TouchMemory( void ) {
 	int		start, end;
 	unsigned int sum;
@@ -1628,11 +1527,6 @@ unsigned int Com_TouchMemory( void ) {
 	return sum; // just to silent compiler warning
 }
 
-/*
-=================
-Com_InitSmallZoneMemory
-=================
-*/
 static void Com_InitSmallZoneMemory( void ) {
 	static byte s_buf[ 512 * 1024 ];
 	int smallZoneSize;
@@ -1643,12 +1537,6 @@ static void Com_InitSmallZoneMemory( void ) {
 	Z_ClearZone( smallzone, smallzone, smallZoneSize, 1 );
 }
 
-
-/*
-=================
-Com_InitZoneMemory
-=================
-*/
 static void Com_InitZoneMemory( void ) {
 	int		mainZoneSize;
 
