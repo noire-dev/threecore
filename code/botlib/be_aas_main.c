@@ -87,12 +87,6 @@ static void AAS_SetInitialized(void)
 {
 	aasworld.initialized = qtrue;
 	botimport.Print(PRT_MESSAGE, "AAS initialized.\n");
-#ifdef DEBUG
-	//create all the routing cache
-	//AAS_CreateAllRoutingCache();
-	//
-	//AAS_RoutingInfo();
-#endif
 } //end of the function AAS_SetInitialized
 void AAS_ContinueInit(float time) {
 	if (!aasworld.loaded) return;
@@ -169,13 +163,11 @@ static int AAS_LoadFiles(const char *mapname)
 // Returns:					-
 // Changes Globals:		-
 //===========================================================================
-int AAS_LoadMap(const char *mapname)
-{
+int AAS_LoadMap(const char *mapname) {
 	int	errnum;
 
 	//if no mapname is provided then the string indexes are updated
-	if (!mapname)
-	{
+	if (!mapname) {
 		return 0;
 	} //end if
 	//
@@ -186,8 +178,7 @@ int AAS_LoadMap(const char *mapname)
 	AAS_FreeRoutingCaches();
 	//load the map
 	errnum = AAS_LoadFiles(mapname);
-	if (errnum != BLERR_NOERROR)
-	{
+	if (errnum != BLERR_NOERROR) {
 		aasworld.loaded = qfalse;
 		return errnum;
 	} //end if
@@ -197,8 +188,6 @@ int AAS_LoadMap(const char *mapname)
 	AAS_InitAASLinkHeap();
 	//initialize the AAS linked entities for the new map
 	AAS_InitAASLinkedEntities();
-	//initialize reachability for the new map
-	AAS_InitReachability();
 	//initialize the alternative routing
 	AAS_InitAlternativeRouting();
 	//everything went ok

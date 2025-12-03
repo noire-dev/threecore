@@ -1191,8 +1191,7 @@ static void AAS_InitReachabilityAreas(void)
 // Returns:				-
 // Changes Globals:		-
 //===========================================================================
-void AAS_InitRouting(void)
-{
+void AAS_InitRouting(void) {
 	AAS_InitTravelFlagFromType();
 	//
 	AAS_InitAreaContentsTravelFlags();
@@ -1210,12 +1209,7 @@ void AAS_InitRouting(void)
 	AAS_InitPortalMaxTravelTimes();
 	//get the areas reachabilities go through
 	AAS_InitReachabilityAreas();
-	//
-#ifdef ROUTING_DEBUG
-	numareacacheupdates = 0;
-	numportalcacheupdates = 0;
-#endif //ROUTING_DEBUG
-	//
+	
 	routingcachesize = 0;
 	max_routingcachesize = 1024 * 4096;
 	// read any routing cache if available
@@ -1958,59 +1952,6 @@ int AAS_NextModelReachability(int num, int modelnum)
 	} //end for
 	return 0;
 } //end of the function AAS_NextModelReachability
-//===========================================================================
-//
-// Parameter:			-
-// Returns:				-
-// Changes Globals:		-
-//===========================================================================
-int AAS_RandomGoalArea(int areanum, int travelflags, int *goalareanum, vec3_t goalorigin)
-{
-	int i, n, t;
-	vec3_t start, end;
-	aas_trace_t trace;
-
-	//if the area has no reachabilities
-	if (!AAS_AreaReachability(areanum)) return qfalse;
-	//
-	n = aasworld.numareas * random();
-	for (i = 0; i < aasworld.numareas; i++)
-	{
-		if (n <= 0) n = 1;
-		if (n >= aasworld.numareas) n = 1;
-		if (AAS_AreaReachability(n))
-		{
-			t = AAS_AreaTravelTimeToGoalArea(areanum, aasworld.areas[areanum].center, n, travelflags);
-			//if the goal is reachable
-			if (t > 0)
-			{
-				if (AAS_AreaSwim(n))
-				{
-					*goalareanum = n;
-					VectorCopy(aasworld.areas[n].center, goalorigin);
-					//botimport.Print(PRT_MESSAGE, "found random goal area %d\n", *goalareanum);
-					return qtrue;
-				} //end if
-				VectorCopy(aasworld.areas[n].center, start);
-				VectorCopy(start, end);
-				end[2] -= 300;
-				trace = AAS_TraceClientBBox(start, end, PRESENCE_CROUCH, -1);
-				if (!trace.startsolid && trace.fraction < 1 && AAS_PointAreaNum(trace.endpos) == n)
-				{
-					if (AAS_AreaGroundFaceArea(n) > 300)
-					{
-						*goalareanum = n;
-						VectorCopy(trace.endpos, goalorigin);
-						//botimport.Print(PRT_MESSAGE, "found random goal area %d\n", *goalareanum);
-						return qtrue;
-					} //end if
-				} //end if
-			} //end if
-		} //end if
-		n++;
-	} //end for
-	return qfalse;
-} //end of the function AAS_RandomGoalArea
 //===========================================================================
 //
 // Parameter:			-
