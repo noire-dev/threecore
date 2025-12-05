@@ -686,23 +686,6 @@ int BotGetReachabilityToGoal(vec3_t origin, int areanum,
 	for (reachnum = AAS_NextAreaReachability(areanum, 0); reachnum;
 		reachnum = AAS_NextAreaReachability(areanum, reachnum))
 	{
-#ifdef AVOIDREACH
-		//check if it isn't a reachability to avoid
-		for (i = 0; i < MAX_AVOIDREACH; i++)
-		{
-			if (avoidreach[i] == reachnum && avoidreachtimes[i] >= AAS_Time()) break;
-		} //end for
-		if (i != MAX_AVOIDREACH && avoidreachtries[i] > AVOIDREACH_TRIES)
-		{
-#ifdef DEBUG
-			if (botDeveloper)
-			{
-				botimport.Print(PRT_MESSAGE, "avoiding reachability %d\n", avoidreach[i]);
-			} //end if
-#endif //DEBUG
-			continue;
-		} //end if
-#endif //AVOIDREACH
 		//get the reachability from the number
 		AAS_ReachabilityFromNum(reachnum, &reach);
 		//NOTE: do not go back to the previous area if the goal didn't change
@@ -2859,14 +2842,10 @@ static bot_moveresult_t BotMoveInGoalArea(bot_movestate_t *ms, bot_goal_t *goal)
 // Returns:					-
 // Changes Globals:		-
 //===========================================================================
-void BotMoveToGoal(bot_moveresult_t *result, int movestate, bot_goal_t *goal, int travelflags)
-{
+void BotMoveToGoal(int movestate, bot_goal_t *goal, int travelflags) {
 	int reachnum, lastreachnum, foundjumppad, ent, resultflags;
 	aas_reachability_t reach, lastreach;
 	bot_movestate_t *ms;
-	//vec3_t mins, maxs, up = {0, 0, 1};
-	//bsp_trace_t trace;
-	//static int debugline;
 
 	result->failure = qfalse;
 	result->type = 0;
@@ -2875,18 +2854,13 @@ void BotMoveToGoal(bot_moveresult_t *result, int movestate, bot_goal_t *goal, in
 	result->traveltype = 0;
 	result->flags = 0;
 
-	//
 	ms = BotMoveStateFromHandle(movestate);
 	if (!ms) return;
 	//reset the grapple before testing if the bot has a valid goal
 	//because the bot could lose all its goals when stuck to a wall
 	BotResetGrapple(ms);
 	//
-	if (!goal)
-	{
-#ifdef DEBUG
-		botimport.Print(PRT_MESSAGE, "client %d: movetogoal -> no goal\n", ms->client);
-#endif //DEBUG
+	if (!goal) {
 		result->failure = qtrue;
 		return;
 	} //end if
@@ -3056,25 +3030,7 @@ void BotMoveToGoal(bot_moveresult_t *result, int movestate, bot_goal_t *goal, in
 				{
 					reachnum = 0;
 				} //end if
-			} //end if
-			else
-			{
-#ifdef DEBUG
-				if (botDeveloper)
-				{
-					if (ms->reachability_time < AAS_Time())
-					{
-						botimport.Print(PRT_MESSAGE, "client %d: reachability timeout in ", ms->client);
-						AAS_PrintTravelType(reach.traveltype & TRAVELTYPE_MASK);
-						botimport.Print(PRT_MESSAGE, "\n");
-					} //end if
-					/*
-					if (ms->lastareanum != ms->areanum)
-					{
-						botimport.Print(PRT_MESSAGE, "changed from area %d to %d\n", ms->lastareanum, ms->areanum);
-					} //end if*/
-				} //end if
-#endif //DEBUG
+			} else {
 				//if the goal area changed or the reachability timed out
 				//or the area changed
 				if (ms->lastgoalareanum != goal->areanum ||
@@ -3088,18 +3044,7 @@ void BotMoveToGoal(bot_moveresult_t *result, int movestate, bot_goal_t *goal, in
 		} //end if
 		resultflags = 0;
 		//if the bot needs a new reachability
-		if (!reachnum)
-		{
-			//if the area has no reachability links
-			if (!AAS_AreaReachability(ms->areanum))
-			{
-#ifdef DEBUG
-				if (botDeveloper)
-				{
-					botimport.Print(PRT_MESSAGE, "area %d no reachability\n", ms->areanum);
-				} //end if
-#endif //DEBUG
-			} //end if
+		if (!reachnum) {
 			//get a new reachability leading towards the goal
 			reachnum = BotGetReachabilityToGoal(ms->origin, ms->areanum,
 								ms->lastgoalareanum, ms->lastareanum,
@@ -3117,31 +3062,7 @@ void BotMoveToGoal(bot_moveresult_t *result, int movestate, bot_goal_t *goal, in
 				AAS_ReachabilityFromNum(reachnum, &reach);
 				//set a timeout for this reachability
 				ms->reachability_time = AAS_Time() + BotReachabilityTime(&reach);
-				//
-#ifdef AVOIDREACH
-				//add the reachability to the reachabilities to avoid for a while
-				BotAddToAvoidReach(ms, reachnum, AVOIDREACH_TIME);
-#endif //AVOIDREACH
 			} //end if
-#ifdef DEBUG
-			
-			else if (botDeveloper)
-			{
-				botimport.Print(PRT_MESSAGE, "goal not reachable\n");
-				Com_Memset(&reach, 0, sizeof(aas_reachability_t)); //make compiler happy
-			} //end else
-			if (botDeveloper)
-			{
-				//if still going for the same goal
-				if (ms->lastgoalareanum == goal->areanum)
-				{
-					if (ms->lastareanum == reach.areanum)
-					{
-						botimport.Print(PRT_MESSAGE, "same goal, going back to previous area\n");
-					} //end if
-				} //end if
-			} //end if
-#endif //DEBUG
 		} //end else
 		//
 		ms->lastreachnum = reachnum;
@@ -3153,35 +3074,23 @@ void BotMoveToGoal(bot_moveresult_t *result, int movestate, bot_goal_t *goal, in
 			//get the reachability from the number
 			AAS_ReachabilityFromNum(reachnum, &reach);
 			result->traveltype = reach.traveltype;
-			//
-#ifdef DEBUG_AI_MOVE
-			AAS_ClearShownDebugLines();
-			AAS_PrintTravelType(reach.traveltype & TRAVELTYPE_MASK);
-			AAS_ShowReachability(&reach);
-#endif //DEBUG_AI_MOVE
-			//
-#ifdef DEBUG
-			//botimport.Print(PRT_MESSAGE, "client %d: ", ms->client);
-			//AAS_PrintTravelType(reach.traveltype);
-			//botimport.Print(PRT_MESSAGE, "\n");
-#endif //DEBUG
 			switch(reach.traveltype & TRAVELTYPE_MASK)
 			{
-				case TRAVEL_WALK: *result = BotTravel_Walk(ms, &reach); break;
-				case TRAVEL_CROUCH: *result = BotTravel_Crouch(ms, &reach); break;
-				case TRAVEL_BARRIERJUMP: *result = BotTravel_BarrierJump(ms, &reach); break;
-				case TRAVEL_LADDER: *result = BotTravel_Ladder(ms, &reach); break;
-				case TRAVEL_WALKOFFLEDGE: *result = BotTravel_WalkOffLedge(ms, &reach); break;
-				case TRAVEL_JUMP: *result = BotTravel_Jump(ms, &reach); break;
-				case TRAVEL_SWIM: *result = BotTravel_Swim(ms, &reach); break;
-				case TRAVEL_WATERJUMP: *result = BotTravel_WaterJump(ms, &reach); break;
-				case TRAVEL_TELEPORT: *result = BotTravel_Teleport(ms, &reach); break;
-				case TRAVEL_ELEVATOR: *result = BotTravel_Elevator(ms, &reach); break;
-				case TRAVEL_GRAPPLEHOOK: *result = BotTravel_Grapple(ms, &reach); break;
-				case TRAVEL_ROCKETJUMP: *result = BotTravel_RocketJump(ms, &reach); break;
-				case TRAVEL_BFGJUMP: *result = BotTravel_BFGJump(ms, &reach); break;
-				case TRAVEL_JUMPPAD: *result = BotTravel_JumpPad(ms, &reach); break;
-				case TRAVEL_FUNCBOB: *result = BotTravel_FuncBobbing(ms, &reach); break;
+				case TRAVEL_WALK: BotTravel_Walk(ms, &reach); break;
+				case TRAVEL_CROUCH: BotTravel_Crouch(ms, &reach); break;
+				case TRAVEL_BARRIERJUMP: BotTravel_BarrierJump(ms, &reach); break;
+				case TRAVEL_LADDER: BotTravel_Ladder(ms, &reach); break;
+				case TRAVEL_WALKOFFLEDGE: BotTravel_WalkOffLedge(ms, &reach); break;
+				case TRAVEL_JUMP: BotTravel_Jump(ms, &reach); break;
+				case TRAVEL_SWIM: BotTravel_Swim(ms, &reach); break;
+				case TRAVEL_WATERJUMP: BotTravel_WaterJump(ms, &reach); break;
+				case TRAVEL_TELEPORT: BotTravel_Teleport(ms, &reach); break;
+				case TRAVEL_ELEVATOR: BotTravel_Elevator(ms, &reach); break;
+				case TRAVEL_GRAPPLEHOOK: BotTravel_Grapple(ms, &reach); break;
+				case TRAVEL_ROCKETJUMP: BotTravel_RocketJump(ms, &reach); break;
+				case TRAVEL_BFGJUMP: BotTravel_BFGJump(ms, &reach); break;
+				case TRAVEL_JUMPPAD: BotTravel_JumpPad(ms, &reach); break;
+				case TRAVEL_FUNCBOB: BotTravel_FuncBobbing(ms, &reach); break;
 				default:
 				{
 					botimport.Print(PRT_FATAL, "travel type %d not implemented yet\n", (reach.traveltype & TRAVELTYPE_MASK));
@@ -3197,17 +3106,6 @@ void BotMoveToGoal(bot_moveresult_t *result, int movestate, bot_goal_t *goal, in
 			result->flags |= resultflags;
 			Com_Memset(&reach, 0, sizeof(aas_reachability_t));
 		} //end else
-#ifdef DEBUG
-		if (botDeveloper)
-		{
-			if (result->failure)
-			{
-				botimport.Print(PRT_MESSAGE, "client %d: movement failure in ", ms->client);
-				AAS_PrintTravelType(reach.traveltype & TRAVELTYPE_MASK);
-				botimport.Print(PRT_MESSAGE, "\n");
-			} //end if
-		} //end if
-#endif //DEBUG
 	} //end if
 	else
 	{
@@ -3264,32 +3162,27 @@ void BotMoveToGoal(bot_moveresult_t *result, int movestate, bot_goal_t *goal, in
 		//
 		if (ms->lastreachnum)
 		{
-			//botimport.Print(PRT_MESSAGE, "%s: NOT onground, swimming or against ladder\n", ClientName(ms->entitynum-1));
+			
 			AAS_ReachabilityFromNum(ms->lastreachnum, &reach);
 			result->traveltype = reach.traveltype;
-#ifdef DEBUG
-			//botimport.Print(PRT_MESSAGE, "client %d finish: ", ms->client);
-			//AAS_PrintTravelType(reach.traveltype & TRAVELTYPE_MASK);
-			//botimport.Print(PRT_MESSAGE, "\n");
-#endif //DEBUG
-			//
+			
 			switch(reach.traveltype & TRAVELTYPE_MASK)
 			{
-				case TRAVEL_WALK: *result = BotTravel_Walk(ms, &reach); break;//BotFinishTravel_Walk(ms, &reach); break;
+				case TRAVEL_WALK: BotTravel_Walk(ms, &reach); break;//BotFinishTravel_Walk(ms, &reach); break;
 				case TRAVEL_CROUCH: /*do nothing*/ break;
-				case TRAVEL_BARRIERJUMP: *result = BotFinishTravel_BarrierJump(ms, &reach); break;
-				case TRAVEL_LADDER: *result = BotTravel_Ladder(ms, &reach); break;
-				case TRAVEL_WALKOFFLEDGE: *result = BotFinishTravel_WalkOffLedge(ms, &reach); break;
-				case TRAVEL_JUMP: *result = BotFinishTravel_Jump(ms, &reach); break;
-				case TRAVEL_SWIM: *result = BotTravel_Swim(ms, &reach); break;
-				case TRAVEL_WATERJUMP: *result = BotFinishTravel_WaterJump(ms, &reach); break;
+				case TRAVEL_BARRIERJUMP: BotFinishTravel_BarrierJump(ms, &reach); break;
+				case TRAVEL_LADDER: BotTravel_Ladder(ms, &reach); break;
+				case TRAVEL_WALKOFFLEDGE: BotFinishTravel_WalkOffLedge(ms, &reach); break;
+				case TRAVEL_JUMP: BotFinishTravel_Jump(ms, &reach); break;
+				case TRAVEL_SWIM: BotTravel_Swim(ms, &reach); break;
+				case TRAVEL_WATERJUMP: BotFinishTravel_WaterJump(ms, &reach); break;
 				case TRAVEL_TELEPORT: /*do nothing*/ break;
-				case TRAVEL_ELEVATOR: *result = BotFinishTravel_Elevator(ms, &reach); break;
-				case TRAVEL_GRAPPLEHOOK: *result = BotTravel_Grapple(ms, &reach); break;
+				case TRAVEL_ELEVATOR: BotFinishTravel_Elevator(ms, &reach); break;
+				case TRAVEL_GRAPPLEHOOK: BotTravel_Grapple(ms, &reach); break;
 				case TRAVEL_ROCKETJUMP:
-				case TRAVEL_BFGJUMP: *result = BotFinishTravel_WeaponJump(ms, &reach); break;
-				case TRAVEL_JUMPPAD: *result = BotFinishTravel_JumpPad(ms, &reach); break;
-				case TRAVEL_FUNCBOB: *result = BotFinishTravel_FuncBobbing(ms, &reach); break;
+				case TRAVEL_BFGJUMP: BotFinishTravel_WeaponJump(ms, &reach); break;
+				case TRAVEL_JUMPPAD: BotFinishTravel_JumpPad(ms, &reach); break;
+				case TRAVEL_FUNCBOB: BotFinishTravel_FuncBobbing(ms, &reach); break;
 				default:
 				{
 					botimport.Print(PRT_FATAL, "(last) travel type %d not implemented yet\n", (reach.traveltype & TRAVELTYPE_MASK));
@@ -3297,17 +3190,6 @@ void BotMoveToGoal(bot_moveresult_t *result, int movestate, bot_goal_t *goal, in
 				} //end case
 			} //end switch
 			result->traveltype = reach.traveltype;
-#ifdef DEBUG
-			if (botDeveloper)
-			{
-				if (result->failure)
-				{
-					botimport.Print(PRT_MESSAGE, "client %d: movement failure in finish ", ms->client);
-					AAS_PrintTravelType(reach.traveltype & TRAVELTYPE_MASK);
-					botimport.Print(PRT_MESSAGE, "\n");
-				} //end if
-			} //end if
-#endif //DEBUG
 		} //end if
 	} //end else
 	//FIXME: is it right to do this here?

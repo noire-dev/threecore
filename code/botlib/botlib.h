@@ -356,7 +356,7 @@ typedef struct ai_export_s
 	// be_ai_move.h
 	//-----------------------------------
 	void	(*BotResetMoveState)(int movestate);
-	void	(*BotMoveToGoal)(struct bot_moveresult_s *result, int movestate, struct bot_goal_s *goal, int travelflags);
+	void	(*BotMoveToGoal)(int movestate, struct bot_goal_s *goal, int travelflags);
 	int		(*BotMoveInDirection)(int movestate, vec3_t dir, float speed, int type);
 	void	(*BotResetAvoidReach)(int movestate);
 	void	(*BotResetLastAvoidReach)(int movestate);

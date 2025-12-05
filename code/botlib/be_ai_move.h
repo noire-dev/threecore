@@ -112,7 +112,7 @@ typedef struct bot_avoidspot_s
 //resets the whole move state
 void BotResetMoveState(int movestate);
 //moves the bot to the given goal
-void BotMoveToGoal(bot_moveresult_t *result, int movestate, bot_goal_t *goal, int travelflags);
+void BotMoveToGoal(int movestate, bot_goal_t *goal, int travelflags);
 //moves the bot in the specified direction using the specified type of movement
 int BotMoveInDirection(int movestate, vec3_t dir, float speed, int type);
 //reset avoid reachability
