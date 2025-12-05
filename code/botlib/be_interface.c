@@ -44,12 +44,8 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #include "be_interface.h"
 
 #include "be_ea.h"
-#include "be_ai_weight.h"
 #include "be_ai_goal.h"
 #include "be_ai_move.h"
-#include "be_ai_weap.h"
-#include "be_ai_chat.h"
-#include "be_ai_char.h"
 
 //library globals in a structure
 botlib_globals_t botlibglobals;
@@ -139,11 +135,7 @@ static int Export_BotLibSetup( void )
 	if (errnum != BLERR_NOERROR) return errnum;
 	errnum = EA_Setup();			//be_ea.c
 	if (errnum != BLERR_NOERROR) return errnum;
-	errnum = BotSetupWeaponAI();	//be_ai_weap.c
-	if (errnum != BLERR_NOERROR)return errnum;
 	errnum = BotSetupGoalAI();		//be_ai_goal.c
-	if (errnum != BLERR_NOERROR) return errnum;
-	errnum = BotSetupChatAI();		//be_ai_chat.c
 	if (errnum != BLERR_NOERROR) return errnum;
 	errnum = BotSetupMoveAI();		//be_ai_move.c
 	if (errnum != BLERR_NOERROR) return errnum;
@@ -163,16 +155,9 @@ static int Export_BotLibShutdown(void)
 {
 	if ( !botlibglobals.botlibsetup )
 		return BLERR_LIBRARYNOTSETUP;
-#ifndef DEMO
-	//DumpFileCRCs();
-#endif //DEMO
-	//
-	BotShutdownChatAI();		//be_ai_chat.c
+
 	BotShutdownMoveAI();		//be_ai_move.c
 	BotShutdownGoalAI();		//be_ai_goal.c
-	BotShutdownWeaponAI();		//be_ai_weap.c
-	BotShutdownWeights();		//be_ai_weight.c
-	BotShutdownCharacters();	//be_ai_char.c
 	//shut down AAS
 	AAS_Shutdown();
 	//shut down bot elementary actions
@@ -371,83 +356,17 @@ Init_AI_Export
 */
 static void Init_AI_Export( ai_export_t *ai ) {
 	//-----------------------------------
-	// be_ai_char.h
-	//-----------------------------------
-	ai->BotLoadCharacter = BotLoadCharacter;
-	ai->BotFreeCharacter = BotFreeCharacter;
-	ai->Characteristic_Float = Characteristic_Float;
-	ai->Characteristic_BFloat = Characteristic_BFloat;
-	ai->Characteristic_Integer = Characteristic_Integer;
-	ai->Characteristic_BInteger = Characteristic_BInteger;
-	ai->Characteristic_String = Characteristic_String;
-	//-----------------------------------
-	// be_ai_chat.h
-	//-----------------------------------
-	ai->BotAllocChatState = BotAllocChatState;
-	ai->BotFreeChatState = BotFreeChatState;
-	ai->BotQueueConsoleMessage = BotQueueConsoleMessage;
-	ai->BotRemoveConsoleMessage = BotRemoveConsoleMessage;
-	ai->BotNextConsoleMessage = BotNextConsoleMessage;
-	ai->BotNumConsoleMessages = BotNumConsoleMessages;
-	ai->BotInitialChat = BotInitialChat;
-	ai->BotNumInitialChats = BotNumInitialChats;
-	ai->BotReplyChat = BotReplyChat;
-	ai->BotEnterChat = BotEnterChat;
-	ai->BotGetChatMessage = BotGetChatMessage;
-	ai->StringContains = StringContains;
-	ai->BotFindMatch = BotFindMatch;
-	ai->BotMatchVariable = BotMatchVariable;
-	ai->UnifyWhiteSpaces = UnifyWhiteSpaces;
-	ai->BotReplaceSynonyms = BotReplaceSynonyms;
-	ai->BotLoadChatFile = BotLoadChatFile;
-	ai->BotSetChatGender = BotSetChatGender;
-	ai->BotSetChatName = BotSetChatName;
-	//-----------------------------------
 	// be_ai_goal.h
 	//-----------------------------------
-	ai->BotResetGoalState = BotResetGoalState;
-	ai->BotResetAvoidGoals = BotResetAvoidGoals;
-	ai->BotRemoveFromAvoidGoals = BotRemoveFromAvoidGoals;
-	ai->BotPushGoal = BotPushGoal;
-	ai->BotPopGoal = BotPopGoal;
-	ai->BotEmptyGoalStack = BotEmptyGoalStack;
-	ai->BotDumpAvoidGoals = BotDumpAvoidGoals;
-	ai->BotDumpGoalStack = BotDumpGoalStack;
-	ai->BotGoalName = BotGoalName;
-	ai->BotGetTopGoal = BotGetTopGoal;
-	ai->BotGetSecondGoal = BotGetSecondGoal;
-	ai->BotChooseLTGItem = BotChooseLTGItem;
-	ai->BotChooseNBGItem = BotChooseNBGItem;
 	ai->BotTouchingGoal = BotTouchingGoal;
-	ai->BotItemGoalInVisButNotVisible = BotItemGoalInVisButNotVisible;
-	ai->BotGetLevelItemGoal = BotGetLevelItemGoal;
-	ai->BotGetNextCampSpotGoal = BotGetNextCampSpotGoal;
-	ai->BotAvoidGoalTime = BotAvoidGoalTime;
-	ai->BotSetAvoidGoalTime = BotSetAvoidGoalTime;
-	ai->BotInitLevelItems = BotInitLevelItems;
-	ai->BotUpdateEntityItems = BotUpdateEntityItems;
-	ai->BotLoadItemWeights = BotLoadItemWeights;
-	ai->BotFreeItemWeights = BotFreeItemWeights;
-	ai->BotAllocGoalState = BotAllocGoalState;
-	ai->BotFreeGoalState = BotFreeGoalState;
 	//-----------------------------------
 	// be_ai_move.h
 	//-----------------------------------
-	ai->BotResetMoveState = BotResetMoveState;
 	ai->BotMoveToGoal = BotMoveToGoal;
-	ai->BotMoveInDirection = BotMoveInDirection;
-	ai->BotMovementViewTarget = BotMovementViewTarget;
-	ai->BotPredictVisiblePosition = BotPredictVisiblePosition;
+	ai->BotResetMoveState = BotResetMoveState;
 	ai->BotAllocMoveState = BotAllocMoveState;
 	ai->BotFreeMoveState = BotFreeMoveState;
 	ai->BotInitMoveState = BotInitMoveState;
-	//-----------------------------------
-	// be_ai_weap.h
-	//-----------------------------------
-	ai->BotLoadWeaponWeights = BotLoadWeaponWeights;
-	ai->BotAllocWeaponState = BotAllocWeaponState;
-	ai->BotFreeWeaponState = BotFreeWeaponState;
-	ai->BotResetWeaponState = BotResetWeaponState;
 }
 
 

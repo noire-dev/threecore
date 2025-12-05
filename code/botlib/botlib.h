@@ -289,90 +289,19 @@ typedef struct ea_export_s
 	void	(*EA_ResetInput)(int client);
 } ea_export_t;
 
-typedef struct ai_export_s
-{
-	//-----------------------------------
-	// be_ai_char.h
-	//-----------------------------------
-	int		(*BotLoadCharacter)(const char *charfile, float skill);
-	void	(*BotFreeCharacter)(int character);
-	float	(*Characteristic_Float)(int character, int index);
-	float	(*Characteristic_BFloat)(int character, int index, float min, float max);
-	int		(*Characteristic_Integer)(int character, int index);
-	int		(*Characteristic_BInteger)(int character, int index, int min, int max);
-	void	(*Characteristic_String)(int character, int index, char *buf, int size);
-	//-----------------------------------
-	// be_ai_chat.h
-	//-----------------------------------
-	int		(*BotAllocChatState)(void);
-	void	(*BotFreeChatState)(int handle);
-	void	(*BotQueueConsoleMessage)(int chatstate, int type, const char *message);
-	void	(*BotRemoveConsoleMessage)(int chatstate, int handle);
-	int		(*BotNextConsoleMessage)(int chatstate, struct bot_consolemessage_s *cm);
-	int		(*BotNumConsoleMessages)(int chatstate);
-	void	(*BotInitialChat)(int chatstate, const char *type, int mcontext, const char *var0, const char *var1, const char *var2, const char *var3, const char *var4, const char *var5, const char *var6, const char *var7);
-	int		(*BotNumInitialChats)(int chatstate, const char *type);
-	int		(*BotReplyChat)(int chatstate, const char *message, int mcontext, int vcontext, const char *var0, const char *var1, const char *var2, const char *var3, const char *var4, const char *var5, const char *var6, const char *var7);
-	void	(*BotEnterChat)(int chatstate, int client, int sendto);
-	void	(*BotGetChatMessage)(int chatstate, char *buf, int size);
-	int		(*StringContains)(const char *str1, const char *str2, int casesensitive);
-	int		(*BotFindMatch)(const char *str, struct bot_match_s *match, unsigned long int context);
-	void	(*BotMatchVariable)(struct bot_match_s *match, int variable, char *buf, int size);
-	void	(*UnifyWhiteSpaces)(char *string);
-	void	(*BotReplaceSynonyms)(char *string, int size, unsigned long int context);
-	int		(*BotLoadChatFile)(int chatstate, const char *chatfile, const char *chatname);
-	void	(*BotSetChatGender)(int chatstate, int gender);
-	void	(*BotSetChatName)(int chatstate, const char *name, int client);
+typedef struct ai_export_s {
 	//-----------------------------------
 	// be_ai_goal.h
 	//-----------------------------------
-	void	(*BotResetGoalState)(int goalstate);
-	void	(*BotResetAvoidGoals)(int goalstate);
-	void	(*BotRemoveFromAvoidGoals)(int goalstate, int number);
-	void	(*BotPushGoal)(int goalstate, struct bot_goal_s *goal);
-	void	(*BotPopGoal)(int goalstate);
-	void	(*BotEmptyGoalStack)(int goalstate);
-	void	(*BotDumpAvoidGoals)(int goalstate);
-	void	(*BotDumpGoalStack)(int goalstate);
-	void	(*BotGoalName)(int number, char *name, int size);
-	int		(*BotGetTopGoal)(int goalstate, struct bot_goal_s *goal);
-	int		(*BotGetSecondGoal)(int goalstate, struct bot_goal_s *goal);
-	int		(*BotChooseLTGItem)(int goalstate, vec3_t origin, int *inventory, int travelflags);
-	int		(*BotChooseNBGItem)(int goalstate, vec3_t origin, int *inventory, int travelflags,
-								struct bot_goal_s *ltg, float maxtime);
 	int		(*BotTouchingGoal)(const vec3_t origin, const struct bot_goal_s *goal);
-	int		(*BotItemGoalInVisButNotVisible)(int viewer, vec3_t eye, vec3_t viewangles, struct bot_goal_s *goal);
-	int		(*BotGetLevelItemGoal)(int index, const char *classname, struct bot_goal_s *goal);
-	int		(*BotGetNextCampSpotGoal)(int num, struct bot_goal_s *goal);
-	float	(*BotAvoidGoalTime)(int goalstate, int number);
-	void	(*BotSetAvoidGoalTime)(int goalstate, int number, float avoidtime);
-	void	(*BotInitLevelItems)(void);
-	void	(*BotUpdateEntityItems)(void);
-	int		(*BotLoadItemWeights)(int goalstate, const char *filename);
-	void	(*BotFreeItemWeights)(int goalstate);
-	int		(*BotAllocGoalState)(int client);
-	void	(*BotFreeGoalState)(int handle);
 	//-----------------------------------
 	// be_ai_move.h
 	//-----------------------------------
-	void	(*BotResetMoveState)(int movestate);
 	void	(*BotMoveToGoal)(int movestate, struct bot_goal_s *goal, int travelflags);
-	int		(*BotMoveInDirection)(int movestate, vec3_t dir, float speed, int type);
-	void	(*BotResetAvoidReach)(int movestate);
-	void	(*BotResetLastAvoidReach)(int movestate);
-	int		(*BotMovementViewTarget)(int movestate, struct bot_goal_s *goal, int travelflags, float lookahead, vec3_t target);
-	int		(*BotPredictVisiblePosition)(vec3_t origin, int areanum, struct bot_goal_s *goal, int travelflags, vec3_t target);
+	void	(*BotResetMoveState)(int movestate);
 	int		(*BotAllocMoveState)(void);
 	void	(*BotFreeMoveState)(int handle);
 	void	(*BotInitMoveState)(int handle, struct bot_initmove_s *initmove);
-	void	(*BotAddAvoidSpot)(int movestate, const vec3_t origin, float radius, int type);
-	//-----------------------------------
-	// be_ai_weap.h
-	//-----------------------------------
-	int		(*BotLoadWeaponWeights)(int weaponstate, const char *filename);
-	int		(*BotAllocWeaponState)(void);
-	void	(*BotFreeWeaponState)(int weaponstate);
-	void	(*BotResetWeaponState)(int weaponstate);
 } ai_export_t;
 
 //bot AI library imported functions
@@ -408,85 +337,3 @@ typedef struct botlib_export_s
 
 //linking of bot library
 botlib_export_t *GetBotLibAPI( int apiVersion, botlib_import_t *import );
-
-/* Library variables:
-
-name:						default:			module(s):			description:
-
-"basedir"					"game"				be_interface.c		base directory
-"gamedir"					""					be_interface.c		game directory
-"homedir"					""					be_interface.c		home directory
-
-"log"						"0"					l_log.c				enable/disable creating a log file
-"maxclients"				"MAX_CLIENTS"					be_interface.c		maximum number of clients
-"maxentities"				"MAX_GENTITIES"				be_interface.c		maximum number of entities
-"bot_developer"				"0"					be_interface.c		bot developer mode (it's "botDeveloper" in C to prevent symbol clash).
-
-"phys_friction"				"6"					be_aas_move.c		ground friction
-"phys_stopspeed"			"100"				be_aas_move.c		stop speed
-"phys_gravity"				"800"				be_aas_move.c		gravity value
-"phys_waterfriction"		"1"					be_aas_move.c		water friction
-"phys_watergravity"			"400"				be_aas_move.c		gravity in water
-"phys_maxvelocity"			"320"				be_aas_move.c		maximum velocity
-"phys_maxwalkvelocity"		"320"				be_aas_move.c		maximum walk velocity
-"phys_maxcrouchvelocity"	"100"				be_aas_move.c		maximum crouch velocity
-"phys_maxswimvelocity"		"150"				be_aas_move.c		maximum swim velocity
-"phys_walkaccelerate"		"10"				be_aas_move.c		walk acceleration
-"phys_airaccelerate"		"1"					be_aas_move.c		air acceleration
-"phys_swimaccelerate"		"4"					be_aas_move.c		swim acceleration
-"phys_maxstep"				"18"				be_aas_move.c		maximum step height
-"phys_maxsteepness"			"0.7"				be_aas_move.c		maximum floor steepness
-"phys_maxbarrier"			"32"				be_aas_move.c		maximum barrier height
-"phys_maxwaterjump"			"19"				be_aas_move.c		maximum waterjump height
-"phys_jumpvel"				"270"				be_aas_move.c		jump z velocity
-"phys_falldelta5"			"40"				be_aas_move.c
-"phys_falldelta10"			"60"				be_aas_move.c
-"rs_waterjump"				"400"				be_aas_move.c
-"rs_teleport"				"50"				be_aas_move.c
-"rs_barrierjump"			"100"				be_aas_move.c
-"rs_startcrouch"			"300"				be_aas_move.c
-"rs_startgrapple"			"500"				be_aas_move.c
-"rs_startwalkoffledge"		"70"				be_aas_move.c
-"rs_startjump"				"300"				be_aas_move.c
-"rs_rocketjump"				"500"				be_aas_move.c
-"rs_bfgjump"				"500"				be_aas_move.c
-"rs_jumppad"				"250"				be_aas_move.c
-"rs_aircontrolledjumppad"	"300"				be_aas_move.c
-"rs_funcbob"				"300"				be_aas_move.c
-"rs_startelevator"			"50"				be_aas_move.c
-"rs_falldamage5"			"300"				be_aas_move.c
-"rs_falldamage10"			"500"				be_aas_move.c
-"rs_maxjumpfallheight"		"450"				be_aas_move.c
-
-"max_aaslinks"				"4096"				be_aas_sample.c		maximum links in the AAS
-"max_routingcache"			"4096"				be_aas_route.c		maximum routing cache size in KB
-"forceclustering"			"0"					be_aas_main.c		force recalculation of clusters
-"forcereachability"			"0"					be_aas_main.c		force recalculation of reachabilities
-"forcewrite"				"0"					be_aas_main.c		force writing of aas file
-"aasoptimize"				"0"					be_aas_main.c		enable aas optimization
-"bot_visualizejumppads"		"0"					be_aas_reach.c		visualize jump pads
-
-"bot_reloadcharacters"		"0"					-					reload bot character files
-"ai_gametype"				"0"					be_ai_goal.c		game type
-"droppedweight"				"1000"				be_ai_goal.c		additional dropped item weight
-"weapindex_rocketlauncher"	"5"					be_ai_move.c		rl weapon index for rocket jumping
-"weapindex_bfg10k"			"9"					be_ai_move.c		bfg weapon index for bfg jumping
-"weapindex_grapple"			"10"				be_ai_move.c		grapple weapon index for grappling
-"entitytypemissile"			"3"					be_ai_move.c		ET_MISSILE
-"offhandgrapple"			"0"					be_ai_move.c		enable off hand grapple hook
-"cmd_grappleon"				"grappleon"			be_ai_move.c		command to activate off hand grapple
-"cmd_grappleoff"			"grappleoff"		be_ai_move.c		command to deactivate off hand grapple
-"itemconfig"				"items.c"			be_ai_goal.c		item configuration file
-"weaponconfig"				"weapons.c"			be_ai_weap.c		weapon configuration file
-"synfile"					"syn.c"				be_ai_chat.c		file with synonyms
-"rndfile"					"rnd.c"				be_ai_chat.c		file with random strings
-"matchfile"					"match.c"			be_ai_chat.c		file with match strings
-"nochat"					"0"					be_ai_chat.c		disable chats
-"max_messages"				"1024"				be_ai_chat.c		console message heap size
-"max_weaponinfo"			"32"				be_ai_weap.c		maximum number of weapon info
-"max_projectileinfo"		"32"				be_ai_weap.c		maximum number of projectile info
-"max_iteminfo"				"4096"				be_ai_goal.c		maximum number of item info
-"max_levelitems"			"4096"				be_ai_goal.c		maximum number of level items
-
-*/
-
