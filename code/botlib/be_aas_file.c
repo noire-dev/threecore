@@ -30,6 +30,12 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  *****************************************************************************/
 
 #include "../qcommon/q_shared.h"
+#include "l_memory.h"
+#include "l_script.h"
+#include "l_precomp.h"
+#include "l_struct.h"
+#include "l_libvar.h"
+#include "l_utils.h"
 #include "aasfile.h"
 #include "botlib.h"
 #include "be_aas.h"
@@ -37,6 +43,14 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #include "be_interface.h"
 #include "be_aas_def.h"
 
+//#define AASFILEDEBUG
+
+//===========================================================================
+//
+// Parameter:				-
+// Returns:					-
+// Changes Globals:		-
+//===========================================================================
 static void AAS_SwapAASData(void)
 {
 	int i, j;
@@ -159,50 +173,56 @@ static void AAS_SwapAASData(void)
 		aasworld.clusters[i].firstportal = LittleLong(aasworld.clusters[i].firstportal);
 	} //end for
 } //end of the function AAS_SwapAASData
-
+//===========================================================================
+// dump the current loaded aas file
+//
+// Parameter:				-
+// Returns:					-
+// Changes Globals:		-
+//===========================================================================
 void AAS_DumpAASData(void)
 {
 	aasworld.numbboxes = 0;
-	if (aasworld.bboxes) free(aasworld.bboxes);
+	if (aasworld.bboxes) FreeMemory(aasworld.bboxes);
 	aasworld.bboxes = NULL;
 	aasworld.numvertexes = 0;
-	if (aasworld.vertexes) free(aasworld.vertexes);
+	if (aasworld.vertexes) FreeMemory(aasworld.vertexes);
 	aasworld.vertexes = NULL;
 	aasworld.numplanes = 0;
-	if (aasworld.planes) free(aasworld.planes);
+	if (aasworld.planes) FreeMemory(aasworld.planes);
 	aasworld.planes = NULL;
 	aasworld.numedges = 0;
-	if (aasworld.edges) free(aasworld.edges);
+	if (aasworld.edges) FreeMemory(aasworld.edges);
 	aasworld.edges = NULL;
 	aasworld.edgeindexsize = 0;
-	if (aasworld.edgeindex) free(aasworld.edgeindex);
+	if (aasworld.edgeindex) FreeMemory(aasworld.edgeindex);
 	aasworld.edgeindex = NULL;
 	aasworld.numfaces = 0;
-	if (aasworld.faces) free(aasworld.faces);
+	if (aasworld.faces) FreeMemory(aasworld.faces);
 	aasworld.faces = NULL;
 	aasworld.faceindexsize = 0;
-	if (aasworld.faceindex) free(aasworld.faceindex);
+	if (aasworld.faceindex) FreeMemory(aasworld.faceindex);
 	aasworld.faceindex = NULL;
 	aasworld.numareas = 0;
-	if (aasworld.areas) free(aasworld.areas);
+	if (aasworld.areas) FreeMemory(aasworld.areas);
 	aasworld.areas = NULL;
 	aasworld.numareasettings = 0;
-	if (aasworld.areasettings) free(aasworld.areasettings);
+	if (aasworld.areasettings) FreeMemory(aasworld.areasettings);
 	aasworld.areasettings = NULL;
 	aasworld.reachabilitysize = 0;
-	if (aasworld.reachability) free(aasworld.reachability);
+	if (aasworld.reachability) FreeMemory(aasworld.reachability);
 	aasworld.reachability = NULL;
 	aasworld.numnodes = 0;
-	if (aasworld.nodes) free(aasworld.nodes);
+	if (aasworld.nodes) FreeMemory(aasworld.nodes);
 	aasworld.nodes = NULL;
 	aasworld.numportals = 0;
-	if (aasworld.portals) free(aasworld.portals);
+	if (aasworld.portals) FreeMemory(aasworld.portals);
 	aasworld.portals = NULL;
 	aasworld.numportals = 0;
-	if (aasworld.portalindex) free(aasworld.portalindex);
+	if (aasworld.portalindex) FreeMemory(aasworld.portalindex);
 	aasworld.portalindex = NULL;
 	aasworld.portalindexsize = 0;
-	if (aasworld.clusters) free(aasworld.clusters);
+	if (aasworld.clusters) FreeMemory(aasworld.clusters);
 	aasworld.clusters = NULL;
 	aasworld.numclusters = 0;
 	//
@@ -210,7 +230,63 @@ void AAS_DumpAASData(void)
 	aasworld.initialized = qfalse;
 	aasworld.savefile = qfalse;
 } //end of the function AAS_DumpAASData
+//===========================================================================
+//
+// Parameter:				-
+// Returns:					-
+// Changes Globals:		-
+//===========================================================================
+#ifdef AASFILEDEBUG
+static void AAS_FileInfo(void)
+{
+	int i, n, optimized;
 
+	botimport.Print(PRT_MESSAGE, "version = %d\n", AASVERSION);
+	botimport.Print(PRT_MESSAGE, "numvertexes = %d\n", aasworld.numvertexes);
+	botimport.Print(PRT_MESSAGE, "numplanes = %d\n", aasworld.numplanes);
+	botimport.Print(PRT_MESSAGE, "numedges = %d\n", aasworld.numedges);
+	botimport.Print(PRT_MESSAGE, "edgeindexsize = %d\n", aasworld.edgeindexsize);
+	botimport.Print(PRT_MESSAGE, "numfaces = %d\n", aasworld.numfaces);
+	botimport.Print(PRT_MESSAGE, "faceindexsize = %d\n", aasworld.faceindexsize);
+	botimport.Print(PRT_MESSAGE, "numareas = %d\n", aasworld.numareas);
+	botimport.Print(PRT_MESSAGE, "numareasettings = %d\n", aasworld.numareasettings);
+	botimport.Print(PRT_MESSAGE, "reachabilitysize = %d\n", aasworld.reachabilitysize);
+	botimport.Print(PRT_MESSAGE, "numnodes = %d\n", aasworld.numnodes);
+	botimport.Print(PRT_MESSAGE, "numportals = %d\n", aasworld.numportals);
+	botimport.Print(PRT_MESSAGE, "portalindexsize = %d\n", aasworld.portalindexsize);
+	botimport.Print(PRT_MESSAGE, "numclusters = %d\n", aasworld.numclusters);
+	//
+	for (n = 0, i = 0; i < aasworld.numareasettings; i++)
+	{
+		if (aasworld.areasettings[i].areaflags & AREA_GROUNDED) n++;
+	} //end for
+	botimport.Print(PRT_MESSAGE, "num grounded areas = %d\n", n);
+	//
+	botimport.Print(PRT_MESSAGE, "planes size %d bytes\n", aasworld.numplanes * sizeof(aas_plane_t));
+	botimport.Print(PRT_MESSAGE, "areas size %d bytes\n", aasworld.numareas * sizeof(aas_area_t));
+	botimport.Print(PRT_MESSAGE, "areasettings size %d bytes\n", aasworld.numareasettings * sizeof(aas_areasettings_t));
+	botimport.Print(PRT_MESSAGE, "nodes size %d bytes\n", aasworld.numnodes * sizeof(aas_node_t));
+	botimport.Print(PRT_MESSAGE, "reachability size %d bytes\n", aasworld.reachabilitysize * sizeof(aas_reachability_t));
+	botimport.Print(PRT_MESSAGE, "portals size %d bytes\n", aasworld.numportals * sizeof(aas_portal_t));
+	botimport.Print(PRT_MESSAGE, "clusters size %d bytes\n", aasworld.numclusters * sizeof(aas_cluster_t));
+
+	optimized = aasworld.numplanes * sizeof(aas_plane_t) +
+					aasworld.numareas * sizeof(aas_area_t) +
+					aasworld.numareasettings * sizeof(aas_areasettings_t) +
+					aasworld.numnodes * sizeof(aas_node_t) +
+					aasworld.reachabilitysize * sizeof(aas_reachability_t) +
+					aasworld.numportals * sizeof(aas_portal_t) +
+					aasworld.numclusters * sizeof(aas_cluster_t);
+	botimport.Print(PRT_MESSAGE, "optimized size %d KB\n", optimized >> 10);
+} //end of the function AAS_FileInfo
+#endif //AASFILEDEBUG
+//===========================================================================
+// allocate memory and read a lump of an AAS file
+//
+// Parameter:				-
+// Returns:					-
+// Changes Globals:		-
+//===========================================================================
 static char *AAS_LoadAASLump(fileHandle_t fp, int offset, int length, int *lastoffset, int size)
 {
 	char *buf;
@@ -218,7 +294,7 @@ static char *AAS_LoadAASLump(fileHandle_t fp, int offset, int length, int *lasto
 	if (!length)
 	{
 		//just alloc a dummy
-		return (char *) malloc(size+1);
+		return (char *) GetClearedHunkMemory(size+1);
 	} //end if
 	//seek to the data
 	if (offset != *lastoffset)
@@ -233,7 +309,7 @@ static char *AAS_LoadAASLump(fileHandle_t fp, int offset, int length, int *lasto
 		} //end if
 	} //end if
 	//allocate memory
-	buf = (char *) malloc(length+1);
+	buf = (char *) GetClearedHunkMemory(length+1);
 	//read the data
 	//if (length)
 	{
@@ -242,7 +318,12 @@ static char *AAS_LoadAASLump(fileHandle_t fp, int offset, int length, int *lasto
 	} //end if
 	return buf;
 } //end of the function AAS_LoadAASLump
-
+//===========================================================================
+//
+// Parameter:			-
+// Returns:				-
+// Changes Globals:		-
+//===========================================================================
 static void AAS_DData(unsigned char *data, int size)
 {
 	int i;
@@ -252,7 +333,13 @@ static void AAS_DData(unsigned char *data, int size)
 		data[i] ^= (unsigned char) i * 119;
 	} //end for
 } //end of the function AAS_DData
-
+//===========================================================================
+// load an aas file
+//
+// Parameter:			-
+// Returns:				-
+// Changes Globals:		-
+//===========================================================================
 int AAS_LoadAASFile(char *filename)
 {
 	fileHandle_t fp;
@@ -386,6 +473,103 @@ int AAS_LoadAASFile(char *filename)
 	aasworld.loaded = qtrue;
 	//close the file
 	botimport.FS_FCloseFile(fp);
-	
+	//
+#ifdef AASFILEDEBUG
+	AAS_FileInfo();
+#endif //AASFILEDEBUG
+	//
 	return BLERR_NOERROR;
 } //end of the function AAS_LoadAASFile
+//===========================================================================
+//
+// Parameter:				-
+// Returns:					-
+// Changes Globals:		-
+//===========================================================================
+static int AAS_WriteAASLump_offset;
+
+static int AAS_WriteAASLump(fileHandle_t fp, aas_header_t *h, int lumpnum, void *data, int length)
+{
+	aas_lump_t *lump;
+
+	lump = &h->lumps[lumpnum];
+	
+	lump->fileofs = LittleLong(AAS_WriteAASLump_offset);	//LittleLong(ftell(fp));
+	lump->filelen = LittleLong(length);
+
+	if (length > 0)
+	{
+		botimport.FS_Write(data, length, fp );
+	} //end if
+
+	AAS_WriteAASLump_offset += length;
+
+	return qtrue;
+} //end of the function AAS_WriteAASLump
+//===========================================================================
+// aas data is useless after writing to file because it is byte swapped
+//
+// Parameter:				-
+// Returns:					-
+// Changes Globals:		-
+//===========================================================================
+qboolean AAS_WriteAASFile(char *filename)
+{
+	aas_header_t header;
+	fileHandle_t fp;
+
+	botimport.Print(PRT_MESSAGE, "writing %s\n", filename);
+	//swap the aas data
+	AAS_SwapAASData();
+	//initialize the file header
+	Com_Memset(&header, 0, sizeof(aas_header_t));
+	header.ident = LittleLong(AASID);
+	header.version = LittleLong(AASVERSION);
+	header.bspchecksum = LittleLong(aasworld.bspchecksum);
+	//open a new file
+	botimport.FS_FOpenFile( filename, &fp, FS_WRITE );
+	if (!fp)
+	{
+		botimport.Print(PRT_ERROR, "error opening %s\n", filename);
+		return qfalse;
+	} //end if
+	//write the header
+	botimport.FS_Write(&header, sizeof(aas_header_t), fp);
+	AAS_WriteAASLump_offset = sizeof(aas_header_t);
+	//add the data lumps to the file
+	if (!AAS_WriteAASLump(fp, &header, AASLUMP_BBOXES, aasworld.bboxes,
+		aasworld.numbboxes * sizeof(aas_bbox_t))) return qfalse;
+	if (!AAS_WriteAASLump(fp, &header, AASLUMP_VERTEXES, aasworld.vertexes,
+		aasworld.numvertexes * sizeof(aas_vertex_t))) return qfalse;
+	if (!AAS_WriteAASLump(fp, &header, AASLUMP_PLANES, aasworld.planes,
+		aasworld.numplanes * sizeof(aas_plane_t))) return qfalse;
+	if (!AAS_WriteAASLump(fp, &header, AASLUMP_EDGES, aasworld.edges,
+		aasworld.numedges * sizeof(aas_edge_t))) return qfalse;
+	if (!AAS_WriteAASLump(fp, &header, AASLUMP_EDGEINDEX, aasworld.edgeindex,
+		aasworld.edgeindexsize * sizeof(aas_edgeindex_t))) return qfalse;
+	if (!AAS_WriteAASLump(fp, &header, AASLUMP_FACES, aasworld.faces,
+		aasworld.numfaces * sizeof(aas_face_t))) return qfalse;
+	if (!AAS_WriteAASLump(fp, &header, AASLUMP_FACEINDEX, aasworld.faceindex,
+		aasworld.faceindexsize * sizeof(aas_faceindex_t))) return qfalse;
+	if (!AAS_WriteAASLump(fp, &header, AASLUMP_AREAS, aasworld.areas,
+		aasworld.numareas * sizeof(aas_area_t))) return qfalse;
+	if (!AAS_WriteAASLump(fp, &header, AASLUMP_AREASETTINGS, aasworld.areasettings,
+		aasworld.numareasettings * sizeof(aas_areasettings_t))) return qfalse;
+	if (!AAS_WriteAASLump(fp, &header, AASLUMP_REACHABILITY, aasworld.reachability,
+		aasworld.reachabilitysize * sizeof(aas_reachability_t))) return qfalse;
+	if (!AAS_WriteAASLump(fp, &header, AASLUMP_NODES, aasworld.nodes,
+		aasworld.numnodes * sizeof(aas_node_t))) return qfalse;
+	if (!AAS_WriteAASLump(fp, &header, AASLUMP_PORTALS, aasworld.portals,
+		aasworld.numportals * sizeof(aas_portal_t))) return qfalse;
+	if (!AAS_WriteAASLump(fp, &header, AASLUMP_PORTALINDEX, aasworld.portalindex,
+		aasworld.portalindexsize * sizeof(aas_portalindex_t))) return qfalse;
+	if (!AAS_WriteAASLump(fp, &header, AASLUMP_CLUSTERS, aasworld.clusters,
+		aasworld.numclusters * sizeof(aas_cluster_t))) return qfalse;
+	//rewrite the header with the added lumps
+	botimport.FS_Seek(fp, 0, FS_SEEK_SET);
+	AAS_DData((unsigned char *) &header + 8, sizeof(aas_header_t) - 8);
+	botimport.FS_Write(&header, sizeof(aas_header_t), fp);
+	//close the file
+	botimport.FS_FCloseFile(fp);
+	return qtrue;
+} //end of the function AAS_WriteAASFile

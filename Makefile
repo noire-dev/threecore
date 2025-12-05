@@ -795,10 +795,21 @@ Q3OBJ = \
   $(B)/client/be_aas_route.o \
   $(B)/client/be_aas_routealt.o \
   $(B)/client/be_aas_sample.o \
+  $(B)/client/be_ai_char.o \
+  $(B)/client/be_ai_chat.o \
   $(B)/client/be_ai_goal.o \
   $(B)/client/be_ai_move.o \
+  $(B)/client/be_ai_weap.o \
+  $(B)/client/be_ai_weight.o \
   $(B)/client/be_ea.o \
-  $(B)/client/be_interface.o
+  $(B)/client/be_interface.o \
+  $(B)/client/l_crc.o \
+  $(B)/client/l_libvar.o \
+  $(B)/client/l_log.o \
+  $(B)/client/l_memory.o \
+  $(B)/client/l_precomp.o \
+  $(B)/client/l_script.o \
+  $(B)/client/l_struct.o
 
 ifeq ($(USE_OGG_VORBIS),1)
   Q3OBJ += $(OGGOBJ) $(VORBISOBJ) \
@@ -934,10 +945,21 @@ Q3DOBJ = \
   $(B)/ded/be_aas_route.o \
   $(B)/ded/be_aas_routealt.o \
   $(B)/ded/be_aas_sample.o \
+  $(B)/ded/be_ai_char.o \
+  $(B)/ded/be_ai_chat.o \
   $(B)/ded/be_ai_goal.o \
   $(B)/ded/be_ai_move.o \
+  $(B)/ded/be_ai_weap.o \
+  $(B)/ded/be_ai_weight.o \
   $(B)/ded/be_ea.o \
-  $(B)/ded/be_interface.o
+  $(B)/ded/be_interface.o \
+  $(B)/ded/l_crc.o \
+  $(B)/ded/l_libvar.o \
+  $(B)/ded/l_log.o \
+  $(B)/ded/l_memory.o \
+  $(B)/ded/l_precomp.o \
+  $(B)/ded/l_script.o \
+  $(B)/ded/l_struct.o
 
 ifdef MINGW
   Q3DOBJ += \

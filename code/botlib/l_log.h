@@ -21,20 +21,22 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
 /*****************************************************************************
- * name:		be_aas_routealt.h
+ * name:		l_log.h
  *
- * desc:		AAS
+ * desc:		log file
  *
- * $Archive: /source/code/botlib/be_aas_routealt.h $
+ * $Archive: /source/code/botlib/l_log.h $
  *
  *****************************************************************************/
 
-#ifdef AASINTERN
-void AAS_InitAlternativeRouting(void);
-void AAS_ShutdownAlternativeRouting(void);
-#endif //AASINTERN
+//open a log file
+void Log_Open( const char *filename );
+//close log file if present
+void Log_Shutdown(void);
+//write to the current opened log file
+void QDECL Log_Write(char *fmt, ...) __attribute__ ((format (printf, 1, 2)));
+//returns a pointer to the log file
+FILE *Log_FilePointer(void);
+//flush log file
+void Log_Flush(void);
 
-
-int AAS_AlternativeRouteGoals(vec3_t start, int startareanum, vec3_t goal, int goalareanum, int travelflags,
-										aas_altroutegoal_t *altroutegoals, int maxaltroutegoals,
-										int type);
