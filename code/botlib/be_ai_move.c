@@ -912,8 +912,7 @@ static int BotWalkInDirection(bot_movestate_t *ms, vec3_t dir, float speed, int 
 			stopevent = SE_HITGROUNDDAMAGE|
 						SE_ENTERWATER|SE_ENTERSLIME|SE_ENTERLAVA;
 		} //end else
-		//AAS_ClearShownDebugLines();
-		//
+
 		VectorCopy(ms->origin, origin);
 		origin[2] += 0.5;
 		AAS_PredictClientMovement(&move, ms->entitynum, origin, presencetype, qtrue,
@@ -2243,12 +2242,6 @@ static bot_moveresult_t BotTravel_Grapple(bot_movestate_t *ms, aas_reachability_
 	int state, areanum;
 	bsp_trace_t trace;
 
-#ifdef DEBUG_GRAPPLE
-	static int debugline;
-	if (!debugline) debugline = botimport.DebugLineCreate();
-	botimport.DebugLineShow(debugline, reach->start, reach->end, LINECOLOR_BLUE);
-#endif //DEBUG_GRAPPLE
-
 	//
 	if (ms->moveflags & MFL_GRAPPLERESET)
 	{
@@ -2640,11 +2633,6 @@ static bot_moveresult_t BotMoveInGoalArea(bot_movestate_t *ms, bot_goal_t *goal)
 	vec3_t dir;
 	float dist, speed;
 
-#ifdef DEBUG
-	//botimport.Print(PRT_MESSAGE, "%s: moving straight to goal\n", ClientName(ms->entitynum-1));
-	//AAS_ClearShownDebugLines();
-	//AAS_DebugLine(ms->origin, goal->origin, LINECOLOR_RED);
-#endif //DEBUG
 	//walk straight to the goal origin
 	dir[0] = goal->origin[0] - ms->origin[0];
 	dir[1] = goal->origin[1] - ms->origin[1];
@@ -2674,9 +2662,7 @@ static bot_moveresult_t BotMoveInGoalArea(bot_movestate_t *ms, bot_goal_t *goal)
 		Vector2Angles(dir, result.ideal_viewangles);
 		result.flags |= MOVERESULT_SWIMVIEW;
 	} //end if
-	//if (!debugline) debugline = botimport.DebugLineCreate();
-	//botimport.DebugLineShow(debugline, ms->origin, goal->origin, LINECOLOR_BLUE);
-	//
+
 	ms->lastreachnum = 0;
 	ms->lastareanum = 0;
 	ms->lastgoalareanum = goal->areanum;
