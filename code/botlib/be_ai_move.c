@@ -77,12 +77,6 @@ typedef struct bot_movestate_s
 	float grapplevisible_time;					//last time the grapple was visible
 	float lastgrappledist;						//last distance to the grapple end
 	float reachability_time;					//time to use current reachability
-	int avoidreach[MAX_AVOIDREACH];				//reachabilities to avoid
-	float avoidreachtimes[MAX_AVOIDREACH];		//times to avoid the reachabilities
-	int avoidreachtries[MAX_AVOIDREACH];		//number of tries before avoiding
-	//
-	bot_avoidspot_t avoidspots[MAX_AVOIDSPOTS];	//spots to avoid
-	int numavoidspots;
 } bot_movestate_t;
 
 //used to avoid reachability links for some time after being used
@@ -498,38 +492,6 @@ static int BotValidTravel(vec3_t origin, aas_reachability_t *reach, int travelfl
 } //end of the function BotValidTravel
 //===========================================================================
 //
-// Parameter:				-
-// Returns:					-
-// Changes Globals:		-
-//===========================================================================
-static void BotAddToAvoidReach(bot_movestate_t *ms, int number, float avoidtime)
-{
-	int i;
-
-	for (i = 0; i < MAX_AVOIDREACH; i++)
-	{
-		if (ms->avoidreach[i] == number)
-		{
-			if (ms->avoidreachtimes[i] > AAS_Time()) ms->avoidreachtries[i]++;
-			else ms->avoidreachtries[i] = 1;
-			ms->avoidreachtimes[i] = AAS_Time() + avoidtime;
-			return;
-		} //end if
-	} //end for
-	//add the reachability to the reachabilities to avoid for a while
-	for (i = 0; i < MAX_AVOIDREACH; i++)
-	{
-		if (ms->avoidreachtimes[i] < AAS_Time())
-		{
-			ms->avoidreach[i] = number;
-			ms->avoidreachtimes[i] = AAS_Time() + avoidtime;
-			ms->avoidreachtries[i] = 1;
-			return;
-		} //end if
-	} //end for
-} //end of the function BotAddToAvoidReach
-//===========================================================================
-//
 // Parameter:			-
 // Returns:				-
 // Changes Globals:		-
@@ -572,103 +534,7 @@ static float VectorDistanceSquared(const vec3_t p1, const vec3_t p2)
 // Returns:				-
 // Changes Globals:		-
 //===========================================================================
-static int BotAvoidSpots(vec3_t origin, aas_reachability_t *reach, bot_avoidspot_t *avoidspots, int numavoidspots)
-{
-	int checkbetween, i, type;
-	float squareddist, squaredradius;
-
-	switch(reach->traveltype & TRAVELTYPE_MASK)
-	{
-		case TRAVEL_WALK: checkbetween = qtrue; break;
-		case TRAVEL_CROUCH: checkbetween = qtrue; break;
-		case TRAVEL_BARRIERJUMP: checkbetween = qtrue; break;
-		case TRAVEL_LADDER: checkbetween = qtrue; break;
-		case TRAVEL_WALKOFFLEDGE: checkbetween = qfalse; break;
-		case TRAVEL_JUMP: checkbetween = qfalse; break;
-		case TRAVEL_SWIM: checkbetween = qtrue; break;
-		case TRAVEL_WATERJUMP: checkbetween = qtrue; break;
-		case TRAVEL_TELEPORT: checkbetween = qfalse; break;
-		case TRAVEL_ELEVATOR: checkbetween = qfalse; break;
-		case TRAVEL_GRAPPLEHOOK: checkbetween = qfalse; break;
-		case TRAVEL_ROCKETJUMP: checkbetween = qfalse; break;
-		case TRAVEL_BFGJUMP: checkbetween = qfalse; break;
-		case TRAVEL_JUMPPAD: checkbetween = qfalse; break;
-		case TRAVEL_FUNCBOB: checkbetween = qfalse; break;
-		default: checkbetween = qtrue; break;
-	} //end switch
-
-	type = AVOID_CLEAR;
-	for (i = 0; i < numavoidspots; i++)
-	{
-		squaredradius = Square(avoidspots[i].radius);
-		squareddist = DistanceFromLineSquared(avoidspots[i].origin, origin, reach->start);
-		// if moving towards the avoid spot
-		if (squareddist < squaredradius &&
-			VectorDistanceSquared(avoidspots[i].origin, origin) > squareddist)
-		{
-			type = avoidspots[i].type;
-		} //end if
-		else if (checkbetween) {
-			squareddist = DistanceFromLineSquared(avoidspots[i].origin, reach->start, reach->end);
-			// if moving towards the avoid spot
-			if (squareddist < squaredradius &&
-				VectorDistanceSquared(avoidspots[i].origin, reach->start) > squareddist)
-			{
-				type = avoidspots[i].type;
-			} //end if
-		} //end if
-		else
-		{
-			VectorDistanceSquared(avoidspots[i].origin, reach->end);
-			// if the reachability leads closer to the avoid spot
-			if (squareddist < squaredradius && 
-				VectorDistanceSquared(avoidspots[i].origin, reach->start) > squareddist)
-			{
-				type = avoidspots[i].type;
-			} //end if
-		} //end else
-		if (type == AVOID_ALWAYS)
-			return type;
-	} //end for
-	return type;
-} //end of the function BotAvoidSpots
-//===========================================================================
-//
-// Parameter:			-
-// Returns:				-
-// Changes Globals:		-
-//===========================================================================
-void BotAddAvoidSpot(int movestate, const vec3_t origin, float radius, int type)
-{
-	bot_movestate_t *ms;
-
-	ms = BotMoveStateFromHandle(movestate);
-	if (!ms) return;
-	if (type == AVOID_CLEAR)
-	{
-		ms->numavoidspots = 0;
-		return;
-	} //end if
-
-	if (ms->numavoidspots >= MAX_AVOIDSPOTS)
-		return;
-	VectorCopy(origin, ms->avoidspots[ms->numavoidspots].origin);
-	ms->avoidspots[ms->numavoidspots].radius = radius;
-	ms->avoidspots[ms->numavoidspots].type = type;
-	ms->numavoidspots++;
-} //end of the function BotAddAvoidSpot
-//===========================================================================
-//
-// Parameter:			-
-// Returns:				-
-// Changes Globals:		-
-//===========================================================================
-int BotGetReachabilityToGoal(vec3_t origin, int areanum,
-									  int lastgoalareanum, int lastareanum,
-									  int *avoidreach, float *avoidreachtimes, int *avoidreachtries,
-									  bot_goal_t *goal, int travelflags,
-									  struct bot_avoidspot_s *avoidspots, int numavoidspots, int *flags)
-{
+int BotGetReachabilityToGoal(vec3_t origin, int areanum, int lastgoalareanum, int lastareanum, bot_goal_t *goal, int travelflags, int *flags) {
 	int i, t, besttime, bestreachnum, reachnum;
 	aas_reachability_t reach;
 
@@ -698,13 +564,6 @@ int BotGetReachabilityToGoal(vec3_t origin, int areanum,
 		t = AAS_AreaTravelTimeToGoalArea(reach.areanum, reach.end, goal->areanum, travelflags);
 		//if the goal area isn't reachable from the reachable area
 		if (!t) continue;
-		//if the bot should not use this reachability to avoid bad spots
-		if (BotAvoidSpots(origin, &reach, avoidspots, numavoidspots)) {
-			if (flags) {
-				*flags |= MOVERESULT_BLOCKEDBYAVOIDSPOT;
-			}
-			continue;
-		}
 		//add the travel time towards the area
 		t += reach.traveltime;// + AAS_AreaTravelTime(areanum, origin, reach.start);
 		//if the travel time is better than the ones already found
@@ -777,10 +636,7 @@ int BotMovementViewTarget(int movestate, bot_goal_t *goal, int travelflags, floa
 		{
 			if (BotAddToTarget(reach.start, reach.end, lookahead, &dist, target)) return qtrue;
 		} //end if
-		reachnum = BotGetReachabilityToGoal(reach.end, reach.areanum,
-						ms->lastgoalareanum, lastareanum,
-							ms->avoidreach, ms->avoidreachtimes, ms->avoidreachtries,
-									goal, travelflags, NULL, 0, NULL);
+		reachnum = BotGetReachabilityToGoal(reach.end, reach.areanum, ms->lastgoalareanum, lastareanum, goal, travelflags, NULL);
 		VectorCopy(reach.end, end);
 		lastareanum = reach.areanum;
 		if (lastareanum == goal->areanum)
@@ -812,13 +668,9 @@ static int BotVisible(int ent, vec3_t eye, vec3_t target)
 // Returns:				-
 // Changes Globals:		-
 //===========================================================================
-int BotPredictVisiblePosition(vec3_t origin, int areanum, bot_goal_t *goal, int travelflags, vec3_t target)
-{
+int BotPredictVisiblePosition(vec3_t origin, int areanum, bot_goal_t *goal, int travelflags, vec3_t target) {
 	aas_reachability_t reach;
 	int reachnum, lastgoalareanum, lastareanum, i;
-	int avoidreach[MAX_AVOIDREACH];
-	float avoidreachtimes[MAX_AVOIDREACH];
-	int avoidreachtries[MAX_AVOIDREACH];
 	vec3_t end;
 
 	//if the bot has no goal or no last reachability
@@ -828,7 +680,6 @@ int BotPredictVisiblePosition(vec3_t origin, int areanum, bot_goal_t *goal, int 
 	//if the goal areanum is not valid
 	if (!goal->areanum) return qfalse;
 
-	Com_Memset(avoidreach, 0, MAX_AVOIDREACH * sizeof(int));
 	lastgoalareanum = goal->areanum;
 	lastareanum = areanum;
 	VectorCopy(origin, end);
@@ -836,10 +687,7 @@ int BotPredictVisiblePosition(vec3_t origin, int areanum, bot_goal_t *goal, int 
 	for (i = 0; i < 20 && (areanum != goal->areanum); i++)
 	{
 		//
-		reachnum = BotGetReachabilityToGoal(end, areanum,
-						lastgoalareanum, lastareanum,
-							avoidreach, avoidreachtimes, avoidreachtries,
-									goal, travelflags, NULL, 0, NULL);
+		reachnum = BotGetReachabilityToGoal(end, areanum, lastgoalareanum, lastareanum, goal, travelflags, NULL);
 		if (!reachnum) return qfalse;
 		AAS_ReachabilityFromNum(reachnum, &reach);
 		//
@@ -2999,11 +2847,7 @@ void BotMoveToGoal(int movestate, bot_goal_t *goal, int travelflags) {
 		//if the bot needs a new reachability
 		if (!reachnum) {
 			//get a new reachability leading towards the goal
-			reachnum = BotGetReachabilityToGoal(ms->origin, ms->areanum,
-								ms->lastgoalareanum, ms->lastareanum,
-											ms->avoidreach, ms->avoidreachtimes, ms->avoidreachtries,
-														goal, travelflags,
-																ms->avoidspots, ms->numavoidspots, &resultflags);
+			reachnum = BotGetReachabilityToGoal(ms->origin, ms->areanum, ms->lastgoalareanum, ms->lastareanum, goal, travelflags, &resultflags);
 			//the area number the reachability starts in
 			ms->reachareanum = ms->areanum;
 			//reset some state variables
@@ -3068,10 +2912,7 @@ void BotMoveToGoal(int movestate, bot_goal_t *goal, int travelflags) {
 			{
 				//botimport.Print(PRT_MESSAGE, "client %d used a jumppad without knowing, area %d\n", ms->client, areas[i]);
 				foundjumppad = qtrue;
-				lastreachnum = BotGetReachabilityToGoal(end, areas[i],
-							ms->lastgoalareanum, ms->lastareanum,
-							ms->avoidreach, ms->avoidreachtimes, ms->avoidreachtries,
-							goal, TFL_JUMPPAD, ms->avoidspots, ms->numavoidspots, NULL);
+				lastreachnum = BotGetReachabilityToGoal(end, areas[i], ms->lastgoalareanum, ms->lastareanum, goal, TFL_JUMPPAD, NULL);
 				if (lastreachnum)
 				{
 					ms->lastreachnum = lastreachnum;
@@ -3139,52 +2980,6 @@ void BotMoveToGoal(int movestate, bot_goal_t *goal, int travelflags) {
 	//copy the last origin
 	VectorCopy(ms->origin, ms->lastorigin);
 } //end of the function BotMoveToGoal
-//===========================================================================
-//
-// Parameter:				-
-// Returns:					-
-// Changes Globals:		-
-//===========================================================================
-void BotResetAvoidReach(int movestate)
-{
-	bot_movestate_t *ms;
-
-	ms = BotMoveStateFromHandle(movestate);
-	if (!ms) return;
-	Com_Memset(ms->avoidreach, 0, MAX_AVOIDREACH * sizeof(int));
-	Com_Memset(ms->avoidreachtimes, 0, MAX_AVOIDREACH * sizeof(float));
-	Com_Memset(ms->avoidreachtries, 0, MAX_AVOIDREACH * sizeof(int));
-} //end of the function BotResetAvoidReach
-//===========================================================================
-//
-// Parameter:				-
-// Returns:					-
-// Changes Globals:		-
-//===========================================================================
-void BotResetLastAvoidReach(int movestate)
-{
-	int i, latest;
-	float latesttime;
-	bot_movestate_t *ms;
-
-	ms = BotMoveStateFromHandle(movestate);
-	if (!ms) return;
-	latesttime = 0;
-	latest = 0;
-	for (i = 0; i < MAX_AVOIDREACH; i++)
-	{
-		if (ms->avoidreachtimes[i] > latesttime)
-		{
-			latesttime = ms->avoidreachtimes[i];
-			latest = i;
-		} //end if
-	} //end for
-	if (latesttime)
-	{
-		ms->avoidreachtimes[latest] = 0;
-		if (ms->avoidreachtries[latest] > 0) ms->avoidreachtries[latest]--;
-	} //end if
-} //end of the function BotResetLastAvoidReach
 //===========================================================================
 //
 // Parameter:			-
