@@ -67,8 +67,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 //structure used to initialize the movement state
 //the or_moveflags MFL_ONGROUND, MFL_TELEPORTED and MFL_WATERJUMP come from the playerstate
-typedef struct bot_initmove_s
-{
+typedef struct bot_initmove_s {
 	vec3_t origin;				//origin of the bot
 	vec3_t velocity;			//velocity of the bot
 	vec3_t viewoffset;			//view offset

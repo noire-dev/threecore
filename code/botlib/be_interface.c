@@ -436,14 +436,11 @@ static void Init_AI_Export( ai_export_t *ai ) {
 	ai->BotResetMoveState = BotResetMoveState;
 	ai->BotMoveToGoal = BotMoveToGoal;
 	ai->BotMoveInDirection = BotMoveInDirection;
-	ai->BotResetAvoidReach = BotResetAvoidReach;
-	ai->BotResetLastAvoidReach = BotResetLastAvoidReach;
 	ai->BotMovementViewTarget = BotMovementViewTarget;
 	ai->BotPredictVisiblePosition = BotPredictVisiblePosition;
 	ai->BotAllocMoveState = BotAllocMoveState;
 	ai->BotFreeMoveState = BotFreeMoveState;
 	ai->BotInitMoveState = BotInitMoveState;
-	ai->BotAddAvoidSpot = BotAddAvoidSpot;
 	//-----------------------------------
 	// be_ai_weap.h
 	//-----------------------------------
