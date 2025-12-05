@@ -2847,24 +2847,12 @@ void BotMoveToGoal(int movestate, bot_goal_t *goal, int travelflags) {
 	aas_reachability_t reach, lastreach;
 	bot_movestate_t *ms;
 
-	result->failure = qfalse;
-	result->type = 0;
-	result->blocked = qfalse;
-	result->blockentity = 0;
-	result->traveltype = 0;
-	result->flags = 0;
-
 	ms = BotMoveStateFromHandle(movestate);
 	if (!ms) return;
 	//reset the grapple before testing if the bot has a valid goal
 	//because the bot could lose all its goals when stuck to a wall
 	BotResetGrapple(ms);
-	//
-	if (!goal) {
-		result->failure = qtrue;
-		return;
-	} //end if
-	//botimport.Print(PRT_MESSAGE, "numavoidreach = %d\n", ms->numavoidreach);
+	if (!goal) return;
 	//remove some of the move flags
 	ms->moveflags &= ~(MFL_SWIMMING|MFL_AGAINSTLADDER);
 	//set some of the move flags
@@ -2906,13 +2894,9 @@ void BotMoveToGoal(int movestate, bot_goal_t *goal, int travelflags) {
 							{
 								botimport.Print(PRT_MESSAGE, "client %d: on func_plat without reachability\n", ms->client);
 							} //end if
-							result->blocked = qtrue;
-							result->blockentity = ent;
-							result->flags |= MOVERESULT_ONTOPOFOBSTACLE;
 							return;
 						} //end else
 					} //end if
-					result->flags |= MOVERESULT_ONTOPOF_ELEVATOR;
 				} //end if
 				else if (modeltype == MODELTYPE_FUNC_BOB)
 				{
@@ -2936,32 +2920,17 @@ void BotMoveToGoal(int movestate, bot_goal_t *goal, int travelflags) {
 							{
 								botimport.Print(PRT_MESSAGE, "client %d: on func_bobbing without reachability\n", ms->client);
 							} //end if
-							result->blocked = qtrue;
-							result->blockentity = ent;
-							result->flags |= MOVERESULT_ONTOPOFOBSTACLE;
 							return;
 						} //end else
 					} //end if
-					result->flags |= MOVERESULT_ONTOPOF_FUNCBOB;
 				} //end if
 				else if (modeltype == MODELTYPE_FUNC_STATIC || modeltype == MODELTYPE_FUNC_DOOR)
 				{
 					// check if ontop of a door bridge ?
 					ms->areanum = BotFuzzyPointReachabilityArea(ms->origin);
 					// if not in a reachability area
-					if (!AAS_AreaReachability(ms->areanum))
-					{
-						result->blocked = qtrue;
-						result->blockentity = ent;
-						result->flags |= MOVERESULT_ONTOPOFOBSTACLE;
-						return;
-					} //end if
-				} //end else if
-				else
-				{
-					result->blocked = qtrue;
-					result->blockentity = ent;
-					result->flags |= MOVERESULT_ONTOPOFOBSTACLE;
+					if (!AAS_AreaReachability(ms->areanum)) return;
+				} else {
 					return;
 				} //end else
 			} //end if
@@ -2981,20 +2950,9 @@ void BotMoveToGoal(int movestate, bot_goal_t *goal, int travelflags) {
 		//ms->areanum = BotReachabilityArea(ms->origin, ((lastreach.traveltype & TRAVELTYPE_MASK) != TRAVEL_ELEVATOR));
 		ms->areanum = BotFuzzyPointReachabilityArea(ms->origin);
 		//
-		if ( !ms->areanum )
-		{
-			result->failure = qtrue;
-			result->blocked = qtrue;
-			result->blockentity = 0;
-			result->type = RESULTTYPE_INSOLIDAREA;
-			return;
-		} //end if
+		if ( !ms->areanum ) return;
 		//if the bot is in the goal area
-		if (ms->areanum == goal->areanum)
-		{
-			*result = BotMoveInGoalArea(ms, goal);
-			return;
-		} //end if
+		if (ms->areanum == goal->areanum) return;
 		//assume we can use the reachability from the last frame
 		reachnum = ms->lastreachnum;
 		//if there is a last reachability
@@ -3019,11 +2977,6 @@ void BotMoveToGoal(int movestate, bot_goal_t *goal, int travelflags) {
 			else if ((reach.traveltype & TRAVELTYPE_MASK) == TRAVEL_ELEVATOR ||
 				(reach.traveltype & TRAVELTYPE_MASK) == TRAVEL_FUNCBOB)
 			{
-				if ((result->flags & MOVERESULT_ONTOPOF_ELEVATOR) ||
-					(result->flags & MOVERESULT_ONTOPOF_FUNCBOB))
-				{
-					ms->reachability_time = AAS_Time() + 5;
-				} //end if
 				//if the bot was going for an elevator and reached the reachability area
 				if (ms->areanum == reach.areanum ||
 					ms->reachability_time < AAS_Time())
@@ -3073,7 +3026,6 @@ void BotMoveToGoal(int movestate, bot_goal_t *goal, int travelflags) {
 		{
 			//get the reachability from the number
 			AAS_ReachabilityFromNum(reachnum, &reach);
-			result->traveltype = reach.traveltype;
 			switch(reach.traveltype & TRAVELTYPE_MASK)
 			{
 				case TRAVEL_WALK: BotTravel_Walk(ms, &reach); break;
@@ -3097,13 +3049,7 @@ void BotMoveToGoal(int movestate, bot_goal_t *goal, int travelflags) {
 					break;
 				} //end case
 			} //end switch
-			result->traveltype = reach.traveltype;
-			result->flags |= resultflags;
-		} //end if
-		else
-		{
-			result->failure = qtrue;
-			result->flags |= resultflags;
+		} else {
 			Com_Memset(&reach, 0, sizeof(aas_reachability_t));
 		} //end else
 	} //end if
@@ -3164,7 +3110,6 @@ void BotMoveToGoal(int movestate, bot_goal_t *goal, int travelflags) {
 		{
 			
 			AAS_ReachabilityFromNum(ms->lastreachnum, &reach);
-			result->traveltype = reach.traveltype;
 			
 			switch(reach.traveltype & TRAVELTYPE_MASK)
 			{
@@ -3189,11 +3134,8 @@ void BotMoveToGoal(int movestate, bot_goal_t *goal, int travelflags) {
 					break;
 				} //end case
 			} //end switch
-			result->traveltype = reach.traveltype;
 		} //end if
 	} //end else
-	//FIXME: is it right to do this here?
-	if (result->blocked) ms->reachability_time -= 10 * ms->thinktime;
 	//copy the last origin
 	VectorCopy(ms->origin, ms->lastorigin);
 } //end of the function BotMoveToGoal
