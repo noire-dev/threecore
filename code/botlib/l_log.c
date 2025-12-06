@@ -61,9 +61,6 @@ void Log_Open( const char *filename )
 {
 	const char *ospath;
 
-	if ( !LibVarValue( "log", "0" ) ) 
-		return;
-
 	if ( !filename || !*filename )
 	{
 		botimport.Print( PRT_MESSAGE, "openlog <filename>\n" );

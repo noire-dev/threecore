@@ -132,7 +132,6 @@ int AAS_StartFrame(float time)
 	if (saveroutingcache->value)
 	{
 		AAS_WriteRouteCache();
-		LibVarSet("saveroutingcache", "0");
 	} //end if
 	//
 	aasworld.numframes++;
@@ -245,18 +244,16 @@ int AAS_LoadMap(const char *mapname)
 //===========================================================================
 int AAS_Setup(void)
 {
-	aasworld.maxclients = (int) LibVarValue("maxclients", "128");
-	aasworld.maxentities = (int) LibVarValue("maxentities", "4096");
+	aasworld.maxclients = MAX_CLIENTS;
+	aasworld.maxentities = MAX_GENTITIES;
 	// as soon as it's set to 1 the routing cache will be saved
-	saveroutingcache = LibVar("saveroutingcache", "0");
+	saveroutingcache = 0;
 	//allocate memory for the entities
 	if (aasworld.entities) FreeMemory(aasworld.entities);
 	aasworld.entities = (aas_entity_t *) GetClearedHunkMemory(aasworld.maxentities * sizeof(aas_entity_t));
 	//invalidate all the entities
 	AAS_InvalidateEntities();
-	//force some recalculations
-	//LibVarSet("forceclustering", "1");			//force clustering calculation
-	//LibVarSet("forcereachability", "1");		//force reachability calculation
+
 	aasworld.numframes = 0;
 	return BLERR_NOERROR;
 } //end of the function AAS_Setup

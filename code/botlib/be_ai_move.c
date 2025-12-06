@@ -421,8 +421,7 @@ static int MoverDown(aas_reachability_t *reach)
 // Returns:				-
 // Changes Globals:		-
 //========================================================================
-void BotSetBrushModelTypes(void)
-{
+void BotSetBrushModelTypes(void) {
 	int ent, modelnum;
 	char classname[MAX_EPAIRKEY], model[MAX_EPAIRKEY];
 
@@ -2821,16 +2820,14 @@ void BotResetMoveState(int movestate)
 int BotSetupMoveAI(void)
 {
 	BotSetBrushModelTypes();
-	sv_maxstep = LibVar("sv_step", "18");
-	sv_maxbarrier = LibVar("sv_maxbarrier", "32");
-	sv_gravity = LibVar("sv_gravity", "800");
-	weapindex_rocketlauncher = LibVar("weapindex_rocketlauncher", "5");
-	weapindex_bfg10k = LibVar("weapindex_bfg10k", "9");
-	weapindex_grapple = LibVar("weapindex_grapple", "10");
-	entitytypemissile = LibVar("entitytypemissile", "3");
-	offhandgrapple = LibVar("offhandgrapple", "0");
-	cmd_grappleon = LibVar("cmd_grappleon", "grappleon");
-	cmd_grappleoff = LibVar("cmd_grappleoff", "grappleoff");
+    sv_maxstep = 18;
+    sv_maxbarrier = 32;
+    sv_gravity = 800;
+    weapindex_rocketlauncher = 5;
+    weapindex_bfg10k = 9;
+    weapindex_grapple = 10;
+    entitytypemissile = 3;
+    offhandgrapple = 0;
 	return BLERR_NOERROR;
 } //end of the function BotSetupMoveAI
 //===========================================================================

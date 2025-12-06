@@ -293,11 +293,7 @@ int AAS_BestReachableFromJumpPadArea(vec3_t origin, vec3_t mins, vec3_t maxs)
 	aas_link_t *areas, *link;
 	char classname[MAX_EPAIRKEY];
 
-#ifdef BSPC
 	bot_visualizejumppads = 0;
-#else
-	bot_visualizejumppads = LibVarValue("bot_visualizejumppads", "0");
-#endif
 	VectorAdd(origin, mins, bboxmins);
 	VectorAdd(origin, maxs, bboxmaxs);
 	for (ent = AAS_NextBSPEntity(0); ent; ent = AAS_NextBSPEntity(ent))
@@ -3405,11 +3401,7 @@ static void AAS_Reachability_JumpPad(void)
 	//char target[MAX_EPAIRKEY], targetname[MAX_EPAIRKEY], model[MAX_EPAIRKEY];
 	char classname[MAX_EPAIRKEY];
 
-#ifdef BSPC
 	bot_visualizejumppads = 0;
-#else
-	bot_visualizejumppads = LibVarValue("bot_visualizejumppads", "0");
-#endif
 	for (ent = AAS_NextBSPEntity(0); ent; ent = AAS_NextBSPEntity(ent))
 	{
 		if (!AAS_ValueForBSPEpairKey(ent, "classname", classname, MAX_EPAIRKEY)) continue;

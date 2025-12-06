@@ -48,14 +48,17 @@ static int Export_BotLibSetup(void) {
 
 	memset(&botlibglobals, 0, sizeof(botlibglobals));
 
-	botlibglobals.maxclients = (int)LibVarValue("maxclients", "128");
-	botlibglobals.maxentities = (int)LibVarValue("maxentities", "4096");
+	botlibglobals.maxclients = MAX_CLIENTS;
+	botlibglobals.maxentities = MAX_GENTITIES;
 
 	errnum = AAS_Setup();
+	botimport.Print(PRT_ERROR, "AAS_Setup being setup\n");
 	if(errnum != BLERR_NOERROR) return errnum;
 	errnum = EA_Setup();
+	botimport.Print(PRT_ERROR, "EA_Setup being setup\n");
 	if(errnum != BLERR_NOERROR) return errnum;
 	errnum = BotSetupMoveAI();
+	botimport.Print(PRT_ERROR, "BotSetupMoveAI being setup\n");
 	if(errnum != BLERR_NOERROR) return errnum;
 
 	botlibsetup = qtrue;
@@ -76,11 +79,6 @@ static int Export_BotLibShutdown(void) {
 	botlibsetup = qfalse;
 	botlibglobals.botlibsetup = qfalse;
 	PC_CheckOpenSourceHandles();
-	return BLERR_NOERROR;
-}
-
-static int Export_BotLibVarSet(const char* var_name, const char* value) {
-	LibVarSet(var_name, value);
 	return BLERR_NOERROR;
 }
 
