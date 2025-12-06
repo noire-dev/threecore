@@ -11,6 +11,8 @@
 #include "be_interface.h"
 #include "be_ea.h"
 
+#define MAX_USERMOVE 400
+
 static bot_input_t* botinputs;
 
 void EA_Gesture(int client) {
@@ -50,6 +52,31 @@ void EA_View(int client, vec3_t viewangles) {
 	VectorCopy(viewangles, bi->viewangles);
 }
 
+void EA_MoveUp(int client) {
+	bot_input_t *bi;
+
+	bi = &botinputs[client];
+	bi->actionflags |= ACTION_MOVEUP;
+}
+
+void EA_MoveForward(int client) {
+	bot_input_t *bi;
+
+	bi = &botinputs[client];
+	bi->actionflags |= ACTION_MOVEFORWARD;
+}
+
+void EA_Move(int client, vec3_t dir, float speed)
+{
+	bot_input_t *bi;
+
+	bi = &botinputs[client];
+	VectorCopy(dir, bi->dir);
+	if (speed > MAX_USERMOVE) speed = MAX_USERMOVE;
+	else if (speed < -MAX_USERMOVE) speed = -MAX_USERMOVE;
+	bi->speed = speed;
+}
+
 void EA_GetInput(int client, float thinktime, bot_input_t* input) {
 	bot_input_t* bi;
 
@@ -72,7 +99,6 @@ void EA_ResetInput(int client) {
 }
 
 int EA_Setup(void) {
-	// initialize the bot inputs
 	botinputs = (bot_input_t*)GetClearedHunkMemory(botlibglobals.maxclients * sizeof(bot_input_t));
 	return BLERR_NOERROR;
 }
