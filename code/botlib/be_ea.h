@@ -4,6 +4,8 @@
 
 // ClientCommand elementary actions
 void EA_Command(int client, const char* command);
+void EA_Crouch(int client);
+void EA_Walk(int client);
 void EA_Attack(int client);
 void EA_Gesture(int client);
 void EA_Use(int client);
@@ -12,6 +14,8 @@ void EA_View(int client, vec3_t viewangles);
 void EA_MoveUp(int client);
 void EA_MoveForward(int client);
 void EA_Move(int client, vec3_t dir, float speed);
+void EA_Jump(int client);
+void EA_DelayedJump(int client);
 
 // send regular input to the server
 void EA_GetInput(int client, float thinktime, bot_input_t* input);
