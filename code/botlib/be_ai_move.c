@@ -2067,8 +2067,6 @@ static void BotResetGrapple(bot_movestate_t *ms)
 	{
 		if ((ms->moveflags & MFL_ACTIVEGRAPPLE) || ms->grapplevisible_time)
 		{
-			if (offhandgrapple)
-				EA_Command(ms->client, cmd_grappleoff->string);
 			ms->moveflags &= ~MFL_ACTIVEGRAPPLE;
 			ms->grapplevisible_time = 0;
 #ifdef DEBUG_GRAPPLE
@@ -2094,8 +2092,6 @@ static bot_moveresult_t BotTravel_Grapple(bot_movestate_t *ms, aas_reachability_
 	//
 	if (ms->moveflags & MFL_GRAPPLERESET)
 	{
-		if (offhandgrapple)
-			EA_Command(ms->client, cmd_grappleoff->string);
 		ms->moveflags &= ~MFL_ACTIVEGRAPPLE;
 		return result;
 	} //end if
@@ -2123,11 +2119,6 @@ static bot_moveresult_t BotTravel_Grapple(bot_movestate_t *ms, aas_reachability_
 		{
 			if (ms->lastgrappledist - dist < 1)
 			{
-#ifdef DEBUG_GRAPPLE
-				botimport.Print(PRT_ERROR, "grapple normal end\n");
-#endif //DEBUG_GRAPPLE
-				if (offhandgrapple)
-					EA_Command(ms->client, cmd_grappleoff->string);
 				ms->moveflags &= ~MFL_ACTIVEGRAPPLE;
 				ms->moveflags |= MFL_GRAPPLERESET;
 				ms->reachability_time = 0;	//end the reachability
@@ -2140,11 +2131,6 @@ static bot_moveresult_t BotTravel_Grapple(bot_movestate_t *ms, aas_reachability_
 		{
 			if (ms->grapplevisible_time < AAS_Time() - 0.4)
 			{
-#ifdef DEBUG_GRAPPLE
-				botimport.Print(PRT_ERROR, "grapple not visible\n");
-#endif //DEBUG_GRAPPLE
-				if (offhandgrapple)
-					EA_Command(ms->client, cmd_grappleoff->string);
 				ms->moveflags &= ~MFL_ACTIVEGRAPPLE;
 				ms->moveflags |= MFL_GRAPPLERESET;
 				ms->reachability_time = 0;	//end the reachability
@@ -2197,14 +2183,7 @@ static bot_moveresult_t BotTravel_Grapple(bot_movestate_t *ms, aas_reachability_
 				return result;
 			} //end if
 			//activate the grapple
-			if (offhandgrapple)
-			{
-				EA_Command(ms->client, cmd_grappleon->string);
-			} //end if
-			else
-			{
-				EA_Attack(ms->client);
-			} //end else
+			EA_Attack(ms->client);
 			ms->moveflags |= MFL_ACTIVEGRAPPLE;
 			ms->lastgrappledist = 999999;
 		} //end if
