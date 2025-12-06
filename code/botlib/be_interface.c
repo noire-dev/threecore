@@ -242,142 +242,29 @@ float BotGapDistance(vec3_t origin, vec3_t hordir, int entnum);
 
 void AAS_FloodAreas(vec3_t origin);
 
-/*
-============
-Init_AAS_Export
-============
-*/
 static void Init_AAS_Export( aas_export_t *aas ) {
-	//--------------------------------------------
-	// be_aas_entity.c
-	//--------------------------------------------
-	aas->AAS_EntityInfo = AAS_EntityInfo;
-	//--------------------------------------------
-	// be_aas_main.c
-	//--------------------------------------------
 	aas->AAS_Initialized = AAS_Initialized;
-	aas->AAS_PresenceTypeBoundingBox = AAS_PresenceTypeBoundingBox;
 	aas->AAS_Time = AAS_Time;
-	//--------------------------------------------
-	// be_aas_sample.c
-	//--------------------------------------------
 	aas->AAS_PointAreaNum = AAS_PointAreaNum;
-	aas->AAS_PointReachabilityAreaIndex = AAS_PointReachabilityAreaIndex;
 	aas->AAS_TraceAreas = AAS_TraceAreas;
-	aas->AAS_BBoxAreas = AAS_BBoxAreas;
-	aas->AAS_AreaInfo = AAS_AreaInfo;
-	//--------------------------------------------
-	// be_aas_bspq3.c
-	//--------------------------------------------
-	aas->AAS_PointContents = AAS_PointContents;
-	aas->AAS_NextBSPEntity = AAS_NextBSPEntity;
-	aas->AAS_ValueForBSPEpairKey = AAS_ValueForBSPEpairKey;
-	aas->AAS_VectorForBSPEpairKey = AAS_VectorForBSPEpairKey;
-	aas->AAS_FloatForBSPEpairKey = AAS_FloatForBSPEpairKey;
-	aas->AAS_IntForBSPEpairKey = AAS_IntForBSPEpairKey;
-	//--------------------------------------------
-	// be_aas_reach.c
-	//--------------------------------------------
-	aas->AAS_AreaReachability = AAS_AreaReachability;
-	//--------------------------------------------
-	// be_aas_route.c
-	//--------------------------------------------
-	aas->AAS_AreaTravelTimeToGoalArea = AAS_AreaTravelTimeToGoalArea;
-	aas->AAS_EnableRoutingArea = AAS_EnableRoutingArea;
-	aas->AAS_PredictRoute = AAS_PredictRoute;
-	//--------------------------------------------
-	// be_aas_altroute.c
-	//--------------------------------------------
-	aas->AAS_AlternativeRouteGoals = AAS_AlternativeRouteGoals;
-	//--------------------------------------------
-	// be_aas_move.c
-	//--------------------------------------------
-	aas->AAS_Swimming = AAS_Swimming;
-	aas->AAS_PredictClientMovement = AAS_PredictClientMovement;
 }
 
-  
-/*
-============
-Init_EA_Export
-============
-*/
 static void Init_EA_Export( ea_export_t *ea ) {
-	//ClientCommand elementary actions
 	ea->EA_Command = EA_Command;
-	ea->EA_Say = EA_Say;
-	ea->EA_SayTeam = EA_SayTeam;
-
-	ea->EA_Action = EA_Action;
 	ea->EA_Gesture = EA_Gesture;
-	ea->EA_Talk = EA_Talk;
 	ea->EA_Attack = EA_Attack;
 	ea->EA_Use = EA_Use;
-	ea->EA_Respawn = EA_Respawn;
-	ea->EA_Crouch = EA_Crouch;
-
 	ea->EA_SelectWeapon = EA_SelectWeapon;
 	ea->EA_View = EA_View;
 	ea->EA_GetInput = EA_GetInput;
 	ea->EA_ResetInput = EA_ResetInput;
 }
 
-
-/*
-============
-Init_AI_Export
-============
-*/
 static void Init_AI_Export( ai_export_t *ai ) {
-	//-----------------------------------
-	// be_ai_goal.h
-	//-----------------------------------
 	ai->BotTouchingGoal = BotTouchingGoal;
-	//-----------------------------------
-	// be_ai_move.h
-	//-----------------------------------
 	ai->BotMoveToGoal = BotMoveToGoal;
 	ai->BotResetMoveState = BotResetMoveState;
 	ai->BotAllocMoveState = BotAllocMoveState;
 	ai->BotFreeMoveState = BotFreeMoveState;
 	ai->BotInitMoveState = BotInitMoveState;
-}
-
-
-/*
-============
-GetBotLibAPI
-============
-*/
-botlib_export_t *GetBotLibAPI(int apiVersion, botlib_import_t *import) {
-	assert(import);
-	botimport = *import;
-	assert(botimport.Print);
-
-	Com_Memset( &be_botlib_export, 0, sizeof( be_botlib_export ) );
-
-	if ( apiVersion != BOTLIB_API_VERSION ) {
-		botimport.Print( PRT_ERROR, "Mismatched BOTLIB_API_VERSION: expected %i, got %i\n", BOTLIB_API_VERSION, apiVersion );
-		return NULL;
-	}
-
-	Init_AAS_Export(&be_botlib_export.aas);
-	Init_EA_Export(&be_botlib_export.ea);
-	Init_AI_Export(&be_botlib_export.ai);
-
-	be_botlib_export.BotLibSetup = Export_BotLibSetup;
-	be_botlib_export.BotLibShutdown = Export_BotLibShutdown;
-	be_botlib_export.BotLibVarSet = Export_BotLibVarSet;
-
-	be_botlib_export.PC_AddGlobalDefine = PC_AddGlobalDefine;
-	be_botlib_export.PC_LoadSourceHandle = PC_LoadSourceHandle;
-	be_botlib_export.PC_FreeSourceHandle = PC_FreeSourceHandle;
-	be_botlib_export.PC_ReadTokenHandle = PC_ReadTokenHandle;
-	be_botlib_export.PC_SourceFileAndLine = PC_SourceFileAndLine;
-
-	be_botlib_export.BotLibStartFrame = Export_BotLibStartFrame;
-	be_botlib_export.BotLibLoadMap = Export_BotLibLoadMap;
-	be_botlib_export.BotLibUpdateEntity = Export_BotLibUpdateEntity;
-
-	return &be_botlib_export;
 }
