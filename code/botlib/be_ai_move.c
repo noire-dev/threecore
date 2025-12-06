@@ -90,16 +90,14 @@ typedef struct bot_movestate_s
 #define MODELTYPE_FUNC_DOOR		3
 #define MODELTYPE_FUNC_STATIC	4
 
-static libvar_t *sv_maxstep;
-static libvar_t *sv_maxbarrier;
-static libvar_t *sv_gravity;
-static libvar_t *weapindex_rocketlauncher;
-static libvar_t *weapindex_bfg10k;
-static libvar_t *weapindex_grapple;
-static libvar_t *entitytypemissile;
-static libvar_t *offhandgrapple;
-static libvar_t *cmd_grappleoff;
-static libvar_t *cmd_grappleon;
+static int sv_maxstep;
+static int sv_maxbarrier;
+static int sv_gravity;
+static int weapindex_rocketlauncher;
+static int weapindex_bfg10k;
+static int weapindex_grapple;
+static int entitytypemissile;
+static int offhandgrapple;
 //type of model, func_plat or func_bobbing
 static int modeltypes[MAX_MODELS];
 
@@ -753,13 +751,13 @@ static float BotGapDistance(vec3_t origin, vec3_t hordir, int entnum)
 		VectorMA(origin, dist, hordir, start);
 		start[2] = startz + 24;
 		VectorCopy(start, end);
-		end[2] -= 48 + sv_maxbarrier->value;
+		end[2] -= 48 + sv_maxbarrier;
 		trace = AAS_TraceClientBBox(start, end, PRESENCE_CROUCH, entnum);
 		//if solid is found the bot can't walk any further and fall into a gap
 		if (!trace.startsolid)
 		{
 			//if it is a gap
-			if (trace.endpos[2] < startz - sv_maxstep->value - 8)
+			if (trace.endpos[2] < startz - sv_maxstep - 8)
 			{
 				VectorCopy(trace.endpos, end);
 				end[2] -= 20;
@@ -785,13 +783,13 @@ static int BotCheckBarrierJump(bot_movestate_t *ms, vec3_t dir, float speed)
 	aas_trace_t trace;
 
 	VectorCopy(ms->origin, end);
-	end[2] += sv_maxbarrier->value;
+	end[2] += sv_maxbarrier;
 	//trace right up
 	trace = AAS_TraceClientBBox(ms->origin, end, PRESENCE_NORMAL, ms->entitynum);
 	//this shouldn't happen... but we check anyway
 	if (trace.startsolid) return qfalse;
 	//if very low ceiling it isn't possible to jump up to a barrier
-	if (trace.endpos[2] - ms->origin[2] < sv_maxstep->value) return qfalse;
+	if (trace.endpos[2] - ms->origin[2] < sv_maxstep) return qfalse;
 	//
 	hordir[0] = dir[0];
 	hordir[1] = dir[1];
@@ -815,7 +813,7 @@ static int BotCheckBarrierJump(bot_movestate_t *ms, vec3_t dir, float speed)
 	//if no obstacle at all
 	if (trace.fraction >= 1.0) return qfalse;
 	//if less than the maximum step height
-	if (trace.endpos[2] - ms->origin[2] < sv_maxstep->value) return qfalse;
+	if (trace.endpos[2] - ms->origin[2] < sv_maxstep) return qfalse;
 	//
 	EA_Jump(ms->client);
 	EA_Move(ms->client, hordir, speed);
@@ -992,7 +990,7 @@ static void BotCheckBlocked(bot_movestate_t *ms, vec3_t dir, int checkbottom, bo
 	//
 	if (fabs(DotProduct(dir, up)) < 0.7)
 	{
-		mins[2] += sv_maxstep->value; //if the bot can step on
+		mins[2] += sv_maxstep; //if the bot can step on
 		maxs[2] -= 10; //a little lower to avoid low ceiling
 	} //end if
 	VectorMA(ms->origin, 3, dir, end);
@@ -1334,7 +1332,7 @@ static int BotAirControl(vec3_t origin, vec3_t velocity, vec3_t goal, vec3_t dir
 	VectorScale(velocity, 0.1, vel);
 	for (i = 0; i < 50; i++)
 	{
-		vel[2] -= sv_gravity->value * 0.01;
+		vel[2] -= sv_gravity * 0.01;
 		//if going down and next position would be below the goal
 		if (vel[2] < 0 && org[2] + vel[2] < goal[2])
 		{
@@ -1594,7 +1592,7 @@ static bot_moveresult_t BotTravel_Elevator(bot_movestate_t *ms, aas_reachability
 		botimport.Print(PRT_MESSAGE, "bot on elevator\n");
 #endif //DEBUG_ELEVATOR
 		//if vertically not too far from the end point
-		if (fabs(ms->origin[2] - reach->end[2]) < sv_maxbarrier->value)
+		if (fabs(ms->origin[2] - reach->end[2]) < sv_maxbarrier)
 		{
 #ifdef DEBUG_ELEVATOR
 			botimport.Print(PRT_MESSAGE, "bot moving to end\n");
@@ -2041,10 +2039,10 @@ static int GrappleState(bot_movestate_t *ms, aas_reachability_t *reach)
 	//or visible grapple entity
 	for (i = AAS_NextEntity(0); i; i = AAS_NextEntity(i))
 	{
-		if (AAS_EntityType(i) == (int) entitytypemissile->value)
+		if (AAS_EntityType(i) == entitytypemissile)
 		{
 			AAS_EntityInfo(i, &entinfo);
-			if (entinfo.weapon == (int) weapindex_grapple->value)
+			if (entinfo.weapon == weapindex_grapple)
 			{
 				return 1;
 			} //end if
@@ -2069,7 +2067,7 @@ static void BotResetGrapple(bot_movestate_t *ms)
 	{
 		if ((ms->moveflags & MFL_ACTIVEGRAPPLE) || ms->grapplevisible_time)
 		{
-			if (offhandgrapple->value)
+			if (offhandgrapple)
 				EA_Command(ms->client, cmd_grappleoff->string);
 			ms->moveflags &= ~MFL_ACTIVEGRAPPLE;
 			ms->grapplevisible_time = 0;
@@ -2096,15 +2094,15 @@ static bot_moveresult_t BotTravel_Grapple(bot_movestate_t *ms, aas_reachability_
 	//
 	if (ms->moveflags & MFL_GRAPPLERESET)
 	{
-		if (offhandgrapple->value)
+		if (offhandgrapple)
 			EA_Command(ms->client, cmd_grappleoff->string);
 		ms->moveflags &= ~MFL_ACTIVEGRAPPLE;
 		return result;
 	} //end if
 	//
-	if (!(int) offhandgrapple->value)
+	if (!offhandgrapple)
 	{
-		result.weapon = weapindex_grapple->value;
+		result.weapon = weapindex_grapple;
 		result.flags |= MOVERESULT_MOVEMENTWEAPON;
 	} //end if
 	//
@@ -2128,7 +2126,7 @@ static bot_moveresult_t BotTravel_Grapple(bot_movestate_t *ms, aas_reachability_
 #ifdef DEBUG_GRAPPLE
 				botimport.Print(PRT_ERROR, "grapple normal end\n");
 #endif //DEBUG_GRAPPLE
-				if (offhandgrapple->value)
+				if (offhandgrapple)
 					EA_Command(ms->client, cmd_grappleoff->string);
 				ms->moveflags &= ~MFL_ACTIVEGRAPPLE;
 				ms->moveflags |= MFL_GRAPPLERESET;
@@ -2145,7 +2143,7 @@ static bot_moveresult_t BotTravel_Grapple(bot_movestate_t *ms, aas_reachability_
 #ifdef DEBUG_GRAPPLE
 				botimport.Print(PRT_ERROR, "grapple not visible\n");
 #endif //DEBUG_GRAPPLE
-				if (offhandgrapple->value)
+				if (offhandgrapple)
 					EA_Command(ms->client, cmd_grappleoff->string);
 				ms->moveflags &= ~MFL_ACTIVEGRAPPLE;
 				ms->moveflags |= MFL_GRAPPLERESET;
@@ -2158,7 +2156,7 @@ static bot_moveresult_t BotTravel_Grapple(bot_movestate_t *ms, aas_reachability_
 			ms->grapplevisible_time = AAS_Time();
 		} //end else
 		//
-		if (!(int) offhandgrapple->value)
+		if (!(int) offhandgrapple)
 		{
 			EA_Attack(ms->client);
 		} //end if
@@ -2199,7 +2197,7 @@ static bot_moveresult_t BotTravel_Grapple(bot_movestate_t *ms, aas_reachability_
 				return result;
 			} //end if
 			//activate the grapple
-			if (offhandgrapple->value)
+			if (offhandgrapple)
 			{
 				EA_Command(ms->client, cmd_grappleon->string);
 			} //end if
@@ -2281,9 +2279,9 @@ static bot_moveresult_t BotTravel_RocketJump(bot_movestate_t *ms, aas_reachabili
 	//view is important for the movement
 	result.flags |= MOVERESULT_MOVEMENTVIEWSET;
 	//select the rocket launcher
-	EA_SelectWeapon(ms->client, (int) weapindex_rocketlauncher->value);
+	EA_SelectWeapon(ms->client, weapindex_rocketlauncher);
 	//weapon is used for movement
-	result.weapon = (int) weapindex_rocketlauncher->value;
+	result.weapon = weapindex_rocketlauncher;
 	result.flags |= MOVERESULT_MOVEMENTWEAPON;
 	//
 	VectorCopy(hordir, result.movedir);
@@ -2341,9 +2339,9 @@ static bot_moveresult_t BotTravel_BFGJump(bot_movestate_t *ms, aas_reachability_
 	//view is important for the movement
 	result.flags |= MOVERESULT_MOVEMENTVIEWSET;
 	//select the rocket launcher
-	EA_SelectWeapon(ms->client, (int) weapindex_bfg10k->value);
+	EA_SelectWeapon(ms->client, weapindex_bfg10k);
 	//weapon is used for movement
-	result.weapon = (int) weapindex_bfg10k->value;
+	result.weapon = weapindex_bfg10k;
 	result.flags |= MOVERESULT_MOVEMENTWEAPON;
 	//
 	VectorCopy(hordir, result.movedir);
