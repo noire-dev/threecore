@@ -250,8 +250,8 @@ int AAS_Setup(void)
 	saveroutingcache = 0;
 	botimport.Print(PRT_MESSAGE, "AIDEBUG: maxentities: %i.\n", aasworld.maxentities);
 	//allocate memory for the entities
-	if (aasworld.entities) FreeMemory(aasworld.entities);
-	aasworld.entities = (aas_entity_t *) GetClearedHunkMemory(aasworld.maxentities * sizeof(aas_entity_t));
+	if (aasworld.entities) free(aasworld.entities);
+	aasworld.entities = (aas_entity_t *) malloc(aasworld.maxentities * sizeof(aas_entity_t));
 	//invalidate all the entities
 	botimport.Print(PRT_MESSAGE, "AIDEBUG: GetClearedHunkMemory: %i.\n", aasworld.maxentities);
 	AAS_InvalidateEntities();
