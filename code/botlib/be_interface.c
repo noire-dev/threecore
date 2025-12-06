@@ -135,8 +135,6 @@ static int Export_BotLibSetup( void )
 	if (errnum != BLERR_NOERROR) return errnum;
 	errnum = EA_Setup();			//be_ea.c
 	if (errnum != BLERR_NOERROR) return errnum;
-	errnum = BotSetupGoalAI();		//be_ai_goal.c
-	if (errnum != BLERR_NOERROR) return errnum;
 	errnum = BotSetupMoveAI();		//be_ai_move.c
 	if (errnum != BLERR_NOERROR) return errnum;
 
@@ -157,7 +155,6 @@ static int Export_BotLibShutdown(void)
 		return BLERR_LIBRARYNOTSETUP;
 
 	BotShutdownMoveAI();		//be_ai_move.c
-	BotShutdownGoalAI();		//be_ai_goal.c
 	//shut down AAS
 	AAS_Shutdown();
 	//shut down bot elementary actions
@@ -166,12 +163,6 @@ static int Export_BotLibShutdown(void)
 	LibVarDeAllocAll();
 	//remove all global defines from the pre compiler
 	PC_RemoveAllGlobalDefines();
-
-	//dump all allocated memory
-//	DumpMemory();
-#ifdef DEBUG
-	PrintMemoryLabels();
-#endif
 	//shut down library log file
 	Log_Shutdown();
 	//
