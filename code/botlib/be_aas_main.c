@@ -94,13 +94,7 @@ static void AAS_SetInitialized(void)
 {
 	aasworld.initialized = qtrue;
 	botimport.Print(PRT_MESSAGE, "AAS initialized.\n");
-#ifdef DEBUG
-	//create all the routing cache
-	//AAS_CreateAllRoutingCache();
-	//
-	//AAS_RoutingInfo();
-#endif
-} //end of the function AAS_SetInitialized
+}
 //===========================================================================
 //
 // Parameter:				-
@@ -133,28 +127,8 @@ int AAS_StartFrame(float time)
 	AAS_InvalidateEntities();
 	//initialize AAS
 	AAS_ContinueInit(time);
-	//
 	aasworld.frameroutingupdates = 0;
-	//
-	if (botDeveloper)
-	{
-		if (LibVarGetValue("showcacheupdates"))
-		{
-			AAS_RoutingInfo();
-			LibVarSet("showcacheupdates", "0");
-		} //end if
-		if (LibVarGetValue("showmemoryusage"))
-		{
-			PrintUsedMemorySize();
-			LibVarSet("showmemoryusage", "0");
-		} //end if
-		if (LibVarGetValue("memorydump"))
-		{
-			PrintMemoryLabels();
-			LibVarSet("memorydump", "0");
-		} //end if
-	} //end if
-	//
+
 	if (saveroutingcache->value)
 	{
 		AAS_WriteRouteCache();

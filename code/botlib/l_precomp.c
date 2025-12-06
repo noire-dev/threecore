@@ -92,8 +92,6 @@ typedef enum {qfalse, qtrue}	qboolean;
 #include "l_utils.h"
 #endif //QUAKE
 
-//#define DEBUG_EVAL
-
 #define MAX_DEFINEPARMS			128
 
 #define DEFINEHASHING			1

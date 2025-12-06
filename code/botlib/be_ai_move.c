@@ -46,11 +46,6 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #include "be_ai_goal.h"
 #include "be_ai_move.h"
 
-
-//#define DEBUG_AI_MOVE
-//#define DEBUG_ELEVATOR
-//#define DEBUG_GRAPPLE
-
 //movement state
 //NOTE: the moveflags MFL_ONGROUND, MFL_TELEPORTED, MFL_WATERJUMP and
 //		MFL_GRAPPLEPULL must be set outside the movement code
@@ -1008,9 +1003,6 @@ static void BotCheckBlocked(bot_movestate_t *ms, vec3_t dir, int checkbottom, bo
 	{
 		result->blocked = qtrue;
 		result->blockentity = trace.ent;
-#ifdef DEBUG
-		//botimport.Print(PRT_MESSAGE, "%d: BotCheckBlocked: I'm blocked\n", ms->client);
-#endif //DEBUG
 	} //end if
 	//if not in an area with reachability
 	else if (checkbottom && !AAS_AreaReachability(ms->areanum))
@@ -2584,10 +2576,6 @@ void BotMoveToGoal(int movestate, bot_goal_t *goal, int travelflags) {
 						} //end if
 						else
 						{
-							if (botDeveloper)
-							{
-								botimport.Print(PRT_MESSAGE, "client %d: on func_plat without reachability\n", ms->client);
-							} //end if
 							return;
 						} //end else
 					} //end if
@@ -2610,10 +2598,6 @@ void BotMoveToGoal(int movestate, bot_goal_t *goal, int travelflags) {
 						} //end if
 						else
 						{
-							if (botDeveloper)
-							{
-								botimport.Print(PRT_MESSAGE, "client %d: on func_bobbing without reachability\n", ms->client);
-							} //end if
 							return;
 						} //end else
 					} //end if
@@ -2781,15 +2765,6 @@ void BotMoveToGoal(int movestate, bot_goal_t *goal, int travelflags) {
 				} //end else
 			} //end if
 		} //end for
-		if (botDeveloper)
-		{
-			//if a jumppad is found with the trace but no reachability is found
-			if (foundjumppad && !ms->lastreachnum)
-			{
-				botimport.Print(PRT_MESSAGE, "client %d didn't find jumppad reachability\n", ms->client);
-			} //end if
-		} //end if
-		//
 		if (ms->lastreachnum)
 		{
 			

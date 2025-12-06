@@ -149,12 +149,6 @@ aas_link_t *AAS_AllocAASLink(void)
 	link = aasworld.freelinks;
 	if (!link)
 	{
-#ifndef BSPC
-		if (botDeveloper)
-#endif
-		{
-			botimport.Print(PRT_FATAL, "empty aas link heap\n");
-		} //end if
 		return NULL;
 	} //end if
 	if (aasworld.freelinks) aasworld.freelinks = aasworld.freelinks->next_ent;

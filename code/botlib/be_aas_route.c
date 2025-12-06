@@ -311,10 +311,6 @@ int AAS_EnableRoutingArea(int areanum, int enable)
 
 	if (areanum <= 0 || areanum >= aasworld.numareas)
 	{
-		if (botDeveloper)
-		{
-			botimport.Print(PRT_ERROR, "AAS_EnableRoutingArea: areanum %d out of range\n", areanum);
-		} //end if
 		return 0;
 	} //end if
 	flags = aasworld.areasettings[areanum].areaflags & AREA_DISABLED;
@@ -1607,18 +1603,10 @@ static int AAS_AreaRouteToGoalArea(int areanum, vec3_t origin, int goalareanum, 
 	//check !AAS_AreaReachability(areanum) with custom developer-only debug message
 	if (areanum <= 0 || areanum >= aasworld.numareas)
 	{
-		if (botDeveloper)
-		{
-			botimport.Print(PRT_ERROR, "AAS_AreaTravelTimeToGoalArea: areanum %d out of range\n", areanum);
-		} //end if
 		return qfalse;
 	} //end if
 	if (goalareanum <= 0 || goalareanum >= aasworld.numareas)
 	{
-		if (botDeveloper)
-		{
-			botimport.Print(PRT_ERROR, "AAS_AreaTravelTimeToGoalArea: goalareanum %d out of range\n", goalareanum);
-		} //end if
 		return qfalse;
 	} //end if
 	if (!aasworld.areasettings[areanum].numreachableareas || !aasworld.areasettings[goalareanum].numreachableareas)

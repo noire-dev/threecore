@@ -160,3 +160,5 @@ typedef struct botlib_export_s {
 	int (*BotLibLoadMap)(const char* mapname);
 	int (*BotLibUpdateEntity)(int ent, bot_entitystate_t* state);
 } botlib_export_t;
+
+botlib_export_t *GetBotLibAPI(botlib_import_t *import);
