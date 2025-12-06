@@ -237,6 +237,7 @@ static intptr_t SV_GameSystemCalls(intptr_t* args) {
 			}
 		}
 			return 0;
+		case BOTLIB_UPDATENTITY: return botlib_export->BotLibUpdateEntity(args[1], VMA(2));
 		case BOTLIB_AAS_INITIALIZED: return botlib_export->aas.AAS_Initialized();
 		case BOTLIB_AAS_TIME: return FloatAsInt(botlib_export->aas.AAS_Time());
 		case BOTLIB_AAS_POINT_AREA_NUM: return botlib_export->aas.AAS_PointAreaNum(VMA(1));
