@@ -3195,10 +3195,6 @@ static aas_lreachability_t *AAS_FindFaceReachabilities(vec3_t *facepoints, int n
 		lreach->traveltime = 0;
 		lreach->next = lreachabilities;
 		lreachabilities = lreach;
-#ifndef BSPC
-		if (towardsface) AAS_PermanentLine(lreach->start, lreach->end, 1);
-		else AAS_PermanentLine(lreach->start, lreach->end, 2);
-#endif
 	} //end for
 	return lreachabilities;
 } //end of the function AAS_FindFaceReachabilities
@@ -3268,14 +3264,6 @@ static void AAS_Reachability_FuncBobbing(void)
 		//
 		Log_Write("funcbob model %d, start = {%1.1f, %1.1f, %1.1f} end = {%1.1f, %1.1f, %1.1f}\n",
 					modelnum, move_start[0], move_start[1], move_start[2], move_end[0], move_end[1], move_end[2]);
-		//
-#ifndef BSPC
-		/*
-		AAS_DrawPermanentCross(move_start, 4, 1);
-		AAS_DrawPermanentCross(move_end, 4, 2);
-		*/
-#endif
-		//
 		for (i = 0; i < 4; i++)
 		{
 			VectorCopy(move_start, start_edgeverts[i]);
@@ -3338,20 +3326,10 @@ static void AAS_Reachability_FuncBobbing(void)
 			for (startreach = firststartreach; startreach; startreach = nextstartreach)
 			{
 				nextstartreach = startreach->next;
-				//
-				//trace = AAS_TraceClientBBox(startreach->start, move_start_top, PRESENCE_NORMAL, -1);
-				//if (trace.fraction < 1) continue;
-				//
 				for (endreach = firstendreach; endreach; endreach = nextendreach)
 				{
 					nextendreach = endreach->next;
-					//
-					//trace = AAS_TraceClientBBox(endreach->end, move_end_top, PRESENCE_NORMAL, -1);
-					//if (trace.fraction < 1) continue;
-					//
 					Log_Write("funcbob reach from area %d to %d\n", startreach->areanum, endreach->areanum);
-					//
-					//
 					if (i == 0) VectorCopy(move_start_top, org);
 					else VectorCopy(move_end_top, org);
 					VectorSubtract(startreach->start, org, dir);
@@ -3378,10 +3356,6 @@ static void AAS_Reachability_FuncBobbing(void)
 					lreach->facenum = (spawnflags << 16) | modelnum;
 					VectorCopy(startreach->start, lreach->start);
 					VectorCopy(endreach->end, lreach->end);
-#ifndef BSPC
-//					AAS_DrawArrow(lreach->start, lreach->end, LINECOLOR_BLUE, LINECOLOR_YELLOW);
-//					AAS_PermanentLine(lreach->start, lreach->end, 1);
-#endif
 					lreach->traveltype = TRAVEL_FUNCBOB;
 					lreach->traveltype |= AAS_TravelFlagsForTeam(ent);
 					lreach->traveltime = aassettings.rs_funcbob;
