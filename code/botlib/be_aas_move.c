@@ -642,15 +642,6 @@ static int AAS_ClientMovementPrediction( aas_clientmove_t *move,
 			VectorAdd(org, left_test_vel, end);
 			//trace a bounding box
 			trace = AAS_TraceClientBBox(org, end, presencetype, entnum);
-			//
-//#ifdef AAS_MOVE_DEBUG
-			if (visualize)
-			{
-				if (trace.startsolid) botimport.Print(PRT_MESSAGE, "PredictMovement: start solid\n");
-				AAS_DebugLine(org, trace.endpos, LINECOLOR_RED);
-			} //end if
-//#endif //AAS_MOVE_DEBUG
-			//
 			if (stopevent & (SE_ENTERAREA|SE_TOUCHJUMPPAD|SE_TOUCHTELEPORTER|SE_TOUCHCLUSTERPORTAL))
 			{
 				numareas = AAS_TraceAreas(org, trace.endpos, areas, points, 20);
@@ -788,17 +779,6 @@ static int AAS_ClientMovementPrediction( aas_clientmove_t *move,
 							VectorSubtract(end, steptrace.endpos, left_test_vel);
 							left_test_vel[2] = 0;
 							frame_test_vel[2] = 0;
-//#ifdef AAS_MOVE_DEBUG
-							if (visualize)
-							{
-								if (steptrace.endpos[2] - org[2] > 0.125)
-								{
-									VectorCopy(org, start);
-									start[2] = steptrace.endpos[2];
-									AAS_DebugLine(org, start, LINECOLOR_BLUE);
-								} //end if
-							} //end if
-//#endif //AAS_MOVE_DEBUG
 							org[2] = steptrace.endpos[2];
 							step = qtrue;
 						} //end if

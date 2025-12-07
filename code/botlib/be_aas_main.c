@@ -121,8 +121,6 @@ void AAS_ContinueInit(float time)
 	//or there is a forced data optimization
 	if (aasworld.savefile || ((int)LibVarGetValue("forcewrite")))
 	{
-		//optimize the AAS data
-		if ((int)LibVarValue("aasoptimize", "0")) AAS_Optimize();
 		//save the AAS file
 		if (AAS_WriteAASFile(aasworld.filename))
 		{
