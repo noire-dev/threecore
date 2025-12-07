@@ -42,7 +42,6 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #include "be_aas.h"
 #include "be_aas_funcs.h"
 #include "be_interface.h"
-#include "be_ai_weight.h"
 #include "be_ai_goal.h"
 #include "be_ai_move.h"
 
