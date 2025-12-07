@@ -814,20 +814,6 @@ int BotMovementViewTarget(int movestate, bot_goal_t *goal, int travelflags, floa
 // Returns:				-
 // Changes Globals:		-
 //===========================================================================
-static int BotVisible(int ent, vec3_t eye, vec3_t target)
-{
-	bsp_trace_t trace;
-
-	trace = AAS_Trace(eye, NULL, NULL, target, ent, CONTENTS_SOLID|CONTENTS_PLAYERCLIP);
-	if (trace.fraction >= 1) return qtrue;
-	return qfalse;
-} //end of the function BotVisible
-//===========================================================================
-//
-// Parameter:			-
-// Returns:				-
-// Changes Globals:		-
-//===========================================================================
 int BotPredictVisiblePosition(vec3_t origin, int areanum, bot_goal_t *goal, int travelflags, vec3_t target)
 {
 	aas_reachability_t reach;
