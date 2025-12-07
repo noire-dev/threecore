@@ -44,9 +44,6 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #include "be_aas_funcs.h"
 #include "be_aas_def.h"
 
-
-//#define AAS_SAMPLE_DEBUG
-
 #define BBOX_NORMAL_EPSILON		0.001
 
 #define ON_EPSILON					0 //0.0005
@@ -401,7 +398,11 @@ aas_trace_t AAS_TraceClientBBox(vec3_t start, vec3_t end, int presencetype,
 	//clear the trace structure
 	Com_Memset(&trace, 0, sizeof(aas_trace_t));
 
+    botimport.Print(PRT_MESSAGE, "AIDEBUG->AAS_TraceClientBBox start\n");
+
 	if (!aasworld.loaded) return trace;
+	
+	botimport.Print(PRT_MESSAGE, "AIDEBUG->AAS_TraceClientBBox after start\n");
 	
 	tstack_p = tracestack;
 	//we start with the whole line on the stack
@@ -437,15 +438,8 @@ aas_trace_t AAS_TraceClientBBox(vec3_t start, vec3_t end, int presencetype,
 		//if it is an area
 		if (nodenum < 0)
 		{
-#ifdef AAS_SAMPLE_DEBUG
-			if (-nodenum > aasworld.numareasettings)
-			{
-				botimport.Print(PRT_ERROR, "AAS_TraceBoundingBox: -nodenum out of range\n");
-				return trace;
-			} //end if
-#endif //AAS_SAMPLE_DEBUG
-			//botimport.Print(PRT_MESSAGE, "areanum = %d, must be %d\n", -nodenum, AAS_PointAreaNum(start));
 			//if can't enter the area because it hasn't got the right presence type
+			botimport.Print(PRT_MESSAGE, "AIDEBUG->AAS_TraceClientBBox nodenum\n");
 			if (!(aasworld.areasettings[-nodenum].presencetype & presencetype))
 			{
 				//if the start point is still the initial start point
@@ -481,10 +475,12 @@ aas_trace_t AAS_TraceClientBBox(vec3_t start, vec3_t end, int presencetype,
 			{
 				if (passent >= 0)
 				{
+				    botimport.Print(PRT_MESSAGE, "AIDEBUG->AAS_TraceClientBBox AAS_AreaEntityCollision\n");
 					if (AAS_AreaEntityCollision(-nodenum, tstack_p->start,
 													tstack_p->end, presencetype, passent,
 													&trace))
 					{
+					    botimport.Print(PRT_MESSAGE, "AIDEBUG->AAS_TraceClientBBox after AAS_AreaEntityCollision\n");
 						if (!trace.startsolid)
 						{
 							VectorSubtract(end, start, v1);
@@ -498,6 +494,7 @@ aas_trace_t AAS_TraceClientBBox(vec3_t start, vec3_t end, int presencetype,
 			trace.lastarea = -nodenum;
 			continue;
 		} //end if
+		botimport.Print(PRT_MESSAGE, "AIDEBUG->AAS_TraceClientBBox 2\n");
 		//if it is a solid leaf
 		if (!nodenum)
 		{
@@ -530,13 +527,6 @@ aas_trace_t AAS_TraceClientBBox(vec3_t start, vec3_t end, int presencetype,
 			if (DotProduct(v1, plane->normal) > 0) trace.planenum ^= 1;
 			return trace;
 		} //end if
-#ifdef AAS_SAMPLE_DEBUG
-		if (nodenum > aasworld.numnodes)
-		{
-			botimport.Print(PRT_ERROR, "AAS_TraceBoundingBox: nodenum out of range\n");
-			return trace;
-		} //end if
-#endif //AAS_SAMPLE_DEBUG
 		//the node to test against
 		aasnode = &aasworld.nodes[nodenum];
 		//start point of current line to test against node
@@ -547,26 +537,7 @@ aas_trace_t AAS_TraceClientBBox(vec3_t start, vec3_t end, int presencetype,
 		plane = &aasworld.planes[aasnode->planenum];
 
 		switch(plane->type)
-		{/*FIXME: wtf doesn't this work? obviously the axial node planes aren't always facing positive!!!
-			//check for axial planes
-			case PLANE_X:
-			{
-				front = cur_start[0] - plane->dist;
-				back = cur_end[0] - plane->dist;
-				break;
-			} //end case
-			case PLANE_Y:
-			{
-				front = cur_start[1] - plane->dist;
-				back = cur_end[1] - plane->dist;
-				break;
-			} //end case
-			case PLANE_Z:
-			{
-				front = cur_start[2] - plane->dist;
-				back = cur_end[2] - plane->dist;
-				break;
-			} //end case*/
+		{
 			default: //gee it's not an axial plane
 			{
 				front = DotProduct(cur_start, plane->normal) - plane->dist;
