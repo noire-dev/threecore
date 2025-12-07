@@ -44,7 +44,6 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #include "be_interface.h"
 
 #include "be_ea.h"
-#include "be_ai_goal.h"
 #include "be_ai_move.h"
 
 //library globals in a structure
@@ -132,8 +131,6 @@ static int Export_BotLibSetup( void )
 	if (errnum != BLERR_NOERROR) return errnum;
 	errnum = EA_Setup();			//be_ea.c
 	if (errnum != BLERR_NOERROR) return errnum;
-	errnum = BotSetupGoalAI();		//be_ai_goal.c
-	if (errnum != BLERR_NOERROR) return errnum;
 	errnum = BotSetupMoveAI();		//be_ai_move.c
 	if (errnum != BLERR_NOERROR) return errnum;
 
@@ -154,7 +151,6 @@ static int Export_BotLibShutdown(void)
 		return BLERR_LIBRARYNOTSETUP;
 	//
 	BotShutdownMoveAI();		//be_ai_move.c
-	BotShutdownGoalAI();		//be_ai_goal.c
 	//shut down AAS
 	AAS_Shutdown();
 	//shut down bot elementary actions
@@ -220,8 +216,6 @@ static int Export_BotLibLoadMap(const char *mapname)
 	//startup AAS for the current map, model and sound index
 	errnum = AAS_LoadMap(mapname);
 	if (errnum != BLERR_NOERROR) return errnum;
-	//initialize the items in the level
-	BotInitLevelItems();		//be_ai_goal.h
 	BotSetBrushModelTypes();	//be_ai_move.h
 	//
 	botimport.Print(PRT_MESSAGE, "-------------------------------------\n");
@@ -356,34 +350,6 @@ Init_AI_Export
 ============
 */
 static void Init_AI_Export( ai_export_t *ai ) {
-	//-----------------------------------
-	// be_ai_goal.h
-	//-----------------------------------
-	ai->BotResetGoalState = BotResetGoalState;
-	ai->BotResetAvoidGoals = BotResetAvoidGoals;
-	ai->BotRemoveFromAvoidGoals = BotRemoveFromAvoidGoals;
-	ai->BotPushGoal = BotPushGoal;
-	ai->BotPopGoal = BotPopGoal;
-	ai->BotEmptyGoalStack = BotEmptyGoalStack;
-	ai->BotDumpAvoidGoals = BotDumpAvoidGoals;
-	ai->BotDumpGoalStack = BotDumpGoalStack;
-	ai->BotGoalName = BotGoalName;
-	ai->BotGetTopGoal = BotGetTopGoal;
-	ai->BotGetSecondGoal = BotGetSecondGoal;
-	ai->BotChooseLTGItem = BotChooseLTGItem;
-	ai->BotChooseNBGItem = BotChooseNBGItem;
-	ai->BotTouchingGoal = BotTouchingGoal;
-	ai->BotItemGoalInVisButNotVisible = BotItemGoalInVisButNotVisible;
-	ai->BotGetLevelItemGoal = BotGetLevelItemGoal;
-	ai->BotGetNextCampSpotGoal = BotGetNextCampSpotGoal;
-	ai->BotAvoidGoalTime = BotAvoidGoalTime;
-	ai->BotSetAvoidGoalTime = BotSetAvoidGoalTime;
-	ai->BotInitLevelItems = BotInitLevelItems;
-	ai->BotUpdateEntityItems = BotUpdateEntityItems;
-	ai->BotLoadItemWeights = BotLoadItemWeights;
-	ai->BotFreeItemWeights = BotFreeItemWeights;
-	ai->BotAllocGoalState = BotAllocGoalState;
-	ai->BotFreeGoalState = BotFreeGoalState;
 	//-----------------------------------
 	// be_ai_move.h
 	//-----------------------------------

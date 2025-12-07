@@ -248,7 +248,6 @@ static intptr_t SV_GameSystemCalls(intptr_t* args) {
 		case BOTLIB_EA_VIEW: botlib_export->ea.EA_View(args[1], VMA(2)); return 0;
 		case BOTLIB_EA_GET_INPUT: botlib_export->ea.EA_GetInput(args[1], VMF(2), VMA(3)); return 0;
 		case BOTLIB_EA_RESET_INPUT: botlib_export->ea.EA_ResetInput(args[1]); return 0;
-        case BOTLIB_AI_TOUCHING_GOAL: return botlib_export->ai.BotTouchingGoal(VMA(1), VMA(2));
 		case BOTLIB_AI_MOVE_TO_GOAL: botlib_export->ai.BotMoveToGoal(args[1], VMA(2), args[3]); return 0;
 		case BOTLIB_AI_RESET_MOVE_STATE: botlib_export->ai.BotResetMoveState(args[1]); return 0;
 		case BOTLIB_AI_ALLOC_MOVE_STATE: return botlib_export->ai.BotAllocMoveState();

@@ -43,7 +43,6 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #include "be_interface.h"
 
 #include "be_ea.h"
-#include "be_ai_goal.h"
 #include "be_ai_move.h"
 
 
@@ -859,19 +858,6 @@ int BotPredictVisiblePosition(vec3_t origin, int areanum, bot_goal_t *goal, int 
 									goal, travelflags, NULL, 0, NULL);
 		if (!reachnum) return qfalse;
 		AAS_ReachabilityFromNum(reachnum, &reach);
-		//
-		if (BotVisible(goal->entitynum, goal->origin, reach.start))
-		{
-			VectorCopy(reach.start, target);
-			return qtrue;
-		} //end if
-		//
-		if (BotVisible(goal->entitynum, goal->origin, reach.end))
-		{
-			VectorCopy(reach.end, target);
-			return qtrue;
-		} //end if
-		//
 		if (reach.areanum == goal->areanum)
 		{
 			VectorCopy(reach.end, target);

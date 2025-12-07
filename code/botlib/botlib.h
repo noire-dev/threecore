@@ -166,6 +166,14 @@ typedef struct bot_entitystate_s
 	int		torsoAnim;		// mask off ANIM_TOGGLEBIT
 } bot_entitystate_t;
 
+//a bot goal
+typedef struct bot_goal_s
+{
+	vec3_t origin;				//origin of the goal
+	int areanum;				//area number of the goal
+	vec3_t mins, maxs;			//mins and maxs of the goal
+} bot_goal_t;
+
 //bot AI library exported functions
 typedef struct botlib_import_s
 {
@@ -284,35 +292,6 @@ typedef struct ea_export_s
 
 typedef struct ai_export_s
 {
-	//-----------------------------------
-	// be_ai_goal.h
-	//-----------------------------------
-	void	(*BotResetGoalState)(int goalstate);
-	void	(*BotResetAvoidGoals)(int goalstate);
-	void	(*BotRemoveFromAvoidGoals)(int goalstate, int number);
-	void	(*BotPushGoal)(int goalstate, struct bot_goal_s *goal);
-	void	(*BotPopGoal)(int goalstate);
-	void	(*BotEmptyGoalStack)(int goalstate);
-	void	(*BotDumpAvoidGoals)(int goalstate);
-	void	(*BotDumpGoalStack)(int goalstate);
-	void	(*BotGoalName)(int number, char *name, int size);
-	int		(*BotGetTopGoal)(int goalstate, struct bot_goal_s *goal);
-	int		(*BotGetSecondGoal)(int goalstate, struct bot_goal_s *goal);
-	int		(*BotChooseLTGItem)(int goalstate, vec3_t origin, int *inventory, int travelflags);
-	int		(*BotChooseNBGItem)(int goalstate, vec3_t origin, int *inventory, int travelflags,
-								struct bot_goal_s *ltg, float maxtime);
-	int		(*BotTouchingGoal)(const vec3_t origin, const struct bot_goal_s *goal);
-	int		(*BotItemGoalInVisButNotVisible)(int viewer, vec3_t eye, vec3_t viewangles, struct bot_goal_s *goal);
-	int		(*BotGetLevelItemGoal)(int index, const char *classname, struct bot_goal_s *goal);
-	int		(*BotGetNextCampSpotGoal)(int num, struct bot_goal_s *goal);
-	float	(*BotAvoidGoalTime)(int goalstate, int number);
-	void	(*BotSetAvoidGoalTime)(int goalstate, int number, float avoidtime);
-	void	(*BotInitLevelItems)(void);
-	void	(*BotUpdateEntityItems)(void);
-	int		(*BotLoadItemWeights)(int goalstate, const char *filename);
-	void	(*BotFreeItemWeights)(int goalstate);
-	int		(*BotAllocGoalState)(int client);
-	void	(*BotFreeGoalState)(int handle);
 	//-----------------------------------
 	// be_ai_move.h
 	//-----------------------------------

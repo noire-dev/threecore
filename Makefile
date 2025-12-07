@@ -793,7 +793,6 @@ Q3OBJ = \
   $(B)/client/be_aas_route.o \
   $(B)/client/be_aas_routealt.o \
   $(B)/client/be_aas_sample.o \
-  $(B)/client/be_ai_goal.o \
   $(B)/client/be_ai_move.o \
   $(B)/client/be_ea.o \
   $(B)/client/be_interface.o \
@@ -937,7 +936,6 @@ Q3DOBJ = \
   $(B)/ded/be_aas_route.o \
   $(B)/ded/be_aas_routealt.o \
   $(B)/ded/be_aas_sample.o \
-  $(B)/ded/be_ai_goal.o \
   $(B)/ded/be_ai_move.o \
   $(B)/ded/be_ea.o \
   $(B)/ded/be_interface.o \
