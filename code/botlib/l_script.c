@@ -1069,7 +1069,7 @@ script_t *LoadScriptFile(const char *filename)
 	length = FileLength(fp);
 #endif
 
-	buffer = GetClearedMemory(sizeof(script_t) + length + 1);
+	buffer = calloc(sizeof(script_t) + length + 1);
 	script = (script_t *) buffer;
 	Com_Memset(script, 0, sizeof(script_t));
 	Q_strncpyz(script->filename, filename, sizeof(script->filename));
@@ -1115,7 +1115,7 @@ script_t *LoadScriptMemory(const char *ptr, int length, const char *name)
 	void *buffer;
 	script_t *script;
 
-	buffer = GetClearedMemory(sizeof(script_t) + length + 1);
+	buffer = calloc(sizeof(script_t) + length + 1);
 	script = (script_t *) buffer;
 	Com_Memset(script, 0, sizeof(script_t));
 	Q_strncpyz(script->filename, name, sizeof(script->filename));

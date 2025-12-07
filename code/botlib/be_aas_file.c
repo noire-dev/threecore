@@ -294,7 +294,7 @@ static char *AAS_LoadAASLump(fileHandle_t fp, int offset, int length, int *lasto
 	if (!length)
 	{
 		//just alloc a dummy
-		return (char *) malloc(size+1);
+		return (char *) calloc(size+1);
 	} //end if
 	//seek to the data
 	if (offset != *lastoffset)
@@ -309,7 +309,7 @@ static char *AAS_LoadAASLump(fileHandle_t fp, int offset, int length, int *lasto
 		} //end if
 	} //end if
 	//allocate memory
-	buf = (char *) malloc(length+1);
+	buf = (char *) calloc(length+1);
 	//read the data
 	//if (length)
 	{

@@ -351,7 +351,7 @@ static void AAS_ParseBSPEntities(void)
 		while(PS_ReadToken(script, &token))
 		{
 			if (!strcmp(token.string, "}")) break;
-			epair = (bsp_epair_t *) malloc(sizeof(bsp_epair_t));
+			epair = (bsp_epair_t *) calloc(sizeof(bsp_epair_t));
 			epair->next = ent->epairs;
 			ent->epairs = epair;
 			if (token.type != TT_STRING)
@@ -362,7 +362,7 @@ static void AAS_ParseBSPEntities(void)
 				return;
 			} //end if
 			StripDoubleQuotes(token.string);
-			epair->key = (char *) malloc(strlen(token.string) + 1);
+			epair->key = (char *) calloc(strlen(token.string) + 1);
 			strcpy(epair->key, token.string);
 			if (!PS_ExpectTokenType(script, TT_STRING, 0, &token))
 			{
@@ -371,7 +371,7 @@ static void AAS_ParseBSPEntities(void)
 				return;
 			} //end if
 			StripDoubleQuotes(token.string);
-			epair->value = (char *) malloc(strlen(token.string) + 1);
+			epair->value = (char *) calloc(strlen(token.string) + 1);
 			strcpy(epair->value, token.string);
 		} //end while
 		if (strcmp(token.string, "}"))
@@ -412,7 +412,7 @@ int AAS_LoadBSPFile(void)
 {
 	AAS_DumpBSPData();
 	bspworld.entdatasize = strlen(botimport.BSPEntityData()) + 1;
-	bspworld.dentdata = (char *) malloc(bspworld.entdatasize);
+	bspworld.dentdata = (char *) calloc(bspworld.entdatasize);
 	Com_Memcpy(bspworld.dentdata, botimport.BSPEntityData(), bspworld.entdatasize);
 	AAS_ParseBSPEntities();
 	bspworld.loaded = qtrue;

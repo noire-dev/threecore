@@ -261,7 +261,7 @@ static token_t *PC_CopyToken(token_t *token)
 {
 	token_t *t;
 
-//	t = (token_t *) malloc(sizeof(token_t));
+//	t = (token_t *) calloc(sizeof(token_t));
 	t = (token_t *) GetMemory(sizeof(token_t));
 //	t = freetokens;
 	if (!t)
@@ -1274,7 +1274,7 @@ static define_t *PC_DefineFromString(const char *string)
 	Q_strncpyz( src.filename, "*extern", sizeof( src.filename ) );
 	src.scriptstack = script;
 #if DEFINEHASHING
-	src.definehash = GetClearedMemory(DEFINEHASHSIZE * sizeof(define_t *));
+	src.definehash = calloc(DEFINEHASHSIZE * sizeof(define_t *));
 #endif //DEFINEHASHING
 	//create a define from the source
 	res = PC_Directive_define(&src);
@@ -1560,9 +1560,9 @@ static int PC_OperatorPriority(int op)
 	return qfalse;
 } //end of the function PC_OperatorPriority
 
-//#define AllocValue()			GetClearedMemory(sizeof(value_t));
+//#define AllocValue()			calloc(sizeof(value_t));
 //#define FreeValue(val)		free(val)
-//#define AllocOperator(op)		op = (operator_t *) GetClearedMemory(sizeof(operator_t));
+//#define AllocOperator(op)		op = (operator_t *) calloc(sizeof(operator_t));
 //#define FreeOperator(op)		free(op);
 
 #define MAX_VALUES		64
@@ -1640,7 +1640,7 @@ static int PC_EvaluateTokens(source_t *source, token_t *tokens, int *intvalue, f
 					error = 1;
 					break;
 				} //end if
-				//v = (value_t *) GetClearedMemory(sizeof(value_t));
+				//v = (value_t *) calloc(sizeof(value_t));
 				AllocValue(v);
 #if DEFINEHASHING
 				if (PC_FindHashedDefine(source->definehash, t->string))
@@ -1685,7 +1685,7 @@ static int PC_EvaluateTokens(source_t *source, token_t *tokens, int *intvalue, f
 					error = 1;
 					break;
 				} //end if
-				//v = (value_t *) GetClearedMemory(sizeof(value_t));
+				//v = (value_t *) calloc(sizeof(value_t));
 				AllocValue(v);
 				if (negativevalue)
 				{
@@ -1815,7 +1815,7 @@ static int PC_EvaluateTokens(source_t *source, token_t *tokens, int *intvalue, f
 				} //end switch
 				if (!error && !negativevalue)
 				{
-					//o = (operator_t *) GetClearedMemory(sizeof(operator_t));
+					//o = (operator_t *) calloc(sizeof(operator_t));
 					AllocOperator(o);
 					o->operator = t->subtype;
 					o->priority = PC_OperatorPriority(t->subtype);
@@ -2848,7 +2848,7 @@ source_t *LoadSourceFile(const char *filename)
 	source->skip = 0;
 
 #if DEFINEHASHING
-	source->definehash = GetClearedMemory(DEFINEHASHSIZE * sizeof(define_t *));
+	source->definehash = calloc(DEFINEHASHSIZE * sizeof(define_t *));
 #endif //DEFINEHASHING
 	PC_AddGlobalDefinesToSource(source);
 	return source;

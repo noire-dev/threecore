@@ -103,7 +103,7 @@ void AAS_InitAASLinkHeap(void)
 		max_aaslinks = 6144;
 		if (max_aaslinks < 0) max_aaslinks = 0;
 		aasworld.linkheapsize = max_aaslinks;
-		aasworld.linkheap = (aas_link_t *) malloc(max_aaslinks * sizeof(aas_link_t));
+		aasworld.linkheap = (aas_link_t *) calloc(max_aaslinks * sizeof(aas_link_t));
 	} //end if
 	//link the links on the heap
 	aasworld.linkheap[0].prev_ent = NULL;
@@ -178,7 +178,7 @@ void AAS_InitAASLinkedEntities(void)
 {
 	if (!aasworld.loaded) return;
 	if (aasworld.arealinkedentities) free(aasworld.arealinkedentities);
-	aasworld.arealinkedentities = (aas_link_t **) malloc(
+	aasworld.arealinkedentities = (aas_link_t **) calloc(
 						aasworld.numareas * sizeof(aas_link_t *));
 } //end of the function AAS_InitAASLinkedEntities
 //===========================================================================
