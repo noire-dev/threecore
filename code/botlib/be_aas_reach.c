@@ -3195,10 +3195,6 @@ static aas_lreachability_t *AAS_FindFaceReachabilities(vec3_t *facepoints, int n
 		lreach->traveltime = 0;
 		lreach->next = lreachabilities;
 		lreachabilities = lreach;
-#ifndef BSPC
-		if (towardsface) AAS_PermanentLine(lreach->start, lreach->end, 1);
-		else AAS_PermanentLine(lreach->start, lreach->end, 2);
-#endif
 	} //end for
 	return lreachabilities;
 } //end of the function AAS_FindFaceReachabilities
@@ -3378,10 +3374,6 @@ static void AAS_Reachability_FuncBobbing(void)
 					lreach->facenum = (spawnflags << 16) | modelnum;
 					VectorCopy(startreach->start, lreach->start);
 					VectorCopy(endreach->end, lreach->end);
-#ifndef BSPC
-//					AAS_DrawArrow(lreach->start, lreach->end, LINECOLOR_BLUE, LINECOLOR_YELLOW);
-//					AAS_PermanentLine(lreach->start, lreach->end, 1);
-#endif
 					lreach->traveltype = TRAVEL_FUNCBOB;
 					lreach->traveltype |= AAS_TravelFlagsForTeam(ent);
 					lreach->traveltime = aassettings.rs_funcbob;
