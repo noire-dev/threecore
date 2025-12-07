@@ -106,6 +106,8 @@ void AAS_ContinueInit(float time) {
 	if (!aasworld.loaded) return;
 	//if AAS is already initialized
 	if (aasworld.initialized) return;
+	//calculate reachability, if not finished return
+	if (AAS_ContinueInitReachability(time)) return;
 	//initialize clustering for the new map
 	AAS_InitClustering();
 	//initialize the routing
