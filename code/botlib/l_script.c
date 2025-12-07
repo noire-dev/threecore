@@ -1096,7 +1096,7 @@ script_t *LoadScriptFile(const char *filename)
 #else
 	if (fread(script->buffer, length, 1, fp) != 1)
 	{
-		FreeMemory(buffer);
+		free(buffer);
 		script = NULL;
 	} //end if
 	fclose(fp);
@@ -1149,9 +1149,9 @@ script_t *LoadScriptMemory(const char *ptr, int length, const char *name)
 void FreeScript(script_t *script)
 {
 #ifdef PUNCTABLE
-	if (script->punctuationtable) FreeMemory(script->punctuationtable);
+	if (script->punctuationtable) free(script->punctuationtable);
 #endif //PUNCTABLE
-	FreeMemory(script);
+	free(script);
 } //end of the function FreeScript
 //============================================================================
 // set the base folder to load files from

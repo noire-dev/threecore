@@ -206,7 +206,7 @@ static void PC_PopIndent(source_t *source, int *type, int *skip)
 	*skip = indent->skip;
 	source->indentstack = source->indentstack->next;
 	source->skip -= indent->skip;
-	FreeMemory(indent);
+	free(indent);
 } //end of the function PC_PopIndent
 //============================================================================
 //
@@ -288,7 +288,7 @@ static token_t *PC_CopyToken(token_t *token)
 static void PC_FreeToken(token_t *token)
 {
 	//free(token);
-	FreeMemory(token);
+	free(token);
 //	token->next = freetokens;
 //	freetokens = token;
 	numtokens--;
@@ -642,8 +642,8 @@ static void PC_FreeDefine(define_t *define)
 		PC_FreeToken(t);
 	} //end for
 	//free the define
-	FreeMemory(define->name);
-	FreeMemory(define);
+	free(define->name);
+	free(define);
 } //end of the function PC_FreeDefine
 //============================================================================
 //
@@ -1299,7 +1299,7 @@ static define_t *PC_DefineFromString(const char *string)
 #endif //DEFINEHASHING
 	//
 #if DEFINEHASHING
-	FreeMemory(src.definehash);
+	free(src.definehash);
 #endif //DEFINEHASHING
 	//
 	FreeScript(script);
@@ -1561,9 +1561,9 @@ static int PC_OperatorPriority(int op)
 } //end of the function PC_OperatorPriority
 
 //#define AllocValue()			GetClearedMemory(sizeof(value_t));
-//#define FreeValue(val)		FreeMemory(val)
+//#define FreeValue(val)		free(val)
 //#define AllocOperator(op)		op = (operator_t *) GetClearedMemory(sizeof(operator_t));
-//#define FreeOperator(op)		FreeMemory(op);
+//#define FreeOperator(op)		free(op);
 
 #define MAX_VALUES		64
 #define MAX_OPERATORS	64
@@ -2001,14 +2001,14 @@ static int PC_EvaluateTokens(source_t *source, token_t *tokens, int *intvalue, f
 				else firstvalue = v->next;
 				if (v->next) v->next->prev = v->prev;
 			}
-			//FreeMemory(v);
+			//free(v);
 			FreeValue(v);
 		} //end if
 		//remove the operator
 		if (o->prev) o->prev->next = o->next;
 		else firstoperator = o->next;
 		if (o->next) o->next->prev = o->prev;
-		//FreeMemory(o);
+		//free(o);
 		FreeOperator(o);
 	} //end while
 	if (firstvalue)
@@ -2019,13 +2019,13 @@ static int PC_EvaluateTokens(source_t *source, token_t *tokens, int *intvalue, f
 	for (o = firstoperator; o; o = lastoperator)
 	{
 		lastoperator = o->next;
-		//FreeMemory(o);
+		//free(o);
 		FreeOperator(o);
 	} //end for
 	for (v = firstvalue; v; v = lastvalue)
 	{
 		lastvalue = v->next;
-		//FreeMemory(v);
+		//free(v);
 		FreeValue(v);
 	} //end for
 	if (!error) return qtrue;
@@ -2906,14 +2906,14 @@ void FreeSource(source_t *source)
 	{
 		indent = source->indentstack;
 		source->indentstack = source->indentstack->next;
-		FreeMemory(indent);
+		free(indent);
 	} //end for
 #if DEFINEHASHING
 	//
-	if (source->definehash) FreeMemory(source->definehash);
+	if (source->definehash) free(source->definehash);
 #endif //DEFINEHASHING
 	//free the source itself
-	FreeMemory(source);
+	free(source);
 } //end of the function FreeSource
 //============================================================================
 //

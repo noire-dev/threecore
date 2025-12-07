@@ -102,9 +102,9 @@ libvar_t *LibVarAlloc( const char *var_name )
 void LibVarDeAlloc( libvar_t *v )
 {
 	if ( v->string )
-		FreeMemory( v->string );
-	FreeMemory( v->name );
-	FreeMemory( v );
+		free( v->string );
+	free( v->name );
+	free( v );
 } //end of the function LibVarDeAlloc
 //===========================================================================
 //

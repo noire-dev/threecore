@@ -444,7 +444,7 @@ static void AAS_SetupReachabilityHeap(void)
 //===========================================================================
 static void AAS_ShutDownReachabilityHeap(void)
 {
-	FreeMemory(reachabilityheap);
+	free(reachabilityheap);
 	numlreachabilities = 0;
 } //end of the function AAS_ShutDownReachabilityHeap
 //===========================================================================
@@ -4200,7 +4200,7 @@ static void AAS_StoreReachability(void)
 	aas_lreachability_t *lreach;
 	aas_reachability_t *reach;
 
-	if (aasworld.reachability) FreeMemory(aasworld.reachability);
+	if (aasworld.reachability) free(aasworld.reachability);
 	aasworld.reachability = (aas_reachability_t *) GetClearedMemory((numlreachabilities + 10) * sizeof(aas_reachability_t));
 	aasworld.reachabilitysize = 1;
 	for (i = 0; i < aasworld.numareas; i++)
@@ -4377,7 +4377,7 @@ int AAS_ContinueInitReachability(float time)
 		//free the reachability link heap
 		AAS_ShutDownReachabilityHeap();
 		//
-		FreeMemory(areareachability);
+		free(areareachability);
 		//
 		aasworld.numreachabilityareas++;
 		//

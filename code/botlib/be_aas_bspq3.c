@@ -306,9 +306,9 @@ static void AAS_FreeBSPEntities(void)
 		{
 			nextepair = epair->next;
 			//
-			if (epair->key) FreeMemory(epair->key);
-			if (epair->value) FreeMemory(epair->value);
-			FreeMemory(epair);
+			if (epair->key) free(epair->key);
+			if (epair->value) free(epair->value);
+			free(epair);
 		} //end for
 	} //end for
 	bspworld.numentities = 0;
@@ -351,7 +351,7 @@ static void AAS_ParseBSPEntities(void)
 		while(PS_ReadToken(script, &token))
 		{
 			if (!strcmp(token.string, "}")) break;
-			epair = (bsp_epair_t *) GetClearedHunkMemory(sizeof(bsp_epair_t));
+			epair = (bsp_epair_t *) malloc(sizeof(bsp_epair_t));
 			epair->next = ent->epairs;
 			ent->epairs = epair;
 			if (token.type != TT_STRING)
@@ -362,7 +362,7 @@ static void AAS_ParseBSPEntities(void)
 				return;
 			} //end if
 			StripDoubleQuotes(token.string);
-			epair->key = (char *) GetHunkMemory(strlen(token.string) + 1);
+			epair->key = (char *) malloc(strlen(token.string) + 1);
 			strcpy(epair->key, token.string);
 			if (!PS_ExpectTokenType(script, TT_STRING, 0, &token))
 			{
@@ -371,7 +371,7 @@ static void AAS_ParseBSPEntities(void)
 				return;
 			} //end if
 			StripDoubleQuotes(token.string);
-			epair->value = (char *) GetHunkMemory(strlen(token.string) + 1);
+			epair->value = (char *) malloc(strlen(token.string) + 1);
 			strcpy(epair->value, token.string);
 		} //end while
 		if (strcmp(token.string, "}"))
@@ -394,7 +394,7 @@ void AAS_DumpBSPData(void)
 {
 	AAS_FreeBSPEntities();
 
-	if (bspworld.dentdata) FreeMemory(bspworld.dentdata);
+	if (bspworld.dentdata) free(bspworld.dentdata);
 	bspworld.dentdata = NULL;
 	bspworld.entdatasize = 0;
 	//
@@ -412,7 +412,7 @@ int AAS_LoadBSPFile(void)
 {
 	AAS_DumpBSPData();
 	bspworld.entdatasize = strlen(botimport.BSPEntityData()) + 1;
-	bspworld.dentdata = (char *) GetClearedHunkMemory(bspworld.entdatasize);
+	bspworld.dentdata = (char *) malloc(bspworld.entdatasize);
 	Com_Memcpy(bspworld.dentdata, botimport.BSPEntityData(), bspworld.entdatasize);
 	AAS_ParseBSPEntities();
 	bspworld.loaded = qtrue;

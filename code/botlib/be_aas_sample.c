@@ -103,7 +103,7 @@ void AAS_InitAASLinkHeap(void)
 		max_aaslinks = 6144;
 		if (max_aaslinks < 0) max_aaslinks = 0;
 		aasworld.linkheapsize = max_aaslinks;
-		aasworld.linkheap = (aas_link_t *) GetHunkMemory(max_aaslinks * sizeof(aas_link_t));
+		aasworld.linkheap = (aas_link_t *) malloc(max_aaslinks * sizeof(aas_link_t));
 	} //end if
 	//link the links on the heap
 	aasworld.linkheap[0].prev_ent = NULL;
@@ -128,7 +128,7 @@ void AAS_InitAASLinkHeap(void)
 //===========================================================================
 void AAS_FreeAASLinkHeap(void)
 {
-	if (aasworld.linkheap) FreeMemory(aasworld.linkheap);
+	if (aasworld.linkheap) free(aasworld.linkheap);
 	aasworld.linkheap = NULL;
 	aasworld.linkheapsize = 0;
 } //end of the function AAS_FreeAASLinkHeap
@@ -177,8 +177,8 @@ static void AAS_DeAllocAASLink(aas_link_t *link)
 void AAS_InitAASLinkedEntities(void)
 {
 	if (!aasworld.loaded) return;
-	if (aasworld.arealinkedentities) FreeMemory(aasworld.arealinkedentities);
-	aasworld.arealinkedentities = (aas_link_t **) GetClearedHunkMemory(
+	if (aasworld.arealinkedentities) free(aasworld.arealinkedentities);
+	aasworld.arealinkedentities = (aas_link_t **) malloc(
 						aasworld.numareas * sizeof(aas_link_t *));
 } //end of the function AAS_InitAASLinkedEntities
 //===========================================================================
@@ -189,7 +189,7 @@ void AAS_InitAASLinkedEntities(void)
 //===========================================================================
 void AAS_FreeAASLinkedEntities(void)
 {
-	if (aasworld.arealinkedentities) FreeMemory(aasworld.arealinkedentities);
+	if (aasworld.arealinkedentities) free(aasworld.arealinkedentities);
 	aasworld.arealinkedentities = NULL;
 } //end of the function AAS_InitAASLinkedEntities
 //===========================================================================

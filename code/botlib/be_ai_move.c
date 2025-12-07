@@ -141,7 +141,7 @@ void BotFreeMoveState(int handle)
 		botimport.Print(PRT_FATAL, "invalid move state %d\n", handle);
 		return;
 	} //end if
-	FreeMemory(botmovestates[handle]);
+	free(botmovestates[handle]);
 	botmovestates[handle] = NULL;
 } //end of the function BotFreeMoveState
 //========================================================================
@@ -2821,7 +2821,7 @@ void BotShutdownMoveAI(void)
 	{
 		if (botmovestates[i])
 		{
-			FreeMemory(botmovestates[i]);
+			free(botmovestates[i]);
 			botmovestates[i] = NULL;
 		} //end if
 	} //end for

@@ -216,9 +216,9 @@ int AAS_AlternativeRouteGoals(vec3_t start, int startareanum, vec3_t goal, int g
 void AAS_InitAlternativeRouting(void)
 {
 #ifdef ENABLE_ALTROUTING
-	if (midrangeareas) FreeMemory(midrangeareas);
+	if (midrangeareas) free(midrangeareas);
 	midrangeareas = (midrangearea_t *) GetMemory(aasworld.numareas * sizeof(midrangearea_t));
-	if (clusterareas) FreeMemory(clusterareas);
+	if (clusterareas) free(clusterareas);
 	clusterareas = (int *) GetMemory(aasworld.numareas * sizeof(int));
 #endif
 } //end of the function AAS_InitAlternativeRouting
@@ -231,9 +231,9 @@ void AAS_InitAlternativeRouting(void)
 void AAS_ShutdownAlternativeRouting(void)
 {
 #ifdef ENABLE_ALTROUTING
-	if (midrangeareas) FreeMemory(midrangeareas);
+	if (midrangeareas) free(midrangeareas);
 	midrangeareas = NULL;
-	if (clusterareas) FreeMemory(clusterareas);
+	if (clusterareas) free(clusterareas);
 	clusterareas = NULL;
 	numclusterareas = 0;
 #endif
