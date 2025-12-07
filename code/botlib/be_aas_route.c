@@ -1035,7 +1035,7 @@ static aas_routingcache_t *AAS_ReadCache(fileHandle_t fp)
 	aas_routingcache_t *cache;
 
 	botimport.FS_Read(&size, sizeof(size), fp);
-	cache = (aas_routingcache_t *) GetMemory(size);
+	cache = (aas_routingcache_t *) malloc(size);
 	cache->size = size;
 	botimport.FS_Read((unsigned char *)cache + sizeof(size), size - sizeof(size), fp);
 	cache->reachabilities = (unsigned char *) cache + sizeof(aas_routingcache_t) - sizeof(unsigned short) +
@@ -1124,7 +1124,7 @@ static int AAS_ReadRouteCache(void)
 	{
 		botimport.FS_Read(&size, sizeof(size), fp );
 		if (size) {
-			aasworld.areavisibility[i] = (byte *) GetMemory(size);
+			aasworld.areavisibility[i] = (byte *) malloc(size);
 			botimport.FS_Read(aasworld.areavisibility[i], size, fp );
 		}
 	}

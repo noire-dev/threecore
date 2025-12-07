@@ -84,9 +84,9 @@ libvar_t *LibVarAlloc( const char *var_name )
 {
 	libvar_t *v;
 
-	v = (libvar_t *) GetMemory( sizeof( libvar_t ) );
+	v = (libvar_t *) malloc( sizeof( libvar_t ) );
 	Com_Memset( v, 0, sizeof( libvar_t ) );
-	v->name = (char *) GetMemory( strlen( var_name )+1 );
+	v->name = (char *) malloc( strlen( var_name )+1 );
 	strcpy( v->name, var_name );
 	//add the variable in the list
 	v->next = libvarlist;
@@ -197,7 +197,7 @@ libvar_t *LibVar( const char *var_name, const char *value )
 	//create new variable
 	v = LibVarAlloc( var_name );
 	//variable string
-	v->string = (char *) GetMemory( strlen( value ) + 1 );
+	v->string = (char *) malloc( strlen( value ) + 1 );
 	strcpy( v->string, value );
 	//the value
 	v->value = LibVarStringValue( v->string );

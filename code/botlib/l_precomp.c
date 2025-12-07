@@ -175,7 +175,7 @@ static void PC_PushIndent(source_t *source, int type, int skip)
 {
 	indent_t *indent;
 
-	indent = (indent_t *) GetMemory(sizeof(indent_t));
+	indent = (indent_t *) malloc(sizeof(indent_t));
 	indent->type = type;
 	indent->script = source->scriptstack;
 	indent->skip = (skip != 0);
@@ -262,7 +262,7 @@ static token_t *PC_CopyToken(token_t *token)
 	token_t *t;
 
 //	t = (token_t *) malloc(sizeof(token_t));
-	t = (token_t *) GetMemory(sizeof(token_t));
+	t = (token_t *) malloc(sizeof(token_t));
 //	t = freetokens;
 	if (!t)
 	{
@@ -1158,9 +1158,9 @@ static int PC_Directive_define(source_t *source)
 		if (!PC_Directive_undef(source)) return qfalse;
 	} //end if
 	//allocate define
-	define = (define_t *) GetMemory(sizeof(define_t));
+	define = (define_t *) malloc(sizeof(define_t));
 	Com_Memset(define, 0, sizeof(define_t));
-	define->name = (char *) GetMemory(strlen(token.string) + 1);
+	define->name = (char *) malloc(strlen(token.string) + 1);
 	strcpy(define->name, token.string);
 	//add the define to the source
 #if DEFINEHASHING
@@ -1355,9 +1355,9 @@ static define_t *PC_CopyDefine(source_t *source, const define_t *define)
 	define_t *newdefine;
 	token_t *token, *newtoken, *lasttoken;
 
-	newdefine = (define_t *) GetMemory(sizeof(define_t));
+	newdefine = (define_t *) malloc(sizeof(define_t));
 	//copy the define name
-	newdefine->name = (char *) GetMemory(strlen(define->name) + 1);
+	newdefine->name = (char *) malloc(strlen(define->name) + 1);
 	strcpy(newdefine->name, define->name);
 	newdefine->flags = define->flags;
 	newdefine->builtin = define->builtin;
@@ -2837,7 +2837,7 @@ source_t *LoadSourceFile(const char *filename)
 
 	script->next = NULL;
 
-	source = (source_t *) GetMemory( sizeof( *source ) );
+	source = (source_t *) malloc( sizeof( *source ) );
 	Com_Memset( source, 0, sizeof( *source ) );
 
 	Q_strncpyz(source->filename, filename, sizeof(source->filename));

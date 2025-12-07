@@ -217,9 +217,9 @@ void AAS_InitAlternativeRouting(void)
 {
 #ifdef ENABLE_ALTROUTING
 	if (midrangeareas) free(midrangeareas);
-	midrangeareas = (midrangearea_t *) GetMemory(aasworld.numareas * sizeof(midrangearea_t));
+	midrangeareas = (midrangearea_t *) malloc(aasworld.numareas * sizeof(midrangearea_t));
 	if (clusterareas) free(clusterareas);
-	clusterareas = (int *) GetMemory(aasworld.numareas * sizeof(int));
+	clusterareas = (int *) malloc(aasworld.numareas * sizeof(int));
 #endif
 } //end of the function AAS_InitAlternativeRouting
 //===========================================================================
