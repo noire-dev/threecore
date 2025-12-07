@@ -84,9 +84,9 @@ libvar_t *LibVarAlloc( const char *var_name )
 {
 	libvar_t *v;
 
-	v = (libvar_t *) malloc( sizeof( libvar_t ) );
+	v = (libvar_t *) GetMemory( sizeof( libvar_t ) );
 	Com_Memset( v, 0, sizeof( libvar_t ) );
-	v->name = (char *) malloc( strlen( var_name )+1 );
+	v->name = (char *) GetMemory( strlen( var_name )+1 );
 	strcpy( v->name, var_name );
 	//add the variable in the list
 	v->next = libvarlist;
@@ -102,9 +102,9 @@ libvar_t *LibVarAlloc( const char *var_name )
 void LibVarDeAlloc( libvar_t *v )
 {
 	if ( v->string )
-		free( v->string );
-	free( v->name );
-	free( v );
+		FreeMemory( v->string );
+	FreeMemory( v->name );
+	FreeMemory( v );
 } //end of the function LibVarDeAlloc
 //===========================================================================
 //
@@ -197,7 +197,7 @@ libvar_t *LibVar( const char *var_name, const char *value )
 	//create new variable
 	v = LibVarAlloc( var_name );
 	//variable string
-	v->string = (char *) malloc( strlen( value ) + 1 );
+	v->string = (char *) GetMemory( strlen( value ) + 1 );
 	strcpy( v->string, value );
 	//the value
 	v->value = LibVarStringValue( v->string );
@@ -219,3 +219,43 @@ const char *LibVarString( const char *var_name, const char *value )
 	v = LibVar( var_name, value );
 	return v->string;
 } //end of the function LibVarString
+//===========================================================================
+//
+// Parameter:				-
+// Returns:					-
+// Changes Globals:		-
+//===========================================================================
+float LibVarValue( const char *var_name, const char *value )
+{
+	libvar_t *v;
+
+	v = LibVar( var_name, value );
+	return v->value;
+} //end of the function LibVarValue
+//===========================================================================
+//
+// Parameter:				-
+// Returns:					-
+// Changes Globals:		-
+//===========================================================================
+void LibVarSet( const char *var_name, const char *value )
+{
+	libvar_t *v;
+
+	v = LibVarGet(var_name);
+	if ( v )
+	{
+		FreeMemory( v->string );
+	} //end if
+	else
+	{
+		v = LibVarAlloc( var_name );
+	} //end else
+	//variable string
+	v->string = (char *) GetMemory( strlen( value ) + 1 );
+	strcpy( v->string, value );
+	//the value
+	v->value = LibVarStringValue( v->string );
+	//variable is modified
+	v->modified = qtrue;
+} //end of the function LibVarSet

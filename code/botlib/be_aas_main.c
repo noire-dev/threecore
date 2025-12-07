@@ -46,6 +46,8 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 aas_t aasworld;
 
+libvar_t *saveroutingcache;
+
 //===========================================================================
 //
 // Parameter:				-
@@ -92,14 +94,21 @@ static void AAS_SetInitialized(void)
 {
 	aasworld.initialized = qtrue;
 	botimport.Print(PRT_MESSAGE, "AAS initialized.\n");
-}
+#ifdef DEBUG
+	//create all the routing cache
+	//AAS_CreateAllRoutingCache();
+	//
+	//AAS_RoutingInfo();
+#endif
+} //end of the function AAS_SetInitialized
 //===========================================================================
 //
 // Parameter:				-
 // Returns:					-
 // Changes Globals:		-
 //===========================================================================
-void AAS_ContinueInit(float time) {
+void AAS_ContinueInit(float time)
+{
 	//if no AAS file loaded
 	if (!aasworld.loaded) return;
 	//if AAS is already initialized
@@ -108,6 +117,22 @@ void AAS_ContinueInit(float time) {
 	if (AAS_ContinueInitReachability(time)) return;
 	//initialize clustering for the new map
 	AAS_InitClustering();
+	//if reachability has been calculated and an AAS file should be written
+	//or there is a forced data optimization
+	if (aasworld.savefile || ((int)LibVarGetValue("forcewrite")))
+	{
+		//optimize the AAS data
+		if ((int)LibVarValue("aasoptimize", "0")) AAS_Optimize();
+		//save the AAS file
+		if (AAS_WriteAASFile(aasworld.filename))
+		{
+			botimport.Print(PRT_MESSAGE, "%s written successfully\n", aasworld.filename);
+		} //end if
+		else
+		{
+			botimport.Print(PRT_ERROR, "couldn't write %s\n", aasworld.filename);
+		} //end else
+	} //end if
 	//initialize the routing
 	AAS_InitRouting();
 	//at this point AAS is initialized
@@ -120,7 +145,8 @@ void AAS_ContinueInit(float time) {
 // Returns:					-
 // Changes Globals:		-
 //===========================================================================
-int AAS_StartFrame(float time) {
+int AAS_StartFrame(float time)
+{
 	aasworld.time = time;
 	//unlink all entities that were not updated last frame
 	AAS_UnlinkInvalidEntities();
@@ -128,7 +154,34 @@ int AAS_StartFrame(float time) {
 	AAS_InvalidateEntities();
 	//initialize AAS
 	AAS_ContinueInit(time);
+	//
 	aasworld.frameroutingupdates = 0;
+	//
+	if (botDeveloper)
+	{
+		if (LibVarGetValue("showcacheupdates"))
+		{
+			AAS_RoutingInfo();
+			LibVarSet("showcacheupdates", "0");
+		} //end if
+		if (LibVarGetValue("showmemoryusage"))
+		{
+			PrintUsedMemorySize();
+			LibVarSet("showmemoryusage", "0");
+		} //end if
+		if (LibVarGetValue("memorydump"))
+		{
+			PrintMemoryLabels();
+			LibVarSet("memorydump", "0");
+		} //end if
+	} //end if
+	//
+	if (saveroutingcache->value)
+	{
+		AAS_WriteRouteCache();
+		LibVarSet("saveroutingcache", "0");
+	} //end if
+	//
 	aasworld.numframes++;
 	return BLERR_NOERROR;
 } //end of the function AAS_StartFrame
@@ -241,16 +294,16 @@ int AAS_Setup(void)
 {
 	aasworld.maxclients = MAX_CLIENTS;
 	aasworld.maxentities = MAX_GENTITIES;
-
-	botimport.Print(PRT_MESSAGE, "AIDEBUG: maxentities: %i.\n", aasworld.maxentities);
+	// as soon as it's set to 1 the routing cache will be saved
+	saveroutingcache = LibVar("saveroutingcache", "0");
 	//allocate memory for the entities
-	if (aasworld.entities) free(aasworld.entities);
-	aasworld.entities = (aas_entity_t *) malloc(aasworld.maxentities * sizeof(aas_entity_t));
+	if (aasworld.entities) FreeMemory(aasworld.entities);
+	aasworld.entities = (aas_entity_t *) GetClearedHunkMemory(aasworld.maxentities * sizeof(aas_entity_t));
 	//invalidate all the entities
-	botimport.Print(PRT_MESSAGE, "AIDEBUG: malloc: %i.\n", aasworld.maxentities);
 	AAS_InvalidateEntities();
-	botimport.Print(PRT_MESSAGE, "AIDEBUG: AAS_InvalidateEntities: %i.\n", aasworld.maxentities);
-
+	//force some recalculations
+	//LibVarSet("forceclustering", "1");			//force clustering calculation
+	//LibVarSet("forcereachability", "1");		//force reachability calculation
 	aasworld.numframes = 0;
 	return BLERR_NOERROR;
 } //end of the function AAS_Setup
@@ -274,7 +327,7 @@ void AAS_Shutdown(void)
 	//free the aas data
 	AAS_DumpAASData();
 	//free the entities
-	if (aasworld.entities) free(aasworld.entities);
+	if (aasworld.entities) FreeMemory(aasworld.entities);
 	//clear the aasworld structure
 	Com_Memset(&aasworld, 0, sizeof(aas_t));
 	//aas has not been initialized

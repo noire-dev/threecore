@@ -293,7 +293,11 @@ int AAS_BestReachableFromJumpPadArea(vec3_t origin, vec3_t mins, vec3_t maxs)
 	aas_link_t *areas, *link;
 	char classname[MAX_EPAIRKEY];
 
+#ifdef BSPC
 	bot_visualizejumppads = 0;
+#else
+	bot_visualizejumppads = LibVarValue("bot_visualizejumppads", "0");
+#endif
 	VectorAdd(origin, mins, bboxmins);
 	VectorAdd(origin, maxs, bboxmaxs);
 	for (ent = AAS_NextBSPEntity(0); ent; ent = AAS_NextBSPEntity(ent))
@@ -426,7 +430,7 @@ static void AAS_SetupReachabilityHeap(void)
 {
 	int i;
 
-	reachabilityheap = (aas_lreachability_t *) malloc(
+	reachabilityheap = (aas_lreachability_t *) GetClearedMemory(
 						AAS_MAX_REACHABILITYSIZE * sizeof(aas_lreachability_t));
 	for (i = 0; i < AAS_MAX_REACHABILITYSIZE-1; i++)
 	{
@@ -444,7 +448,7 @@ static void AAS_SetupReachabilityHeap(void)
 //===========================================================================
 static void AAS_ShutDownReachabilityHeap(void)
 {
-	free(reachabilityheap);
+	FreeMemory(reachabilityheap);
 	numlreachabilities = 0;
 } //end of the function AAS_ShutDownReachabilityHeap
 //===========================================================================
@@ -3191,6 +3195,10 @@ static aas_lreachability_t *AAS_FindFaceReachabilities(vec3_t *facepoints, int n
 		lreach->traveltime = 0;
 		lreach->next = lreachabilities;
 		lreachabilities = lreach;
+#ifndef BSPC
+		if (towardsface) AAS_PermanentLine(lreach->start, lreach->end, 1);
+		else AAS_PermanentLine(lreach->start, lreach->end, 2);
+#endif
 	} //end for
 	return lreachabilities;
 } //end of the function AAS_FindFaceReachabilities
@@ -3260,6 +3268,14 @@ static void AAS_Reachability_FuncBobbing(void)
 		//
 		Log_Write("funcbob model %d, start = {%1.1f, %1.1f, %1.1f} end = {%1.1f, %1.1f, %1.1f}\n",
 					modelnum, move_start[0], move_start[1], move_start[2], move_end[0], move_end[1], move_end[2]);
+		//
+#ifndef BSPC
+		/*
+		AAS_DrawPermanentCross(move_start, 4, 1);
+		AAS_DrawPermanentCross(move_end, 4, 2);
+		*/
+#endif
+		//
 		for (i = 0; i < 4; i++)
 		{
 			VectorCopy(move_start, start_edgeverts[i]);
@@ -3322,10 +3338,20 @@ static void AAS_Reachability_FuncBobbing(void)
 			for (startreach = firststartreach; startreach; startreach = nextstartreach)
 			{
 				nextstartreach = startreach->next;
+				//
+				//trace = AAS_TraceClientBBox(startreach->start, move_start_top, PRESENCE_NORMAL, -1);
+				//if (trace.fraction < 1) continue;
+				//
 				for (endreach = firstendreach; endreach; endreach = nextendreach)
 				{
 					nextendreach = endreach->next;
+					//
+					//trace = AAS_TraceClientBBox(endreach->end, move_end_top, PRESENCE_NORMAL, -1);
+					//if (trace.fraction < 1) continue;
+					//
 					Log_Write("funcbob reach from area %d to %d\n", startreach->areanum, endreach->areanum);
+					//
+					//
 					if (i == 0) VectorCopy(move_start_top, org);
 					else VectorCopy(move_end_top, org);
 					VectorSubtract(startreach->start, org, dir);
@@ -3352,6 +3378,10 @@ static void AAS_Reachability_FuncBobbing(void)
 					lreach->facenum = (spawnflags << 16) | modelnum;
 					VectorCopy(startreach->start, lreach->start);
 					VectorCopy(endreach->end, lreach->end);
+#ifndef BSPC
+//					AAS_DrawArrow(lreach->start, lreach->end, LINECOLOR_BLUE, LINECOLOR_YELLOW);
+//					AAS_PermanentLine(lreach->start, lreach->end, 1);
+#endif
 					lreach->traveltype = TRAVEL_FUNCBOB;
 					lreach->traveltype |= AAS_TravelFlagsForTeam(ent);
 					lreach->traveltime = aassettings.rs_funcbob;
@@ -3401,7 +3431,11 @@ static void AAS_Reachability_JumpPad(void)
 	//char target[MAX_EPAIRKEY], targetname[MAX_EPAIRKEY], model[MAX_EPAIRKEY];
 	char classname[MAX_EPAIRKEY];
 
+#ifdef BSPC
 	bot_visualizejumppads = 0;
+#else
+	bot_visualizejumppads = LibVarValue("bot_visualizejumppads", "0");
+#endif
 	for (ent = AAS_NextBSPEntity(0); ent; ent = AAS_NextBSPEntity(ent))
 	{
 		if (!AAS_ValueForBSPEpairKey(ent, "classname", classname, MAX_EPAIRKEY)) continue;
@@ -4200,8 +4234,8 @@ static void AAS_StoreReachability(void)
 	aas_lreachability_t *lreach;
 	aas_reachability_t *reach;
 
-	if (aasworld.reachability) free(aasworld.reachability);
-	aasworld.reachability = (aas_reachability_t *) malloc((numlreachabilities + 10) * sizeof(aas_reachability_t));
+	if (aasworld.reachability) FreeMemory(aasworld.reachability);
+	aasworld.reachability = (aas_reachability_t *) GetClearedMemory((numlreachabilities + 10) * sizeof(aas_reachability_t));
 	aasworld.reachabilitysize = 1;
 	for (i = 0; i < aasworld.numareas; i++)
 	{
@@ -4377,7 +4411,7 @@ int AAS_ContinueInitReachability(float time)
 		//free the reachability link heap
 		AAS_ShutDownReachabilityHeap();
 		//
-		free(areareachability);
+		FreeMemory(areareachability);
 		//
 		aasworld.numreachabilityareas++;
 		//
@@ -4424,7 +4458,7 @@ void AAS_InitReachability(void)
 	//setup the heap with reachability links
 	AAS_SetupReachabilityHeap();
 	//allocate area reachability link array
-	areareachability = (aas_lreachability_t **) malloc(
+	areareachability = (aas_lreachability_t **) GetClearedMemory(
 									aasworld.numareas * sizeof(aas_lreachability_t *));
 	//
 	AAS_SetWeaponJumpAreaFlags();

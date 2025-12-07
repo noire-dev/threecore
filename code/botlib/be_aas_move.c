@@ -73,45 +73,45 @@ int AAS_DropToFloor(vec3_t origin, vec3_t mins, vec3_t maxs)
 //===========================================================================
 void AAS_InitSettings(void)
 {
-	aassettings.phys_gravitydirection[0]	  = 0;
-	aassettings.phys_gravitydirection[1]	  = 0;
-	aassettings.phys_gravitydirection[2]	  = -1;
-	aassettings.phys_friction                 = 6;
-    aassettings.phys_stopspeed                = 100;
-    aassettings.phys_gravity                  = 800;
-    aassettings.phys_waterfriction            = 1;
-    aassettings.phys_watergravity             = 400;
-    aassettings.phys_maxvelocity              = 320;
-    aassettings.phys_maxwalkvelocity          = 320;
-    aassettings.phys_maxcrouchvelocity        = 100;
-    aassettings.phys_maxswimvelocity          = 150;
-    aassettings.phys_walkaccelerate           = 10;
-    aassettings.phys_airaccelerate            = 1;
-    aassettings.phys_swimaccelerate           = 4;
-    aassettings.phys_maxstep                  = 19;
-    aassettings.phys_maxsteepness             = 0.7;
-    aassettings.phys_maxwaterjump             = 18;
-    aassettings.phys_maxbarrier               = 33;
-    aassettings.phys_jumpvel                  = 270;
-    aassettings.phys_falldelta5               = 40;
-    aassettings.phys_falldelta10              = 60;
-    aassettings.rs_waterjump                  = 400;
-    aassettings.rs_teleport                   = 50;
-    aassettings.rs_barrierjump                = 100;
-    aassettings.rs_startcrouch                = 300;
-    aassettings.rs_startgrapple               = 500;
-    aassettings.rs_startwalkoffledge          = 70;
-    aassettings.rs_startjump                  = 300;
-    aassettings.rs_rocketjump                 = 500;
-    aassettings.rs_bfgjump                    = 500;
-    aassettings.rs_jumppad                    = 250;
-    aassettings.rs_aircontrolledjumppad       = 300;
-    aassettings.rs_funcbob                    = 300;
-    aassettings.rs_startelevator              = 50;
-    aassettings.rs_falldamage5                = 300;
-    aassettings.rs_falldamage10               = 500;
-    aassettings.rs_maxfallheight              = 0;
-    aassettings.rs_maxjumpfallheight          = 450;
+	aassettings.phys_gravitydirection[0]	= 0;
+	aassettings.phys_gravitydirection[1]	= 0;
+	aassettings.phys_gravitydirection[2]	= -1;
+	aassettings.phys_friction				= LibVarValue("phys_friction", "6");
+	aassettings.phys_stopspeed				= LibVarValue("phys_stopspeed", "100");
+	aassettings.phys_gravity				= LibVarValue("phys_gravity", "800");
+	aassettings.phys_waterfriction			= LibVarValue("phys_waterfriction", "1");
+	aassettings.phys_watergravity			= LibVarValue("phys_watergravity", "400");
+	aassettings.phys_maxvelocity			= LibVarValue("phys_maxvelocity", "320");
+	aassettings.phys_maxwalkvelocity		= LibVarValue("phys_maxwalkvelocity", "320");
+	aassettings.phys_maxcrouchvelocity		= LibVarValue("phys_maxcrouchvelocity", "100");
+	aassettings.phys_maxswimvelocity		= LibVarValue("phys_maxswimvelocity", "150");
+	aassettings.phys_walkaccelerate			= LibVarValue("phys_walkaccelerate", "10");
+	aassettings.phys_airaccelerate			= LibVarValue("phys_airaccelerate", "1");
+	aassettings.phys_swimaccelerate			= LibVarValue("phys_swimaccelerate", "4");
+	aassettings.phys_maxstep				= LibVarValue("phys_maxstep", "19");
+	aassettings.phys_maxsteepness			= LibVarValue("phys_maxsteepness", "0.7");
+	aassettings.phys_maxwaterjump			= LibVarValue("phys_maxwaterjump", "18");
+	aassettings.phys_maxbarrier				= LibVarValue("phys_maxbarrier", "33");
+	aassettings.phys_jumpvel				= LibVarValue("phys_jumpvel", "270");
+	aassettings.phys_falldelta5				= LibVarValue("phys_falldelta5", "40");
+	aassettings.phys_falldelta10			= LibVarValue("phys_falldelta10", "60");
+	aassettings.rs_waterjump				= LibVarValue("rs_waterjump", "400");
+	aassettings.rs_teleport					= LibVarValue("rs_teleport", "50");
+	aassettings.rs_barrierjump				= LibVarValue("rs_barrierjump", "100");
+	aassettings.rs_startcrouch				= LibVarValue("rs_startcrouch", "300");
+	aassettings.rs_startgrapple				= LibVarValue("rs_startgrapple", "500");
+	aassettings.rs_startwalkoffledge		= LibVarValue("rs_startwalkoffledge", "70");
+	aassettings.rs_startjump				= LibVarValue("rs_startjump", "300");
+	aassettings.rs_rocketjump				= LibVarValue("rs_rocketjump", "500");
+	aassettings.rs_bfgjump					= LibVarValue("rs_bfgjump", "500");
+	aassettings.rs_jumppad					= LibVarValue("rs_jumppad", "250");
+	aassettings.rs_aircontrolledjumppad		= LibVarValue("rs_aircontrolledjumppad", "300");
+	aassettings.rs_funcbob					= LibVarValue("rs_funcbob", "300");
+	aassettings.rs_startelevator			= LibVarValue("rs_startelevator", "50");
+	aassettings.rs_falldamage5				= LibVarValue("rs_falldamage5", "300");
+	aassettings.rs_falldamage10				= LibVarValue("rs_falldamage10", "500");
+	aassettings.rs_maxfallheight			= LibVarValue("rs_maxfallheight", "0");
+	aassettings.rs_maxjumpfallheight		= LibVarValue("rs_maxjumpfallheight", "450");
 } //end of the function AAS_InitSettings
 //===========================================================================
 // returns qtrue if the bot is against a ladder
@@ -190,9 +190,9 @@ int AAS_OnGround(vec3_t origin, int presencetype, int passent)
 
 	VectorCopy(origin, end);
 	end[2] -= 10;
-    botimport.Print(PRT_MESSAGE, "AIDEBUG->AAS_OnGround start\n");
+
 	trace = AAS_TraceClientBBox(origin, end, presencetype, passent);
-    botimport.Print(PRT_MESSAGE, "AIDEBUG->AAS_OnGround AAS_TraceClientBBox\n");
+
 	//if in solid
 	if (trace.startsolid) return qfalse;
 	//if nothing hit at all
@@ -200,9 +200,7 @@ int AAS_OnGround(vec3_t origin, int presencetype, int passent)
 	//if too far from the hit plane
 	if (origin[2] - trace.endpos[2] > 10) return qfalse;
 	//check if the plane isn't too steep
-	botimport.Print(PRT_MESSAGE, "AIDEBUG->AAS_OnGround before AAS_PlaneFromNum\n");
 	plane = AAS_PlaneFromNum(trace.planenum);
-	botimport.Print(PRT_MESSAGE, "AIDEBUG->AAS_OnGround AAS_PlaneFromNum\n");
 	if (DotProduct(plane->normal, up) < aassettings.phys_maxsteepness) return qfalse;
 	//the bot is on the ground
 	return qtrue;
@@ -644,7 +642,15 @@ static int AAS_ClientMovementPrediction( aas_clientmove_t *move,
 			VectorAdd(org, left_test_vel, end);
 			//trace a bounding box
 			trace = AAS_TraceClientBBox(org, end, presencetype, entnum);
-
+			//
+//#ifdef AAS_MOVE_DEBUG
+			if (visualize)
+			{
+				if (trace.startsolid) botimport.Print(PRT_MESSAGE, "PredictMovement: start solid\n");
+				AAS_DebugLine(org, trace.endpos, LINECOLOR_RED);
+			} //end if
+//#endif //AAS_MOVE_DEBUG
+			//
 			if (stopevent & (SE_ENTERAREA|SE_TOUCHJUMPPAD|SE_TOUCHTELEPORTER|SE_TOUCHCLUSTERPORTAL))
 			{
 				numareas = AAS_TraceAreas(org, trace.endpos, areas, points, 20);
@@ -782,6 +788,17 @@ static int AAS_ClientMovementPrediction( aas_clientmove_t *move,
 							VectorSubtract(end, steptrace.endpos, left_test_vel);
 							left_test_vel[2] = 0;
 							frame_test_vel[2] = 0;
+//#ifdef AAS_MOVE_DEBUG
+							if (visualize)
+							{
+								if (steptrace.endpos[2] - org[2] > 0.125)
+								{
+									VectorCopy(org, start);
+									start[2] = steptrace.endpos[2];
+									AAS_DebugLine(org, start, LINECOLOR_BLUE);
+								} //end if
+							} //end if
+//#endif //AAS_MOVE_DEBUG
 							org[2] = steptrace.endpos[2];
 							step = qtrue;
 						} //end if

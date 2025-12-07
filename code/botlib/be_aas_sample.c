@@ -44,6 +44,9 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #include "be_aas_funcs.h"
 #include "be_aas_def.h"
 
+
+//#define AAS_SAMPLE_DEBUG
+
 #define BBOX_NORMAL_EPSILON		0.001
 
 #define ON_EPSILON					0 //0.0005
@@ -97,10 +100,14 @@ void AAS_InitAASLinkHeap(void)
 	//if there's no link heap present
 	if (!aasworld.linkheap)
 	{
+#ifdef BSPC
 		max_aaslinks = 6144;
+#else
+		max_aaslinks = (int) LibVarValue("max_aaslinks", "6144");
+#endif
 		if (max_aaslinks < 0) max_aaslinks = 0;
 		aasworld.linkheapsize = max_aaslinks;
-		aasworld.linkheap = (aas_link_t *) malloc(max_aaslinks * sizeof(aas_link_t));
+		aasworld.linkheap = (aas_link_t *) GetHunkMemory(max_aaslinks * sizeof(aas_link_t));
 	} //end if
 	//link the links on the heap
 	aasworld.linkheap[0].prev_ent = NULL;
@@ -125,7 +132,7 @@ void AAS_InitAASLinkHeap(void)
 //===========================================================================
 void AAS_FreeAASLinkHeap(void)
 {
-	if (aasworld.linkheap) free(aasworld.linkheap);
+	if (aasworld.linkheap) FreeMemory(aasworld.linkheap);
 	aasworld.linkheap = NULL;
 	aasworld.linkheapsize = 0;
 } //end of the function AAS_FreeAASLinkHeap
@@ -142,6 +149,12 @@ aas_link_t *AAS_AllocAASLink(void)
 	link = aasworld.freelinks;
 	if (!link)
 	{
+#ifndef BSPC
+		if (botDeveloper)
+#endif
+		{
+			botimport.Print(PRT_FATAL, "empty aas link heap\n");
+		} //end if
 		return NULL;
 	} //end if
 	if (aasworld.freelinks) aasworld.freelinks = aasworld.freelinks->next_ent;
@@ -174,8 +187,8 @@ static void AAS_DeAllocAASLink(aas_link_t *link)
 void AAS_InitAASLinkedEntities(void)
 {
 	if (!aasworld.loaded) return;
-	if (aasworld.arealinkedentities) free(aasworld.arealinkedentities);
-	aasworld.arealinkedentities = (aas_link_t **) malloc(
+	if (aasworld.arealinkedentities) FreeMemory(aasworld.arealinkedentities);
+	aasworld.arealinkedentities = (aas_link_t **) GetClearedHunkMemory(
 						aasworld.numareas * sizeof(aas_link_t *));
 } //end of the function AAS_InitAASLinkedEntities
 //===========================================================================
@@ -186,7 +199,7 @@ void AAS_InitAASLinkedEntities(void)
 //===========================================================================
 void AAS_FreeAASLinkedEntities(void)
 {
-	if (aasworld.arealinkedentities) free(aasworld.arealinkedentities);
+	if (aasworld.arealinkedentities) FreeMemory(aasworld.arealinkedentities);
 	aasworld.arealinkedentities = NULL;
 } //end of the function AAS_InitAASLinkedEntities
 //===========================================================================
@@ -335,6 +348,48 @@ int AAS_PointPresenceType(vec3_t point)
 	return aasworld.areasettings[areanum].presencetype;
 } //end of the function AAS_PointPresenceType
 //===========================================================================
+//
+// Parameter:				-
+// Returns:					-
+// Changes Globals:		-
+//===========================================================================
+static qboolean AAS_AreaEntityCollision(int areanum, vec3_t start, vec3_t end,
+										int presencetype, int passent, aas_trace_t *trace)
+{
+	int collision;
+	vec3_t boxmins, boxmaxs;
+	aas_link_t *link;
+	bsp_trace_t bsptrace;
+
+	AAS_PresenceTypeBoundingBox(presencetype, boxmins, boxmaxs);
+
+	Com_Memset(&bsptrace, 0, sizeof(bsp_trace_t)); //make compiler happy
+	//assume no collision
+	bsptrace.fraction = 1;
+	collision = qfalse;
+	for (link = aasworld.arealinkedentities[areanum]; link; link = link->next_ent)
+	{
+		//ignore the pass entity
+		if (link->entnum == passent) continue;
+		//
+		if (AAS_EntityCollision(link->entnum, start, boxmins, boxmaxs, end,
+												CONTENTS_SOLID|CONTENTS_PLAYERCLIP, &bsptrace))
+		{
+			collision = qtrue;
+		} //end if
+	} //end for
+	if (collision)
+	{
+		trace->startsolid = bsptrace.startsolid;
+		trace->ent = bsptrace.ent;
+		VectorCopy(bsptrace.endpos, trace->endpos);
+		trace->area = 0;
+		trace->planenum = 0;
+		return qtrue;
+	} //end if
+	return qfalse;
+} //end of the function AAS_AreaEntityCollision
+//===========================================================================
 // recursive subdivision of the line by the BSP tree.
 //
 // Parameter:				-
@@ -356,11 +411,7 @@ aas_trace_t AAS_TraceClientBBox(vec3_t start, vec3_t end, int presencetype,
 	//clear the trace structure
 	Com_Memset(&trace, 0, sizeof(aas_trace_t));
 
-    botimport.Print(PRT_MESSAGE, "AIDEBUG->AAS_TraceClientBBox start\n");
-
 	if (!aasworld.loaded) return trace;
-	
-	botimport.Print(PRT_MESSAGE, "AIDEBUG->AAS_TraceClientBBox after start\n");
 	
 	tstack_p = tracestack;
 	//we start with the whole line on the stack
@@ -396,8 +447,15 @@ aas_trace_t AAS_TraceClientBBox(vec3_t start, vec3_t end, int presencetype,
 		//if it is an area
 		if (nodenum < 0)
 		{
+#ifdef AAS_SAMPLE_DEBUG
+			if (-nodenum > aasworld.numareasettings)
+			{
+				botimport.Print(PRT_ERROR, "AAS_TraceBoundingBox: -nodenum out of range\n");
+				return trace;
+			} //end if
+#endif //AAS_SAMPLE_DEBUG
+			//botimport.Print(PRT_MESSAGE, "areanum = %d, must be %d\n", -nodenum, AAS_PointAreaNum(start));
 			//if can't enter the area because it hasn't got the right presence type
-			botimport.Print(PRT_MESSAGE, "AIDEBUG->AAS_TraceClientBBox nodenum\n");
 			if (!(aasworld.areasettings[-nodenum].presencetype & presencetype))
 			{
 				//if the start point is still the initial start point
@@ -429,10 +487,27 @@ aas_trace_t AAS_TraceClientBBox(vec3_t start, vec3_t end, int presencetype,
 				if (DotProduct(v1, plane->normal) > 0) trace.planenum ^= 1;
 				return trace;
 			} //end if
+			else
+			{
+				if (passent >= 0)
+				{
+					if (AAS_AreaEntityCollision(-nodenum, tstack_p->start,
+													tstack_p->end, presencetype, passent,
+													&trace))
+					{
+						if (!trace.startsolid)
+						{
+							VectorSubtract(end, start, v1);
+							VectorSubtract(trace.endpos, start, v2);
+							trace.fraction = VectorLength(v2) / VectorLength(v1);
+						} //end if
+						return trace;
+					} //end if
+				} //end if
+			} //end else
 			trace.lastarea = -nodenum;
 			continue;
 		} //end if
-		botimport.Print(PRT_MESSAGE, "AIDEBUG->AAS_TraceClientBBox 2\n");
 		//if it is a solid leaf
 		if (!nodenum)
 		{
@@ -465,6 +540,13 @@ aas_trace_t AAS_TraceClientBBox(vec3_t start, vec3_t end, int presencetype,
 			if (DotProduct(v1, plane->normal) > 0) trace.planenum ^= 1;
 			return trace;
 		} //end if
+#ifdef AAS_SAMPLE_DEBUG
+		if (nodenum > aasworld.numnodes)
+		{
+			botimport.Print(PRT_ERROR, "AAS_TraceBoundingBox: nodenum out of range\n");
+			return trace;
+		} //end if
+#endif //AAS_SAMPLE_DEBUG
 		//the node to test against
 		aasnode = &aasworld.nodes[nodenum];
 		//start point of current line to test against node
@@ -475,7 +557,26 @@ aas_trace_t AAS_TraceClientBBox(vec3_t start, vec3_t end, int presencetype,
 		plane = &aasworld.planes[aasnode->planenum];
 
 		switch(plane->type)
-		{
+		{/*FIXME: wtf doesn't this work? obviously the axial node planes aren't always facing positive!!!
+			//check for axial planes
+			case PLANE_X:
+			{
+				front = cur_start[0] - plane->dist;
+				back = cur_end[0] - plane->dist;
+				break;
+			} //end case
+			case PLANE_Y:
+			{
+				front = cur_start[1] - plane->dist;
+				back = cur_end[1] - plane->dist;
+				break;
+			} //end case
+			case PLANE_Z:
+			{
+				front = cur_start[2] - plane->dist;
+				back = cur_end[2] - plane->dist;
+				break;
+			} //end case*/
 			default: //gee it's not an axial plane
 			{
 				front = DotProduct(cur_start, plane->normal) - plane->dist;

@@ -222,9 +222,7 @@ static intptr_t SV_GameSystemCalls(intptr_t* args) {
 				return qtrue;
 			}
 		}
-
 #include "../q_sharedsyscalls.inc"
-
 		case BOTLIB_SETUP: return SV_BotLibSetup();
 		case BOTLIB_SHUTDOWN: return SV_BotLibShutdown();
 		case BOTLIB_START_FRAME: return botlib_export->BotLibStartFrame(VMF(1));
@@ -256,8 +254,7 @@ static intptr_t SV_GameSystemCalls(intptr_t* args) {
 		case BOTLIB_AI_ALLOC_MOVE_STATE: return botlib_export->ai.BotAllocMoveState();
 		case BOTLIB_AI_FREE_MOVE_STATE: botlib_export->ai.BotFreeMoveState(args[1]); return 0;
 		case BOTLIB_AI_INIT_MOVE_STATE: botlib_export->ai.BotInitMoveState(args[1], VMA(2)); return 0;
-
-		default: Com_Error(ERR_DROP, "Bad Game system trap: %ld", (long int)args[0]);
+		default: Com_Error(ERR_DROP, "Bad game.qvm system trap: %ld", (long int)args[0]);
 	}
 
 	return 0;

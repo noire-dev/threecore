@@ -242,6 +242,39 @@ static void BotImport_BSPModelMinsMaxsOrigin(int modelnum, vec3_t angles, vec3_t
 
 /*
 ==================
+BotImport_GetMemory
+==================
+*/
+static void *BotImport_GetMemory(int size) {
+	void *ptr;
+
+	ptr = Z_TagMalloc( size, TAG_BOTLIB );
+	return ptr;
+}
+
+/*
+==================
+BotImport_FreeMemory
+==================
+*/
+static void BotImport_FreeMemory(void *ptr) {
+	Z_Free(ptr);
+}
+
+/*
+=================
+BotImport_HunkAlloc
+=================
+*/
+static void *BotImport_HunkAlloc( int size ) {
+	if( Hunk_CheckMark() ) {
+		Com_Error( ERR_DROP, "%s(): Alloc with marks already set", __func__ );
+	}
+	return Hunk_Alloc( size, h_high );
+}
+
+/*
+==================
 SV_BotClientCommand
 ==================
 */
@@ -349,6 +382,12 @@ void SV_BotInitBotLib(void) {
 	botlib_import.BSPModelMinsMaxsOrigin = BotImport_BSPModelMinsMaxsOrigin;
 	botlib_import.BotClientCommand = BotClientCommand;
 
+	//memory management
+	botlib_import.GetMemory = BotImport_GetMemory;
+	botlib_import.FreeMemory = BotImport_FreeMemory;
+	botlib_import.AvailableMemory = Z_AvailableMemory;
+	botlib_import.HunkAlloc = BotImport_HunkAlloc;
+
 	// file system access
 	botlib_import.FS_FOpenFile = FS_FOpenFileByMode;
 	botlib_import.FS_Read = FS_Read;
@@ -358,7 +397,7 @@ void SV_BotInitBotLib(void) {
 
 	botlib_import.Sys_Milliseconds = Sys_Milliseconds;
 
-	botlib_export = (botlib_export_t *)GetBotLibAPI( &botlib_import );
+	botlib_export = (botlib_export_t *)GetBotLibAPI( BOTLIB_API_VERSION, &botlib_import );
 	assert(botlib_export); 	// somehow we end up with a zero import.
 }
 
@@ -396,5 +435,23 @@ int SV_BotGetConsoleMessage( int client, char *buf, int size )
 		return qtrue;
 	} else {
 		return qfalse;
+	}
+}
+
+/*
+==================
+SV_BotGetSnapshotEntity
+==================
+*/
+int SV_BotGetSnapshotEntity( int client, int sequence ) {
+	if ( (unsigned) client < sv.maxclients ) {
+		const client_t* cl = &svs.clients[client];
+		const clientSnapshot_t* frame = &cl->frames[cl->netchan.outgoingSequence & PACKET_MASK];
+		if ( (unsigned) sequence >= frame->num_entities ) {
+			return -1;
+		}
+		return frame->ents[sequence]->number;
+	} else {
+		return -1;
 	}
 }

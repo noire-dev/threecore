@@ -92,6 +92,8 @@ typedef enum {qfalse, qtrue}	qboolean;
 #include "l_utils.h"
 #endif //QUAKE
 
+//#define DEBUG_EVAL
+
 #define MAX_DEFINEPARMS			128
 
 #define DEFINEHASHING			1
@@ -175,7 +177,7 @@ static void PC_PushIndent(source_t *source, int type, int skip)
 {
 	indent_t *indent;
 
-	indent = (indent_t *) malloc(sizeof(indent_t));
+	indent = (indent_t *) GetMemory(sizeof(indent_t));
 	indent->type = type;
 	indent->script = source->scriptstack;
 	indent->skip = (skip != 0);
@@ -206,7 +208,7 @@ static void PC_PopIndent(source_t *source, int *type, int *skip)
 	*skip = indent->skip;
 	source->indentstack = source->indentstack->next;
 	source->skip -= indent->skip;
-	free(indent);
+	FreeMemory(indent);
 } //end of the function PC_PopIndent
 //============================================================================
 //
@@ -262,7 +264,7 @@ static token_t *PC_CopyToken(token_t *token)
 	token_t *t;
 
 //	t = (token_t *) malloc(sizeof(token_t));
-	t = (token_t *) malloc(sizeof(token_t));
+	t = (token_t *) GetMemory(sizeof(token_t));
 //	t = freetokens;
 	if (!t)
 	{
@@ -288,7 +290,7 @@ static token_t *PC_CopyToken(token_t *token)
 static void PC_FreeToken(token_t *token)
 {
 	//free(token);
-	free(token);
+	FreeMemory(token);
 //	token->next = freetokens;
 //	freetokens = token;
 	numtokens--;
@@ -642,8 +644,8 @@ static void PC_FreeDefine(define_t *define)
 		PC_FreeToken(t);
 	} //end for
 	//free the define
-	free(define->name);
-	free(define);
+	FreeMemory(define->name);
+	FreeMemory(define);
 } //end of the function PC_FreeDefine
 //============================================================================
 //
@@ -1158,9 +1160,9 @@ static int PC_Directive_define(source_t *source)
 		if (!PC_Directive_undef(source)) return qfalse;
 	} //end if
 	//allocate define
-	define = (define_t *) malloc(sizeof(define_t));
+	define = (define_t *) GetMemory(sizeof(define_t));
 	Com_Memset(define, 0, sizeof(define_t));
-	define->name = (char *) malloc(strlen(token.string) + 1);
+	define->name = (char *) GetMemory(strlen(token.string) + 1);
 	strcpy(define->name, token.string);
 	//add the define to the source
 #if DEFINEHASHING
@@ -1274,7 +1276,7 @@ static define_t *PC_DefineFromString(const char *string)
 	Q_strncpyz( src.filename, "*extern", sizeof( src.filename ) );
 	src.scriptstack = script;
 #if DEFINEHASHING
-	src.definehash = malloc(DEFINEHASHSIZE * sizeof(define_t *));
+	src.definehash = GetClearedMemory(DEFINEHASHSIZE * sizeof(define_t *));
 #endif //DEFINEHASHING
 	//create a define from the source
 	res = PC_Directive_define(&src);
@@ -1299,7 +1301,7 @@ static define_t *PC_DefineFromString(const char *string)
 #endif //DEFINEHASHING
 	//
 #if DEFINEHASHING
-	free(src.definehash);
+	FreeMemory(src.definehash);
 #endif //DEFINEHASHING
 	//
 	FreeScript(script);
@@ -1355,9 +1357,9 @@ static define_t *PC_CopyDefine(source_t *source, const define_t *define)
 	define_t *newdefine;
 	token_t *token, *newtoken, *lasttoken;
 
-	newdefine = (define_t *) malloc(sizeof(define_t));
+	newdefine = (define_t *) GetMemory(sizeof(define_t));
 	//copy the define name
-	newdefine->name = (char *) malloc(strlen(define->name) + 1);
+	newdefine->name = (char *) GetMemory(strlen(define->name) + 1);
 	strcpy(newdefine->name, define->name);
 	newdefine->flags = define->flags;
 	newdefine->builtin = define->builtin;
@@ -1560,10 +1562,10 @@ static int PC_OperatorPriority(int op)
 	return qfalse;
 } //end of the function PC_OperatorPriority
 
-//#define AllocValue()			malloc(sizeof(value_t));
-//#define FreeValue(val)		free(val)
-//#define AllocOperator(op)		op = (operator_t *) malloc(sizeof(operator_t));
-//#define FreeOperator(op)		free(op);
+//#define AllocValue()			GetClearedMemory(sizeof(value_t));
+//#define FreeValue(val)		FreeMemory(val)
+//#define AllocOperator(op)		op = (operator_t *) GetClearedMemory(sizeof(operator_t));
+//#define FreeOperator(op)		FreeMemory(op);
 
 #define MAX_VALUES		64
 #define MAX_OPERATORS	64
@@ -1640,7 +1642,7 @@ static int PC_EvaluateTokens(source_t *source, token_t *tokens, int *intvalue, f
 					error = 1;
 					break;
 				} //end if
-				//v = (value_t *) malloc(sizeof(value_t));
+				//v = (value_t *) GetClearedMemory(sizeof(value_t));
 				AllocValue(v);
 #if DEFINEHASHING
 				if (PC_FindHashedDefine(source->definehash, t->string))
@@ -1685,7 +1687,7 @@ static int PC_EvaluateTokens(source_t *source, token_t *tokens, int *intvalue, f
 					error = 1;
 					break;
 				} //end if
-				//v = (value_t *) malloc(sizeof(value_t));
+				//v = (value_t *) GetClearedMemory(sizeof(value_t));
 				AllocValue(v);
 				if (negativevalue)
 				{
@@ -1815,7 +1817,7 @@ static int PC_EvaluateTokens(source_t *source, token_t *tokens, int *intvalue, f
 				} //end switch
 				if (!error && !negativevalue)
 				{
-					//o = (operator_t *) malloc(sizeof(operator_t));
+					//o = (operator_t *) GetClearedMemory(sizeof(operator_t));
 					AllocOperator(o);
 					o->operator = t->subtype;
 					o->priority = PC_OperatorPriority(t->subtype);
@@ -2001,14 +2003,14 @@ static int PC_EvaluateTokens(source_t *source, token_t *tokens, int *intvalue, f
 				else firstvalue = v->next;
 				if (v->next) v->next->prev = v->prev;
 			}
-			//free(v);
+			//FreeMemory(v);
 			FreeValue(v);
 		} //end if
 		//remove the operator
 		if (o->prev) o->prev->next = o->next;
 		else firstoperator = o->next;
 		if (o->next) o->next->prev = o->prev;
-		//free(o);
+		//FreeMemory(o);
 		FreeOperator(o);
 	} //end while
 	if (firstvalue)
@@ -2019,13 +2021,13 @@ static int PC_EvaluateTokens(source_t *source, token_t *tokens, int *intvalue, f
 	for (o = firstoperator; o; o = lastoperator)
 	{
 		lastoperator = o->next;
-		//free(o);
+		//FreeMemory(o);
 		FreeOperator(o);
 	} //end for
 	for (v = firstvalue; v; v = lastvalue)
 	{
 		lastvalue = v->next;
-		//free(v);
+		//FreeMemory(v);
 		FreeValue(v);
 	} //end for
 	if (!error) return qtrue;
@@ -2837,7 +2839,7 @@ source_t *LoadSourceFile(const char *filename)
 
 	script->next = NULL;
 
-	source = (source_t *) malloc( sizeof( *source ) );
+	source = (source_t *) GetMemory( sizeof( *source ) );
 	Com_Memset( source, 0, sizeof( *source ) );
 
 	Q_strncpyz(source->filename, filename, sizeof(source->filename));
@@ -2848,7 +2850,7 @@ source_t *LoadSourceFile(const char *filename)
 	source->skip = 0;
 
 #if DEFINEHASHING
-	source->definehash = malloc(DEFINEHASHSIZE * sizeof(define_t *));
+	source->definehash = GetClearedMemory(DEFINEHASHSIZE * sizeof(define_t *));
 #endif //DEFINEHASHING
 	PC_AddGlobalDefinesToSource(source);
 	return source;
@@ -2906,14 +2908,14 @@ void FreeSource(source_t *source)
 	{
 		indent = source->indentstack;
 		source->indentstack = source->indentstack->next;
-		free(indent);
+		FreeMemory(indent);
 	} //end for
 #if DEFINEHASHING
 	//
-	if (source->definehash) free(source->definehash);
+	if (source->definehash) FreeMemory(source->definehash);
 #endif //DEFINEHASHING
 	//free the source itself
-	free(source);
+	FreeMemory(source);
 } //end of the function FreeSource
 //============================================================================
 //

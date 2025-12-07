@@ -179,7 +179,7 @@ static void PS_CreatePunctuationTable(script_t *script, punctuation_t *punctuati
 
 	//get memory for the table
 	if (!script->punctuationtable) script->punctuationtable = (punctuation_t **)
-												malloc(256 * sizeof(punctuation_t *));
+												GetMemory(256 * sizeof(punctuation_t *));
 	Com_Memset(script->punctuationtable, 0, 256 * sizeof(punctuation_t *));
 	//add the punctuations in the list to the punctuation table
 	for (i = 0; punctuations[i].p; i++)
@@ -1069,7 +1069,7 @@ script_t *LoadScriptFile(const char *filename)
 	length = FileLength(fp);
 #endif
 
-	buffer = malloc(sizeof(script_t) + length + 1);
+	buffer = GetClearedMemory(sizeof(script_t) + length + 1);
 	script = (script_t *) buffer;
 	Com_Memset(script, 0, sizeof(script_t));
 	Q_strncpyz(script->filename, filename, sizeof(script->filename));
@@ -1096,7 +1096,7 @@ script_t *LoadScriptFile(const char *filename)
 #else
 	if (fread(script->buffer, length, 1, fp) != 1)
 	{
-		free(buffer);
+		FreeMemory(buffer);
 		script = NULL;
 	} //end if
 	fclose(fp);
@@ -1115,7 +1115,7 @@ script_t *LoadScriptMemory(const char *ptr, int length, const char *name)
 	void *buffer;
 	script_t *script;
 
-	buffer = malloc(sizeof(script_t) + length + 1);
+	buffer = GetClearedMemory(sizeof(script_t) + length + 1);
 	script = (script_t *) buffer;
 	Com_Memset(script, 0, sizeof(script_t));
 	Q_strncpyz(script->filename, name, sizeof(script->filename));
@@ -1149,9 +1149,9 @@ script_t *LoadScriptMemory(const char *ptr, int length, const char *name)
 void FreeScript(script_t *script)
 {
 #ifdef PUNCTABLE
-	if (script->punctuationtable) free(script->punctuationtable);
+	if (script->punctuationtable) FreeMemory(script->punctuationtable);
 #endif //PUNCTABLE
-	free(script);
+	FreeMemory(script);
 } //end of the function FreeScript
 //============================================================================
 // set the base folder to load files from

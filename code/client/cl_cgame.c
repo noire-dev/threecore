@@ -280,11 +280,9 @@ static intptr_t CL_CgameSystemCalls(intptr_t* args) {
 		case CG_S_ADDREALLOOPINGSOUND: S_AddRealLoopingSound(args[1], VMA(2), VMA(3), args[4]); return 0;
 		case CG_S_STOPLOOPINGSOUND: S_StopLoopingSound(args[1]); return 0;
 		case CG_IMPORTOBJ: CL_StartConvertOBJ(VMA(1)); return 0;
-
 #include "../q_sharedsyscalls.inc"
 #include "../q_sharedsyscalls_client.inc"
-
-		default: Com_Error(ERR_DROP, "Bad CGame system trap: %ld", (long int)args[0]);
+		default: Com_Error(ERR_DROP, "Bad cgame.qvm system trap: %ld", (long int)args[0]);
 	}
 
 	return 0;
