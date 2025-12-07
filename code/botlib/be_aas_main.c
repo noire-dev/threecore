@@ -46,8 +46,6 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 aas_t aasworld;
 
-libvar_t *saveroutingcache;
-
 //===========================================================================
 //
 // Parameter:				-
@@ -132,11 +130,6 @@ int AAS_StartFrame(float time) {
 	AAS_ContinueInit(time);
 	aasworld.frameroutingupdates = 0;
 
-	if (saveroutingcache->value)
-	{
-		AAS_WriteRouteCache();
-	} //end if
-	//
 	aasworld.numframes++;
 	return BLERR_NOERROR;
 } //end of the function AAS_StartFrame
@@ -249,8 +242,7 @@ int AAS_Setup(void)
 {
 	aasworld.maxclients = MAX_CLIENTS;
 	aasworld.maxentities = MAX_GENTITIES;
-	// as soon as it's set to 1 the routing cache will be saved
-	saveroutingcache = 0;
+
 	botimport.Print(PRT_MESSAGE, "AIDEBUG: maxentities: %i.\n", aasworld.maxentities);
 	//allocate memory for the entities
 	if (aasworld.entities) free(aasworld.entities);
