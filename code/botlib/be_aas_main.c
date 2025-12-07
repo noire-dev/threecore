@@ -106,6 +106,8 @@ void AAS_ContinueInit(float time) {
 	if (!aasworld.loaded) return;
 	//if AAS is already initialized
 	if (aasworld.initialized) return;
+	//initialize clustering for the new map
+	AAS_InitClustering();
 	//initialize the routing
 	AAS_InitRouting();
 	//at this point AAS is initialized
@@ -118,8 +120,7 @@ void AAS_ContinueInit(float time) {
 // Returns:					-
 // Changes Globals:		-
 //===========================================================================
-int AAS_StartFrame(float time)
-{
+int AAS_StartFrame(float time) {
 	aasworld.time = time;
 	//unlink all entities that were not updated last frame
 	AAS_UnlinkInvalidEntities();
