@@ -190,9 +190,9 @@ int AAS_OnGround(vec3_t origin, int presencetype, int passent)
 
 	VectorCopy(origin, end);
 	end[2] -= 10;
-
+    botimport.Print(PRT_MESSAGE, "AIDEBUG->AAS_OnGround start\n");
 	trace = AAS_TraceClientBBox(origin, end, presencetype, passent);
-
+    botimport.Print(PRT_MESSAGE, "AIDEBUG->AAS_OnGround AAS_TraceClientBBox\n");
 	//if in solid
 	if (trace.startsolid) return qfalse;
 	//if nothing hit at all
@@ -200,7 +200,9 @@ int AAS_OnGround(vec3_t origin, int presencetype, int passent)
 	//if too far from the hit plane
 	if (origin[2] - trace.endpos[2] > 10) return qfalse;
 	//check if the plane isn't too steep
+	botimport.Print(PRT_MESSAGE, "AIDEBUG->AAS_OnGround before AAS_PlaneFromNum\n");
 	plane = AAS_PlaneFromNum(trace.planenum);
+	botimport.Print(PRT_MESSAGE, "AIDEBUG->AAS_OnGround AAS_PlaneFromNum\n");
 	if (DotProduct(plane->normal, up) < aassettings.phys_maxsteepness) return qfalse;
 	//the bot is on the ground
 	return qtrue;
