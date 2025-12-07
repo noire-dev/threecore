@@ -400,7 +400,7 @@ static void AAS_InitAreaContentsTravelFlags(void)
 	int i;
 
 	if (aasworld.areacontentstravelflags) free(aasworld.areacontentstravelflags);
-	aasworld.areacontentstravelflags = (int *) calloc(aasworld.numareas * sizeof(int));
+	aasworld.areacontentstravelflags = (int *) malloc(aasworld.numareas * sizeof(int));
 	//
 	for (i = 0; i < aasworld.numareas; i++) {
 		aasworld.areacontentstravelflags[i] = AAS_GetAreaContentsTravelFlags(i);
@@ -427,7 +427,7 @@ static void AAS_CreateReversedReachability(void)
 	//free reversed links that have already been created
 	if (aasworld.reversedreachability) free(aasworld.reversedreachability);
 	//allocate memory for the reversed reachability links
-	ptr = (char *) calloc(aasworld.numareas * sizeof(aas_reversedreachability_t) +
+	ptr = (char *) malloc(aasworld.numareas * sizeof(aas_reversedreachability_t) +
 							aasworld.reachabilitysize * sizeof(aas_reversedlink_t));
 	//
 	aasworld.reversedreachability = (aas_reversedreachability_t *) ptr;
@@ -523,7 +523,7 @@ static void AAS_CalculateAreaTravelTimes(void)
 			PAD(revreach->numlinks, sizeof(long)) * sizeof(unsigned short);
 	} //end for
 	//allocate memory for the area travel times
-	ptr = (char *) calloc(size);
+	ptr = (char *) malloc(size);
 	aasworld.areatraveltimes = (unsigned short ***) ptr;
 	ptr += aasworld.numareas * sizeof(unsigned short **);
 	//calcluate the travel times for all the areas
@@ -602,7 +602,7 @@ static void AAS_InitPortalMaxTravelTimes(void)
 
 	if (aasworld.portalmaxtraveltimes) free(aasworld.portalmaxtraveltimes);
 
-	aasworld.portalmaxtraveltimes = (int *) calloc(aasworld.numportals * sizeof(int));
+	aasworld.portalmaxtraveltimes = (int *) malloc(aasworld.numportals * sizeof(int));
 
 	for (i = 0; i < aasworld.numportals; i++)
 	{
@@ -742,7 +742,7 @@ static aas_routingcache_t *AAS_AllocRoutingCache(int numtraveltimes)
 	//
 	routingcachesize += size;
 	//
-	cache = (aas_routingcache_t *) calloc(size);
+	cache = (aas_routingcache_t *) malloc(size);
 	cache->reachabilities = (unsigned char *) cache + sizeof(aas_routingcache_t)
 								+ numtraveltimes * sizeof(unsigned short int);
 	cache->size = size;
@@ -798,7 +798,7 @@ static void AAS_InitClusterAreaCache(void)
 	} //end for
 	//two dimensional array with pointers for every cluster to routing cache
 	//for every area in that cluster
-	ptr = (char *) calloc(
+	ptr = (char *) malloc(
 				aasworld.numclusters * sizeof(aas_routingcache_t **) +
 				size * sizeof(aas_routingcache_t *));
 	aasworld.clusterareacache = (aas_routingcache_t ***) ptr;
@@ -844,7 +844,7 @@ static void AAS_FreeAllPortalCache(void)
 static void AAS_InitPortalCache(void)
 {
 	//
-	aasworld.portalcache = (aas_routingcache_t **) calloc(
+	aasworld.portalcache = (aas_routingcache_t **) malloc(
 								aasworld.numareas * sizeof(aas_routingcache_t *));
 } //end of the function AAS_InitPortalCache
 //===========================================================================
@@ -869,12 +869,12 @@ static void AAS_InitRoutingUpdate(void)
 		} //end if
 	} //end for
 	//allocate memory for the routing update fields
-	aasworld.areaupdate = (aas_routingupdate_t *) calloc(
+	aasworld.areaupdate = (aas_routingupdate_t *) malloc(
 									maxreachabilityareas * sizeof(aas_routingupdate_t));
 	//
 	if (aasworld.portalupdate) free(aasworld.portalupdate);
 	//allocate memory for the portal update fields
-	aasworld.portalupdate = (aas_routingupdate_t *) calloc(
+	aasworld.portalupdate = (aas_routingupdate_t *) malloc(
 									(aasworld.numportals+1) * sizeof(aas_routingupdate_t));
 } //end of the function AAS_InitRoutingUpdate
 //===========================================================================
@@ -1118,8 +1118,8 @@ static int AAS_ReadRouteCache(void)
 	} //end for
 	// read the visareas
 	/*
-	aasworld.areavisibility = (byte **) calloc(aasworld.numareas * sizeof(byte *));
-	aasworld.decompressedvis = (byte *) calloc(aasworld.numareas * sizeof(byte));
+	aasworld.areavisibility = (byte **) malloc(aasworld.numareas * sizeof(byte *));
+	aasworld.decompressedvis = (byte *) malloc(aasworld.numareas * sizeof(byte));
 	for (i = 0; i < aasworld.numareas; i++)
 	{
 		botimport.FS_Read(&size, sizeof(size), fp );
@@ -1154,9 +1154,9 @@ static void AAS_InitReachabilityAreas(void)
 		free(aasworld.reachabilityareaindex);
 
 	aasworld.reachabilityareas = (aas_reachabilityareas_t *)
-				calloc(aasworld.reachabilitysize * sizeof(aas_reachabilityareas_t));
+				malloc(aasworld.reachabilitysize * sizeof(aas_reachabilityareas_t));
 	aasworld.reachabilityareaindex = (int *)
-				calloc(aasworld.reachabilitysize * MAX_REACHABILITYPASSAREAS * sizeof(int));
+				malloc(aasworld.reachabilitysize * MAX_REACHABILITYPASSAREAS * sizeof(int));
 	numreachareas = 0;
 	for (i = 0; i < aasworld.reachabilitysize; i++)
 	{
@@ -2068,7 +2068,7 @@ int AAS_NearestHideArea(int srcnum, vec3_t origin, int areanum, int enemynum, ve
 	//
 	if (!hidetraveltimes)
 	{
-		hidetraveltimes = (unsigned short int *) calloc(aasworld.numareas * sizeof(unsigned short int));
+		hidetraveltimes = (unsigned short int *) malloc(aasworld.numareas * sizeof(unsigned short int));
 	} //end if
 	else
 	{

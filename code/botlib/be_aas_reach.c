@@ -426,7 +426,7 @@ static void AAS_SetupReachabilityHeap(void)
 {
 	int i;
 
-	reachabilityheap = (aas_lreachability_t *) calloc(
+	reachabilityheap = (aas_lreachability_t *) malloc(
 						AAS_MAX_REACHABILITYSIZE * sizeof(aas_lreachability_t));
 	for (i = 0; i < AAS_MAX_REACHABILITYSIZE-1; i++)
 	{
@@ -4201,7 +4201,7 @@ static void AAS_StoreReachability(void)
 	aas_reachability_t *reach;
 
 	if (aasworld.reachability) free(aasworld.reachability);
-	aasworld.reachability = (aas_reachability_t *) calloc((numlreachabilities + 10) * sizeof(aas_reachability_t));
+	aasworld.reachability = (aas_reachability_t *) malloc((numlreachabilities + 10) * sizeof(aas_reachability_t));
 	aasworld.reachabilitysize = 1;
 	for (i = 0; i < aasworld.numareas; i++)
 	{
@@ -4424,7 +4424,7 @@ void AAS_InitReachability(void)
 	//setup the heap with reachability links
 	AAS_SetupReachabilityHeap();
 	//allocate area reachability link array
-	areareachability = (aas_lreachability_t **) calloc(
+	areareachability = (aas_lreachability_t **) malloc(
 									aasworld.numareas * sizeof(aas_lreachability_t *));
 	//
 	AAS_SetWeaponJumpAreaFlags();

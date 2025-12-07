@@ -251,9 +251,9 @@ int AAS_Setup(void)
 	botimport.Print(PRT_MESSAGE, "AIDEBUG: maxentities: %i.\n", aasworld.maxentities);
 	//allocate memory for the entities
 	if (aasworld.entities) free(aasworld.entities);
-	aasworld.entities = (aas_entity_t *) calloc(aasworld.maxentities * sizeof(aas_entity_t));
+	aasworld.entities = (aas_entity_t *) malloc(aasworld.maxentities * sizeof(aas_entity_t));
 	//invalidate all the entities
-	botimport.Print(PRT_MESSAGE, "AIDEBUG: calloc: %i.\n", aasworld.maxentities);
+	botimport.Print(PRT_MESSAGE, "AIDEBUG: malloc: %i.\n", aasworld.maxentities);
 	AAS_InvalidateEntities();
 	botimport.Print(PRT_MESSAGE, "AIDEBUG: AAS_InvalidateEntities: %i.\n", aasworld.maxentities);
 

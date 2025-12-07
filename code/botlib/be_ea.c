@@ -134,7 +134,7 @@ void EA_ResetInput(int client) {
 }
 
 int EA_Setup(void) {
-	botinputs = (bot_input_t*)calloc(botlibglobals.maxclients * sizeof(bot_input_t));
+	botinputs = (bot_input_t*)malloc(botlibglobals.maxclients * sizeof(bot_input_t));
 	return BLERR_NOERROR;
 }
 
