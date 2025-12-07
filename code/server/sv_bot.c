@@ -267,9 +267,6 @@ BotImport_HunkAlloc
 =================
 */
 static void *BotImport_HunkAlloc( int size ) {
-	if( Hunk_CheckMark() ) {
-		Com_Error( ERR_DROP, "%s(): Alloc with marks already set", __func__ );
-	}
 	return Hunk_Alloc( size, h_high );
 }
 
