@@ -129,7 +129,6 @@ int AAS_StartFrame(float time) {
 	//initialize AAS
 	AAS_ContinueInit(time);
 	aasworld.frameroutingupdates = 0;
-
 	aasworld.numframes++;
 	return BLERR_NOERROR;
 } //end of the function AAS_StartFrame

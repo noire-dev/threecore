@@ -2518,9 +2518,10 @@ void BotMoveToGoal(int movestate, bot_goal_t *goal, int travelflags) {
 	//remove some of the move flags
 	ms->moveflags &= ~(MFL_SWIMMING|MFL_AGAINSTLADDER);
 	//set some of the move flags
+	botimport.Print(PRT_MESSAGE, "AIDEBUG BotMoveToGoal\n");
 	//NOTE: the MFL_ONGROUND flag is also set in the higher AI
 	if (AAS_OnGround(ms->origin, ms->presencetype, ms->entitynum)) ms->moveflags |= MFL_ONGROUND;
-	//
+	botimport.Print(PRT_MESSAGE, "AIDEBUG AAS_OnGround\n");
 	if (ms->moveflags & MFL_ONGROUND)
 	{
 		int modeltype, modelnum;
@@ -2590,6 +2591,7 @@ void BotMoveToGoal(int movestate, bot_goal_t *goal, int travelflags) {
 			} //end if
 		} //end if
 	} //end if
+	botimport.Print(PRT_MESSAGE, "AIDEBUG after AAS_OnGround\n");
 	//if swimming
 	if (AAS_Swimming(ms->origin)) ms->moveflags |= MFL_SWIMMING;
 	//if against a ladder
