@@ -335,48 +335,6 @@ int AAS_PointPresenceType(vec3_t point)
 	return aasworld.areasettings[areanum].presencetype;
 } //end of the function AAS_PointPresenceType
 //===========================================================================
-//
-// Parameter:				-
-// Returns:					-
-// Changes Globals:		-
-//===========================================================================
-static qboolean AAS_AreaEntityCollision(int areanum, vec3_t start, vec3_t end,
-										int presencetype, int passent, aas_trace_t *trace)
-{
-	int collision;
-	vec3_t boxmins, boxmaxs;
-	aas_link_t *link;
-	bsp_trace_t bsptrace;
-
-	AAS_PresenceTypeBoundingBox(presencetype, boxmins, boxmaxs);
-
-	Com_Memset(&bsptrace, 0, sizeof(bsp_trace_t)); //make compiler happy
-	//assume no collision
-	bsptrace.fraction = 1;
-	collision = qfalse;
-	for (link = aasworld.arealinkedentities[areanum]; link; link = link->next_ent)
-	{
-		//ignore the pass entity
-		if (link->entnum == passent) continue;
-		//
-		if (AAS_EntityCollision(link->entnum, start, boxmins, boxmaxs, end,
-												CONTENTS_SOLID|CONTENTS_PLAYERCLIP, &bsptrace))
-		{
-			collision = qtrue;
-		} //end if
-	} //end for
-	if (collision)
-	{
-		trace->startsolid = bsptrace.startsolid;
-		trace->ent = bsptrace.ent;
-		VectorCopy(bsptrace.endpos, trace->endpos);
-		trace->area = 0;
-		trace->planenum = 0;
-		return qtrue;
-	} //end if
-	return qfalse;
-} //end of the function AAS_AreaEntityCollision
-//===========================================================================
 // recursive subdivision of the line by the BSP tree.
 //
 // Parameter:				-
@@ -471,26 +429,6 @@ aas_trace_t AAS_TraceClientBBox(vec3_t start, vec3_t end, int presencetype,
 				if (DotProduct(v1, plane->normal) > 0) trace.planenum ^= 1;
 				return trace;
 			} //end if
-			else
-			{
-				if (passent >= 0)
-				{
-				    botimport.Print(PRT_MESSAGE, "AIDEBUG->AAS_TraceClientBBox AAS_AreaEntityCollision\n");
-					if (AAS_AreaEntityCollision(-nodenum, tstack_p->start,
-													tstack_p->end, presencetype, passent,
-													&trace))
-					{
-					    botimport.Print(PRT_MESSAGE, "AIDEBUG->AAS_TraceClientBBox after AAS_AreaEntityCollision\n");
-						if (!trace.startsolid)
-						{
-							VectorSubtract(end, start, v1);
-							VectorSubtract(trace.endpos, start, v2);
-							trace.fraction = VectorLength(v2) / VectorLength(v1);
-						} //end if
-						return trace;
-					} //end if
-				} //end if
-			} //end else
 			trace.lastarea = -nodenum;
 			continue;
 		} //end if
