@@ -110,10 +110,6 @@ typedef struct botlib_import_s {
 	char* (*BSPEntityData)(void);
 	void (*BSPModelMinsMaxsOrigin)(int modelnum, vec3_t angles, vec3_t mins, vec3_t maxs, vec3_t origin);
 	void (*BotClientCommand)(int client, const char* command);
-	void* (*GetMemory)(int size);   // allocate from Zone
-	void (*FreeMemory)(void* ptr);  // free memory from Zone
-	int (*AvailableMemory)(void);   // available Zone memory
-	void* (*HunkAlloc)(int size);   // allocate from hunk
 	int (*FS_FOpenFile)(const char* qpath, fileHandle_t* file, fsMode_t mode);
 	int (*FS_Read)(void* buffer, int len, fileHandle_t f);
 	int (*FS_Write)(const void* buffer, int len, fileHandle_t f);
