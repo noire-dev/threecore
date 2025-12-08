@@ -162,84 +162,6 @@ static void Con_Clear_f( void ) {
 	Con_Bottom();		// go to end
 }
 
-						
-/*
-================
-Con_Dump_f
-
-Save the console contents out to a file
-================
-*/
-static void Con_Dump_f( void )
-{
-	int		l, x, i, n;
-	short	*line;
-	fileHandle_t	f;
-	int		bufferlen;
-	char	*buffer;
-	char	filename[ MAX_OSPATH ];
-	const char *ext;
-
-	if ( Cmd_Argc() != 2 )
-	{
-		Com_Printf( "usage: condump <filename>\n" );
-		return;
-	}
-
-	Q_strncpyz( filename, Cmd_Argv( 1 ), sizeof( filename ) );
-	COM_DefaultExtension( filename, sizeof( filename ), ".txt" );
-
-	if ( !FS_AllowedExtension( filename, qfalse, &ext ) ) {
-		Com_Printf( "%s: Invalid filename extension '%s'.\n", __func__, ext );
-		return;
-	}
-
-	f = FS_FOpenFileWrite( filename );
-	if ( f == FS_INVALID_HANDLE )
-	{
-		Com_Printf( "ERROR: couldn't open %s.\n", filename );
-		return;
-	}
-
-	Com_Printf( "Dumped console text to %s.\n", filename );
-
-	if ( con.current >= con.totallines ) {
-		n = con.totallines;
-		l = con.current + 1;
-	} else {
-		n = con.current + 1;
-		l = 0;
-	}
-
-	bufferlen = con.linewidth + ARRAY_LEN( Q_NEWLINE ) * sizeof( char );
-	buffer = Hunk_AllocateTempMemory( bufferlen );
-
-	// write the remaining lines
-	buffer[ bufferlen - 1 ] = '\0';
-
-	for ( i = 0; i < n ; i++, l++ ) 
-	{
-		line = con.text + (l % con.totallines) * con.linewidth;
-		// store line
-		for( x = 0; x < con.linewidth; x++ )
-			buffer[ x ] = line[ x ] & 0xff;
-		buffer[ con.linewidth ] = '\0';
-		// terminate on ending space characters
-		for ( x = con.linewidth - 1 ; x >= 0 ; x-- ) {
-			if ( buffer[ x ] == ' ' )
-				buffer[ x ] = '\0';
-			else
-				break;
-		}
-		Q_strcat( buffer, bufferlen, Q_NEWLINE );
-		FS_Write( buffer, strlen( buffer ), f );
-	}
-
-	Hunk_FreeTempMemory( buffer );
-	FS_FCloseFile( f );
-}
-
-						
 /*
 ================
 Con_ClearNotify
@@ -384,8 +306,6 @@ void Con_Init( void )
 	g_consoleField.widthInChars = g_console_field_width;
 
 	Cmd_AddCommand( "clear", Con_Clear_f );
-	Cmd_AddCommand( "condump", Con_Dump_f );
-	Cmd_SetCommandCompletionFunc( "condump", Cmd_CompleteTxtName );
 	Cmd_AddCommand( "toggleconsole", Con_ToggleConsole_f );
 	Cmd_AddCommand( "messagemode", Con_MessageMode_f );
 	Cmd_AddCommand( "messagemode2", Con_MessageMode2_f );
@@ -401,7 +321,6 @@ Con_Shutdown
 void Con_Shutdown( void )
 {
 	Cmd_RemoveCommand( "clear" );
-	Cmd_RemoveCommand( "condump" );
 	Cmd_RemoveCommand( "toggleconsole" );
 	Cmd_RemoveCommand( "messagemode" );
 	Cmd_RemoveCommand( "messagemode2" );

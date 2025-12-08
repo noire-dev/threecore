@@ -1,24 +1,6 @@
-/*
-===========================================================================
-Copyright (C) 1999-2005 Id Software, Inc.
-
-This file is part of Quake III Arena source code.
-
-Quake III Arena source code is free software; you can redistribute it
-and/or modify it under the terms of the GNU General Public License as
-published by the Free Software Foundation; either version 2 of the License,
-or (at your option) any later version.
-
-Quake III Arena source code is distributed in the hope that it will be
-useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with Quake III Arena source code; if not, write to the Free Software
-Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-===========================================================================
-*/
+// Copyright (C) 1999-2005 ID Software, Inc.
+// Copyright (C) 2023-2026 Noire.dev
+// SourceTech — GPLv2; see LICENSE for details.
 
 #include "q_shared.h"
 #include "qcommon.h"
@@ -162,10 +144,7 @@ void Cbuf_Execute(void) {
 	qboolean in_star_comment;
 	qboolean in_slash_comment;
 
-	if(cmd_wait > 0) {
-		// delay command buffer execution
-		return;
-	}
+	if(cmd_wait > 0) return;
 
 	// This will keep // style comments all on one line by not breaking on
 	// a semicolon.  It will keep /* ... */ style comments all on one line by not
@@ -244,16 +223,12 @@ void Cbuf_Execute(void) {
 		Cmd_ExecuteString(line);
 
 		// break on wait command
-		if(cmd_wait > 0) {
-			break;
-		}
+		if(cmd_wait > 0) break;
 	}
 }
 
 void Cbuf_Wait(void) {
-	if(cmd_wait > 0) {
-		--cmd_wait;
-	}
+	if(cmd_wait > 0) --cmd_wait;
 }
 
 static void Cmd_Exec_f(void) {
@@ -264,39 +239,22 @@ static void Cmd_Exec_f(void) {
 	} f;
 	char filename[MAX_QEXTENDEDPATH];
 
-	quiet = !Q_stricmp(Cmd_Argv(0), "execq");
-
 	if(Cmd_Argc() != 2) {
-		Com_Printf("exec%s <filename> : execute a script file%s\n", quiet ? "q" : "", quiet ? " without notification" : "");
+		Com_Printf("exec <filename> : execute a sandbox.script file\n");
 		return;
 	}
 
 	Q_strncpyz(filename, Cmd_Argv(1), sizeof(filename));
-	COM_DefaultExtension(filename, sizeof(filename), ".cfg");
+	COM_DefaultExtension(filename, sizeof(filename), ".sbscript");
 	FS_ReadFile(filename, &f.v);
 	if(f.v == NULL) {
 		Com_Printf("couldn't exec %s\n", filename);
 		return;
 	}
-	if(!quiet) Com_Printf("execing %s\n", filename);
 
 	Cbuf_InsertText(f.c);
-
 	if(!Q_stricmp(filename, CONFIG_CFG)) Com_WriteConfiguration();  // to avoid loading outdated values
-
 	FS_FreeFile(f.v);
-}
-
-static void Cmd_Vstr_f(void) {
-	const char* v;
-
-	if(Cmd_Argc() != 2) {
-		Com_Printf("vstr <variablename> : execute a variable command\n");
-		return;
-	}
-
-	v = Cvar_VariableString(Cmd_Argv(1));
-	Cbuf_InsertText(v);
 }
 
 static void Cmd_Echo_f(void) { Com_Printf("%s\n", Cmd_ArgsFrom(1)); }
@@ -323,9 +281,7 @@ void Cmd_Clear(void) {
 }
 
 const char* Cmd_Argv(int arg) {
-	if((unsigned)arg >= cmd_argc) {
-		return "";
-	}
+	if((unsigned)arg >= cmd_argc) return "";
 	return cmd_argv[arg];
 }
 
@@ -482,14 +438,11 @@ static cmd_function_t* Cmd_FindCommand(const char* cmd_name) {
 void Cmd_AddCommand(const char* cmd_name, xcommand_t function) {
 	cmd_function_t* cmd;
 
-	// fail if the command already exists
 	if(Cmd_FindCommand(cmd_name)) {
-		// allow completion-only commands to be silently doubled
 		if(function != NULL) Com_Printf("Cmd_AddCommand: %s already defined\n", cmd_name);
 		return;
 	}
 
-	// use a small malloc to avoid zone fragmentation
 	cmd = S_Malloc(sizeof(*cmd));
 	cmd->name = CopyString(cmd_name);
 	cmd->function = function;
@@ -515,15 +468,10 @@ void Cmd_RemoveCommand(const char* cmd_name) {
 	back = &cmd_functions;
 	while(1) {
 		cmd = *back;
-		if(!cmd) {
-			// command wasn't active
-			return;
-		}
+		if(!cmd) return;
 		if(!Q_stricmp(cmd_name, cmd->name)) {
 			*back = cmd->next;
-			if(cmd->name) {
-				Z_Free(cmd->name);
-			}
+			if(cmd->name) Z_Free(cmd->name);
 			Z_Free(cmd);
 			return;
 		}
@@ -531,28 +479,10 @@ void Cmd_RemoveCommand(const char* cmd_name) {
 	}
 }
 
-void Cmd_RemoveCgameCommands(void) {
-	const cmd_function_t* cmd;
-	qboolean removed;
-
-	do {
-		removed = qfalse;
-		for(cmd = cmd_functions; cmd; cmd = cmd->next) {
-			if(cmd->function == NULL) {
-				Cmd_RemoveCommand(cmd->name);
-				removed = qtrue;
-				break;
-			}
-		}
-	} while(removed);
-}
-
 void Cmd_CommandCompletion(void (*callback)(const char* s)) {
 	const cmd_function_t* cmd;
 
-	for(cmd = cmd_functions; cmd; cmd = cmd->next) {
-		callback(cmd->name);
-	}
+	for(cmd = cmd_functions; cmd; cmd = cmd->next) callback(cmd->name);
 }
 
 qboolean Cmd_CompleteArgument(const char* command, const char* args, int argNum) {
@@ -560,9 +490,7 @@ qboolean Cmd_CompleteArgument(const char* command, const char* args, int argNum)
 
 	for(cmd = cmd_functions; cmd; cmd = cmd->next) {
 		if(!Q_stricmp(command, cmd->name)) {
-			if(cmd->complete) {
-				cmd->complete(args, argNum);
-			}
+			if(cmd->complete) cmd->complete(args, argNum);
 			return qtrue;
 		}
 	}
@@ -574,11 +502,9 @@ static void Cmd_ReplaceCvarsInArgs(void) {
 	for(int i = 0; i < Cmd_Argc(); i++) {
 		char* arg = cmd_argv[i];
 
-		if(arg[0] == '$') {                       // If arg begin with $
-			cvar_t* var = Cvar_FindVar(arg + 1);  // +1 skip $
-			if(var) {
-				strcpy(arg, var->string);  // Replace on cvar value
-			}  // If cvar not found - just keep it
+		if(arg[0] == '$') {
+			cvar_t* var = Cvar_FindVar(arg + 1);
+			if(var) strcpy(arg, var->string);
 		}
 	}
 }
@@ -586,82 +512,44 @@ static void Cmd_ReplaceCvarsInArgs(void) {
 void Cmd_ExecuteString(const char* text) {
 	cmd_function_t *cmd, **prev;
 
-	Cmd_TokenizeString(text);	// execute the command line
-	if(!Cmd_Argc()) {
-		return;  // no tokens
-	}
+	Cmd_TokenizeString(text);
+	if(!Cmd_Argc()) return;
 
 	Cmd_ReplaceCvarsInArgs();
 
-	// check registered command functions
 	for(prev = &cmd_functions; *prev; prev = &cmd->next) {
 		cmd = *prev;
 		if(!Q_stricmp(cmd_argv[0], cmd->name)) {
-			// rearrange the links so that the command will be
-			// near the head of the list next time it is used
 			*prev = cmd->next;
 			cmd->next = cmd_functions;
 			cmd_functions = cmd;
 
-			// perform the action
-			if(!cmd->function) {
-				// let the cgame or game handle it
-				break;
-			} else {
-				cmd->function();
-			}
+			if(!cmd->function) break;
+			else cmd->function();
 			return;
 		}
 	}
 
-	// check cvars
-	if(Cvar_Command()) {
-		return;
-	}
-
+	if(Cvar_Command()) return;
+	if(com_sv_running && com_sv_running->integer && SV_GameCommand()) return;
 #ifndef DEDICATED
-	// check client game commands
-	if(com_cl_running && com_cl_running->integer && CL_GameCommand()) {
-		return;
-	}
-#endif
-
-	// check server game commands
-	if(com_sv_running && com_sv_running->integer && SV_GameCommand()) {
-		return;
-	}
-
-#ifndef DEDICATED
-	// check ui commands
-	if(com_cl_running && com_cl_running->integer && UI_GameCommand()) {
-		return;
-	}
-
-	// send it as a server command if we are connected
-	// this will usually result in a chat message
+    if(com_cl_running && com_cl_running->integer && CL_GameCommand()) return;
+	if(com_cl_running && com_cl_running->integer && UI_GameCommand()) return;
 	CL_ForwardCommandToServer(text);
 #endif
 }
 
 static void Cmd_CompleteCfgName(const char* args, int argNum) {
-	if(argNum == 2) {
-		Field_CompleteFilename("", "cfg", qfalse, FS_MATCH_ANY | FS_MATCH_STICK | FS_MATCH_SUBDIRS);
-	}
+	if(argNum == 2) Field_CompleteFilename("", "sbscript", qfalse, FS_MATCH_ANY | FS_MATCH_STICK | FS_MATCH_SUBDIRS);
 }
 
 void Cmd_CompleteWriteCfgName(const char* args, int argNum) {
-	if(argNum == 2) {
-		Field_CompleteFilename("", "cfg", qfalse, FS_MATCH_EXTERN | FS_MATCH_STICK);
-	}
+	if(argNum == 2) Field_CompleteFilename("", "sbscript", qfalse, FS_MATCH_EXTERN | FS_MATCH_STICK);
 }
 
 void Cmd_Init(void) {
 	Cmd_AddCommand("exec", Cmd_Exec_f);
-	Cmd_AddCommand("execq", Cmd_Exec_f);
 	Cmd_SetCommandCompletionFunc("exec", Cmd_CompleteCfgName);
-	Cmd_SetCommandCompletionFunc("execq", Cmd_CompleteCfgName);
-	Cmd_AddCommand("vstr", Cmd_Vstr_f);
-	Cmd_SetCommandCompletionFunc("vstr", Cvar_CompleteCvarName);
 	Cmd_AddCommand("echo", Cmd_Echo_f);
 	Cmd_AddCommand("wait", Cmd_Wait_f);
 }

@@ -1,5 +1,5 @@
 // Copyright (C) 1999-2005 ID Software, Inc.
-// Copyright (C) 2023-2025 Noire.dev
+// Copyright (C) 2023-2026 Noire.dev
 // SourceTech — GPLv2; see LICENSE for details.
 
 #include "q_shared.h"
@@ -7,7 +7,6 @@
 
 static cvar_t* cvar_vars = NULL;
 static cvar_t* cvar_cheats;
-static cvar_t* cvar_developer;
 int cvar_modifiedFlags;
 
 static cvar_t cvar_indexes[MAX_CVARS];
@@ -187,11 +186,6 @@ cvar_t* Cvar_Set(const char* var_name, const char* value) {
 
 	if((var->flags & CVAR_CHEAT) && !cvar_cheats->integer) {
 		Com_Printf("%s is cheat protected.\n", var_name);
-		return var;
-	}
-
-	if((var->flags & CVAR_DEVELOPER) && !cvar_developer->integer) {
-		Com_Printf("%s can be set only in developer mode.\n", var_name);
 		return var;
 	}
 
@@ -638,9 +632,7 @@ void Cvar_Init(void) {
 
 	cvar_cheats = Cvar_Get("sv_cheats", "0", CVAR_SYSTEMINFO);
 	Cvar_SetDescription(cvar_cheats, "Enable cheating commands (server side only).");
-	cvar_developer = Cvar_Get("developer", "0", 0);
-	Cvar_SetDescription(cvar_developer, "Toggles developer mode. Prints more info to console and provides more commands.");
-
+	
 	Cmd_AddCommand("toggle", Cvar_Toggle_f);
 	Cmd_SetCommandCompletionFunc("toggle", Cvar_CompleteCvarName);
 

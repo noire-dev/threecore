@@ -498,7 +498,6 @@ void	Cmd_AddCommand( const char *cmd_name, xcommand_t function );
 // as a clc_clientCommand instead of executed locally
 
 void	Cmd_RemoveCommand( const char *cmd_name );
-void	Cmd_RemoveCgameCommands( void );
 
 typedef void (*completionFunc_t)( const char *args, int argNum );
 
@@ -661,10 +660,10 @@ issues.
 #define	MAX_FOUND_FILES		0x5000
 
 #ifdef DEDICATED
-#define CONFIG_CFG "sandbox_server.cfg"
+#define CONFIG_CFG "sandbox_server.sbscript"
 #define CONSOLE_HISTORY_FILE "history_server"
 #else
-#define CONFIG_CFG "sandbox.cfg"
+#define CONFIG_CFG "sandbox.sbscript"
 #define CONSOLE_HISTORY_FILE "history"
 #endif
 

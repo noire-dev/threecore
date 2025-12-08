@@ -951,8 +951,6 @@ qboolean CL_Disconnect( qboolean showMainMenu ) {
 
 	CL_UpdateGUID( NULL, 0 );
 
-	Cmd_RemoveCgameCommands();
-
 	cl_disconnecting = qfalse;
 
 	return qfalse;
@@ -1242,13 +1240,7 @@ static void CL_Rcon_f( void ) {
 	message[3] = -1;
 	message[4] = '\0';
 
-	// we may need to quote password if it contains spaces
-	sp = strchr( rcon_client_password->string, ' ' );
-
-	len = Com_sprintf( message+4, sizeof( message )-4,
-		sp ? "rcon \"%s\" %s" : "rcon %s %s",
-		rcon_client_password->string,
-		Cmd_Cmd() + 5 ) + 4 + 1; // including OOB marker and '\0'
+	len = Com_sprintf( message+4, sizeof( message )-4, "rcon %s %s", rcon_client_password->string, Cmd_Cmd() + 5 ) + 4 + 1; // including OOB marker and '\0'
 
 	NET_SendPacket( NS_CLIENT, len, message, &rcon_address );
 }
