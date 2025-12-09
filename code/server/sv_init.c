@@ -553,8 +553,8 @@ void SV_Init( void )
 
 	// systeminfo
 	Cvar_Get( "sv_cheats", "0", CVAR_SYSTEMINFO);
-	sv_serverid = Cvar_Get( "sv_serverid", "0", CVAR_SYSTEMINFO | CVAR_ROM );
-	sv_referencedPakNames = Cvar_Get( "sv_referencedPakNames", "", CVAR_SYSTEMINFO | CVAR_ROM );
+	sv_serverid = Cvar_Get( "sv_serverid", "0", CVAR_SYSTEMINFO );
+	sv_referencedPakNames = Cvar_Get( "sv_referencedPakNames", "", CVAR_SYSTEMINFO );
 	Cvar_SetDescription( sv_referencedPakNames, "Variable holds a list of all the pk3 files the server loaded data from." );
 
 	// server vars
@@ -580,7 +580,7 @@ void SV_Init( void )
 	sv_reconnectlimit = Cvar_Get( "sv_reconnectlimit", "3", 0 );
 	Cvar_SetDescription( sv_reconnectlimit, "Number of seconds a disconnected client should wait before next reconnect." );
 
-	sv_padPackets = Cvar_Get( "sv_padPackets", "0", CVAR_DEVELOPER );
+	sv_padPackets = Cvar_Get( "sv_padPackets", "0", 0 );
 	Cvar_SetDescription( sv_padPackets, "Adds padding bytes to network packets for rate debugging." );
 	sv_killserver = Cvar_Get( "sv_killserver", "0", 0 );
 	Cvar_SetDescription( sv_killserver, "Internal flag to manage server state." );

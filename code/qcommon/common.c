@@ -2577,7 +2577,7 @@ void Com_Init( char *commandLine ) {
 	com_developer = Cvar_Get( "developer", "0", 0 );
 
 	Com_StartupVariable( "journal" );
-	com_journal = Cvar_Get( "journal", "0", CVAR_INIT );
+	com_journal = Cvar_Get( "journal", "0", 0 );
 	Cvar_SetDescription( com_journal, "When enabled, writes events and its data to 'journal.dat' and 'journaldata.dat'.");
 
 	Com_StartupVariable( "sv_master1" );
@@ -2664,18 +2664,18 @@ void Com_Init( char *commandLine ) {
 	com_cameraMode = Cvar_Get( "com_cameraMode", "0", CVAR_CHEAT );
 
 #ifndef DEDICATED
-	cl_paused = Cvar_Get( "cl_paused", "0", CVAR_ROM );
+	cl_paused = Cvar_Get( "cl_paused", "0", 0 );
 	Cvar_SetDescription( cl_paused, "Read-only CVAR to toggle functionality of paused games (the variable holds the status of the paused flag on the client side)." );
 	cl_packetdelay = Cvar_Get( "cl_packetdelay", "0", CVAR_CHEAT );
 	Cvar_SetDescription( cl_packetdelay, "Artificially set the client's latency. Simulates packet delay, which can lead to packet loss." );
-	com_cl_running = Cvar_Get( "cl_running", "0", CVAR_ROM );
+	com_cl_running = Cvar_Get( "cl_running", "0", 0 );
 	Cvar_SetDescription( com_cl_running, "Can be used to check the status of the client game." );
 #endif
 
-	sv_paused = Cvar_Get( "sv_paused", "0", CVAR_ROM );
+	sv_paused = Cvar_Get( "sv_paused", "0", 0 );
 	sv_packetdelay = Cvar_Get( "sv_packetdelay", "0", CVAR_CHEAT );
 	Cvar_SetDescription( sv_packetdelay, "Simulates packet delay, which can lead to packet loss. Server side." );
-	com_sv_running = Cvar_Get( "sv_running", "0", CVAR_ROM );
+	com_sv_running = Cvar_Get( "sv_running", "0", 0 );
 	Cvar_SetDescription( com_sv_running, "Communicates to game modules if there is a server currently running." );
 
 	Cvar_Get( "com_errorMessage", "", CVAR_ROM );

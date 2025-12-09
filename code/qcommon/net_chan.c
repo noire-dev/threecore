@@ -71,7 +71,7 @@ void Netchan_Init( int port ) {
 	Cvar_SetDescription( showpackets, "Toggles information of all packets sent and received." );
 	showdrop = Cvar_Get ("showdrop", "0", 0 );
 	Cvar_SetDescription( showdrop, "Toggles information of dropped packet traffic." );
-	qport = Cvar_Get ("net_qport", va("%i", port), CVAR_INIT );
+	qport = Cvar_Get ("net_qport", va("%i", port), 0 );
 	Cvar_SetDescription( qport, "Set internal network port. This allows more than one person to play from behind a NAT router by using only one IP address." );
 }
 

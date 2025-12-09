@@ -1480,7 +1480,7 @@ qboolean S_Base_Init( soundInterface_t *si ) {
 	s_mixahead = Cvar_Get( "s_mixAhead", "0.2", CVAR_ARCHIVE );
 	Cvar_SetDescription( s_mixahead, "Amount of time to pre-mix sound data to avoid potential skips/stuttering in case of unstable framerate. Higher values add more CPU usage." );
 
-	s_mixOffset = Cvar_Get( "s_mixOffset", "0", CVAR_ARCHIVE | CVAR_DEVELOPER );
+	s_mixOffset = Cvar_Get( "s_mixOffset", "0", CVAR_ARCHIVE );
 
 	s_show = Cvar_Get( "s_show", "0", CVAR_CHEAT );
 	Cvar_SetDescription( s_show, "Debugging output (used sound files)." );

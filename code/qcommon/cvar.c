@@ -101,8 +101,9 @@ cvar_t* Cvar_Get(const char* var_name, const char* var_value, int flags) {
 	var = Cvar_FindVar(var_name);
 
 	if(var) {
-		var->flags |= flags;
-		cvar_modifiedFlags |= flags;
+		var->flags = flags;
+		cvar_modifiedFlags = flags;
+		var->resetString = CopyString(var_value);
 		if (var->latchedString) {
 		    var->string = CopyString(var->latchedString);
 		    var->latchedString = NULL;
@@ -110,7 +111,6 @@ cvar_t* Cvar_Get(const char* var_name, const char* var_value, int flags) {
 	        var->value = atof(var->string);
 	        var->integer = atoi(var->string);
 	    }
-	    var->resetString = CopyString(var_value);
 		return var;
 	}
 
@@ -163,10 +163,8 @@ cvar_t* Cvar_Get(const char* var_name, const char* var_value, int flags) {
 static void Cvar_Print(const cvar_t* v) {
 	Com_Printf("\"%s\" = \"%s" S_COLOR_WHITE "\"\n", v->name, v->string);
 
-	if(!(v->flags & CVAR_ROM)) Com_Printf("default:\"%s" S_COLOR_WHITE "\"\n", v->resetString);
-
+	if(v->resetString) Com_Printf("default:\"%s" S_COLOR_WHITE "\"\n", v->resetString);
 	if(v->latchedString) Com_Printf("latched: \"%s\"\n", v->latchedString);
-
 	if(v->description) Com_Printf("%s\n", v->description);
 }
 
@@ -261,40 +259,28 @@ void Cvar_SetCheatState(void) {
 typedef enum {
 	FT_BAD = 0,
 	FT_CREATE,
-	FT_SAVE,
-	FT_UNSAVE,
-	FT_SHARE,
-	FT_UNSHARE,
+	FT_SET,
 	FT_RESET,
-	FT_UNSET,
 	FT_ADD,
 	FT_SUB,
 	FT_MUL,
 	FT_DIV,
 	FT_MOD,
-	FT_SIN,
-	FT_COS,
 	FT_RAND,
 } funcType_t;
 
 static funcType_t GetFuncType(void) {
 	const char* cmd;
 	cmd = Cmd_Argv(1);
-	if(!Q_stricmp(cmd, "=")) return FT_CREATE;
-	if(!Q_stricmp(cmd, "-")) return FT_SAVE;
-	if(!Q_stricmp(cmd, "--")) return FT_UNSAVE;
-	if(!Q_stricmp(cmd, "+")) return FT_SHARE;
-	if(!Q_stricmp(cmd, "++")) return FT_UNSHARE;
+	if(!Q_stricmp(cmd, ":=")) return FT_CREATE;
+	if(!Q_stricmp(cmd, "=")) return FT_SET;
 	if(!Q_stricmp(cmd, "*")) return FT_RESET;
-	if(!Q_stricmp(cmd, "**")) return FT_UNSET;
 	if(!Q_stricmp(cmd, "+=")) return FT_ADD;
 	if(!Q_stricmp(cmd, "-=")) return FT_SUB;
 	if(!Q_stricmp(cmd, "*=")) return FT_MUL;
 	if(!Q_stricmp(cmd, "/=")) return FT_DIV;
 	if(!Q_stricmp(cmd, "%=")) return FT_MOD;
-	if(!Q_stricmp(cmd, "s=")) return FT_SIN;
-	if(!Q_stricmp(cmd, "c=")) return FT_COS;
-	if(!Q_stricmp(cmd, ":=")) return FT_RAND;
+	if(!Q_stricmp(cmd, "?=")) return FT_RAND;
 
 	return FT_BAD;
 }
@@ -331,10 +317,6 @@ static void Cvar_Op(funcType_t ftype, float* val) {
 		case FT_MOD:
 			if(mod) *val = fmodf(*val, mod);
 			break;
-
-		case FT_SIN: *val = sin(mod); break;
-
-		case FT_COS: *val = cos(mod); break;
 		default: break;
 	}
 
@@ -408,41 +390,13 @@ qboolean Cvar_Command(void) {
 	} else if(Cmd_Argc() >= 2) {
 		ftype = GetFuncType();
 		if(ftype == FT_CREATE) {
+			Cvar_Get(Cmd_Argv(0), Cmd_ArgsFrom(3), Cmd_Argv(2));
+			return qtrue;
+		} else if(ftype == FT_SET) {
 			Cvar_Set(Cmd_Argv(0), Cmd_ArgsFrom(2));
-			return qtrue;
-		} else if(ftype == FT_SAVE) {
-			v = Cvar_Set(Cmd_Argv(0), Cmd_ArgsFrom(2));
-			if(v && !(v->flags & CVAR_ARCHIVE)) {
-				v->flags |= CVAR_ARCHIVE;
-				cvar_modifiedFlags |= CVAR_ARCHIVE;
-			}
-			return qtrue;
-		} else if(ftype == FT_UNSAVE) {
-			v = Cvar_Set(Cmd_Argv(0), Cmd_ArgsFrom(2));
-			if(v && (v->flags & CVAR_ARCHIVE)) {
-				v->flags &= ~CVAR_ARCHIVE;
-				cvar_modifiedFlags &= ~CVAR_ARCHIVE;
-			}
-			return qtrue;
-		} else if(ftype == FT_SHARE) {
-			v = Cvar_Set(Cmd_Argv(0), Cmd_ArgsFrom(2));
-			if(v && !(v->flags & CVAR_SYSTEMINFO)) {
-				v->flags |= CVAR_SYSTEMINFO;
-				cvar_modifiedFlags |= CVAR_SYSTEMINFO;
-			}
-			return qtrue;
-		} else if(ftype == FT_UNSHARE) {
-			v = Cvar_Set(Cmd_Argv(0), Cmd_ArgsFrom(2));
-			if(v && (v->flags & CVAR_SYSTEMINFO)) {
-				v->flags &= ~CVAR_SYSTEMINFO;
-				cvar_modifiedFlags &= ~CVAR_SYSTEMINFO;
-			}
 			return qtrue;
 		} else if(ftype == FT_RESET && v) {
 			Cvar_Set(v->name, NULL);
-			return qtrue;
-		} else if(ftype == FT_UNSET && v) {
-			Cvar_Unset(v);
 			return qtrue;
 		}
 	}
@@ -518,7 +472,7 @@ void Cvar_WriteVariables(fileHandle_t f) {
 				continue;
 			}
 			if(var->resetString && !strcmp(value, var->resetString)) continue;
-			len = Com_sprintf(buffer, sizeof(buffer), "%s - \"%s\"" Q_NEWLINE, var->name, value);
+			len = Com_sprintf(buffer, sizeof(buffer), "%s = \"%s\"" Q_NEWLINE, var->name, value);
 
 			FS_Write(buffer, len, f);
 		}
@@ -531,9 +485,6 @@ void Cvar_Restart(qboolean unsetVM) {
 	while(curvar) {
 		if(curvar->resetString[0]) {
 			Cvar_Set(curvar->name, curvar->resetString);
-		} else {
-			curvar = Cvar_Unset(curvar);
-			continue;
 		}
 
 		curvar = curvar->next;

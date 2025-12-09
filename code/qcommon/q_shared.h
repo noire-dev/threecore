@@ -911,13 +911,10 @@ default values.
 
 #define	CVAR_ARCHIVE		1	// set to cause it to be saved
 #define	CVAR_USERINFO		2	// sent to server on connect or change
-#define	CVAR_SERVERINFO		4	// sent in response to front end requests
-#define	CVAR_SYSTEMINFO		8	// these cvars will be duplicated on all clients
-#define	CVAR_INIT			16	// don't allow change from console at all
-#define	CVAR_LATCH			32	// will only change after restart
-#define	CVAR_ROM			64	// display only, cannot be set by user at all
-#define CVAR_CHEAT			128	// can not be changed if cheats are disabled
-#define CVAR_DEVELOPER		256 // can be set only in developer mode
+#define	CVAR_SYSTEMINFO		4	// these cvars will be duplicated on all clients
+#define	CVAR_SERVERINFO		8	// sent in response to front end requests
+#define	CVAR_LATCH			16	// will only change after restart
+#define CVAR_CHEAT			32	// can not be changed if cheats are disabled
 
 typedef enum {
 	CVG_NONE = 0,

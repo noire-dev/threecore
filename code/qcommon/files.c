@@ -4110,17 +4110,17 @@ static void FS_Startup( void ) {
 
 	fs_debug = Cvar_Get( "fs_debug", "0", 0 );
 	Cvar_SetDescription( fs_debug, "Debugging tool for the filesystem. Run the game in debug mode. Prints additional information regarding read files into the console." );
-	fs_copyfiles = Cvar_Get( "fs_copyfiles", "0", CVAR_INIT );
+	fs_copyfiles = Cvar_Get( "fs_copyfiles", "0", 0 );
 	Cvar_SetDescription( fs_copyfiles, "Whether or not to copy files when loading them into the game. Every file found in the cdpath will be copied over." );
-	fs_basepath = Cvar_Get( "fs_basepath", Sys_DefaultBasePath(), CVAR_INIT );
+	fs_basepath = Cvar_Get( "fs_basepath", Sys_DefaultBasePath(), 0 );
 	Cvar_SetDescription( fs_basepath, "Write-protected CVAR specifying the path to the installation folder of the game." );
-	fs_basegame = Cvar_Get( "fs_basegame", BASEGAME, CVAR_INIT );
+	fs_basegame = Cvar_Get( "fs_basegame", BASEGAME, 0 );
 	Cvar_SetDescription( fs_basegame, "Write-protected CVAR specifying the path to the base game." );
 	
 	if ( fs_basegame->string[0] == '\0' ) Com_Error( ERR_FATAL, "* fs_basegame is not set *" );
 
 #ifndef USE_HANDLE_CACHE
-	fs_locked = Cvar_Get( "fs_locked", "0", CVAR_INIT );
+	fs_locked = Cvar_Get( "fs_locked", "0", 0 );
 	Cvar_SetDescription( fs_locked, "Set file handle policy for pk3 files:\n"
 		" 0 - release after use, unlimited number of pk3 files can be loaded\n"
 		" 1 - keep file handle locked, more consistent, total pk3 files count limited to ~1k-4k\n" );
@@ -4131,7 +4131,7 @@ static void FS_Startup( void ) {
 		homePath = fs_basepath->string;
 	}
 
-	fs_homepath = Cvar_Get( "fs_homepath", homePath, CVAR_INIT );
+	fs_homepath = Cvar_Get( "fs_homepath", homePath, 0 );
 	Cvar_SetDescription( fs_homepath, "Directory to store user configuration and downloaded files." );
 
 	fs_excludeReference = Cvar_Get( "fs_excludeReference", "", CVAR_ARCHIVE | CVAR_LATCH );
@@ -4151,7 +4151,7 @@ static void FS_Startup( void ) {
 		FS_AddGameDirectory( fs_basepath->string, fs_basegame->string );
 
 #ifdef __APPLE__
-	fs_apppath = Cvar_Get( "fs_apppath", Sys_DefaultAppPath(), CVAR_INIT );
+	fs_apppath = Cvar_Get( "fs_apppath", Sys_DefaultAppPath(), 0 );
 	// Make MacOSX also include the base path included with the .app bundle
 	if ( fs_apppath->string[0] )
 		FS_AddGameDirectory( fs_apppath->string, fs_basegame->string );

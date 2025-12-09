@@ -901,7 +901,7 @@ void CL_InitInput( void ) {
 	Cmd_AddCommand ("+mlook", IN_MLookDown);
 	Cmd_AddCommand ("-mlook", IN_MLookUp);
 
-	cl_nodelta = Cvar_Get( "cl_nodelta", "0", CVAR_DEVELOPER );
+	cl_nodelta = Cvar_Get( "cl_nodelta", "0", 0 );
 	Cvar_SetDescription( cl_nodelta, "Flag server to disable delta compression on server snapshots." );
 	cl_debugMove = Cvar_Get( "cl_debugMove", "0", 0 );
 	Cvar_SetDescription( cl_debugMove, "Prints a graph of view angle deltas.\n 0: Disabled\n 1: Yaw\n 2: Pitch" );
