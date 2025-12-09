@@ -575,9 +575,6 @@ cvar_t	*Cvar_Set(const char *var_name, const char *value);
 void	Cvar_SetLatched( const char *var_name, const char *value);
 // don't set the cvar immediately
 
-void	Cvar_SetValue( const char *var_name, float value );
-void	Cvar_SetIntegerValue( const char *var_name, int value );
-
 qboolean Cvar_SetModified( const char *var_name, qboolean modified );
 
 cvar_t *Cvar_FindVar( const char *var_name );
@@ -615,7 +612,7 @@ void	Cvar_SetGroup( cvar_t *var, cvarGroup_t group );
 int		Cvar_CheckGroup( cvarGroup_t group );
 void	Cvar_ResetGroup( cvarGroup_t group );
 
-void	Cvar_Restart( qboolean unsetVM );
+void	Cvar_Restart(void);
 
 void	Cvar_CompleteCvarName( const char *args, int argNum );
 

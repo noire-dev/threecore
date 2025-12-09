@@ -33,6 +33,22 @@ static long generateHashValue(const char* fname) {
 	return hash;
 }
 
+static int ParseCvarFlags(const char *flagsStr) {
+    int flags = 0;
+    const char *p = flagsStr;
+    
+    if (!p || !*p) return 0;
+    
+    if (strstr(p, "ARCHIVE")) flags |= CVAR_ARCHIVE;
+    if (strstr(p, "USERINFO")) flags |= CVAR_USERINFO;
+    if (strstr(p, "SYSTEMINFO")) flags |= CVAR_SYSTEMINFO;
+    if (strstr(p, "SERVERINFO")) flags |= CVAR_SERVERINFO;
+    if (strstr(p, "LATCH")) flags |= CVAR_LATCH;
+    if (strstr(p, "CHEAT")) flags |= CVAR_CHEAT;
+    
+    return flags;
+}
+
 static qboolean Cvar_ValidateName(const char* name) {
 	const char* s;
 	int c;
@@ -102,7 +118,7 @@ cvar_t* Cvar_Get(const char* var_name, const char* var_value, int flags) {
 
 	if(var) {
 		var->flags = flags;
-		cvar_modifiedFlags = flags;
+		cvar_modifiedFlags |= flags;
 		var->resetString = CopyString(var_value);
 		if (var->latchedString) {
 		    var->string = CopyString(var->latchedString);
@@ -213,24 +229,6 @@ cvar_t* Cvar_Set(const char* var_name, const char* value) {
 	return var;
 }
 
-void Cvar_SetValue(const char* var_name, float value) {
-	char val[32];
-
-	if(value == (int)value) {
-		Com_sprintf(val, sizeof(val), "%i", (int)value);
-	} else {
-		Com_sprintf(val, sizeof(val), "%f", value);
-	}
-	Cvar_Set(var_name, val);
-}
-
-void Cvar_SetIntegerValue(const char* var_name, int value) {
-	char val[32];
-
-	sprintf(val, "%i", value);
-	Cvar_Set(var_name, val);
-}
-
 int Cvar_VariableIntegerValue(const char* var_name) {
 	cvar_t* var;
 
@@ -328,7 +326,6 @@ static void Cvar_Op(funcType_t ftype, float* val) {
 	if(Cmd_Argc() > 4) {  // high bound
 		if(GetValue(4, &cap)) {
 			if(*val > cap) *val = cap;
-			if(*val > cap) *val = cap;
 		}
 	}
 }
@@ -348,34 +345,6 @@ static void Cvar_Rand(float* val) {
 	}
 }
 
-static cvar_t* Cvar_Unset(cvar_t* cv) {
-	cvar_t* next = cv->next;
-	
-	cvar_modifiedFlags |= cv->flags;
-
-	if(cv->name) Z_Free(cv->name);
-	if(cv->string) Z_Free(cv->string);
-	if(cv->latchedString) Z_Free(cv->latchedString);
-	if(cv->resetString) Z_Free(cv->resetString);
-	if(cv->description) Z_Free(cv->description);
-
-	if(cv->prev)
-		cv->prev->next = cv->next;
-	else
-		cvar_vars = cv->next;
-	if(cv->next) cv->next->prev = cv->prev;
-
-	if(cv->hashPrev)
-		cv->hashPrev->hashNext = cv->hashNext;
-	else
-		hashTable[cv->hashIndex] = cv->hashNext;
-	if(cv->hashNext) cv->hashNext->hashPrev = cv->hashPrev;
-
-	Com_Memset(cv, '\0', sizeof(*cv));
-
-	return next;
-}
-
 qboolean Cvar_Command(void) {
 	cvar_t* v;
 	funcType_t ftype;
@@ -390,7 +359,7 @@ qboolean Cvar_Command(void) {
 	} else if(Cmd_Argc() >= 2) {
 		ftype = GetFuncType();
 		if(ftype == FT_CREATE) {
-			Cvar_Get(Cmd_Argv(0), Cmd_ArgsFrom(3), Cmd_Argv(2));
+			Cvar_Get(Cmd_Argv(0), Cmd_ArgsFrom(3), ParseCvarFlags(Cmd_Argv(2)));
 			return qtrue;
 		} else if(ftype == FT_SET) {
 			Cvar_Set(Cmd_Argv(0), Cmd_ArgsFrom(2));
@@ -479,19 +448,16 @@ void Cvar_WriteVariables(fileHandle_t f) {
 	}
 }
 
-void Cvar_Restart(qboolean unsetVM) {
+void Cvar_Restart(void) {
 	cvar_t* curvar = cvar_vars;
 
 	while(curvar) {
-		if(curvar->resetString[0]) {
-			Cvar_Set(curvar->name, curvar->resetString);
-		}
-
+		if(curvar->resetString[0]) Cvar_Set(curvar->name, curvar->resetString);
 		curvar = curvar->next;
 	}
 }
 
-static void Cvar_Restart_f(void) { Cvar_Restart(qfalse); }
+static void Cvar_Restart_f(void) { Cvar_Restart(); }
 
 const char* Cvar_InfoString(int bit, qboolean* truncated) {
 	static char info[BIG_INFO_STRING];

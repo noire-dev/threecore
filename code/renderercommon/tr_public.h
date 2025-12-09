@@ -150,7 +150,6 @@ typedef struct {
 
 	cvar_t	*(*Cvar_Get)( const char *name, const char *value, int flags );
 	cvar_t	*(*Cvar_Set)( const char *name, const char *value );
-	void	(*Cvar_SetValue) (const char *name, float value);
 	void	(*Cvar_SetDescription)( cvar_t *cv, const char *description );
 
 	void	(*Cvar_SetGroup)( cvar_t *var, cvarGroup_t group );

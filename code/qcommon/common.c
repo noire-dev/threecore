@@ -276,7 +276,7 @@ void NORETURN FORMAT_PRINTF(2, 3) QDECL Com_Error( errorParm_t code, const char 
 
 	com_errorEntered = qtrue;
 
-	Cvar_SetIntegerValue( "com_errorCode", code );
+	Cvar_Set("com_errorCode", va("%i", code));
 
 	// if we are getting a solid stream of ERR_DROP, do an ERR_FATAL
 	currentTime = Sys_Milliseconds();
@@ -2136,7 +2136,7 @@ void Com_GameRestart( int checksumFeed, qboolean clientRestart )
 		FS_Shutdown( qtrue );
 
 		// Clean out any user and VM created cvars
-		Cvar_Restart( qtrue );
+		Cvar_Restart();
 
 #ifndef DEDICATED
 		if ( CL_GameSwitch() )
@@ -2678,7 +2678,7 @@ void Com_Init( char *commandLine ) {
 	com_sv_running = Cvar_Get( "sv_running", "0", 0 );
 	Cvar_SetDescription( com_sv_running, "Communicates to game modules if there is a server currently running." );
 
-	Cvar_Get( "com_errorMessage", "", CVAR_ROM );
+	Cvar_Get( "com_errorMessage", "", 0 );
 
 	gw_minimized = qfalse;
 
@@ -2695,13 +2695,13 @@ void Com_Init( char *commandLine ) {
 	Cmd_AddCommand( "game_restart", Com_GameRestart_f );
 
 	s = va( "%s %s %s", ENGINE_VERSION, PLATFORM_STRING, __DATE__ );
-	com_version = Cvar_Get( "version", s, CVAR_ROM | CVAR_SERVERINFO );
+	com_version = Cvar_Get( "version", s, CVAR_SERVERINFO );
 	Cvar_SetDescription( com_version, "Read-only CVAR to see the version of the game." );
 
 	Sys_Init();
 
 	// CPU detection
-	Cvar_Get( "sys_cpustring", "detect", CVAR_ROM );
+	Cvar_Get( "sys_cpustring", "detect", 0 );
 	if ( !Q_stricmp( Cvar_VariableString( "sys_cpustring" ), "detect" ) ) {
 		char vendor[128];
 		Com_Printf( "...detecting CPU, found " );
@@ -2779,17 +2779,7 @@ Writes key bindings and archived cvars to config file if modified
 ===============
 */
 void Com_WriteConfiguration( void ) {
-	// if we are quitting without fully initializing, make sure
-	// we don't write out anything
-	if ( !com_fullyInitialized ) {
-		return;
-	}
-
-	if ( !(cvar_modifiedFlags & CVAR_ARCHIVE ) ) {
-		return;
-	}
-	cvar_modifiedFlags &= ~CVAR_ARCHIVE;
-
+	if ( !com_fullyInitialized ) return;
 	Com_WriteConfigToFile( CONFIG_CFG );
 }
 

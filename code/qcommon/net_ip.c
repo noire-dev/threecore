@@ -1125,7 +1125,7 @@ static void NET_SetMulticast6( void )
 		Com_Printf("WARNING: NET_JoinMulticast6: Incorrect multicast address given, "
 			   "please set cvar %s to a sane value.\n", net_mcast6addr->name);
 		
-		Cvar_SetIntegerValue( net_enabled->name, net_enabled->integer | NET_DISABLEMCAST );
+		Cvar_Set(net_enabled->name, va("%i", net_enabled->integer | NET_DISABLEMCAST));
 		
 		return;
 	}
@@ -1537,7 +1537,7 @@ static void NET_OpenIP( void ) {
 			ip6_socket = NET_IP6Socket(net_ip6->string, port6 + i, &boundto, &err);
 			if (ip6_socket != INVALID_SOCKET)
 			{
-				Cvar_SetIntegerValue( "net_port6", port6 + i );
+				Cvar_Set("net_port6", va("%i", port6 + i));
 				break;
 			}
 			else
@@ -1556,7 +1556,7 @@ static void NET_OpenIP( void ) {
 		for( i = 0 ; i < 10 ; i++ ) {
 			ip_socket = NET_IPSocket( net_ip->string, port + i, &err );
 			if (ip_socket != INVALID_SOCKET) {
-				Cvar_SetIntegerValue( "net_port", port + i );
+				Cvar_Set("net_port", va("%i", port + i));
 
 				if (net_socksEnabled->integer)
 					NET_OpenSocks( port + i );

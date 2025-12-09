@@ -1495,7 +1495,7 @@ static void CL_BeginDownload( const char *localName, const char *remoteName ) {
 	Cvar_Set( "cl_downloadName", remoteName );
 	Cvar_Set( "cl_downloadSize", "0" );
 	Cvar_Set( "cl_downloadCount", "0" );
-	Cvar_SetIntegerValue( "cl_downloadTime", cls.realtime );
+	Cvar_Set( "cl_downloadTime", va("%i", cls.realtime) );
 
 	clc.downloadBlock = 0; // Starting new file
 	clc.downloadCount = 0;
@@ -2525,7 +2525,6 @@ static void CL_InitRef( void ) {
 
 	rimp.Cvar_Get = Cvar_Get;
 	rimp.Cvar_Set = Cvar_Set;
-	rimp.Cvar_SetValue = Cvar_SetValue;
 	rimp.Cvar_SetDescription = Cvar_SetDescription;
 	rimp.Cvar_VariableString = Cvar_VariableString;
 	rimp.Cvar_VariableIntegerValue = Cvar_VariableIntegerValue;

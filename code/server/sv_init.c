@@ -413,7 +413,7 @@ void SV_SpawnServer( const char *mapname ) {
 	// serverid should be different each time
 	sv.serverId = com_frameTime;
 	sv.restartedServerId = sv.serverId;
-	Cvar_SetIntegerValue( "sv_serverid", sv.serverId );
+	Cvar_Set("sv_serverid", va("%i", sv.serverId));
 
 	// clear physics interaction links
 	SV_ClearWorld();

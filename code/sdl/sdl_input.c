@@ -516,7 +516,7 @@ void HandleEvents( void )
 				key = IN_TranslateSDLToQ3Key( &e.key.keysym, qtrue );
 
 				if ( key == K_ENTER && keys[K_ALT].down ) {
-					Cvar_SetIntegerValue( "r_fullscreen", glw_state.isFullscreen ? 0 : 2 );
+					Cvar_Set("r_fullscreen", va("%i", glw_state.isFullscreen ? 0 : 2));
 					Cbuf_AddText( "vid_restart\n" );
 					break;
 				}
