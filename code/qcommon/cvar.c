@@ -380,7 +380,7 @@ qboolean Cvar_Command(void) {
 			Cvar_Set(Cmd_Argv(0), Cmd_ArgsFrom(2));
 			return qtrue;
 		} else if(ftype == FT_VA) {
-			Cvar_Set(Cmd_Argv(0), va(Cmd_ArgsFrom(2), ARGS_32));
+			Cvar_Set(Cmd_Argv(0), va(Cmd_Argv(2), ARGS_32));
 			return qtrue;
 		} else if(ftype == FT_RESET && v) {
 			Cvar_Set(v->name, NULL);
