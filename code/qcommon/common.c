@@ -77,9 +77,6 @@ cvar_t	*os_windows;
 cvar_t	*os_macos;
 
 cvar_t	*com_cameraMode;
-#if defined(_WIN32) && defined(_DEBUG)
-cvar_t	*com_noErrorInterrupt;
-#endif
 
 static int	lastTime;
 int			com_frameTime;
@@ -258,14 +255,6 @@ void NORETURN FORMAT_PRINTF(2, 3) QDECL Com_Error( errorParm_t code, const char 
 	static int	errorCount;
 	static qboolean	calledSysError = qfalse;
 	int			currentTime;
-
-#if defined(_WIN32) && defined(_DEBUG)
-	if ( code != ERR_DISCONNECT ) {
-		if ( !com_noErrorInterrupt->integer ) {
-			DebugBreak();
-		}
-	}
-#endif
 
 	if ( com_errorEntered ) {
 		if ( !calledSysError ) {
@@ -2555,10 +2544,6 @@ void Com_Init( char *commandLine ) {
 	Com_InitSmallZoneMemory();
 	Cvar_Init();
 
-#if defined(_WIN32) && defined(_DEBUG)
-	com_noErrorInterrupt = Cvar_Get( "com_noErrorInterrupt", "0", 0 );
-#endif
-
 	// prepare enough of the subsystems to handle
 	// cvar and command buffer management
 	Com_ParseCommandLine( commandLine );
@@ -2644,7 +2629,7 @@ void Com_Init( char *commandLine ) {
 	// init commands and vars
 	//
 #ifndef DEDICATED
-	com_maxfps = Cvar_Get( "com_maxfps", "60", 0 ); // try to force that in some light way
+	com_maxfps = Cvar_Get( "com_maxfps", "60", CVAR_ARCHIVEĹ );
 	Cvar_SetDescription( com_maxfps, "Sets maximum frames per second." );
 	com_maxfpsUnfocused = Cvar_Get( "com_maxfpsUnfocused", "60", CVAR_ARCHIVE );
 	Cvar_SetDescription( com_maxfpsUnfocused, "Sets maximum frames per second in unfocused game window." );
