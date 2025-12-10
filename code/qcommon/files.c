@@ -4329,19 +4329,6 @@ is resetting due to a game change
 ================
 */
 void FS_InitFilesystem( void ) {
-	// allow command line parms to override our defaults
-	// we have to specially handle this, because normal command
-	// line variable sets don't happen until after the filesystem
-	// has already been initialized
-	Com_StartupVariable( "fs_basepath" );
-	Com_StartupVariable( "fs_homepath" );
-	Com_StartupVariable( "fs_basegame" );
-	Com_StartupVariable( "fs_copyfiles" );
-	Com_StartupVariable( "fs_restrict" );
-#ifndef USE_HANDLE_CACHE
-	Com_StartupVariable( "fs_locked" );
-#endif
-
 #ifdef _WIN32
  	_setmaxstdio( 2048 );
 #endif

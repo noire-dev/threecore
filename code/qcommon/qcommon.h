@@ -911,11 +911,6 @@ int			Com_FilterPath( const char *filter, const char *name );
 int			Com_RealTime(qtime_t *qtime);
 void		Com_RunAndTimeServerPacket( const netadr_t *evFrom, msg_t *buf );
 
-void		Com_StartupVariable( const char *match );
-// checks for and removes command line "+set var arg" constructs
-// if match is NULL, all set commands will be executed, otherwise
-// only a set with the exact name.  Only used during startup.
-
 void		Com_WriteConfiguration( void );
 int			Com_HexStrToInt( const char *str );
 qboolean	Com_GetHashColor( const char *str, byte *color );
