@@ -421,33 +421,6 @@ static void Com_ParseCommandLine( char *commandLine ) {
 	parsed = 1;
 }
 
-/*
-===============
-Com_StartupVariable
-
-Searches for command line parameters that are set commands.
-If match is not NULL, only that cvar will be looked for.
-That is necessary because cddir and basedir need to be set
-before the filesystem is started, but all other sets should
-be after execing the config and default.
-===============
-*/
-void Com_StartupVariable( const char *match ) {
-	int i;
-	const char *name;
-
-	for ( i = 0; i < com_numConsoleLines; i++ ) {
-		Cmd_TokenizeString( com_consoleLines[i] );
-		if ( Q_stricmp( Cmd_Argv( 1 ), "=" ) ) {
-			continue;
-		}
-
-		name = Cmd_Argv( 0 );
-		if ( !match || Q_stricmp( name, match ) == 0 )
-			Cvar_Set( name, Cmd_ArgsFrom( 2 ) );
-	}
-}
-
 void Info_Print( const char *s ) {
 	char	key[BIG_INFO_KEY];
 	char	value[BIG_INFO_VALUE];
@@ -2548,31 +2521,18 @@ void Com_Init( char *commandLine ) {
 	// cvar and command buffer management
 	Com_ParseCommandLine( commandLine );
 
-//	Swap_Init ();
 	Cbuf_Init();
-
-	// override anything from the config files with command line args
-	Com_StartupVariable( NULL );
 
 	Com_InitZoneMemory();
 	Cmd_Init();
 
 	// get the developer cvar set as early as possible
-	Com_StartupVariable( "developer" );
 	com_developer = Cvar_Get( "developer", "0", 0 );
-
-	Com_StartupVariable( "journal" );
 	com_journal = Cvar_Get( "journal", "0", 0 );
-	Cvar_SetDescription( com_journal, "When enabled, writes events and its data to 'journal.dat' and 'journaldata.dat'.");
-
-	Com_StartupVariable( "sv_master1" );
-	Com_StartupVariable( "sv_master2" );
-	Com_StartupVariable( "sv_master3" );
 	Cvar_Get( "sv_master1", "", CVAR_ARCHIVE );
 	Cvar_Get( "sv_master2", "", CVAR_ARCHIVE );
 	Cvar_Get( "sv_master3", "", CVAR_ARCHIVE );
 
-	// done early so bind command exists
 	Com_InitKeyCommands();
 	
 	cl_selectedmod = Cvar_Get("cl_selectedmod", "default", CVAR_ARCHIVE | CVAR_SERVERINFO);
@@ -2604,19 +2564,10 @@ void Com_Init( char *commandLine ) {
 	FS_InitFilesystem();
 
 	com_logfile = Cvar_Get( "logfile", "0", 0 );
-	Cvar_SetDescription( com_logfile, "System console logging:\n"
-		" 0 - disabled\n"
-		" 1 - overwrite mode, buffered\n"
-		" 2 - overwrite mode, synced\n"
-		" 3 - append mode, buffered\n"
-		" 4 - append mode, synced\n" );
 
 	Com_InitJournaling();
 
 	Com_ExecuteCfg();
-
-	// override anything from the config files with command line args
-	Com_StartupVariable( NULL );
 
 	// allocate the stack based hunk allocator
 	Com_InitHunkMemory();
@@ -2629,40 +2580,28 @@ void Com_Init( char *commandLine ) {
 	// init commands and vars
 	//
 #ifndef DEDICATED
-	com_maxfps = Cvar_Get( "com_maxfps", "60", CVAR_ARCHIVEĹ );
-	Cvar_SetDescription( com_maxfps, "Sets maximum frames per second." );
+	com_maxfps = Cvar_Get( "com_maxfps", "60", CVAR_ARCHIVE ); // try to force that in some light way
 	com_maxfpsUnfocused = Cvar_Get( "com_maxfpsUnfocused", "60", CVAR_ARCHIVE );
-	Cvar_SetDescription( com_maxfpsUnfocused, "Sets maximum frames per second in unfocused game window." );
 	com_yieldCPU = Cvar_Get( "com_yieldCPU", "1", CVAR_ARCHIVE );
-	Cvar_SetDescription( com_yieldCPU, "Attempt to sleep specified amount of time between rendered frames when game is active, this will greatly reduce CPU load. Use 0 only if you're experiencing some lag." );
 #endif
 
 #ifdef USE_AFFINITY_MASK
 	com_affinityMask = Cvar_Get( "com_affinityMask", "", CVAR_ARCHIVE );
-	Cvar_SetDescription( com_affinityMask, "Bind game process to bitmask-specified CPU core(s), special characters:\n A or a - all default cores\n P or p - performance cores\n E or e - efficiency cores\n 0x<value> - use hexadecimal notation\n + or - can be used to add or exclude particular cores" );
-	com_affinityMask->modified = qfalse;
+    com_affinityMask->modified = qfalse;
 #endif
 	com_timescale = Cvar_Get( "timescale", "1", CVAR_CHEAT | CVAR_SYSTEMINFO );
-	Cvar_SetDescription( com_timescale, "System timing factor:\n < 1: Slows the game down\n = 1: Regular speed\n > 1: Speeds the game up" );
 	com_fixedtime = Cvar_Get( "fixedtime", "0", CVAR_CHEAT );
-	Cvar_SetDescription( com_fixedtime, "Toggle the rendering of every frame the game will wait until each frame is completely rendered before sending the next frame." );
 	com_cameraMode = Cvar_Get( "com_cameraMode", "0", CVAR_CHEAT );
 
 #ifndef DEDICATED
 	cl_paused = Cvar_Get( "cl_paused", "0", 0 );
-	Cvar_SetDescription( cl_paused, "Read-only CVAR to toggle functionality of paused games (the variable holds the status of the paused flag on the client side)." );
 	cl_packetdelay = Cvar_Get( "cl_packetdelay", "0", CVAR_CHEAT );
-	Cvar_SetDescription( cl_packetdelay, "Artificially set the client's latency. Simulates packet delay, which can lead to packet loss." );
 	com_cl_running = Cvar_Get( "cl_running", "0", 0 );
-	Cvar_SetDescription( com_cl_running, "Can be used to check the status of the client game." );
 #endif
 
 	sv_paused = Cvar_Get( "sv_paused", "0", 0 );
 	sv_packetdelay = Cvar_Get( "sv_packetdelay", "0", CVAR_CHEAT );
-	Cvar_SetDescription( sv_packetdelay, "Simulates packet delay, which can lead to packet loss. Server side." );
 	com_sv_running = Cvar_Get( "sv_running", "0", 0 );
-	Cvar_SetDescription( com_sv_running, "Communicates to game modules if there is a server currently running." );
-
 	Cvar_Get( "com_errorMessage", "", 0 );
 
 	gw_minimized = qfalse;
@@ -2681,7 +2620,6 @@ void Com_Init( char *commandLine ) {
 
 	s = va( "%s %s %s", ENGINE_VERSION, PLATFORM_STRING, __DATE__ );
 	com_version = Cvar_Get( "version", s, CVAR_SERVERINFO );
-	Cvar_SetDescription( com_version, "Read-only CVAR to see the version of the game." );
 
 	Sys_Init();
 
@@ -2712,9 +2650,7 @@ void Com_Init( char *commandLine ) {
 	Netchan_Init( qport & 0xffff );
 
 	VM_Init();
-//#ifdef DEDICATED
 	SV_Init();
-//#endif
 
 #ifndef DEDICATED
 	CL_Init();

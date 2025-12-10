@@ -736,21 +736,9 @@ void IN_Init( void )
 	Com_DPrintf( "\n------- Input Initialization -------\n" );
 
 	in_keyboardDebug = Cvar_Get( "in_keyboardDebug", "0", CVAR_ARCHIVE );
-	Cvar_SetDescription( in_keyboardDebug, "Print keyboard debug info." );
 	in_forceCharset = Cvar_Get( "in_forceCharset", "1", CVAR_ARCHIVE );
-	Cvar_SetDescription( in_forceCharset, "Try to translate non-ASCII chars in keyboard input or force EN/US keyboard layout." );
-
-	// mouse variables
 	in_mouse = Cvar_Get( "in_mouse", "1", CVAR_ARCHIVE );
-	Cvar_SetDescription( in_mouse,
-		"Mouse data input source:\n" \
-		"  0 - disable mouse input\n" \
-		"  1 - di/raw mouse\n" \
-		" -1 - win32 mouse" );
-
-	// ~ and `, as keys and characters
 	cl_consoleKeys = Cvar_Get( "cl_consoleKeys", "~ ` 0x7e 0x60", CVAR_ARCHIVE );
-	Cvar_SetDescription( cl_consoleKeys, "Space delimited list of key names or characters that toggle the console." );
 
 	mouseAvailable = ( in_mouse->value != 0 ) ? qtrue : qfalse;
 

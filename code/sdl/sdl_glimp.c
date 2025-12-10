@@ -425,8 +425,6 @@ void GLimp_Init( glconfig_t *config ) {
 	glw_state.config = config; // feedback renderer configuration
 
 	in_nograb = Cvar_Get( "in_nograb", "0", 0 );
-	Cvar_SetDescription( in_nograb, "Do not capture mouse in game, may be useful during online streaming." );
-
 	r_swapInterval = Cvar_Get( "r_swapInterval", "0", CVAR_ARCHIVE | CVAR_LATCH );
 
 	// Create the window and set up the context
@@ -494,8 +492,6 @@ void VKimp_Init( glconfig_t *config ) {
 	Com_DPrintf( "VKimp_Init()\n" );
 
 	in_nograb = Cvar_Get( "in_nograb", "0", CVAR_ARCHIVE );
-	Cvar_SetDescription( in_nograb, "Do not capture mouse in game, may be useful during online streaming." );
-
 	r_swapInterval = Cvar_Get( "r_swapInterval", "0", CVAR_ARCHIVE | CVAR_LATCH );
 
 	// feedback to renderer configuration

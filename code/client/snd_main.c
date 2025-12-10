@@ -397,18 +397,12 @@ void S_Init( void )
 	Com_Printf( "------ Initializing Sound ------\n" );
 
 	s_volume = Cvar_Get( "s_volume", "1.0", CVAR_ARCHIVE );
-	Cvar_SetDescription( s_volume, "Sets master volume for all game audio." );
 	s_musicVolume = Cvar_Get( "s_musicVolume", "0.4", CVAR_ARCHIVE );
-	Cvar_SetDescription( s_musicVolume, "Sets volume for in-game music only." );
 	s_doppler = Cvar_Get( "s_doppler", "1", CVAR_ARCHIVE );
-	Cvar_SetDescription( s_doppler, "Enables doppler effect on moving projectiles." );
 	s_muteWhenUnfocused = Cvar_Get( "s_muteWhenUnfocused", "1", CVAR_ARCHIVE );
-	Cvar_SetDescription( s_muteWhenUnfocused, "Mutes all audio while game window is unfocused." );
 	s_muteWhenMinimized = Cvar_Get( "s_muteWhenMinimized", "1", CVAR_ARCHIVE );
-	Cvar_SetDescription( s_muteWhenMinimized, "Mutes all audio while game is minimized." );
 
 	cv = Cvar_Get( "s_initsound", "1", 0 );
-	Cvar_SetDescription( cv, "Whether or not to startup the sound system." );
 	if ( !cv->integer ) {
 		Com_Printf( "Sound disabled.\n" );
 	} else {

@@ -531,83 +531,45 @@ void SV_Init( void )
 
 	// serverinfo vars
 	sv_gametype = Cvar_Get ("g_gametype", "0", CVAR_SERVERINFO | CVAR_LATCH );
-	Cvar_SetDescription( sv_gametype, "Set the gametype to mod." );
 	sv_mapname = Cvar_Get ("sv_mapname", "", CVAR_SERVERINFO );
-	Cvar_SetDescription( sv_mapname, "Display the name of the current map being used on a server." );
 	sv_privateClients = Cvar_Get( "sv_privateClients", "0", 0 );
-	Cvar_SetDescription( sv_privateClients, "The number of spots, out of g_maxClients, reserved for players with the server password (sv_privatePassword)." );
 	sv_hostname = Cvar_Get ("sv_hostname", "OpenSandbox", CVAR_SERVERINFO | CVAR_ARCHIVE );
-	Cvar_SetDescription( sv_hostname, "Sets the name of the server." );
-
 	sv_maxclientsPerIP = Cvar_Get( "sv_maxclientsPerIP", "3", CVAR_ARCHIVE );
-	Cvar_SetDescription( sv_maxclientsPerIP, "Limits number of simultaneous connections from the same IP address." );
-
 	sv_minRate = Cvar_Get( "sv_minRate", "0", CVAR_ARCHIVE );
-	Cvar_SetDescription( sv_minRate, "Minimum server bandwidth (in bit per second) a client can use." );
 	sv_maxRate = Cvar_Get( "sv_maxRate", "0", CVAR_ARCHIVE );
-	Cvar_SetDescription( sv_maxRate, "Maximum server bandwidth (in bit per second) a client can use." );
 	sv_dlRate = Cvar_Get( "sv_dlRate", "100", CVAR_ARCHIVE );
-	Cvar_SetDescription( sv_dlRate, "Bandwidth allotted to PK3 file downloads via UDP, in kbyte/s." );
 	sv_floodProtect = Cvar_Get( "sv_floodProtect", "1", CVAR_ARCHIVE | CVAR_SERVERINFO );
-	Cvar_SetDescription( sv_floodProtect, "Toggle server flood protection to keep players from bringing the server down." );
-
-	// systeminfo
 	Cvar_Get( "sv_cheats", "0", CVAR_SYSTEMINFO);
 	sv_serverid = Cvar_Get( "sv_serverid", "0", CVAR_SYSTEMINFO );
 	sv_referencedPakNames = Cvar_Get( "sv_referencedPakNames", "", CVAR_SYSTEMINFO );
-	Cvar_SetDescription( sv_referencedPakNames, "Variable holds a list of all the pk3 files the server loaded data from." );
-
-	// server vars
 	sv_rconPassword = Cvar_Get ("rconPassword", "", 0 );
-	Cvar_SetDescription( sv_rconPassword, "Password for remote server commands." );
 	sv_privatePassword = Cvar_Get ("sv_privatePassword", "", 0 );
-	Cvar_SetDescription( sv_privatePassword, "Set password for private clients to login with." );
 	sv_fps = Cvar_Get ("sv_fps", "60", 0 );
-	Cvar_SetDescription( sv_fps, "Set the max frames per second the server sends the client." );
 	sv_timeout = Cvar_Get( "sv_timeout", "999999", 0 );
-	Cvar_SetDescription( sv_timeout, "Seconds without any message before automatic client disconnect." );
 	sv_zombietime = Cvar_Get( "sv_zombietime", "2", 0 );
-	Cvar_SetDescription( sv_zombietime, "Seconds to sink messages after disconnect." );
 	Cvar_Get ("nextmap", "", 0 );
-
 	sv_allowDownload = Cvar_Get ("sv_allowDownload", "1", CVAR_SERVERINFO);
-	Cvar_SetDescription( sv_allowDownload, "Toggle the ability for clients to download files maps etc. from server." );
 	Cvar_Get ("sv_dlURL", "", CVAR_SERVERINFO | CVAR_ARCHIVE);
 
 	for ( index = 0; index < MAX_MASTER_SERVERS; index++ )
 		sv_master[ index ] = Cvar_Get( va( "sv_master%d", index + 1 ), "", CVAR_ARCHIVE );
 
 	sv_reconnectlimit = Cvar_Get( "sv_reconnectlimit", "3", 0 );
-	Cvar_SetDescription( sv_reconnectlimit, "Number of seconds a disconnected client should wait before next reconnect." );
-
 	sv_padPackets = Cvar_Get( "sv_padPackets", "0", 0 );
-	Cvar_SetDescription( sv_padPackets, "Adds padding bytes to network packets for rate debugging." );
 	sv_killserver = Cvar_Get( "sv_killserver", "0", 0 );
-	Cvar_SetDescription( sv_killserver, "Internal flag to manage server state." );
 	sv_lanForceRate = Cvar_Get( "sv_lanForceRate", "1", CVAR_ARCHIVE );
-	Cvar_SetDescription( sv_lanForceRate, "Forces LAN clients to the maximum rate instead of accepting client setting." );
-
 	sv_anticheatengine = Cvar_Get( "sv_anticheatengine", "0", CVAR_ARCHIVE | CVAR_SERVERINFO );
-	Cvar_SetDescription( sv_anticheatengine, "Enables or disables the SourceTech server-side anti-cheat engine." );
 	sv_ace_wallhack = Cvar_Get( "sv_ace_wallhack", "2", CVAR_ARCHIVE );
-	Cvar_SetDescription( sv_ace_wallhack, "Enables or disables wallhack protection. 0-Off 1-Players(Fast) 2-Players 3-Players+Items." );
-
 	sv_filter = Cvar_Get( "sv_filter", "filter.txt", CVAR_ARCHIVE );
-	Cvar_SetDescription( sv_filter, "Cvar that point on filter file, if it is "" then filtering will be disabled." );
 
-	// initialize bot cvars so they are listed and can be set before loading the botlib
 	SV_BotInitCvars();
-
-	// init the botlib here because we need the pre-compiler in the UI
 	SV_BotInitBotLib();
 
-	// track group cvar changes
 	Cvar_SetGroup( sv_lanForceRate, CVG_SERVER );
 	Cvar_SetGroup( sv_minRate, CVG_SERVER );
 	Cvar_SetGroup( sv_maxRate, CVG_SERVER );
 	Cvar_SetGroup( sv_fps, CVG_SERVER );
 
-	// force initial check
 	SV_TrackCvarChanges();
 
 	SV_InitChallenger();

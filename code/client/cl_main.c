@@ -2525,7 +2525,6 @@ static void CL_InitRef( void ) {
 
 	rimp.Cvar_Get = Cvar_Get;
 	rimp.Cvar_Set = Cvar_Set;
-	rimp.Cvar_SetDescription = Cvar_SetDescription;
 	rimp.Cvar_VariableString = Cvar_VariableString;
 	rimp.Cvar_VariableIntegerValue = Cvar_VariableIntegerValue;
 
@@ -3204,11 +3203,8 @@ qboolean CL_GetModeInfo( int *width, int *height, float *windowAspect, const cha
 static void CL_InitGLimp_Cvars( void )  {
 	// shared with GLimp
 	r_swapInterval = Cvar_Get( "r_swapInterval", "1", CVAR_ARCHIVE );
-	Cvar_SetDescription( r_swapInterval, "V-blanks to wait before swapping buffers.\n 0: No V-Sync\n 1: Synced to the monitor's refresh rate." );
 	r_resolution = Cvar_Get( "r_resolution", "640x480", CVAR_ARCHIVE | CVAR_LATCH );
-	Cvar_SetDescription( r_resolution, "Set resolution in [width]x[height] format" );
 	r_fullscreen = Cvar_Get( "r_fullscreen", "3", CVAR_ARCHIVE | CVAR_LATCH );
-	Cvar_SetDescription( r_fullscreen, "Fullscreen mode: \n 0 - windowed. \n 1 - borderless windowed. \n 2 - fullscreen. \n 3 - fullscreen native." );
 	r_availableModes = Cvar_Get( "r_availableModes", "0", 0 );
 }
 
@@ -3236,45 +3232,21 @@ void CL_Init( void ) {
 	// register client variables
 	//
 	cl_noprint = Cvar_Get( "cl_noprint", "0", 0 );
-	Cvar_SetDescription( cl_noprint, "Disable printing of information in the console." );
-
 	cl_timeout = Cvar_Get( "cl_timeout", "200", 0 );
-	Cvar_SetDescription( cl_timeout, "Duration of receiving nothing from server for client to decide it must be disconnected (in seconds)." );
-
 	cl_shownet = Cvar_Get ("cl_shownet", "0", 0 );
-	Cvar_SetDescription( cl_shownet, "Toggle the display of current network status." );
 	rcon_client_password = Cvar_Get ("rconPassword", "", 0 );
-	Cvar_SetDescription( rcon_client_password, "Sets a remote console password so clients may change server settings without direct access to the server console." );
 	cl_activeAction = Cvar_Get( "activeAction", "", 0 );
-	Cvar_SetDescription( cl_activeAction, "Contents of this variable will be executed upon first frame of play.\nNote: It is cleared every time it is executed." );
-
 	cl_aviFrameRate = Cvar_Get ("cl_aviFrameRate", "25", CVAR_ARCHIVE);
-	Cvar_SetDescription( cl_aviFrameRate, "The framerate used for capturing video." );
 	cl_aviMotionJpeg = Cvar_Get ("cl_aviMotionJpeg", "1", CVAR_ARCHIVE);
-	Cvar_SetDescription( cl_aviMotionJpeg, "Enable/disable the MJPEG codec for avi output." );
-
 	cl_aviPipeFormat = Cvar_Get( "cl_aviPipeFormat",
 		"-preset medium -crf 23 -c:v libx264 -flags +cgop -pix_fmt yuvj420p "
 		"-bf 2 -c:a aac -strict -2 -b:a 160k -movflags faststart",
 		CVAR_ARCHIVE );
-	Cvar_SetDescription( cl_aviPipeFormat, "Encoder parameters used for \\video-pipe." );
-
 	rconAddress = Cvar_Get ("rconAddress", "", 0);
-	Cvar_SetDescription( rconAddress, "The IP address of the remote console you wish to connect to." );
-
 	cl_allowDownload = Cvar_Get( "cl_allowDownload", "1", CVAR_ARCHIVE );
-	Cvar_SetDescription( cl_allowDownload, "Enables downloading of content needed in server. Valid bitmask flags:\n 1: Downloading enabled\n 2: Do not use HTTP/FTP downloads\n 4: Do not use UDP downloads" );
-
 	cl_serverStatusResendTime = Cvar_Get ("cl_serverStatusResendTime", "750", 0);
-	Cvar_SetDescription( cl_serverStatusResendTime, "Time between re-sending server status requests if no response is received (in milliseconds)." );
-
 	cv = Cvar_Get( "cl_maxPing", "999", CVAR_ARCHIVE );
-	Cvar_SetDescription( cv, "Specify the maximum allowed ping to a server." );
-
 	cl_lanForcePackets = Cvar_Get( "cl_lanForcePackets", "1", CVAR_ARCHIVE );
-	Cvar_SetDescription( cl_lanForcePackets, "Bypass \\cl_maxpackets for LAN games, send packets every frame." );
-
-	// userinfo
 	Cvar_Get ("name", "Sandbox Player", CVAR_USERINFO | CVAR_ARCHIVE );
 	Cvar_Get ("rate", "125000", CVAR_USERINFO | CVAR_ARCHIVE );
 	Cvar_Get ("snaps", "60", CVAR_USERINFO | CVAR_ARCHIVE );
@@ -3286,14 +3258,9 @@ void CL_Init( void ) {
 	Cvar_Get ("team_legsmodel", "beret/default", CVAR_USERINFO | CVAR_ARCHIVE );
 	Cvar_Get ("sex", "male", CVAR_USERINFO | CVAR_ARCHIVE );
 	Cvar_Get ("cl_anonymous", "0", CVAR_USERINFO | CVAR_ARCHIVE );
-
 	Cvar_Get ("password", "", CVAR_USERINFO);
-
 	Cvar_Get ("viewdistance", "180", CVAR_USERINFO );
-
-	//
-	// register client commands
-	//
+	
 	Cmd_AddCommand ("cmd", CL_ForwardToServer_f);
 	Cmd_AddCommand ("configstrings", CL_Configstrings_f);
 	Cmd_AddCommand ("clientinfo", CL_Clientinfo_f);

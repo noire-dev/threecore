@@ -1130,9 +1130,7 @@ static void RE_SyncRender( void )
 R_Register
 ===============
 */
-static void R_Register( void )
-{
-	// make sure all the commands added here are also removed in R_Shutdown
+static void R_Register( void ) {
 	ri.Cmd_AddCommand( "imagelist", R_ImageList_f );
 	ri.Cmd_AddCommand( "shaderlist", R_ShaderList_f );
 	ri.Cmd_AddCommand( "skinlist", R_SkinList_f );
@@ -1141,87 +1139,44 @@ static void R_Register( void )
 	ri.Cmd_AddCommand( "screenshotJPEG", R_ScreenShot_f );
 	ri.Cmd_AddCommand( "screenshotBMP", R_ScreenShot_f );
 
-	//
-	// temporary latched variables that can only change over a restart
-	//
 	r_picmip = ri.Cvar_Get( "r_picmip", "0", CVAR_ARCHIVE | CVAR_LATCH );
-	ri.Cvar_SetDescription( r_picmip, "Set texture quality, lower is better." );
-
 	r_nomip = ri.Cvar_Get( "r_nomip", "1", CVAR_ARCHIVE | CVAR_LATCH );
-	ri.Cvar_SetDescription( r_nomip, "Apply picmip only on worldspawn textures." );
-
 	r_colorMipLevels = ri.Cvar_Get ("r_colorMipLevels", "0", CVAR_LATCH );
-	ri.Cvar_SetDescription( r_colorMipLevels, "Debugging tool to artificially color different mipmap levels so that they are more apparent." );
-
 	r_mergeLightmaps = ri.Cvar_Get( "r_mergeLightmaps", "1", CVAR_ARCHIVE | CVAR_LATCH );
-	ri.Cvar_SetDescription( r_mergeLightmaps, "Merge built-in small lightmaps into bigger lightmaps (atlases)." );
-
 	r_subdivisions = ri.Cvar_Get( "r_subdivisions", "2", CVAR_ARCHIVE | CVAR_LATCH );
-	ri.Cvar_SetDescription(r_subdivisions, "Distance to subdivide bezier curved surfaces. Higher values mean less subdivision and less geometric complexity.");
-
-	//
-	// archived variables that can change at any time
-	//
 	r_lodCurveError = ri.Cvar_Get( "r_lodCurveError", "250", CVAR_ARCHIVE );
-	ri.Cvar_SetDescription( r_lodCurveError, "Level of detail error on curved surface grids. Higher values result in better quality at a distance." );
 	r_lodbias = ri.Cvar_Get( "r_lodbias", "-2", CVAR_ARCHIVE );
-	ri.Cvar_SetDescription( r_lodbias, "Sets the level of detail of in-game models:\n -2: Ultra (further delays LOD transition in the distance)\n -1: Very High (delays LOD transition in the distance)\n 0: High\n 1: Medium\n 2: Low" );
 	r_znear = ri.Cvar_Get( "r_znear", "1", CVAR_CHEAT );
-	ri.Cvar_SetDescription( r_znear, "Viewport distance from view origin (how close objects can be to the player before they're clipped out of the scene)." );
 	r_zproj = ri.Cvar_Get( "r_zproj", "64", CVAR_ARCHIVE );
-	ri.Cvar_SetDescription( r_zproj, "Projected viewport frustum." );
 	r_ignoreGLErrors = ri.Cvar_Get( "r_ignoreGLErrors", "1", CVAR_ARCHIVE );
-	ri.Cvar_SetDescription( r_ignoreGLErrors, "Ignore OpenGL errors." );
 	r_fastsky = ri.Cvar_Get( "r_fastsky", "0", CVAR_ARCHIVE );
-	ri.Cvar_SetDescription( r_fastsky, "Draw flat colored skies." );
 	r_dlightMode = ri.Cvar_Get( "r_dlightMode", "1", CVAR_ARCHIVE );
-	ri.Cvar_SetDescription( r_dlightMode, "Dynamic light mode:\n 0: Off\n 1: High-quality per-pixel dynamic lights" );
-
 	r_ext_multisample = ri.Cvar_Get( "r_ext_multisample", "0", CVAR_ARCHIVE );
-	ri.Cvar_SetDescription( r_ext_multisample, "For anti-aliasing geometry edges, valid values: 0|2|4|6|8." );
 	ri.Cvar_SetGroup( r_ext_multisample, CVG_RENDERER );
 	r_hdr = ri.Cvar_Get( "r_hdr", "1", CVAR_ARCHIVE );
-	ri.Cvar_SetDescription(r_hdr, "Enables high dynamic range frame buffer texture format.\n -1: 4-bit, for testing purposes, heavy color banding, might not work on all systems\n  0: 8 bit, default, moderate color banding with multi-stage shaders\n  1: 16 bit, enhanced blending precision, no color banding, might decrease performance on AMD / Intel GPUs\n" );
 	ri.Cvar_SetGroup( r_hdr, CVG_RENDERER );
-	// bloom
 	r_bloom_threshold = ri.Cvar_Get( "r_bloom_threshold", "0.00", CVAR_ARCHIVE );
-	ri.Cvar_SetDescription(r_bloom_threshold, "Color level to extract to bloom texture, default is 0.6.");
 	ri.Cvar_SetGroup( r_bloom_threshold, CVG_RENDERER );
 	r_bloom_threshold_mode = ri.Cvar_Get( "r_bloom_threshold_mode", "0", CVAR_ARCHIVE );
-	ri.Cvar_SetDescription( r_bloom_threshold_mode, "Color extraction mode:\n 0: (r|g|b) >= threshold\n 1: (r + g + b ) / 3 >= threshold\n 2: luma(r, g, b) >= threshold" );
 	ri.Cvar_SetGroup( r_bloom_threshold_mode, CVG_RENDERER );
 	r_bloom_intensity = ri.Cvar_Get( "r_bloom_intensity", "0.10", CVAR_ARCHIVE );
-	ri.Cvar_SetDescription( r_bloom_intensity, "Final bloom blend factor, default is 0.5." );
 	r_bloom_passes = ri.Cvar_Get( "r_bloom_passes", "6", CVAR_ARCHIVE | CVAR_LATCH );
-	ri.Cvar_SetDescription( r_bloom_passes, "Count of downsampled passes (framebuffers) to blend on final bloom image, default is 5." );
 	r_bloom_blend_base = ri.Cvar_Get( "r_bloom_blend_base", "1", CVAR_ARCHIVE );
-	ri.Cvar_SetDescription( r_bloom_blend_base, "0-based, topmost downsampled framebuffer to use for final image, high values can be used for stronger haze effect, results in overall weaker intensity." );
 	ri.Cvar_SetGroup( r_bloom_blend_base, CVG_RENDERER );
 	r_bloom_modulate = ri.Cvar_Get( "r_bloom_modulate", "0", CVAR_ARCHIVE );
-	ri.Cvar_SetDescription( r_bloom_modulate, "Modulate extracted color:\n 0: off (color = color, i.e. no changes)\n 1: by itself (color = color * color)\n 2: by intensity (color = color * luma(color))" );
 	ri.Cvar_SetGroup( r_bloom_modulate, CVG_RENDERER );
 	r_bloom_filter_size = ri.Cvar_Get( "r_bloom_filter_size", "5", CVAR_ARCHIVE );
-	ri.Cvar_SetDescription( r_bloom_filter_size, "Filter size of Gaussian Blur effect for each pass, bigger filter size means stronger and wider blur, lower values are faster, default is 6." );
-	ri.Cvar_SetGroup( r_bloom_filter_size, CVG_RENDERER );
-
+    ri.Cvar_SetGroup( r_bloom_filter_size, CVG_RENDERER );
 	r_bloom_reflection = ri.Cvar_Get( "r_bloom_reflection", "0.05", CVAR_ARCHIVE );
-	ri.Cvar_SetDescription( r_bloom_reflection, "Bloom lens reflection effect, value is an intensity factor of the effect, negative value means blend only reflection and skip main bloom texture." );
-
 	r_textureMode = ri.Cvar_Get( "r_textureMode", "GL_LINEAR_MIPMAP_NEAREST", CVAR_ARCHIVE );
-	ri.Cvar_SetDescription( r_textureMode, "Texture interpolation mode:\n GL_NEAREST: Nearest neighbor interpolation and will therefore appear similar to Quake II except with the added colored lighting\n GL_LINEAR: Linear interpolation and will appear to blend in objects that are closer than the resolution that the textures are set as\n GL_NEAREST_MIPMAP_NEAREST: Nearest neighbor interpolation with mipmapping for bilinear hardware, mipmapping will blend objects that are farther away than the resolution that they are set as\n GL_LINEAR_MIPMAP_NEAREST: Linear interpolation with mipmapping for bilinear hardware\n GL_NEAREST_MIPMAP_LINEAR: Nearest neighbor interpolation with mipmapping for trilinear hardware\n GL_LINEAR_MIPMAP_LINEAR: Linear interpolation with mipmapping for trilinear hardware" );
 	ri.Cvar_SetGroup( r_textureMode, CVG_RENDERER );
 	r_gamma = ri.Cvar_Get( "r_gamma", "1.0", CVAR_ARCHIVE );
-	ri.Cvar_SetDescription( r_gamma, "Gamma correction factor." );
 	ri.Cvar_SetGroup( r_gamma, CVG_RENDERER );
-
-	//postFX
 	r_modernMode = ri.Cvar_Get( "r_modernMode", "1", CVAR_ARCHIVE | CVAR_LATCH );
 	r_postfx = ri.Cvar_Get( "r_postfx", "1", CVAR_ARCHIVE );
 	ri.Cvar_SetGroup( r_postfx, CVG_RENDERER );
 	r_postprocess = ri.Cvar_Get( "r_postprocess", "0", CVAR_ARCHIVE );
 	ri.Cvar_SetGroup( r_postprocess, CVG_RENDERER );
-
-	//colors
 	r_fx_greyscale = ri.Cvar_Get( "r_fx_greyscale", "-0.25", CVAR_ARCHIVE );
 	ri.Cvar_SetGroup( r_fx_greyscale, CVG_RENDERER );
 	r_fx_sepia = ri.Cvar_Get( "r_fx_sepia", "1.0", CVAR_ARCHIVE );
@@ -1246,8 +1201,6 @@ static void R_Register( void )
 	ri.Cvar_SetGroup( r_fx_filmic, CVG_RENDERER );
 	r_fx_bloom = ri.Cvar_Get( "r_fx_bloom", "0.0", CVAR_ARCHIVE );
 	ri.Cvar_SetGroup( r_fx_bloom, CVG_RENDERER );
-
-	//fragment
 	r_fx_chromaticAberration = ri.Cvar_Get( "r_fx_chromaticAberration", "0.0", CVAR_ARCHIVE );
 	ri.Cvar_SetGroup( r_fx_chromaticAberration, CVG_RENDERER );
 	r_fx_chameleon = ri.Cvar_Get( "r_fx_chameleon", "0.0", CVAR_ARCHIVE );
@@ -1256,60 +1209,28 @@ static void R_Register( void )
 	ri.Cvar_SetGroup( r_fx_ambientlight, CVG_RENDERER );
 	r_fx_blur = ri.Cvar_Get( "r_fx_blur", "0.0", 0 );
 	ri.Cvar_SetGroup( r_fx_blur, CVG_RENDERER );
-
-	//
-	// temporary variables that can change at any time
-	//
 	r_drawworld = ri.Cvar_Get ("r_drawworld", "1", CVAR_CHEAT );
-	ri.Cvar_SetDescription( r_drawworld, "Set to 0 to disable drawing the world. Set to 1 to enable." );
 	r_drawentities = ri.Cvar_Get ("r_drawentities", "1", CVAR_CHEAT );
-	ri.Cvar_SetDescription( r_drawentities, "Draw all world entities." );
 	r_nocull = ri.Cvar_Get ("r_nocull", "0", CVAR_CHEAT);
-	ri.Cvar_SetDescription( r_nocull, "Draw all culled objects." );
 	r_speeds = ri.Cvar_Get ("r_speeds", "0", CVAR_CHEAT);
-	ri.Cvar_SetDescription( r_speeds, "Prints out various debugging stats from PVS:\n 0: Disabled\n 1: Backend BSP\n 2: Frontend grid culling\n 3: Current view cluster index\n 4: Dynamic lighting\n 5: zFar clipping" );
 	r_showtris = ri.Cvar_Get ("r_showtris", "0", CVAR_CHEAT);
-	ri.Cvar_SetDescription( r_showtris, "Debugging tool: Wireframe rendering of polygon triangles in the world." );
 	r_showsky = ri.Cvar_Get( "r_showsky", "0", 0 );
-	ri.Cvar_SetDescription( r_showsky, "Forces sky in front of all surfaces." );
 	r_lockpvs = ri.Cvar_Get ("r_lockpvs", "0", CVAR_CHEAT);
-	ri.Cvar_SetDescription( r_lockpvs, "Debugging tool: Locks to current potentially visible set. Useful for testing vis-culling in maps." );
 	r_noportals = ri.Cvar_Get( "r_noportals", "0", 0 );
-	ri.Cvar_SetDescription(r_noportals, "Disables in-game portals, valid values: 0: Portals enabled\n 1: Portals disabled\n 2: Portals and mirrors disabled" );
-
 	r_aviMotionJpegQuality = ri.Cvar_Get( "r_aviMotionJpegQuality", "100", CVAR_ARCHIVE );
-	ri.Cvar_SetDescription( r_aviMotionJpegQuality, "Controls quality of Jpeg video capture when \\cl_aviMotionJpeg 1." );
 	r_screenshotJpegQuality = ri.Cvar_Get( "r_screenshotJpegQuality", "100", CVAR_ARCHIVE );
-	ri.Cvar_SetDescription( r_screenshotJpegQuality, "Controls quality of Jpeg screenshots when using screenshotJpeg." );
 
-	if ( glConfig.vidWidth )
-		return;
+	if (glConfig.vidWidth) return;
 
-	//
-	// latched and archived variables that can only change over a vid_restart
-	//
 	r_allowExtensions = ri.Cvar_Get( "r_allowExtensions", "1", CVAR_ARCHIVE | CVAR_LATCH );
-	ri.Cvar_SetDescription( r_allowExtensions, "Use all of the OpenGL extensions your card is capable of." );
 	r_ext_compressed_textures = ri.Cvar_Get( "r_ext_compressed_textures", "1", CVAR_ARCHIVE | CVAR_LATCH );
-	ri.Cvar_SetDescription( r_ext_compressed_textures, "Enables texture compression." );
 	r_ext_multitexture = ri.Cvar_Get( "r_ext_multitexture", "1", CVAR_ARCHIVE | CVAR_LATCH );
-	ri.Cvar_SetDescription( r_ext_multitexture, "Enables hardware multi-texturing (0: off, 1: on)." );
 	r_ext_compiled_vertex_array = ri.Cvar_Get( "r_ext_compiled_vertex_array", "1", CVAR_ARCHIVE | CVAR_LATCH );
-	ri.Cvar_SetDescription( r_ext_compiled_vertex_array, "Enables hardware-compiled vertex array rendering method." );
 	r_ext_texture_env_add = ri.Cvar_Get( "r_ext_texture_env_add", "1", CVAR_ARCHIVE | CVAR_LATCH );
-	ri.Cvar_SetDescription( r_ext_texture_env_add, "Enables additive blending in multitexturing. Requires \\r_ext_multitexture 1." );
-
 	r_ext_texture_filter_anisotropic = ri.Cvar_Get( "r_ext_texture_filter_anisotropic",	"1", CVAR_ARCHIVE | CVAR_LATCH );
-	ri.Cvar_SetDescription( r_ext_texture_filter_anisotropic, "Allow anisotropic filtering." );
-
 	r_ext_max_anisotropy = ri.Cvar_Get( "r_ext_max_anisotropy", "8", CVAR_ARCHIVE | CVAR_LATCH );
-	ri.Cvar_SetDescription( r_ext_max_anisotropy, "Sets maximum anisotropic level for your graphics driver. Requires \\r_ext_texture_filter_anisotropic." );
-
 	r_ignorehwgamma = ri.Cvar_Get( "r_ignorehwgamma", "0", CVAR_ARCHIVE | CVAR_LATCH );
-	ri.Cvar_SetDescription( r_ignorehwgamma, "Overrides hardware gamma capabilities." );
-
 	r_ext_supersample = ri.Cvar_Get( "r_ext_supersample", "0", CVAR_ARCHIVE | CVAR_LATCH );
-	ri.Cvar_SetDescription( r_ext_supersample, "Super-sample anti-aliasing." );
 }
 
 #define EPSILON 1e-6f

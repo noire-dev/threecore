@@ -296,11 +296,8 @@ Con_Init
 void Con_Init( void ) 
 {
 	con_conspeed = Cvar_Get( "scr_conspeed", "3", 0 );
-	Cvar_SetDescription( con_conspeed, "Console opening/closing scroll speed." );
 	con_autoclear = Cvar_Get("con_autoclear", "1", CVAR_ARCHIVE);
-	Cvar_SetDescription( con_autoclear, "Enable/disable clearing console input text when console is closed." );
 	con_scale = Cvar_Get( "con_scale", "1", CVAR_ARCHIVE );
-	Cvar_SetDescription( con_scale, "Console font size scale." );
 
 	Field_Clear( &g_consoleField );
 	g_consoleField.widthInChars = g_console_field_width;

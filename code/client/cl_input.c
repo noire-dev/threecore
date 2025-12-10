@@ -902,47 +902,21 @@ void CL_InitInput( void ) {
 	Cmd_AddCommand ("-mlook", IN_MLookUp);
 
 	cl_nodelta = Cvar_Get( "cl_nodelta", "0", 0 );
-	Cvar_SetDescription( cl_nodelta, "Flag server to disable delta compression on server snapshots." );
 	cl_debugMove = Cvar_Get( "cl_debugMove", "0", 0 );
-	Cvar_SetDescription( cl_debugMove, "Prints a graph of view angle deltas.\n 0: Disabled\n 1: Yaw\n 2: Pitch" );
-
 	cl_showSend = Cvar_Get( "cl_showSend", "0", 0 );
-	Cvar_SetDescription( cl_showSend, "Prints client to server packet information." );
-
 	cl_yawspeed = Cvar_Get( "cl_yawspeed", "140", CVAR_ARCHIVE );
-	Cvar_SetDescription( cl_yawspeed, "Side-to-side turning speed using keys (+left and +right)." );
 	cl_pitchspeed = Cvar_Get( "cl_pitchspeed", "140", CVAR_ARCHIVE );
-	Cvar_SetDescription( cl_pitchspeed, "Up and down pitching speed using keys (+lookup and +lookdown)." );
 	cl_anglespeedkey = Cvar_Get( "cl_anglespeedkey", "1.5", 0 );
-	Cvar_SetDescription( cl_anglespeedkey, "Set the speed that the direction keys (not mouse) change the view angle." );
-
 	cl_maxpackets = Cvar_Get ("cl_maxpackets", "60", CVAR_ARCHIVE );
-	Cvar_SetDescription( cl_maxpackets, "Set how many client packets are sent to the server per second, can't exceed \\com_maxFPS." );
 	cl_packetdup = Cvar_Get( "cl_packetdup", "1", CVAR_ARCHIVE );
-	Cvar_SetDescription( cl_packetdup, "Limits the number of previous client commands added in packet, helps in packet loss mitigation, increases client command packets size a bit." );
-
 	cl_run = Cvar_Get( "cl_run", "1", CVAR_ARCHIVE );
-	Cvar_SetDescription( cl_run, "Persistent player running movement." );
 	cl_sensitivity = Cvar_Get( "sensitivity", "5", CVAR_ARCHIVE );
-	Cvar_SetDescription( cl_sensitivity, "Sets base mouse sensitivity (mouse speed)." );
 	cl_freelook = Cvar_Get( "cl_freelook", "1", CVAR_ARCHIVE );
-	Cvar_SetDescription( cl_freelook, "Allow pitching or up/down look with mouse." );
-
 	m_pitch = Cvar_Get( "m_pitch", "0.022", CVAR_ARCHIVE );
-	Cvar_SetDescription( m_pitch, "Set the up and down movement distance of the player in relation to how much the mouse moves." );
 	m_yaw = Cvar_Get( "m_yaw", "0.022", CVAR_ARCHIVE );
-	Cvar_SetDescription( m_yaw, "Set the speed at which the player's screen moves left and right while using the mouse." );
 	m_forward = Cvar_Get( "m_forward", "0.25", CVAR_ARCHIVE );
-	Cvar_SetDescription( m_forward, "Set the back and forth movement distance of the player in relation to how much the mouse moves." );
 	m_side = Cvar_Get( "m_side", "0.25", CVAR_ARCHIVE );
-	Cvar_SetDescription( m_side, "Set the strafe movement distance of the player in relation to how much the mouse moves." );
-#ifdef MACOS_X
-	// Input is jittery on OS X w/o this
-	m_filter = Cvar_Get( "m_filter", "1", CVAR_ARCHIVE );
-#else
 	m_filter = Cvar_Get( "m_filter", "0", CVAR_ARCHIVE );
-#endif
-	Cvar_SetDescription( m_filter, "Toggle use of mouse 'smoothing'." );
 }
 
 

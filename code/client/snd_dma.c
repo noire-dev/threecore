@@ -1460,7 +1460,6 @@ qboolean S_Base_Init( soundInterface_t *si ) {
 	}
 
 	s_khz = Cvar_Get( "s_khz", "44", CVAR_ARCHIVE | CVAR_LATCH );
-	Cvar_SetDescription( s_khz, "Specifies the sound sampling rate, (8, 11, 22, 44, 48) in kHz. Default value is 44." );
 
 	switch( s_khz->integer ) {
 		case 48:
@@ -1478,21 +1477,15 @@ qboolean S_Base_Init( soundInterface_t *si ) {
 	}
 
 	s_mixahead = Cvar_Get( "s_mixAhead", "0.2", CVAR_ARCHIVE );
-	Cvar_SetDescription( s_mixahead, "Amount of time to pre-mix sound data to avoid potential skips/stuttering in case of unstable framerate. Higher values add more CPU usage." );
-
 	s_mixOffset = Cvar_Get( "s_mixOffset", "0", CVAR_ARCHIVE );
-
 	s_show = Cvar_Get( "s_show", "0", CVAR_CHEAT );
-	Cvar_SetDescription( s_show, "Debugging output (used sound files)." );
 	s_testsound = Cvar_Get( "s_testsound", "0", CVAR_CHEAT );
-	Cvar_SetDescription( s_testsound, "Debugging tool that plays a simple sine wave tone to test the sound system." );
 
 	r = SNDDMA_Init();
 
 	if ( r ) {
 		s_soundStarted = qtrue;
 		s_soundMuted = qtrue;
-//		s_numSfx = 0;
 
 		Com_Memset( sfxHash, 0, sizeof( sfxHash ) );
 
