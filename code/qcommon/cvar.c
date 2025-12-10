@@ -14,23 +14,18 @@ static int cvar_numIndexes;
 
 static int cvar_group[CVG_MAX];
 
-#define FILE_HASH_SIZE 4096
+#define FILE_HASH_SIZE 16384
 static cvar_t* hashTable[FILE_HASH_SIZE];
 
 static long generateHashValue(const char* fname) {
-	int i;
-	long hash;
-	char letter;
-
-	hash = 0;
-	i = 0;
-	while(fname[i] != '\0') {
-		letter = locase[(byte)fname[i]];
-		hash += (long)(letter) * (i + 119);
-		i++;
-	}
-	hash &= (FILE_HASH_SIZE - 1);
-	return hash;
+    unsigned int hash = 2166136261u;
+    
+    while (*fname) {
+        hash ^= (unsigned char)*fname++;
+        hash *= 16777619u;
+    }
+    
+    return hash & (FILE_HASH_SIZE - 1);
 }
 
 static int ParseCvarFlags(const char *flagsStr) {
@@ -259,6 +254,7 @@ typedef enum {
 	FT_CREATE,
 	FT_SET,
 	FT_RESET,
+	FT_DESC,
 	FT_ADD,
 	FT_SUB,
 	FT_MUL,
@@ -273,6 +269,7 @@ static funcType_t GetFuncType(void) {
 	if(!Q_stricmp(cmd, ":=")) return FT_CREATE;
 	if(!Q_stricmp(cmd, "=")) return FT_SET;
 	if(!Q_stricmp(cmd, "*")) return FT_RESET;
+	if(!Q_stricmp(cmd, "?")) return FT_DESC;
 	if(!Q_stricmp(cmd, "+=")) return FT_ADD;
 	if(!Q_stricmp(cmd, "-=")) return FT_SUB;
 	if(!Q_stricmp(cmd, "*=")) return FT_MUL;
@@ -367,6 +364,9 @@ qboolean Cvar_Command(void) {
 		} else if(ftype == FT_RESET && v) {
 			Cvar_Set(v->name, NULL);
 			return qtrue;
+		} else if(ftype == FT_DESC && v) {
+		    Cvar_SetDescription(v, Cmd_ArgsFrom(2));
+		    return qtrue;
 		}
 	}
 
@@ -480,9 +480,7 @@ void Cvar_InfoStringBuffer(int bit, char* buff, int buffsize) { Q_strncpyz(buff,
 
 void Cvar_SetDescription(cvar_t* var, const char* var_description) {
 	if(var_description && var_description[0] != '\0') {
-		if(var->description != NULL) {
-			Z_Free(var->description);
-		}
+		if(var->description != NULL) Z_Free(var->description);
 		var->description = CopyString(var_description);
 	}
 }

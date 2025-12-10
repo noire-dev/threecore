@@ -3209,7 +3209,7 @@ static void CL_InitGLimp_Cvars( void )  {
 	Cvar_SetDescription( r_resolution, "Set resolution in [width]x[height] format" );
 	r_fullscreen = Cvar_Get( "r_fullscreen", "3", CVAR_ARCHIVE | CVAR_LATCH );
 	Cvar_SetDescription( r_fullscreen, "Fullscreen mode: \n 0 - windowed. \n 1 - borderless windowed. \n 2 - fullscreen. \n 3 - fullscreen native." );
-	r_availableModes = Cvar_Get( "r_availableModes", "0", CVAR_ROM );
+	r_availableModes = Cvar_Get( "r_availableModes", "0", 0 );
 }
 
 
@@ -3328,7 +3328,7 @@ void CL_Init( void ) {
 
 	CL_GenerateQKey();
 
-	Cvar_Get( "cl_guid", "", CVAR_USERINFO | CVAR_ROM );
+	Cvar_Get( "cl_guid", "", CVAR_USERINFO );
 	CL_UpdateGUID( NULL, 0 );
 
 	Com_Printf( "----- Client Initialization Complete -----\n" );

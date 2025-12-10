@@ -62,7 +62,6 @@ static const char *netsrcString[2] = {
 /*
 ===============
 Netchan_Init
-
 ===============
 */
 void Netchan_Init( int port ) {
