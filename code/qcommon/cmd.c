@@ -329,9 +329,7 @@ static void Cmd_TokenizeString2(const char* text_in, qboolean ignoreQuotes) {
 	cmd_argc = 0;
 	cmd_cmd[0] = '\0';
 
-	if(!text_in) {
-		return;
-	}
+	if(!text_in) return;
 
 	Q_strncpyz(cmd_cmd, text_in, sizeof(cmd_cmd));
 
@@ -375,7 +373,6 @@ static void Cmd_TokenizeString2(const char* text_in, qboolean ignoreQuotes) {
 		}
 
 		// handle quoted strings
-		// NOTE TTimo this doesn't handle \" escaping
 		if(!ignoreQuotes && *text == '"') {
 			cmd_argv[cmd_argc] = textOut;
 			cmd_argc++;
@@ -397,6 +394,29 @@ static void Cmd_TokenizeString2(const char* text_in, qboolean ignoreQuotes) {
 
 		// skip until whitespace, quote, or command
 		while(*text > ' ') {
+		    
+		    // variable via $
+		    if(text[0] == '$') {
+				const char* var_start = text + 1;
+				const char* var_end = var_start;
+				
+				while(*var_end && *var_end != '$') var_end++;
+				
+				if(*var_end == '$' && var_end > var_start) {
+					char var_name[MAX_TOKEN_CHARS];
+					int var_len = var_end - var_start;
+					strncpy(var_name, var_start, var_len);
+					var_name[var_len] = '\0';
+					
+					const char* value = Cvar_VariableString(var_name);
+					
+					while(*value) *textOut++ = *value++;
+					
+					text = var_end + 1;
+					continue;
+				}
+		    }
+		    
 			if(!ignoreQuotes && text[0] == '"') {
 				break;
 			}
@@ -499,20 +519,14 @@ qboolean Cmd_CompleteArgument(const char* command, const char* args, int argNum)
 }
 
 static void Cmd_ReplaceCvarsInArgs(void) {
-    static char temp_buffers[MAX_STRING_TOKENS][MAX_STRING_CHARS];
-    
-    for(int i = 0; i < cmd_argc; i++) {
-        char* arg = cmd_argv[i];
-        
-        if(arg[0] == '$') {
-            cvar_t* var = Cvar_FindVar(arg + 1);
-            if(var) {
-                Com_Printf("%s replaced by %s\n", arg, var->string);
-                Q_strncpyz(temp_buffers[i], var->string, sizeof(temp_buffers[i]));
-                cmd_argv[i] = temp_buffers[i];
-            }
-        }
-    }
+	for(int i = 0; i < Cmd_Argc(); i++) {
+		char* arg = cmd_argv[i];
+
+		if(arg[0] == '$') {
+			cvar_t* var = Cvar_FindVar(arg + 1);
+			if(var) strcpy(arg, var->string);
+		}
+	}
 }
 
 void Cmd_ExecuteString(const char* text) {
@@ -521,7 +535,7 @@ void Cmd_ExecuteString(const char* text) {
 	Cmd_TokenizeString(text);
 	if(!Cmd_Argc()) return;
 
-	Cmd_ReplaceCvarsInArgs();
+//	Cmd_ReplaceCvarsInArgs();
 
 	for(prev = &cmd_functions; *prev; prev = &cmd->next) {
 		cmd = *prev;
