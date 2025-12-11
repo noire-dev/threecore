@@ -499,14 +499,19 @@ qboolean Cmd_CompleteArgument(const char* command, const char* args, int argNum)
 }
 
 static void Cmd_ReplaceCvarsInArgs(void) {
-	for(int i = 0; i < Cmd_Argc(); i++) {
-		char* arg = cmd_argv[i];
-
-		if(arg[0] == '$') {
-			cvar_t* var = Cvar_FindVar(arg + 1);
-			if(var) strcpy(arg, var->string);
-		}
-	}
+    static char temp_buffers[MAX_STRING_TOKENS][MAX_STRING_CHARS];
+    
+    for(int i = 0; i < Cmd_Argc(); i++) {
+        char* arg = cmd_argv[i];
+        
+        if(arg[0] == '$') {
+            cvar_t* var = Cvar_FindVar(arg + 1);
+            if(var) {
+                Q_strncpyz(temp_buffers[i], var->string, sizeof(temp_buffers[i]));
+                cmd_argv[i] = temp_buffers[i];
+            }
+        }
+    }
 }
 
 void Cmd_ExecuteString(const char* text) {
