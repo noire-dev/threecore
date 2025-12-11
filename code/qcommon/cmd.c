@@ -501,12 +501,13 @@ qboolean Cmd_CompleteArgument(const char* command, const char* args, int argNum)
 static void Cmd_ReplaceCvarsInArgs(void) {
     static char temp_buffers[MAX_STRING_TOKENS][MAX_STRING_CHARS];
     
-    for(int i = 0; i < Cmd_Argc(); i++) {
+    for(int i = 0; i < cmd_argc; i++) {
         char* arg = cmd_argv[i];
         
         if(arg[0] == '$') {
             cvar_t* var = Cvar_FindVar(arg + 1);
             if(var) {
+                Com_Printf("%s replaced by %s\n", arg, var->string);
                 Q_strncpyz(temp_buffers[i], var->string, sizeof(temp_buffers[i]));
                 cmd_argv[i] = temp_buffers[i];
             }
