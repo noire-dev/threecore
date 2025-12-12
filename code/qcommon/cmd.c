@@ -318,6 +318,13 @@ void Cmd_Args_Sanitize(const char* separators) {
 	}
 }
 
+static void PrepareNewLinesInString(char* str) {
+    char* p;
+    for (p = str; *p; p++) {
+        if (*p == '\n') *p = ' ';
+    }
+}
+
 static void Cmd_TokenizeString2(const char* text_in, qboolean ignoreQuotes) {
 	const char* text;
 	char* textOut;
@@ -329,6 +336,8 @@ static void Cmd_TokenizeString2(const char* text_in, qboolean ignoreQuotes) {
 	if(!text_in) return;
 
 	Q_strncpyz(cmd_cmd, text_in, sizeof(cmd_cmd));
+	
+	PrepareNewLinesInString(cmd_cmd);
 
 	text = cmd_cmd;  // read from safe-length buffer
 	textOut = cmd_tokenized;
@@ -528,7 +537,7 @@ static void Cmd_PrepareVariables(void) {
 
 void Cmd_ExecuteString(const char* text) {
 	cmd_function_t *cmd, **prev;
-
+    
 	Cmd_TokenizeString(text);
 	if(!Cmd_Argc()) return;
 	
