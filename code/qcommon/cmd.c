@@ -518,15 +518,15 @@ qboolean Cmd_CompleteArgument(const char* command, const char* args, int argNum)
 	return qfalse;
 }
 
-static void Cmd_ReplaceCvarsInArgs(void) {
-	for(int i = 0; i < Cmd_Argc(); i++) {
-		char* arg = cmd_argv[i];
+static void PrepareVariablesInString(char* str) {
+    char* p;
+    for (p = str; *p; p++) {
+        if (*p == '&') *p = '$';
+    }
+}
 
-		if(arg[0] == '$') {
-			cvar_t* var = Cvar_FindVar(arg + 1);
-			if(var) strcpy(arg, var->string);
-		}
-	}
+static void Cmd_PrepareVariables(void) {
+	for(int i = 0; i < Cmd_Argc(); i++) PrepareVariablesInString(cmd_argv[i]);
 }
 
 void Cmd_ExecuteString(const char* text) {
@@ -534,8 +534,10 @@ void Cmd_ExecuteString(const char* text) {
 
 	Cmd_TokenizeString(text);
 	if(!Cmd_Argc()) return;
+	
+	Cmd_PrepareVariables();
 
-//	Cmd_ReplaceCvarsInArgs();
+    PrepareVariablesInString(cvarStorage[id].string);
 
 	for(prev = &cmd_functions; *prev; prev = &cmd->next) {
 		cmd = *prev;

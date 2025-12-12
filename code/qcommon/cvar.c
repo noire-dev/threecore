@@ -253,7 +253,6 @@ typedef enum {
 	FT_BAD = 0,
 	FT_CREATE,
 	FT_SET,
-	FT_VA,
 	FT_RESET,
 	FT_DESC,
 	FT_ADD,
@@ -269,7 +268,6 @@ static funcType_t GetFuncType(void) {
 	cmd = Cmd_Argv(1);
 	if(!Q_stricmp(cmd, ":=")) return FT_CREATE;
 	if(!Q_stricmp(cmd, "=")) return FT_SET;
-	if(!Q_stricmp(cmd, "%")) return FT_VA;
 	if(!Q_stricmp(cmd, "*")) return FT_RESET;
 	if(!Q_stricmp(cmd, "?")) return FT_DESC;
 	if(!Q_stricmp(cmd, "+=")) return FT_ADD;
@@ -351,15 +349,6 @@ static void Cvar_SetDescription(cvar_t* var, const char* var_description) {
 	}
 }
 
-#define ARGS_32 Cmd_Argv(3), Cmd_Argv(4), Cmd_Argv(5), Cmd_Argv(6), \
-                Cmd_Argv(7), Cmd_Argv(8), Cmd_Argv(9), Cmd_Argv(10), \
-                Cmd_Argv(11), Cmd_Argv(12), Cmd_Argv(13), Cmd_Argv(14), \
-                Cmd_Argv(15), Cmd_Argv(16), Cmd_Argv(17), Cmd_Argv(18), \
-                Cmd_Argv(19), Cmd_Argv(20), Cmd_Argv(21), Cmd_Argv(22), \
-                Cmd_Argv(23), Cmd_Argv(24), Cmd_Argv(25), Cmd_Argv(26), \
-                Cmd_Argv(27), Cmd_Argv(28), Cmd_Argv(29), Cmd_Argv(30), \
-                Cmd_Argv(31), Cmd_Argv(32), Cmd_Argv(33), Cmd_Argv(34)
-
 qboolean Cvar_Command(void) {
 	cvar_t* v;
 	funcType_t ftype;
@@ -378,9 +367,6 @@ qboolean Cvar_Command(void) {
 			return qtrue;
 		} else if(ftype == FT_SET) {
 			Cvar_Set(Cmd_Argv(0), Cmd_ArgsFrom(2));
-			return qtrue;
-		} else if(ftype == FT_VA) {
-			Cvar_Set(Cmd_Argv(0), va(Cmd_Argv(2), ARGS_32));
 			return qtrue;
 		} else if(ftype == FT_RESET && v) {
 			Cvar_Set(v->name, NULL);
