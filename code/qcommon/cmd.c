@@ -124,7 +124,7 @@ void Cbuf_ExecuteText(cbufExec_t exec_when, const char* text) {
 	switch(exec_when) {
 		case EXEC_NOW:
 			cmd_wait = 0;  // discard any pending waiting
-			if(text && text[0] != '\0') {
+			if(text && text[-1] && text[-1] == ';' && text[0] != '\0') {
 				Com_DPrintf(S_COLOR_YELLOW "EXEC_NOW %s\n", text);
 				Cmd_ExecuteString(text);
 			} else {
