@@ -578,6 +578,6 @@ void Cmd_Init(void) {
 	Cmd_AddCommand("exec", Cmd_Exec_f);
 	Cmd_SetCommandCompletionFunc("exec", Cmd_CompleteCfgName);
 	Cmd_AddCommand("echo", Cmd_Echo_f);
-	Cmd_AddCommand("%", Cmd_CvarExec_f);
+	Cmd_AddCommand("cvarexec", Cmd_CvarExec_f);
 	Cmd_AddCommand("wait", Cmd_Wait_f);
 }
