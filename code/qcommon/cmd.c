@@ -255,7 +255,7 @@ static void Cmd_Exec_f(void) {
 }
 
 static void Cmd_Echo_f(void) { Com_Printf("%s\n", Cmd_ArgsFrom(1)); }
-static void Cmd_CvarExec_f(void) { Cmd_ExecuteString("%s\n", Cmd_ArgsFrom(1)); }
+static void Cmd_CvarExec_f(void) { Cmd_ExecuteString(va("%s\n", Cmd_ArgsFrom(1))); }
 
 typedef struct cmd_function_s {
 	struct cmd_function_s* next;
