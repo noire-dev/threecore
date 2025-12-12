@@ -124,7 +124,7 @@ void Cbuf_ExecuteText(cbufExec_t exec_when, const char* text) {
 	switch(exec_when) {
 		case EXEC_NOW:
 			cmd_wait = 0;  // discard any pending waiting
-			if(text && text[-1] && text[-1] == ';' && text[0] != '\0') {
+			if(text && text[0] != '\0') {
 				Com_DPrintf(S_COLOR_YELLOW "EXEC_NOW %s\n", text);
 				Cmd_ExecuteString(text);
 			} else {
@@ -178,6 +178,7 @@ void Cbuf_Execute(void) {
 				if(!in_slash_comment && !in_star_comment && text[i] == ';') break;
 			}
 			if(!in_star_comment && (text[i] == '\n' || text[i] == '\r')) {
+				if(quotes & 1) continue;
 				in_slash_comment = qfalse;
 				break;
 			}
@@ -199,7 +200,7 @@ void Cbuf_Execute(void) {
 		if(i != cmd_text.cursize) {
 			++i;
 			// skip all repeating newlines/semicolons/whitespaces
-			while(i < cmd_text.cursize && (text[i] == '\n' || text[i] == '\r' || text[i] == ';' || (text[i] != '\0' && text[-1] == ';' && text[i] <= ' '))) ++i;
+			while(i < cmd_text.cursize && (text[i] == '\n' || text[i] == '\r' || text[i] == ';' || (text[i] != '\0' && text[i] <= ' '))) ++i;
 		}
 
 		cmd_text.cursize -= i;
