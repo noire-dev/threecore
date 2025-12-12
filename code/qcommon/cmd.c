@@ -393,8 +393,8 @@ static void Cmd_TokenizeString2(const char* text_in, qboolean ignoreQuotes) {
 			continue;
 		}
 		
-		// handle quoted strings
-		if(!ignoreQuotes && *text == '"') {
+		// handle bracket strings
+		if(*text == '{' || *text == '}') {
 			cmd_argv[cmd_argc] = textOut;
 			cmd_argc++;
 			text++;
