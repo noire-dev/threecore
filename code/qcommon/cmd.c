@@ -196,14 +196,10 @@ void Cbuf_Execute(void) {
 		// this is necessary because commands (exec) can insert data at the
 		// beginning of the text buffer
 
-		if(i == cmd_text.cursize) {
-			// cmd_text.cursize = 0;
-		} else {
+		if(i != cmd_text.cursize) {
 			++i;
 			// skip all repeating newlines/semicolons/whitespaces
-			while(i < cmd_text.cursize && (text[i] == '\n' || text[i] == '\r' || text[i] == ';' || (text[i] != '\0' && text[i] <= ' '))) {
-				++i;
-			}
+			while(i < cmd_text.cursize && (text[i] == '\n' || text[i] == '\r' || text[i] == ';' || (text[i] != '\0' && text[-1] == ';' && text[i] <= ' '))) ++i;
 		}
 
 		cmd_text.cursize -= i;
