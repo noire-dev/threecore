@@ -537,8 +537,6 @@ void Cmd_ExecuteString(const char* text) {
 	
 	Cmd_PrepareVariables();
 
-    PrepareVariablesInString(cvarStorage[id].string);
-
 	for(prev = &cmd_functions; *prev; prev = &cmd->next) {
 		cmd = *prev;
 		if(!Q_stricmp(cmd_argv[0], cmd->name)) {
