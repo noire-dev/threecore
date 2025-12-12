@@ -386,13 +386,21 @@ static void Cmd_TokenizeString2(const char* text_in, qboolean ignoreQuotes) {
 			cmd_argv[cmd_argc] = textOut;
 			cmd_argc++;
 			text++;
-			while(*text && *text != '"') {
-				*textOut++ = *text++;
-			}
+			while(*text && *text != '"') *textOut++ = *text++;
 			*textOut++ = '\0';
-			if(!*text) {
-				return;  // all tokens parsed
-			}
+			if(!*text) return;  // all tokens parsed
+			text++;
+			continue;
+		}
+		
+		// handle quoted strings
+		if(!ignoreQuotes && *text == '"') {
+			cmd_argv[cmd_argc] = textOut;
+			cmd_argc++;
+			text++;
+			while(*text && *text != '{' && *text != '}') *textOut++ = *text++;
+			*textOut++ = '\0';
+			if(!*text) return;  // all tokens parsed
 			text++;
 			continue;
 		}
