@@ -255,6 +255,7 @@ static void Cmd_Exec_f(void) {
 }
 
 static void Cmd_Echo_f(void) { Com_Printf("%s\n", Cmd_ArgsFrom(1)); }
+static void Cmd_CvarExec_f(void) { Cmd_ExecuteString("%s\n", Cmd_ArgsFrom(1)); }
 
 typedef struct cmd_function_s {
 	struct cmd_function_s* next;
@@ -577,5 +578,6 @@ void Cmd_Init(void) {
 	Cmd_AddCommand("exec", Cmd_Exec_f);
 	Cmd_SetCommandCompletionFunc("exec", Cmd_CompleteCfgName);
 	Cmd_AddCommand("echo", Cmd_Echo_f);
+	Cmd_AddCommand("%", Cmd_CvarExec_f);
 	Cmd_AddCommand("wait", Cmd_Wait_f);
 }
