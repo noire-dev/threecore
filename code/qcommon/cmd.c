@@ -270,6 +270,10 @@ static void Cmd_If_f(void) {
     if(CompareFloats(atof(Cmd_Argv(1)), Cmd_Argv(2), atof(Cmd_Argv(3)))) Cbuf_InsertText(va("%s\n", Cmd_ArgsFrom(4)));
 }
 
+static void Cmd_Repeat_f(void) {
+    for(int i = 0; i < atoi(Cmd_Argv(1)); i++) Cbuf_InsertText(va("%s\n", Cmd_ArgsFrom(2)));
+}
+
 typedef struct cmd_function_s {
 	struct cmd_function_s* next;
 	char* name;
@@ -557,5 +561,6 @@ void Cmd_Init(void) {
 	Cmd_AddCommand("print", Cmd_Print_f);
 	Cmd_AddCommand("eval", Cmd_Eval_f);
 	Cmd_AddCommand("if", Cmd_If_f);
+	Cmd_AddCommand("repeat", Cmd_Repeat_f);
 	Cmd_AddCommand("wait", Cmd_Wait_f);
 }
