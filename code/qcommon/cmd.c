@@ -160,8 +160,8 @@ void Cbuf_Execute(void) {
 		brackets = 0;
 		for(i = 0; i < cmd_text.cursize; i++) {
 		    if(text[i] == '{' || text[i] == '}') brackets++;
-			if(text[i] == '{') text[i] = '"';
-			if(text[i] == '}') text[i] = '"';
+			if(text[i] == '{') text[i] = '';
+			if(text[i] == '}') text[i] = '';
 			if(text[i] == '"') quotes++;
 
 			if(!(quotes & 1)) {
