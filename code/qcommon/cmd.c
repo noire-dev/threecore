@@ -5,8 +5,7 @@
 #include "q_shared.h"
 #include "qcommon.h"
 
-#define MAX_CMD_BUFFER 131072
-#define MAX_CMD_CHUNK 100000
+#define MAX_CMD_BUFFER 33554432
 
 typedef struct {
 	byte* data;
@@ -274,7 +273,6 @@ static void Cmd_If_f(void) {
 static void Cmd_Repeat_f(void) {
     for(int i = 0; i < atoi(Cmd_Argv(1)); i++) {
         Cbuf_InsertText(va("%s\n", Cmd_ArgsFrom(2)));
-        Cbuf_Execute();
     }
 }
 
