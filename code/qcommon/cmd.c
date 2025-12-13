@@ -251,8 +251,25 @@ static void Cmd_Exec_f(void) {
 	FS_FreeFile(f.v);
 }
 
-static void Cmd_Echo_f(void) { Com_Printf("%s\n", Cmd_ArgsFrom(1)); }
+static void Cmd_Print_f(void) { Com_Printf("%s\n", Cmd_ArgsFrom(1)); }
+
 static void Cmd_Eval_f(void) { Cmd_ExecuteString(va("\"%s\"\n", Cmd_ArgsFrom(1))); }
+
+static qboolean CompareFloats(float a, const char* op, float b) {
+    if(!Q_stricmp(op, "==")) return fabs(a - b) < 0.0001f;
+    if(!Q_stricmp(op, "!=")) return fabs(a - b) >= 0.0001f;
+    if(!Q_stricmp(op, ">")) return a > b;
+    if(!Q_stricmp(op, "<")) return a < b;
+    if(!Q_stricmp(op, ">=")) return a >= b;
+    if(!Q_stricmp(op, "<=")) return a <= b;
+
+    return qfalse;
+}
+
+static void Cmd_If_f(void) {
+    if(CompareFloats(atof(Cmd_Argv(0)), Cmd_Argv(1), atof(Cmd_Argv(2)))
+    Cmd_ExecuteString(va("\"%s\"\n", Cmd_ArgsFrom(3)));
+}
 
 typedef struct cmd_function_s {
 	struct cmd_function_s* next;
@@ -538,7 +555,8 @@ void Cmd_CompleteWriteCfgName(const char* args, int argNum) {
 void Cmd_Init(void) {
 	Cmd_AddCommand("exec", Cmd_Exec_f);
 	Cmd_SetCommandCompletionFunc("exec", Cmd_CompleteCfgName);
-	Cmd_AddCommand("echo", Cmd_Echo_f);
+	Cmd_AddCommand("print", Cmd_Echo_f);
 	Cmd_AddCommand("eval", Cmd_Eval_f);
+	Cmd_AddCommand("if", Cmd_If_f);
 	Cmd_AddCommand("wait", Cmd_Wait_f);
 }
