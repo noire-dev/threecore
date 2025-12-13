@@ -282,11 +282,11 @@ ifdef MINGW
   ifeq ($(ARCH),x86_64)
     ARCHEXT = .x64
     BASE_CFLAGS += -m64
-    OPTIMIZE = -O2 -ffast-math
+    OPTIMIZE = -O2
   endif
   ifeq ($(ARCH),x86)
     BASE_CFLAGS += -m32
-    OPTIMIZE = -O2 -march=i586 -mtune=i686 -ffast-math
+    OPTIMIZE = -O2 -march=i586 -mtune=i686
   endif
 
   SHLIBEXT = dll
