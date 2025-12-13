@@ -6,7 +6,7 @@
 #include "qcommon.h"
 
 #define MAX_CMD_BUFFER 131072
-#define Max_CMD_CHUNK 100000
+#define MAX_CMD_CHUNK 100000
 
 typedef struct {
 	byte* data;
