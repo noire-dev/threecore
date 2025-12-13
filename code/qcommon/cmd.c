@@ -138,18 +138,9 @@ void Cbuf_ExecuteText(cbufExec_t exec_when, const char* text) {
 	}
 }
 
-static void PrepareBracketsInString(char* str) {
-    char* p;
-    for (p = str; *p; p++) {
-        if (*p == '{') *p = '"';
-        if (*p == '}') *p = '"';
-        if (*p == '\n') *p = ' ';
-    }
-}
-
 void Cbuf_Execute(void) {
 	char line[MAX_CMD_LINE], *text;
-	int i, n, quotes;
+	int i, n, quotes, brackets;
 	qboolean in_star_comment;
 	qboolean in_slash_comment;
 
@@ -160,16 +151,16 @@ void Cbuf_Execute(void) {
 	// breaking it for semicolon or newline.
 	in_star_comment = qfalse;
 	in_slash_comment = qfalse;
-	
-	PrepareBracketsInString((char*)cmd_text.data);
 
 	while(cmd_text.cursize > 0) {
 		// find a \n or ; line break or comment: // or /* */
 		text = (char*)cmd_text.data;
 
 		quotes = 0;
+		brackets = 0;
 		for(i = 0; i < cmd_text.cursize; i++) {
 			if(text[i] == '"') quotes++;
+			if(text[i] == '{' || text[i] == '}') brackets++;
 
 			if(!(quotes & 1)) {
 				if(i < cmd_text.cursize - 1) {
@@ -189,7 +180,12 @@ void Cbuf_Execute(void) {
 				if(!in_slash_comment && !in_star_comment && text[i] == ';') break;
 			}
 			if(!in_star_comment && (text[i] == '\n' || text[i] == '\r')) {
-				if(quotes & 1) continue;
+				if(brackets & 1) {
+				    if(text[i] == '\n') text[i] = ' ';
+				    if(text[i] == '{') text[i] = '"';
+				    if(text[i] == '}') text[i] = '"';
+				    continue;
+				}
 				in_slash_comment = qfalse;
 				break;
 			}
