@@ -138,9 +138,18 @@ void Cbuf_ExecuteText(cbufExec_t exec_when, const char* text) {
 	}
 }
 
+static void PrepareBracketsInString(char* str) {
+    char* p;
+    for (p = str; *p; p++) {
+        if (*p == '{') *p = '"';
+        if (*p == '}') *p = '"';
+        if (*p == '\n') *p = ' ';
+    }
+}
+
 void Cbuf_Execute(void) {
 	char line[MAX_CMD_LINE], *text;
-	int i, n, quotes, brackets;
+	int i, n, quotes;
 	qboolean in_star_comment;
 	qboolean in_slash_comment;
 
@@ -151,16 +160,16 @@ void Cbuf_Execute(void) {
 	// breaking it for semicolon or newline.
 	in_star_comment = qfalse;
 	in_slash_comment = qfalse;
+	
+	PrepareBracketsInString((char*)cmd_text.data);
 
 	while(cmd_text.cursize > 0) {
 		// find a \n or ; line break or comment: // or /* */
 		text = (char*)cmd_text.data;
 
 		quotes = 0;
-		brackets = 0;
 		for(i = 0; i < cmd_text.cursize; i++) {
 			if(text[i] == '"') quotes++;
-			if(text[i] == '{' || text[i] == '}') brackets++;
 
 			if(!(quotes & 1)) {
 				if(i < cmd_text.cursize - 1) {
@@ -180,24 +189,18 @@ void Cbuf_Execute(void) {
 				if(!in_slash_comment && !in_star_comment && text[i] == ';') break;
 			}
 			if(!in_star_comment && (text[i] == '\n' || text[i] == '\r')) {
-				if(brackets & 1) continue;
+				if(quotes & 1) continue;
 				in_slash_comment = qfalse;
 				break;
 			}
 		}
 
 		// copy up to (MAX_CMD_LINE - 1) chars but keep buffer position intact to prevent parsing truncated leftover
-		if(i > (MAX_CMD_LINE - 1))
-			n = MAX_CMD_LINE - 1;
-		else
-			n = i;
+		if(i > (MAX_CMD_LINE - 1)) n = MAX_CMD_LINE - 1;
+		else n = i;
 
 		Com_Memcpy(line, text, n);
 		line[n] = '\0';
-
-		// delete the text from the command buffer and move remaining commands down
-		// this is necessary because commands (exec) can insert data at the
-		// beginning of the text buffer
 
 		if(i != cmd_text.cursize) {
 			++i;
@@ -207,15 +210,11 @@ void Cbuf_Execute(void) {
 
 		cmd_text.cursize -= i;
 
-		if(cmd_text.cursize) {
-			memmove(text, text + i, cmd_text.cursize);
-		}
+		if(cmd_text.cursize) memmove(text, text + i, cmd_text.cursize);
 
 		if(nestedCmdOffset > 0) {
 			nestedCmdOffset -= i;
-			if(nestedCmdOffset < 0) {
-				nestedCmdOffset = 0;
-			}
+			if(nestedCmdOffset < 0) nestedCmdOffset = 0;
 		}
 
 		// execute the command line
@@ -321,13 +320,6 @@ void Cmd_Args_Sanitize(const char* separators) {
 	}
 }
 
-static void PrepareNewLinesInString(char* str) {
-    char* p;
-    for (p = str; *p; p++) {
-        if (*p == '\n') *p = ' ';
-    }
-}
-
 static void Cmd_TokenizeString2(const char* text_in, qboolean ignoreQuotes) {
 	const char* text;
 	char* textOut;
@@ -339,32 +331,22 @@ static void Cmd_TokenizeString2(const char* text_in, qboolean ignoreQuotes) {
 	if(!text_in) return;
 
 	Q_strncpyz(cmd_cmd, text_in, sizeof(cmd_cmd));
-	
-	PrepareNewLinesInString(cmd_cmd);
 
 	text = cmd_cmd;  // read from safe-length buffer
 	textOut = cmd_tokenized;
 
 	while(1) {
-		if(cmd_argc >= ARRAY_LEN(cmd_argv)) {
-			return;  // this is usually something malicious
-		}
+		if(cmd_argc >= ARRAY_LEN(cmd_argv)) return;  // this is usually something malicious
 
 		while(1) {
 			// skip whitespace
-			while(*text && *text <= ' ') {
-				text++;
-			}
-			if(!*text) {
-				return;  // all tokens parsed
-			}
+			while(*text && *text <= ' ') text++;
+			if(!*text) return;  // all tokens parsed
 
 			// skip // comments
 			if(text[0] == '/' && text[1] == '/') {
 				// accept protocol headers (e.g. http://) in command lines that matching "*?[a-z]://" pattern
-				if(text < cmd_cmd + 3 || text[-1] != ':' || text[-2] < 'a' || text[-2] > 'z') {
-					return;  // all tokens parsed
-				}
+				if(text < cmd_cmd + 3 || text[-1] != ':' || text[-2] < 'a' || text[-2] > 'z') return;  // all tokens parsed
 			}
 
 			// skip /* */ comments
@@ -372,9 +354,7 @@ static void Cmd_TokenizeString2(const char* text_in, qboolean ignoreQuotes) {
 				while(*text && (text[0] != '*' || text[1] != '/')) {
 					text++;
 				}
-				if(!*text) {
-					return;  // all tokens parsed
-				}
+				if(!*text) return;  // all tokens parsed
 				text += 2;
 			} else {
 				break;  // we are ready to parse a token
@@ -392,18 +372,6 @@ static void Cmd_TokenizeString2(const char* text_in, qboolean ignoreQuotes) {
 			text++;
 			continue;
 		}
-		
-		// handle bracket strings
-		if(*text == '{' || *text == '}') {
-			cmd_argv[cmd_argc] = textOut;
-			cmd_argc++;
-			text++;
-			while(*text && *text != '{' && *text != '}') *textOut++ = *text++;
-			*textOut++ = '\0';
-			if(!*text) return;  // all tokens parsed
-			text++;
-			continue;
-		}
 
 		// regular token
 		cmd_argv[cmd_argc] = textOut;
@@ -411,7 +379,6 @@ static void Cmd_TokenizeString2(const char* text_in, qboolean ignoreQuotes) {
 
 		// skip until whitespace, quote, or command
 		while(*text > ' ') {
-		    
 		    // variable via $
 		    if(text[0] == '$') {
 				const char* var_start = text + 1;
@@ -424,40 +391,28 @@ static void Cmd_TokenizeString2(const char* text_in, qboolean ignoreQuotes) {
 					int var_len = var_end - var_start;
 					strncpy(var_name, var_start, var_len);
 					var_name[var_len] = '\0';
-					
 					const char* value = Cvar_VariableString(var_name);
-					
 					while(*value) *textOut++ = *value++;
-					
 					text = var_end + 1;
 					continue;
 				}
 		    }
 		    
-			if(!ignoreQuotes && text[0] == '"') {
-				break;
-			}
+			if(!ignoreQuotes && text[0] == '"') break;
 
 			if(text[0] == '/' && text[1] == '/') {
 				// accept protocol headers (e.g. http://) in command lines that matching "*?[a-z]://" pattern
-				if(text < cmd_cmd + 3 || text[-1] != ':' || text[-2] < 'a' || text[-2] > 'z') {
-					break;
-				}
+				if(text < cmd_cmd + 3 || text[-1] != ':' || text[-2] < 'a' || text[-2] > 'z') break;
 			}
 
 			// skip /* */ comments
-			if(text[0] == '/' && text[1] == '*') {
-				break;
-			}
+			if(text[0] == '/' && text[1] == '*') break;
 
 			*textOut++ = *text++;
 		}
 
 		*textOut++ = '\0';
-
-		if(!*text) {
-			return;  // all tokens parsed
-		}
+		if(!*text) return;  // all tokens parsed
 	}
 }
 
