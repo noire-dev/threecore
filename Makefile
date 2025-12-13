@@ -1020,7 +1020,7 @@ $(B)/client/vorbis/%.o: $(VORBISDIR)/lib/%.c
 $(B)/client/libmad/%.o: $(MADDIR)/%.c
 	$(DO_CC)
 	
-$(B)/client/duktape/%.o: $(DUKTAPEDIR)/%.c
+$(B)/client/%.o: $(DUKTAPEDIR)/%.c
 	$(DO_CC)
 
 $(B)/client/%.o: $(SDLDIR)/%.c
@@ -1059,7 +1059,7 @@ $(B)/ded/%.o: $(ADIR)/%.s
 $(B)/ded/%.o: $(SDIR)/%.c
 	$(DO_DED_CC)
 	
-$(B)/ded/duktape/%.o: $(DUKTAPEDIR)/%.c
+$(B)/ded/%.o: $(DUKTAPEDIR)/%.c
 	$(DO_DED_CC)
 
 $(B)/ded/%.o: $(CMDIR)/%.c
