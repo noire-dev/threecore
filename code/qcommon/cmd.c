@@ -175,7 +175,7 @@ void Cbuf_Execute(void) {
 						break;
 					}
 				}
-				if(!(brackets & 1) && !in_slash_comment && !in_star_comment && text[i] == ';') break;
+				if(!in_slash_comment && !in_star_comment && text[i] == ';') break;
 			}
 			if(!in_star_comment && (text[i] == '\n' || text[i] == '\r')) {
 				in_slash_comment = qfalse;
