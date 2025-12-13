@@ -5,7 +5,7 @@
 #include "q_shared.h"
 #include "qcommon.h"
 
-#define MAX_CMD_BUFFER 65536
+#define MAX_CMD_BUFFER 33554432
 
 typedef struct {
 	byte* data;
