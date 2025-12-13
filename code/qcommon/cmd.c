@@ -253,7 +253,7 @@ static void Cmd_Exec_f(void) {
 
 static void Cmd_Print_f(void) { Com_Printf("%s\n", Cmd_ArgsFrom(1)); }
 
-static void Cmd_Eval_f(void) { Cmd_ExecuteString(va("%s\n", Cmd_ArgsFrom(1))); }
+static void Cmd_Eval_f(void) { Cbuf_InsertText(va("%s\n", Cmd_ArgsFrom(1))); }
 
 static qboolean CompareFloats(float a, const char* op, float b) {
     if(!Q_stricmp(op, "==")) return fabs(a - b) < 0.0001f;
@@ -267,7 +267,7 @@ static qboolean CompareFloats(float a, const char* op, float b) {
 }
 
 static void Cmd_If_f(void) {
-    if(CompareFloats(atof(Cmd_Argv(1)), Cmd_Argv(2), atof(Cmd_Argv(3)))) Cmd_ExecuteString(va("%s\n", Cmd_ArgsFrom(4)));
+    if(CompareFloats(atof(Cmd_Argv(1)), Cmd_Argv(2), atof(Cmd_Argv(3)))) Cbuf_InsertText(va("%s\n", Cmd_ArgsFrom(4)));
 }
 
 typedef struct cmd_function_s {
