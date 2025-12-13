@@ -554,7 +554,7 @@ void Cmd_CompleteWriteCfgName(const char* args, int argNum) {
 void Cmd_Init(void) {
 	Cmd_AddCommand("exec", Cmd_Exec_f);
 	Cmd_SetCommandCompletionFunc("exec", Cmd_CompleteCfgName);
-	Cmd_AddCommand("print", Cmd_Echo_f);
+	Cmd_AddCommand("print", Cmd_Print_f);
 	Cmd_AddCommand("eval", Cmd_Eval_f);
 	Cmd_AddCommand("if", Cmd_If_f);
 	Cmd_AddCommand("wait", Cmd_Wait_f);
