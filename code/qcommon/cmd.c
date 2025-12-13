@@ -160,8 +160,8 @@ void Cbuf_Execute(void) {
 		brackets = 0;
 		for(i = 0; i < cmd_text.cursize; i++) {
 		    if(text[i] == '{' || text[i] == '}') brackets++;
-			if(text[i] == '{') text[i] = '';
-			if(text[i] == '}') text[i] = '';
+			if(text[i] == '{') text[i] = ' ';
+			if(text[i] == '}') text[i] = ' ';
 			if(text[i] == '"') quotes++;
 
 			if(!(quotes & 1)) {
@@ -267,8 +267,7 @@ static qboolean CompareFloats(float a, const char* op, float b) {
 }
 
 static void Cmd_If_f(void) {
-    if(CompareFloats(atof(Cmd_Argv(0)), Cmd_Argv(1), atof(Cmd_Argv(2)))
-    Cmd_ExecuteString(va("\"%s\"\n", Cmd_ArgsFrom(3)));
+    if(CompareFloats(atof(Cmd_Argv(0)), Cmd_Argv(1), atof(Cmd_Argv(2))) Cmd_ExecuteString(va("%s\n", Cmd_ArgsFrom(3)));
 }
 
 typedef struct cmd_function_s {
