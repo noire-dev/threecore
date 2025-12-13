@@ -14,7 +14,7 @@ static int cvar_numIndexes;
 
 static int cvar_group[CVG_MAX];
 
-#define FILE_HASH_SIZE 16384
+#define FILE_HASH_SIZE 65536
 static cvar_t* hashTable[FILE_HASH_SIZE];
 
 static long generateHashValue(const char* fname) {
