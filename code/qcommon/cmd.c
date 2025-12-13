@@ -5,7 +5,7 @@
 #include "q_shared.h"
 #include "qcommon.h"
 
-#define MAX_CMD_BUFFER 33554432
+#define MAX_CMD_BUFFER 16777216
 
 typedef struct {
 	byte* data;
@@ -405,6 +405,25 @@ static void Cmd_TokenizeString2(const char* text_in, qboolean ignoreQuotes) {
 				while(*var_end && *var_end != '$') var_end++;
 				
 				if(*var_end == '$' && var_end > var_start) {
+					char var_name[MAX_TOKEN_CHARS];
+					int var_len = var_end - var_start;
+					strncpy(var_name, var_start, var_len);
+					var_name[var_len] = '\0';
+					const char* value = Cvar_VariableString(var_name);
+					while(*value) *textOut++ = *value++;
+					text = var_end + 1;
+					continue;
+				}
+		    }
+		    
+		    // expressions
+		    if(text[0] == '[' || text[0] == '(') {
+				const char* var_start = text + 1;
+				const char* var_end = var_start;
+				
+				while(*var_end && (*var_end != ']' || *var_end != ')')) var_end++;
+				
+				if((*var_end != ']' || *var_end != ')') && var_end > var_start) {
 					char var_name[MAX_TOKEN_CHARS];
 					int var_len = var_end - var_start;
 					strncpy(var_name, var_start, var_len);

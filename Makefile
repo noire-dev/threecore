@@ -21,6 +21,7 @@ MOUNT_DIR           = code
 
 # General
 USE_LOCAL_HEADERS   = 1
+USE_JAVASCRIPT      = 1
 
 # Audio
 USE_OGG_VORBIS      = 1
@@ -146,6 +147,7 @@ JPDIR=$(MOUNT_DIR)/libjpeg
 OGGDIR=$(MOUNT_DIR)/libogg
 VORBISDIR=$(MOUNT_DIR)/libvorbis
 MADDIR=$(MOUNT_DIR)/libmad
+DUKTAPEDIR=$(MOUNT_DIR)/duktape
 
 bin_path=$(shell which $(1) 2> /dev/null)
 
@@ -720,6 +722,9 @@ MADOBJ = \
   $(B)/client/libmad/version.o
 endif
 
+DUKTAPEOBJ = \
+  $(B)/client/duktape/duktape.o
+
 Q3OBJ = \
   $(B)/client/cl_cgame.o \
   $(B)/client/cl_cin.o \
@@ -812,6 +817,10 @@ endif
 ifeq ($(USE_CODEC_MP3),1)
   Q3OBJ += $(MADOBJ) \
     $(B)/client/snd_codec_mp3.o
+endif
+
+ifeq ($(USE_JAVASCRIPT),1)
+  Q3OBJ += $(DUKTAPEOBJ)
 endif
 
 ifeq ($(USE_VULKAN),1)
@@ -1010,6 +1019,9 @@ $(B)/client/vorbis/%.o: $(VORBISDIR)/lib/%.c
 
 $(B)/client/libmad/%.o: $(MADDIR)/%.c
 	$(DO_CC)
+	
+$(B)/client/duktape/%.o: $(DUKTAPEDIR)/%.c
+	$(DO_CC)
 
 $(B)/client/%.o: $(SDLDIR)/%.c
 	$(DO_CC)
@@ -1045,6 +1057,9 @@ $(B)/ded/%.o: $(ADIR)/%.s
 	$(DO_AS)
 
 $(B)/ded/%.o: $(SDIR)/%.c
+	$(DO_DED_CC)
+	
+$(B)/ded/duktape/%.o: $(DUKTAPEDIR)/%.c
 	$(DO_DED_CC)
 
 $(B)/ded/%.o: $(CMDIR)/%.c
