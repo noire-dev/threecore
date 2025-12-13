@@ -23,6 +23,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 #include "q_shared.h"
 #include "qcommon.h"
+#include "js_local.h"
 #include <setjmp.h>
 #ifndef _WIN32
 #include <netinet/in.h>
@@ -2571,6 +2572,8 @@ void Com_Init( char *commandLine ) {
 
 	// allocate the stack based hunk allocator
 	Com_InitHunkMemory();
+	
+	JS_Init();
 
 	// if any archived cvars are modified after this, we will trigger a writing
 	// of the config file

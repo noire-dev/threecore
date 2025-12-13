@@ -5,7 +5,7 @@
 #include "q_shared.h"
 #include "qcommon.h"
 
-#define MAX_CMD_BUFFER 16777216
+#define MAX_CMD_BUFFER 524288
 
 typedef struct {
 	byte* data;
@@ -140,7 +140,7 @@ void Cbuf_ExecuteText(cbufExec_t exec_when, const char* text) {
 
 void Cbuf_Execute(void) {
 	char line[MAX_CMD_LINE], *text;
-	int i, n, quotes, brackets;
+	int i, n, quotes;
 	qboolean in_star_comment;
 	qboolean in_slash_comment;
 
@@ -157,11 +157,7 @@ void Cbuf_Execute(void) {
 		text = (char*)cmd_text.data;
 
 		quotes = 0;
-		brackets = 0;
 		for(i = 0; i < cmd_text.cursize; i++) {
-		    if(text[i] == '{' || text[i] == '}') brackets++;
-			if(text[i] == '{') text[i] = ' ';
-			if(text[i] == '}') text[i] = ' ';
 			if(text[i] == '"') quotes++;
 
 			if(!(quotes & 1)) {
@@ -182,10 +178,6 @@ void Cbuf_Execute(void) {
 				if(!(brackets & 1) && !in_slash_comment && !in_star_comment && text[i] == ';') break;
 			}
 			if(!in_star_comment && (text[i] == '\n' || text[i] == '\r')) {
-				if(brackets & 1) {
-				    if(text[i] == '\n') text[i] = ' ';
-				    continue;
-				}
 				in_slash_comment = qfalse;
 				break;
 			}
@@ -226,7 +218,6 @@ void Cbuf_Wait(void) {
 }
 
 static void Cmd_Exec_f(void) {
-	qboolean quiet;
 	union {
 		char* c;
 		void* v;
@@ -254,27 +245,6 @@ static void Cmd_Exec_f(void) {
 static void Cmd_Print_f(void) { Com_Printf("%s\n", Cmd_ArgsFrom(1)); }
 
 static void Cmd_Eval_f(void) { Cbuf_InsertText(va("%s\n", Cmd_ArgsFrom(1))); }
-
-static qboolean CompareFloats(float a, const char* op, float b) {
-    if(!Q_stricmp(op, "==")) return fabs(a - b) < 0.0001f;
-    if(!Q_stricmp(op, "!=")) return fabs(a - b) >= 0.0001f;
-    if(!Q_stricmp(op, ">")) return a > b;
-    if(!Q_stricmp(op, "<")) return a < b;
-    if(!Q_stricmp(op, ">=")) return a >= b;
-    if(!Q_stricmp(op, "<=")) return a <= b;
-
-    return qfalse;
-}
-
-static void Cmd_If_f(void) {
-    if(CompareFloats(atof(Cmd_Argv(1)), Cmd_Argv(2), atof(Cmd_Argv(3)))) Cbuf_InsertText(va("%s\n", Cmd_ArgsFrom(4)));
-}
-
-static void Cmd_Repeat_f(void) {
-    for(int i = 0; i < atoi(Cmd_Argv(1)); i++) {
-        Cbuf_InsertText(va("%s\n", Cmd_ArgsFrom(2)));
-    }
-}
 
 typedef struct cmd_function_s {
 	struct cmd_function_s* next;
@@ -416,25 +386,6 @@ static void Cmd_TokenizeString2(const char* text_in, qboolean ignoreQuotes) {
 				}
 		    }
 		    
-		    // expressions
-		    if(text[0] == '[' || text[0] == '(') {
-				const char* var_start = text + 1;
-				const char* var_end = var_start;
-				
-				while(*var_end && (*var_end != ']' || *var_end != ')')) var_end++;
-				
-				if((*var_end != ']' || *var_end != ')') && var_end > var_start) {
-					char var_name[MAX_TOKEN_CHARS];
-					int var_len = var_end - var_start;
-					strncpy(var_name, var_start, var_len);
-					var_name[var_len] = '\0';
-					const char* value = Cvar_VariableString(var_name);
-					while(*value) *textOut++ = *value++;
-					text = var_end + 1;
-					continue;
-				}
-		    }
-		    
 			if(!ignoreQuotes && text[0] == '"') break;
 
 			if(text[0] == '/' && text[1] == '/') {
@@ -527,24 +478,11 @@ qboolean Cmd_CompleteArgument(const char* command, const char* args, int argNum)
 	return qfalse;
 }
 
-static void PrepareVariablesInString(char* str) {
-    char* p;
-    for (p = str; *p; p++) {
-        if (*p == '&') *p = '$';
-    }
-}
-
-static void Cmd_PrepareVariables(void) {
-	for(int i = 0; i < Cmd_Argc(); i++) PrepareVariablesInString(cmd_argv[i]);
-}
-
 void Cmd_ExecuteString(const char* text) {
 	cmd_function_t *cmd, **prev;
     
 	Cmd_TokenizeString(text);
 	if(!Cmd_Argc()) return;
-	
-	Cmd_PrepareVariables();
 
 	for(prev = &cmd_functions; *prev; prev = &cmd->next) {
 		cmd = *prev;
@@ -581,7 +519,5 @@ void Cmd_Init(void) {
 	Cmd_SetCommandCompletionFunc("exec", Cmd_CompleteCfgName);
 	Cmd_AddCommand("print", Cmd_Print_f);
 	Cmd_AddCommand("eval", Cmd_Eval_f);
-	Cmd_AddCommand("if", Cmd_If_f);
-	Cmd_AddCommand("repeat", Cmd_Repeat_f);
 	Cmd_AddCommand("wait", Cmd_Wait_f);
 }
