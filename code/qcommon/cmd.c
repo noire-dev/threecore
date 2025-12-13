@@ -267,7 +267,7 @@ static qboolean CompareFloats(float a, const char* op, float b) {
 }
 
 static void Cmd_If_f(void) {
-    if(CompareFloats(atof(Cmd_Argv(0)), Cmd_Argv(1), atof(Cmd_Argv(2))) Cmd_ExecuteString(va("%s\n", Cmd_ArgsFrom(3)));
+    if(CompareFloats(atof(Cmd_Argv(0)), Cmd_Argv(1), atof(Cmd_Argv(2)))) Cmd_ExecuteString(va("%s\n", Cmd_ArgsFrom(3)));
 }
 
 typedef struct cmd_function_s {
