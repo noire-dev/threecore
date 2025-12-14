@@ -1084,7 +1084,7 @@ typedef enum {
 
 #define	MAX_CONFIGSTRINGS	1600
 #define	MAX_GAMESTATE_CHARS	65535
-#define MAX_CVARS           524288
+#define MAX_CVARS           131072
 
 // these are the only configstrings that the system reserves, all the
 // other ones are strictly for servergame to clientgame communication

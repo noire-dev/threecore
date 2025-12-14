@@ -5,7 +5,7 @@
 #include "q_shared.h"
 #include "qcommon.h"
 
-#define MAX_CMD_BUFFER 524288
+#define MAX_CMD_BUFFER 131072
 
 typedef struct {
 	byte* data;
@@ -244,7 +244,7 @@ static void Cmd_Exec_f(void) {
 
 static void Cmd_Print_f(void) { Com_Printf("%s\n", Cmd_ArgsFrom(1)); }
 
-static void Cmd_Eval_f(void) { Cbuf_InsertText(va("%s\n", Cmd_ArgsFrom(1))); }
+static void Cmd_Eval_f(void) { ExecuteString(va("%s\n", Cmd_ArgsFrom(1))); }
 
 typedef struct cmd_function_s {
 	struct cmd_function_s* next;
