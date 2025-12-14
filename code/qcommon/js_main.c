@@ -20,8 +20,6 @@ static duk_ret_t jsexport_console_cmd(duk_context *ctx) {
     return 0;
 }
 
-Cmd_ExecuteString(line);
-
 static duk_ret_t jsexport_cvar_get(duk_context *ctx) {
     const char *cvar_name = duk_get_string(ctx, 0);
     
