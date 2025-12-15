@@ -3,5 +3,5 @@
 // SourceTech — GPLv2; see LICENSE for details.
 
 void JS_Init(void);
-void JSOpenFile(const char* filename);
-void JSEval(const char* code);
+qboolean JSOpenFile(const char* filename);
+qboolean JSEval(const char* code, qboolean doPrint, qboolean doCopy, char* buffer, int bufferLength);

@@ -56,7 +56,7 @@ static duk_ret_t jsexport_cvar_set(duk_context *ctx) {
     return 0;
 }
 
-void JSOpenFile(const char* filename) {
+qboolean JSOpenFile(const char* filename) {
     union {
 		char* c;
 		void* v;
@@ -65,7 +65,7 @@ void JSOpenFile(const char* filename) {
 	
 	if (!js_ctx) {
         Com_Printf("^1Error: JavaScript VM not initialized");
-        return;
+        return qfalse;
     }
     
     Q_strncpyz(fullpath, filename, sizeof(fullpath));
@@ -74,16 +74,20 @@ void JSOpenFile(const char* filename) {
         
     if(f.v == NULL) {
         Com_Printf("^1Error: Could not load file '%s'\n", fullpath);
-        return;
+        return qfalse;
     }
     
     if (duk_peval_string(js_ctx, f.c) != 0) {
         Com_Printf("^1%s - %s\n", filename, duk_safe_to_string(js_ctx, -1));
         Cvar_Set("js_error", va("%s - %s", filename, duk_safe_to_string(js_ctx, -1)));
+        duk_pop(js_ctx);
+        FS_FreeFile(f.v);
+        return qfalse;
     }
     
     duk_pop(js_ctx);
     FS_FreeFile(f.v);
+    return qtrue;
 }
 
 static void Cmd_JSOpenFile_f(void) {
@@ -98,23 +102,25 @@ static void Cmd_JSOpenFile_f(void) {
     JSOpenFile(filename);
 }
 
-void JSEval(const char* code) {
+qboolean JSEval(const char* code, qboolean doPrint, qboolean doCopy, char* buffer, int bufferLength) {
     if (!js_ctx) {
         Com_Printf("^1Error: JavaScript VM not initialized\n");
-        return;
+        return qfalse;
     }
     
     if (duk_peval_string(js_ctx, code) != 0) {
         Com_Printf("^1%s\n", duk_safe_to_string(js_ctx, -1));
         Cvar_Set("js_error", va("%s", duk_safe_to_string(js_ctx, -1)));
         duk_pop(js_ctx);
-        return;
+        return qfalse;
     }
     
     const char* result = duk_safe_to_string(js_ctx, -1);
-    Com_Printf("%s\n", result);
+    if(doPrint) Com_Printf("%s\n", result);
+    if(doCopy) Q_strncpyz(buffer, result, bufferLength);
     
     duk_pop(js_ctx);
+    return qtrue;
 }
 
 static void Cmd_JSEval_f(void) {
@@ -123,7 +129,7 @@ static void Cmd_JSEval_f(void) {
         return;
     }
     
-    JSEval(Cmd_Argv(1));
+    JSEval(Cmd_Argv(1), qtrue, qfalse, NULL, 0);
 }
 
 static void Cmd_CompleteJSName(const char* args, int argNum) {

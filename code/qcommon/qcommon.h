@@ -25,6 +25,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 #include <sys/types.h>
 #include "cm_public.h"
+#include "js_local.h"
 
 //Ignore __attribute__ on non-gcc/clang platforms
 #if !defined(__GNUC__) && !defined(__clang__)
@@ -367,6 +368,8 @@ typedef enum {
 	TRAP_CMD,
 	TRAP_REAL_TIME,
 	TRAP_SYSTEM,
+	TRAP_JS_OPENFILE,
+	TRAP_JS_EVAL,
 	
 	TRAP_UPDATESCREEN = 1500,
 	TRAP_S_STARTLOCALSOUND,
