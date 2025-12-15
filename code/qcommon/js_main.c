@@ -10,6 +10,44 @@ static duk_context *js_ctx = NULL;
 
 static cvar_t* js_error;
 
+static duk_int_t JSCall_ref = -1;
+static qboolean JSCall_compiled = qfalse;
+
+static void JS_InitCompiler(void) {
+    if (!js_ctx) return;
+    
+    if (duk_get_global_string(js_ctx, "JSCall") && duk_is_function(js_ctx, -1)) {
+        JSCall_ref = duk_get_heapptr(js_ctx, -1);
+        JSCall_compiled = qtrue;
+    } else {
+        duk_pop(js_ctx);
+    }
+    
+    duk_pop(js_ctx);
+}
+
+static void JS_LoadCoreScripts(void) {
+    int numfiles;
+    char filelist[4096];
+    char filename[MAX_QPATH];
+    
+    FS_ListFiles("scripts/core", ".js", &numfiles);
+    
+    if (numfiles == 0) return;
+    
+    Com_Printf("^2Loading %d JS core scripts...\n", numfiles);
+    
+    for (int i = 0; i < numfiles; i++) {
+        FS_GetFileList("scripts/core", ".js", i, filename, sizeof(filename));
+        char fullpath[MAX_QPATH];
+        Com_sprintf(fullpath, sizeof(fullpath), "scripts/core/%s", filename);
+        Com_Printf("^2  Loading: %s\n", filename);
+        if (!JSOpenFile(fullpath)) Com_Printf("^1  Failed to load: %s\n", filename);
+    }
+    
+    FS_FreeFileList(filelist);
+}
+
 static void ParseDuktapeResult(duk_context* ctx, js_result_t* result) {
     if (duk_is_number(ctx, -1)) {
         double val = duk_get_number(ctx, -1);
@@ -160,7 +198,12 @@ qboolean JSCall(int func_id, js_result_t* result, js_args_t* args) {
     }
     
     duk_idx_t top = duk_get_top(js_ctx);
-    duk_get_global_string(js_ctx, "JSCall");
+    if (JSCall_compiled) {
+        duk_push_heapptr(js_ctx, JSCall_ref);
+    } else {
+        Com_Printf("^1Error: JavaScript JSCall not compiled\n");
+        return qfalse;
+    }
     
     duk_push_int(js_ctx, func_id);
     arg_count = 1;
@@ -238,5 +281,8 @@ void JS_Init(void) {
         Cmd_AddCommand("js.eval", Cmd_JSEval_f);
         
         js_error = Cvar_Get("js_error", "", 0);
+        
+        JS_LoadCoreScripts();
+        JS_InitCompiler();
     }
 }
