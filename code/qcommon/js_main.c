@@ -43,12 +43,12 @@ static void JS_LoadCoreScripts(void) {
         Q_strncpyz(filename, fileptr, sizeof(filename));
         char fullpath[MAX_QPATH];
         Com_sprintf(fullpath, sizeof(fullpath), "scripts/core/%s", filename);
-        Com_Printf("  ^5[%d/%d] %s: ", i+1, numfiles, filename);
+        Com_Printf("  ^5[%d/%d] %s: \n", i+1, numfiles, filename);
         
         if (!JSOpenFile(fullpath)) {
-            Com_Printf("^1 Failed\n");
+            Com_Printf("^1Failed\n");
         } else {
-            Com_Printf("^2 Loaded\n");
+            Com_Printf("^2Loaded\n");
         }
         
         if (next) fileptr = next + 1;
@@ -218,7 +218,7 @@ qboolean JSCall(int func_id, js_result_t* result, js_args_t* args) {
     
     if (args) {
         for (int i = 0; i < MAX_JS_ARGS; i++) {
-            if(args->type[i] == JS_TYPE_NONE) continue;
+            if(args->type[i] == JS_TYPE_NONE) break;
             switch (args->type[i]) {
                 case JS_TYPE_INT:
                     duk_push_int(js_ctx, args->value[i].int_val);
