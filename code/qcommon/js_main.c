@@ -10,6 +10,25 @@ static duk_context *js_ctx = NULL;
 
 static cvar_t* js_error;
 
+static void ParseDuktapeResult(duk_context* ctx, js_result_t* result) {
+    if (duk_is_number(ctx, -1)) {
+        double val = duk_get_number(ctx, -1);
+        if (val == (int)val) {
+            result->type = JS_TYPE_INT;
+            result->value.int_val = (int)val;
+        } else {
+            result->type = JS_TYPE_FLOAT;
+            result->value.float_val = (float)val;
+        }
+    } else if (duk_is_boolean(ctx, -1)) {
+        result->type = JS_TYPE_BOOL;
+        result->value.bool_val = duk_get_boolean(ctx, -1);
+    } else {
+        result->type = JS_TYPE_STRING;
+        Q_strncpyz(result->value.string_val, duk_safe_to_string(ctx, -1), MAX_JS_STRINGSIZE);
+    }
+}
+
 static duk_ret_t jsexport_console_log(duk_context *ctx) {
     const char *str = duk_safe_to_string(ctx, 0);
     Com_Printf("%s\n", str);
@@ -102,7 +121,7 @@ static void Cmd_JSOpenFile_f(void) {
     JSOpenFile(filename);
 }
 
-qboolean JSEval(const char* code, qboolean doPrint, qboolean doCopy, char* buffer, int bufferLength) {
+qboolean JSEval(const char* code, qboolean doPrint, qboolean doResult, js_result_t* result) {
     if (!js_ctx) {
         Com_Printf("^1Error: JavaScript VM not initialized\n");
         return qfalse;
@@ -115,9 +134,9 @@ qboolean JSEval(const char* code, qboolean doPrint, qboolean doCopy, char* buffe
         return qfalse;
     }
     
-    const char* result = duk_safe_to_string(js_ctx, -1);
-    if(doPrint) Com_Printf("%s\n", result);
-    if(doCopy) Q_strncpyz(buffer, result, bufferLength);
+    const char* text = duk_safe_to_string(js_ctx, -1);
+    if(doPrint) Com_Printf("%s\n", text);
+    if(doResult) ParseDuktapeResult(js_ctx, result);
     
     duk_pop(js_ctx);
     return qtrue;
@@ -129,7 +148,56 @@ static void Cmd_JSEval_f(void) {
         return;
     }
     
-    JSEval(Cmd_Argv(1), qtrue, qfalse, NULL, 0);
+    JSEval(Cmd_Argv(1), qtrue, qfalse, NULL);
+}
+
+qboolean JSCall(int func_id, js_result_t* result, js_args_t* args) {
+    int arg_count;
+    
+    if (!js_ctx) {
+        Com_Printf("^1Error: JavaScript VM not initialized\n");
+        return qfalse;
+    }
+    
+    duk_idx_t top = duk_get_top(js_ctx);
+    duk_get_global_string(js_ctx, "JSCall");
+    
+    duk_push_int(js_ctx, func_id);
+    arg_count = 1;
+    
+    if (args) {
+        for (int i = 0; i < MAX_JS_ARGS; i++) {
+            if(args->type[i] == JS_TYPE_NONE) continue;
+            switch (args->type[i]) {
+                case JS_TYPE_INT:
+                    duk_push_int(js_ctx, args->value[i].int_val);
+                    break;
+                case JS_TYPE_FLOAT:
+                    duk_push_number(js_ctx, args->value[i].float_val);
+                    break;
+                case JS_TYPE_BOOL:
+                    duk_push_boolean(js_ctx, args->value[i].bool_val);
+                    break;
+                case JS_TYPE_STRING:
+                    duk_push_string(js_ctx, args->value[i].string_val);
+                    break;
+            }
+            arg_count++;
+        }
+    }
+    
+    if (duk_pcall(js_ctx, arg_count) != DUK_EXEC_SUCCESS) {
+        const char* error = duk_safe_to_string(js_ctx, -1);
+        Com_Printf("^1%s\n", error);
+        Cvar_Set("js_error", va("%s", error));
+        duk_set_top(js_ctx, top);
+        return qfalse;
+    }
+    
+    ParseDuktapeResult(js_ctx, result);
+    
+    duk_set_top(js_ctx, top);
+    return qtrue;
 }
 
 static void Cmd_CompleteJSName(const char* args, int argNum) {
