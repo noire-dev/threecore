@@ -10,7 +10,7 @@ static duk_context *js_ctx = NULL;
 
 static cvar_t* js_error;
 
-static duk_int_t JSCall_ref = -1;
+static void *JSCall_ref = NULL;
 static qboolean JSCall_compiled = qfalse;
 
 static void JS_InitCompiler(void) {
@@ -27,25 +27,33 @@ static void JS_InitCompiler(void) {
 }
 
 static void JS_LoadCoreScripts(void) {
-    int numfiles;
-    char filelist[4096];
+    char filelist[8192];
     char filename[MAX_QPATH];
+    char *fileptr;
     
-    FS_ListFiles("scripts/core", ".js", &numfiles);
-    
+    int numfiles = FS_GetFileList("scripts/core", ".js", filelist, sizeof(filelist));
     if (numfiles == 0) return;
-    
     Com_Printf("^2Loading %d JS core scripts...\n", numfiles);
+    fileptr = filelist;
     
     for (int i = 0; i < numfiles; i++) {
-        FS_GetFileList("scripts/core", ".js", i, filename, sizeof(filename));
+        char *next = strchr(fileptr, '\n');
+        if (next) *next = '\0';
+        
+        Q_strncpyz(filename, fileptr, sizeof(filename));
         char fullpath[MAX_QPATH];
         Com_sprintf(fullpath, sizeof(fullpath), "scripts/core/%s", filename);
-        Com_Printf("^2  Loading: %s\n", filename);
-        if (!JSOpenFile(fullpath)) Com_Printf("^1  Failed to load: %s\n", filename);
+        Com_Printf("  ^5[%d/%d] %s: ", i+1, numfiles, filename);
+        
+        if (!JSOpenFile(fullpath)) {
+            Com_Printf("^1 Failed\n");
+        } else {
+            Com_Printf("^2 Loaded\n");
+        }
+        
+        if (next) fileptr = next + 1;
+        else break;
     }
-    
-    FS_FreeFileList(filelist);
 }
 
 static void ParseDuktapeResult(duk_context* ctx, js_result_t* result) {
