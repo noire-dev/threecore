@@ -871,13 +871,6 @@ void FS_FCloseFile( fileHandle_t f ) {
 		if ( fd->pak->handleUsed == 0 ) {
 			FS_AddToHandleList( fd->pak );
 		}
-		if ( !fs_locked->integer ) {
-			if ( fd->pak->handle && !fd->pak->handleUsed ) {
-				unzClose( fd->pak->handle );
-				fd->pak->handle = NULL;
-			}
-		}
-#endif
 	} else {
 		if ( fd->handleFiles.file.o ) {
 			fclose( fd->handleFiles.file.o );
