@@ -30,13 +30,6 @@ static cvar_t		*cl_graphheight;
 static cvar_t		*cl_graphscale;
 static cvar_t		*cl_graphshift;
 
-/*
-================
-SCR_DrawNamedPic
-
-Coordinates are 640*480 virtual values
-=================
-*/
 void SCR_DrawNamedPic( float x, float y, float width, float height, const char *picname ) {
 	qhandle_t	hShader;
 
@@ -47,13 +40,6 @@ void SCR_DrawNamedPic( float x, float y, float width, float height, const char *
 	re.DrawStretchPic( x, y, width, height, 0, 0, 1, 1, hShader );
 }
 
-/*
-================
-SCR_AdjustFrom640
-
-Adjusted for resolution and screen aspect ratio
-================
-*/
 void SCR_AdjustFrom640( float *x, float *y, float *w, float *h ) {
 	float	xscale;
 	float	yscale;
@@ -75,13 +61,6 @@ void SCR_AdjustFrom640( float *x, float *y, float *w, float *h ) {
 	}
 }
 
-/*
-================
-SCR_AdjustFrom640
-
-Select a font resolution from font size
-================
-*/
 int SCR_GetFontRes(float fontSize) {
 	float	fontScale;
 
@@ -94,13 +73,6 @@ int SCR_GetFontRes(float fontSize) {
     return 0; //256 default
 }
 
-/*
-================
-SCR_FillRect
-
-Coordinates are 640*480 virtual values
-=================
-*/
 void SCR_FillRect( float x, float y, float width, float height, const float *color ) {
 	re.SetColor( color );
 
@@ -110,22 +82,11 @@ void SCR_FillRect( float x, float y, float width, float height, const float *col
 	re.SetColor( NULL );
 }
 
-/*
-================
-SCR_DrawPic
-
-Coordinates are 640*480 virtual values
-=================
-*/
 void SCR_DrawPic( float x, float y, float width, float height, qhandle_t hShader ) {
 	SCR_AdjustFrom640( &x, &y, &width, &height );
 	re.DrawStretchPic( x, y, width, height, 0, 0, 1, 1, hShader );
 }
 
-/*
-** SCR_DrawChar
-** chars are drawn at 640*480 virtual screen size
-*/
 static void SCR_DrawChar( int x, int y, float fontSize, int ch ) {
 	int 	row, col;
 	float 	frow, fcol;
@@ -158,11 +119,6 @@ static void SCR_DrawChar( int x, int y, float fontSize, int ch ) {
 	re.DrawStretchPic( ax, ay, aw, ah, fcol, frow, fcol + fontSize, frow + fontSize, cls.defaultFont[fontRes] );
 }
 
-
-/*
-** SCR_DrawSmallChar
-** small chars are drawn at native screen resolution
-*/
 void SCR_DrawSmallChar( int x, int y, int ch ) {
 	int row, col;
 	float frow, fcol;
@@ -191,10 +147,6 @@ void SCR_DrawSmallChar( int x, int y, int ch ) {
 					   cls.defaultFont[0] );
 }
 
-/*
-** SCR_DrawSmallString
-** small string are drawn at native screen resolution
-*/
 void SCR_DrawSmallString( int x, int y, const char *s, int len ) {
 	int row, col, ch, i;
 	float frow, fcol;
@@ -222,17 +174,6 @@ void SCR_DrawSmallString( int x, int y, const char *s, int len ) {
 	}
 }
 
-
-/*
-==================
-SCR_DrawBigString[Color]
-
-Draws a multi-colored string with a drop shadow, optionally forcing
-to a fixed color.
-
-Coordinates are at 640 by 480 virtual resolution
-==================
-*/
 void SCR_DrawStringExt( int x, int y, float size, const char *string, const float *setColor, qboolean forceColor, qboolean noColorEscape ) {
 	vec4_t		color;
 	const char	*s;
@@ -278,12 +219,6 @@ void SCR_DrawStringExt( int x, int y, float size, const char *string, const floa
 	re.SetColor( NULL );
 }
 
-
-/*
-==================
-SCR_DrawBigString
-==================
-*/
 void SCR_DrawBigString( int x, int y, const char *s, float alpha, qboolean noColorEscape ) {
 	float	color[4];
 
@@ -292,15 +227,6 @@ void SCR_DrawBigString( int x, int y, const char *s, float alpha, qboolean noCol
 	SCR_DrawStringExt( x, y, BIGCHAR_WIDTH, s, color, qfalse, noColorEscape );
 }
 
-
-/*
-==================
-SCR_DrawSmallString[Color]
-
-Draws a multi-colored string with a drop shadow, optionally forcing
-to a fixed color.
-==================
-*/
 void SCR_DrawSmallStringExt( int x, int y, const char *string, const float *setColor, qboolean forceColor,
 		qboolean noColorEscape ) {
 	vec4_t		color;
@@ -330,10 +256,6 @@ void SCR_DrawSmallStringExt( int x, int y, const char *string, const float *setC
 	re.SetColor( NULL );
 }
 
-
-/*
-** SCR_Strlen -- skips color escape codes
-*/
 static int SCR_Strlen( const char *str ) {
 	const char *s = str;
 	int count = 0;
@@ -350,22 +272,10 @@ static int SCR_Strlen( const char *str ) {
 	return count;
 }
 
-
-/*
-** SCR_GetBigStringWidth
-*/ 
 int SCR_GetBigStringWidth( const char *str ) {
 	return SCR_Strlen( str ) * BIGCHAR_WIDTH;
 }
 
-
-//===============================================================================
-
-/*
-=================
-SCR_DrawDemoRecording
-=================
-*/
 static void SCR_DrawDemoRecording( void ) {
 	char	string[sizeof(clc.recordNameShort)+32];
 	int		pos;
@@ -380,36 +290,16 @@ static void SCR_DrawDemoRecording( void ) {
 	SCR_DrawStringExt(320 - strlen(string) * 4, 32, 8, string, g_color_table[ColorIndex(COLOR_WHITE)], qtrue, qfalse);
 }
 
-/*
-===============================================================================
-
-DEBUG GRAPH
-
-===============================================================================
-*/
-
 static	int			current;
 static	float		values[1024];
 
-/*
-==============
-SCR_DebugGraph
-==============
-*/
 void SCR_DebugGraph( float value )
 {
 	values[current] = value;
 	current = (current + 1) % ARRAY_LEN(values);
 }
 
-
-/*
-==============
-SCR_DrawDebugGraph
-==============
-*/
-static void SCR_DrawDebugGraph( void )
-{
+static void SCR_DrawDebugGraph( void ) {
 	int		a, x, y, w, i, h;
 	float	v;
 
@@ -437,13 +327,6 @@ static void SCR_DrawDebugGraph( void )
 	}
 }
 
-//=============================================================================
-
-/*
-==================
-SCR_Init
-==================
-*/
 void SCR_Init( void ) {
 	cl_timegraph = Cvar_Get ("timegraph", "0", CVAR_CHEAT);
 	cl_graphheight = Cvar_Get ("graphheight", "32", CVAR_CHEAT);
@@ -453,26 +336,10 @@ void SCR_Init( void ) {
 	scr_initialized = qtrue;
 }
 
-
-/*
-==================
-SCR_Done
-==================
-*/
 void SCR_Done( void ) {
 	scr_initialized = qfalse;
 }
 
-
-//=======================================================
-
-/*
-==================
-SCR_DrawScreenField
-
-This will be called twice if rendering in stereo mode
-==================
-*/
 static void SCR_DrawScreenField( void ) {
 	qboolean uiFullscreen;
 
@@ -549,15 +416,6 @@ static void SCR_DrawScreenField( void ) {
 	}
 }
 
-
-/*
-==================
-SCR_UpdateScreen
-
-This is called every frame, and can also be called explicitly to flush
-text to the screen.
-==================
-*/
 void SCR_UpdateScreen( void ) {
 	static int recursive;
 	static int framecount;
