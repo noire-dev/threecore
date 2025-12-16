@@ -748,27 +748,6 @@ static qboolean ParseStage( shaderStage_t *stage, const char **text )
 					totalImages, maxAnimations, shader.name );
 			}
 		}
-		else if ( !Q_stricmp( token, "videoMap" ) )
-		{
-			int handle;
-			token = COM_ParseExt( text, qfalse );
-			if ( !token[0] )
-			{
-				ri.Printf( PRINT_WARNING, "WARNING: missing parameter for 'videoMap' keyword in shader '%s'\n", shader.name );
-				return qfalse;
-			}
-			handle = ri.CIN_PlayCinematic( token, 0, 0, 256, 256, (CIN_loop | CIN_silent | CIN_shader) );
-			if ( handle != -1 ) {
-				if ( !tr.scratchImage[ handle ] ) {
-					tr.scratchImage[ handle ] = R_CreateImage( va( "*scratch%i", handle ), NULL, NULL, 256, 256, IMGFLAG_CLAMPTOEDGE | IMGFLAG_RGB | IMGFLAG_NOSCALE );
-				}
-				stage->bundle[0].isVideoMap = qtrue;
-				stage->bundle[0].videoMapHandle = handle;
-				stage->bundle[0].image[0] = tr.scratchImage[ handle ];
-			} else {
-				ri.Printf( PRINT_WARNING, "WARNING: could not load '%s' for 'videoMap' keyword in shader '%s'\n", token, shader.name );
-			}
-		}
 		//
 		// alphafunc <func>
 		//

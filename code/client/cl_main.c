@@ -25,7 +25,6 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #include <limits.h>
 
 cvar_t	*cl_noprint;
-cvar_t	*cl_debugMove;
 
 cvar_t	*rcon_client_password;
 cvar_t	*rconAddress;
@@ -2498,12 +2497,6 @@ static void CL_InitRef( void ) {
 	rimp.Cvar_SetGroup = Cvar_SetGroup;
 	rimp.Cvar_CheckGroup = Cvar_CheckGroup;
 	rimp.Cvar_ResetGroup = Cvar_ResetGroup;
-
-	// cinematic stuff
-
-	rimp.CIN_UploadCinematic = CIN_UploadCinematic;
-	rimp.CIN_PlayCinematic = CIN_PlayCinematic;
-	rimp.CIN_RunCinematic = CIN_RunCinematic;
 
 	rimp.CL_WriteAVIVideoFrame = CL_WriteAVIVideoFrame;
 	rimp.CL_SaveJPGToBuffer = CL_SaveJPGToBuffer;

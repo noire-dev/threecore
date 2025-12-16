@@ -89,7 +89,6 @@ static char com_errorMessage[ MAXPRINTMSG ];
 
 static void Com_Shutdown( void );
 static void Com_WriteConfig_f( void );
-void CIN_CloseAllVideos( void );
 
 //============================================================================
 
@@ -1521,9 +1520,6 @@ void Hunk_Clear( void ) {
 	CL_ShutdownUI();
 #endif
 	SV_ShutdownGameProgs();
-#ifndef DEDICATED
-	CIN_CloseAllVideos();
-#endif
 
 	s_hunkUsed = 0;
 	Com_Printf( "Hunk_Clear: reset ok\n" );

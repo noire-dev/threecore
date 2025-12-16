@@ -371,12 +371,6 @@ void Snd_Memset (void* dest, const int val, const size_t count);
 #define Com_Memset memset
 #define Com_Memcpy memcpy
 
-#define CIN_system	1
-#define CIN_loop	2
-#define	CIN_hold	4
-#define CIN_silent	8
-#define CIN_shader	16
-
 /*
 ==============================================================
 

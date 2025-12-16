@@ -177,11 +177,6 @@ typedef struct {
 	void	(*FS_WriteFile)( const char *qpath, const void *buffer, int size );
 	qboolean (*FS_FileExists)( const char *file );
 
-	// cinematic stuff
-	void	(*CIN_UploadCinematic)( int handle );
-	int		(*CIN_PlayCinematic)( const char *arg0, int xpos, int ypos, int width, int height, int bits );
-	e_status (*CIN_RunCinematic)( int handle );
-
 	void	(*CL_WriteAVIVideoFrame)( const byte *buffer, int size );
 
 	size_t	(*CL_SaveJPGToBuffer)( byte *buffer, size_t bufSize, int quality, int image_width, int image_height, byte *image_buffer, int padding );

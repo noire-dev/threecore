@@ -349,7 +349,6 @@ extern	refexport_t		re;		// interface to refresh .dll
 // cvars
 //
 extern	cvar_t	*cl_noprint;
-extern	cvar_t	*cl_debugMove;
 extern	cvar_t	*cl_timegraph;
 extern	cvar_t	*cl_shownet;
 
@@ -427,36 +426,6 @@ qboolean CL_ValidPakSignature( const byte *data, int len );
 void	SCR_Init( void );
 void	SCR_Done( void );
 void	SCR_UpdateScreen( void );
-
-void	SCR_DebugGraph( float value );
-
-void	SCR_AdjustFrom640( float *x, float *y, float *w, float *h );
-void	SCR_FillRect( float x, float y, float width, float height, 
-					 const float *color );
-void	SCR_DrawPic( float x, float y, float width, float height, qhandle_t hShader );
-void	SCR_DrawNamedPic( float x, float y, float width, float height, const char *picname );
-
-void	SCR_DrawBigString( int x, int y, const char *s, float alpha, qboolean noColorEscape );			// draws a string with embedded color control characters with fade
-void	SCR_DrawStringExt( int x, int y, float size, const char *string, const float *setColor, qboolean forceColor, qboolean noColorEscape );
-void	SCR_DrawSmallStringExt( int x, int y, const char *string, const float *setColor, qboolean forceColor, qboolean noColorEscape );
-void	SCR_DrawSmallChar( int x, int y, int ch );
-void	SCR_DrawSmallString( int x, int y, const char *s, int len );
-
-//
-// cl_cin.c
-//
-
-void CL_PlayCinematic_f( void );
-void SCR_DrawCinematic (void);
-void SCR_RunCinematic (void);
-void SCR_StopCinematic (void);
-int CIN_PlayCinematic( const char *arg0, int xpos, int ypos, int width, int height, int bits);
-e_status CIN_StopCinematic(int handle);
-e_status CIN_RunCinematic (int handle);
-void CIN_DrawCinematic (int handle);
-void CIN_SetExtents (int handle, int x, int y, int w, int h);
-void CIN_UploadCinematic(int handle);
-void CIN_CloseAllVideos(void);
 
 //
 // cl_cgame.c

@@ -61,12 +61,6 @@ void R_BindAnimatedImage( const textureBundle_t *bundle ) {
 	int64_t index;
 	double	v;
 
-	if ( bundle->isVideoMap ) {
-		ri.CIN_RunCinematic(bundle->videoMapHandle);
-		ri.CIN_UploadCinematic(bundle->videoMapHandle);
-		return;
-	}
-
 	if ( bundle->isScreenMap && backEnd.viewParms.frameSceneNum == 1 ) {
 		GL_BindTexNum( FBO_ScreenTexture() );
 		return;
