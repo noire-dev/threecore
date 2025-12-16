@@ -2335,20 +2335,8 @@ static void CL_InitRenderer( void ) {
 	// this sets up the renderer and calls R_Init
 	re.BeginRegistration( &cls.glconfig );
 
-	// load character sets
-	cls.defaultFont[0] = re.RegisterShader( "default_font0" ); //256
-	cls.defaultFont[1] = re.RegisterShader( "default_font1" ); //512
-	cls.defaultFont[2] = re.RegisterShader( "default_font2" ); //1024
-	cls.defaultFont[3] = re.RegisterShader( "default_font3" ); //2048
-	cls.defaultFont[4] = re.RegisterShader( "default_font4" ); //4096
 	cls.whiteShader = re.RegisterShader( "white" );
-	cls.consoleShader = re.RegisterShader( "console" );
-
-	Con_CheckResize();
-
-	g_console_field_width = ((cls.glconfig.vidWidth / smallchar_width)) - 2;
-	g_consoleField.widthInChars = g_console_field_width;
-
+	
 	// for 640x480 virtualized screen
 	cls.biasY = 0;
 	cls.biasX = 0;
@@ -2452,14 +2440,6 @@ Sets console chars height
 ============
 */
 static void CL_SetScaling( float factor, int captureWidth, int captureHeight ) {
-
-	if ( cls.con_factor != factor ) {
-		// rescale console
-		con_scale->modified = qtrue;
-	}
-
-	cls.con_factor = factor;
-
 	// set custom capture resolution
 	cls.captureWidth = captureWidth;
 	cls.captureHeight = captureHeight;
@@ -2531,7 +2511,6 @@ static void CL_InitRef( void ) {
 	rimp.CL_LoadJPG = CL_LoadJPG;
 
 	rimp.CL_IsMinimized = CL_IsMininized;
-	rimp.CL_SetScaling = CL_SetScaling;
 
 	rimp.Sys_SetClipboardBitmap = Sys_SetClipboardBitmap;
 	rimp.Sys_LowPhysicalMemory = Sys_LowPhysicalMemory;
