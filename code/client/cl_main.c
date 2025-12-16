@@ -2247,17 +2247,11 @@ void CL_Frame( int msec, int realMsec ) {
 	cls.frametime = msec;
 	cls.realtime += msec;
 
-	if ( cl_timegraph->integer ) {
-		SCR_DebugGraph( msec * 0.25f );
-	}
-
 	// see if we need to update any userinfo
 	CL_CheckUserinfo();
 
 	// if we haven't gotten a packet in a long time, drop the connection
-	if ( !clc.demoplaying ) {
-		CL_CheckTimeout();
-	}
+	if (!clc.demoplaying) CL_CheckTimeout();
 
 	// send intentions now
 	CL_SendCmd();
@@ -2277,8 +2271,6 @@ void CL_Frame( int msec, int realMsec ) {
 
 	// advance local effects for next frame
 	SCR_RunCinematic();
-
-	Con_RunConsole();
 }
 
 
@@ -3219,8 +3211,6 @@ void CL_Init( void ) {
 
 	Com_Printf( "----- Client Initialization -----\n" );
 
-	Con_Init();
-
 	CL_ClearState();
 	cls.state = CA_DISCONNECTED;	// no longer CA_UNINITIALIZED
 
@@ -3332,8 +3322,6 @@ void CL_Shutdown( const char *finalmsg, qboolean quit ) {
 	CL_ShutdownVMs();
 
 	CL_ShutdownRef( quit ? REF_UNLOAD_DLL : REF_DESTROY_WINDOW );
-
-	Con_Shutdown();
 
 	Cmd_RemoveCommand ("cmd");
 	Cmd_RemoveCommand ("configstrings");

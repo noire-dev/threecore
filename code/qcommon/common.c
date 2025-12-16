@@ -2338,9 +2338,7 @@ void Com_Frame( void ) {
 	// mess with msec if needed
 	msec = Com_ModifyMsec( realMsec );
 
-//#ifdef DEDICATED
 	SV_Frame( msec );
-//#endif
 
 #ifndef DEDICATED
 	// client system

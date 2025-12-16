@@ -410,15 +410,6 @@ void CL_SendCmd( void );
 void CL_WritePacket( int repeat );
 
 //
-// cl_keys.c
-//
-extern  field_t     chatField;
-extern  field_t     g_consoleField;
-
-void Field_Draw( field_t *edit, int x, int y, int width, qboolean showCursor, qboolean noColorEscape );
-void Field_BigDraw( field_t *edit, int x, int y, int width, qboolean showCursor, qboolean noColorEscape );
-
-//
 // cl_parse.c
 //
 extern int cl_connectedToCheatServer;
@@ -430,29 +421,6 @@ void CL_ParseServerMessage( msg_t *msg );
 qboolean CL_UpdateVisiblePings_f( int source );
 qboolean CL_ValidPakSignature( const byte *data, int len );
 
-
-//
-// console
-//
-
-extern cvar_t *con_scale;
-
-void Con_CheckResize( void );
-void Con_Init( void );
-void Con_Shutdown( void );
-void Con_ToggleConsole_f( void );
-void Con_ClearNotify( void );
-void Con_RunConsole( void );
-void Con_DrawConsole( void );
-void Con_PageUp( int lines );
-void Con_PageDown( int lines );
-void Con_Top( void );
-void Con_Bottom( void );
-void Con_Close( void );
-
-void CL_LoadConsoleHistory( void );
-void CL_SaveConsoleHistory( void );
-
 //
 // cl_scrn.c
 //
@@ -461,8 +429,6 @@ void	SCR_Done( void );
 void	SCR_UpdateScreen( void );
 
 void	SCR_DebugGraph( float value );
-
-int		SCR_GetBigStringWidth( const char *str );	// returns in virtual 640x480 coordinates
 
 void	SCR_AdjustFrom640( float *x, float *y, float *w, float *h );
 void	SCR_FillRect( float x, float y, float width, float height, 
