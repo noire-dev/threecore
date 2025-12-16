@@ -42,13 +42,10 @@ static jmp_buf abortframe;	// an ERR_DROP occurred, exit the entire frame
 int		CPU_Flags = 0;
 
 static fileHandle_t logfile = FS_INVALID_HANDLE;
-static fileHandle_t com_journalFile = FS_INVALID_HANDLE ; // events are written here
-fileHandle_t com_journalDataFile = FS_INVALID_HANDLE; // config files are written here
 
 cvar_t	*com_developer;
 cvar_t	*com_timescale;
 static cvar_t *com_fixedtime;
-cvar_t	*com_journal;
 #ifndef DEDICATED
 cvar_t	*com_maxfps;
 cvar_t	*com_maxfpsUnfocused;
@@ -57,7 +54,7 @@ cvar_t	*com_yieldCPU;
 #ifdef USE_AFFINITY_MASK
 cvar_t	*com_affinityMask;
 #endif
-static cvar_t *com_logfile;		// 1 = buffer log, 2 = flush after each print
+static cvar_t *com_log;
 cvar_t	*com_version;
 
 #ifndef DEDICATED
@@ -158,9 +155,6 @@ void FORMAT_PRINTF(1, 2) QDECL Com_Printf( const char *fmt, ... ) {
 			*rd_buffer = '\0';
 		}
 		Q_strcat( rd_buffer, rd_buffersize, msg );
-		// TTimo nooo .. that would defeat the purpose
-		//rd_flush(rd_buffer);
-		//*rd_buffer = '\0';
 		return;
 	}
 
@@ -168,52 +162,25 @@ void FORMAT_PRINTF(1, 2) QDECL Com_Printf( const char *fmt, ... ) {
     CL_ConsolePrint( msg );
 #endif
 
-	// echo to dedicated console and early console
 	Sys_Print( msg );
 
-	// logfile
-	if ( com_logfile && com_logfile->integer ) {
-		// TTimo: only open the qconsole.log if the filesystem is in an initialized state
-		//   also, avoid recursing in the qconsole.log opening (i.e. if fs_debug is on)
+	if ( com_log && com_log->integer ) {
 		if ( logfile == FS_INVALID_HANDLE && FS_Initialized() && !opening_qconsole ) {
 			const char *logName = "qconsole.log";
-			int mode;
-
 			opening_qconsole = qtrue;
-
-			mode = com_logfile->integer - 1;
-
-			if ( mode & 2 )
-				logfile = FS_FOpenFileAppend( logName );
-			else
-				logfile = FS_FOpenFileWrite( logName );
+		    logfile = FS_FOpenFileAppend( logName );
 
 			if ( logfile != FS_INVALID_HANDLE ) {
-				struct tm *newtime;
-				time_t aclock;
-				char timestr[32];
-
-				time( &aclock );
-				newtime = localtime( &aclock );
-				strftime( timestr, sizeof( timestr ), "%a %b %d %X %Y", newtime );
-
-				Com_Printf( "logfile opened on %s\n", timestr );
-
-				if ( mode & 1 ) {
-					// force it to not buffer so we get valid
-					// data even if we are crashing
-					FS_ForceFlush( logfile );
-				}
+				Com_Printf( "Logging enabled\n" );
+				FS_ForceFlush( logfile );
 			} else {
-				Com_Printf( S_COLOR_YELLOW "Opening %s failed!\n", logName );
-				Cvar_Set( "logfile", "0" );
+				Com_Printf( S_COLOR_YELLOW "Logging failed\n" );
+				Cvar_Set( "log", "0" );
 			}
 
 			opening_qconsole = qfalse;
 		}
-		if ( logfile != FS_INVALID_HANDLE && FS_Initialized() ) {
-			FS_Write( msg, len, logfile );
-		}
+		if (logfile != FS_INVALID_HANDLE && FS_Initialized()) FS_Write( msg, len, logfile );
 	}
 }
 
@@ -1609,42 +1576,6 @@ static int com_pushedEventsHead = 0;
 static int com_pushedEventsTail = 0;
 static sysEvent_t com_pushedEvents[MAX_PUSHED_EVENTS];
 
-
-/*
-=================
-Com_InitJournaling
-=================
-*/
-static void Com_InitJournaling( void ) {
-	if ( !com_journal->integer ) {
-		return;
-	}
-
-	if ( com_journal->integer == 1 ) {
-		Com_Printf( "Journaling events\n" );
-		com_journalFile = FS_FOpenFileWrite( "journal.dat" );
-		com_journalDataFile = FS_FOpenFileWrite( "journaldata.dat" );
-	} else if ( com_journal->integer == 2 ) {
-		Com_Printf( "Replaying journaled events\n" );
-		FS_FOpenFileRead( "journal.dat", &com_journalFile, qtrue );
-		FS_FOpenFileRead( "journaldata.dat", &com_journalDataFile, qtrue );
-	}
-
-	if ( com_journalFile == FS_INVALID_HANDLE || com_journalDataFile == FS_INVALID_HANDLE ) {
-		Cvar_Set( "com_journal", "0" );
-		if ( com_journalFile != FS_INVALID_HANDLE ) {
-			FS_FCloseFile( com_journalFile );
-			com_journalFile = FS_INVALID_HANDLE;
-		}
-		if ( com_journalDataFile != FS_INVALID_HANDLE ) {
-			FS_FCloseFile( com_journalDataFile );
-			com_journalDataFile = FS_INVALID_HANDLE;
-		}
-		Com_Printf( "Couldn't open journal files\n" );
-	}
-}
-
-
 /*
 ========================================================================
 
@@ -1660,25 +1591,6 @@ static sysEvent_t			eventQue[ MAX_QUED_EVENTS ];
 static sysEvent_t			*lastEvent = eventQue + MAX_QUED_EVENTS - 1;
 static unsigned int			eventHead = 0;
 static unsigned int			eventTail = 0;
-
-static const char *Sys_EventName( sysEventType_t evType ) {
-
-	static const char *evNames[ SE_MAX ] = {
-		"SE_NONE",
-		"SE_KEY",
-		"SE_CHAR",
-		"SE_MOUSE",
-		"SE_JOYSTICK_AXIS",
-		"SE_CONSOLE"
-	};
-
-	if ( (unsigned)evType >= ARRAY_LEN( evNames ) ) {
-		return "SE_UNKNOWN";
-	} else {
-		return evNames[ evType ];
-	}
-}
-
 
 /*
 ================
@@ -1707,7 +1619,6 @@ void Sys_QueEvent( int evTime, sysEventType_t evType, int value, int value2, int
 	ev = &eventQue[ eventHead & MASK_QUED_EVENTS ];
 
 	if ( eventHead - eventTail >= MAX_QUED_EVENTS ) {
-		Com_Printf( "%s(type=%s,keys=(%i,%i),time=%i): overflow\n", __func__, Sys_EventName( evType ), value, value2, evTime );
 		// we are discarding an event, but don't leak memory
 		if ( ev->evPtr ) {
 			Z_Free( ev->evPtr );
@@ -1769,57 +1680,6 @@ static sysEvent_t Com_GetSystemEvent( void ) {
 	return ev;
 }
 
-
-/*
-=================
-Com_GetRealEvent
-=================
-*/
-static sysEvent_t Com_GetRealEvent( void ) {
-
-	// get or save an event from/to the journal file
-	if ( com_journalFile != FS_INVALID_HANDLE ) {
-		int			r;
-		sysEvent_t	ev;
-
-		if ( com_journal->integer == 2 ) {
-			Sys_SendKeyEvents();
-			r = FS_Read( &ev, sizeof(ev), com_journalFile );
-			if ( r != sizeof(ev) ) {
-				Com_Error( ERR_FATAL, "Error reading from journal file" );
-			}
-			if ( ev.evPtrLength ) {
-				ev.evPtr = Z_Malloc( ev.evPtrLength );
-				r = FS_Read( ev.evPtr, ev.evPtrLength, com_journalFile );
-				if ( r != ev.evPtrLength ) {
-					Com_Error( ERR_FATAL, "Error reading from journal file" );
-				}
-			}
-		} else {
-			ev = Com_GetSystemEvent();
-
-			// write the journal value out if needed
-			if ( com_journal->integer == 1 ) {
-				r = FS_Write( &ev, sizeof(ev), com_journalFile );
-				if ( r != sizeof(ev) ) {
-					Com_Error( ERR_FATAL, "Error writing to journal file" );
-				}
-				if ( ev.evPtrLength ) {
-					r = FS_Write( ev.evPtr, ev.evPtrLength, com_journalFile );
-					if ( r != ev.evPtrLength ) {
-						Com_Error( ERR_FATAL, "Error writing to journal file" );
-					}
-				}
-			}
-		}
-
-		return ev;
-	}
-
-	return Com_GetSystemEvent();
-}
-
-
 /*
 =================
 Com_InitPushEvent
@@ -1877,7 +1737,7 @@ static sysEvent_t Com_GetEvent( void ) {
 	if ( com_pushedEventsHead - com_pushedEventsTail > 0 ) {
 		return com_pushedEvents[ (com_pushedEventsTail++) & (MAX_PUSHED_EVENTS-1) ];
 	}
-	return Com_GetRealEvent();
+	return Com_GetSystemEvent();
 }
 
 
@@ -1961,88 +1821,9 @@ int Com_EventLoop( void ) {
 	return 0;	// never reached
 }
 
-
-/*
-================
-Com_Milliseconds
-
-Can be used for profiling, but will be journaled accurately
-================
-*/
 int Com_Milliseconds( void ) {
-
-	sysEvent_t	ev;
-
-	// get events and push them until we get a null event with the current time
-	do {
-		ev = Com_GetRealEvent();
-		if ( ev.evType != SE_NONE ) {
-			Com_PushEvent( &ev );
-		}
-	} while ( ev.evType != SE_NONE );
-
-	return ev.evTime;
+	return Sys_Milliseconds();
 }
-
-//============================================================================
-
-/*
-=============
-Com_Error_f
-
-Just throw a fatal error to
-test error shutdown procedures
-=============
-*/
-static void __attribute__((__noreturn__)) Com_Error_f (void) {
-	if ( Cmd_Argc() > 1 ) {
-		Com_Error( ERR_DROP, "Testing drop error" );
-	} else {
-		Com_Error( ERR_FATAL, "Testing fatal error" );
-	}
-}
-
-
-/*
-=============
-Com_Freeze_f
-
-Just freeze in place for a given number of seconds to test
-error recovery
-=============
-*/
-static void Com_Freeze_f( void ) {
-	int		s;
-	int		start, now;
-
-	if ( Cmd_Argc() != 2 ) {
-		Com_Printf( "freeze <seconds>\n" );
-		return;
-	}
-	s = atoi( Cmd_Argv(1) ) * 1000;
-
-	start = Com_Milliseconds();
-
-	while ( 1 ) {
-		now = Com_Milliseconds();
-		if ( now - start > s ) {
-			break;
-		}
-	}
-}
-
-
-/*
-=================
-Com_Crash_f
-
-A way to force a bus error for development reasons
-=================
-*/
-static void Com_Crash_f( void ) {
-	* ( volatile int * ) 0 = 0x12345678;
-}
-
 
 /*
 ==================
@@ -2051,11 +1832,9 @@ Com_ExecuteCfg
 For controlling environment variables
 ==================
 */
-static void Com_ExecuteCfg( void )
-{
+static void Com_ExecuteCfg( void ) {
 	Cbuf_ExecuteText(EXEC_NOW, "exec default.sbscript\n");
-	Cbuf_Execute(); // Always execute after exec to prevent text buffer overflowing
-
+	Cbuf_Execute();
 	Cbuf_ExecuteText(EXEC_NOW, "exec " CONFIG_CFG "\n");
 	Cbuf_Execute();
 	Cbuf_ExecuteText(EXEC_NOW, "exec autoexec.sbscript\n");
@@ -2528,7 +2307,6 @@ void Com_Init( char *commandLine ) {
 
 	// get the developer cvar set as early as possible
 	com_developer = Cvar_Get( "developer", "0", 0 );
-	com_journal = Cvar_Get( "journal", "0", 0 );
 	Cvar_Get( "sv_master1", "", CVAR_ARCHIVE );
 	Cvar_Get( "sv_master2", "", CVAR_ARCHIVE );
 	Cvar_Get( "sv_master3", "", CVAR_ARCHIVE );
@@ -2563,9 +2341,7 @@ void Com_Init( char *commandLine ) {
 
 	FS_InitFilesystem();
 
-	com_logfile = Cvar_Get( "logfile", "0", 0 );
-
-	Com_InitJournaling();
+	com_log = Cvar_Get( "log", "0", 0 );
 
 	Com_ExecuteCfg();
 
@@ -2607,12 +2383,6 @@ void Com_Init( char *commandLine ) {
 	Cvar_Get( "com_errorMessage", "", 0 );
 
 	gw_minimized = qfalse;
-
-	if ( com_developer->integer ) {
-		Cmd_AddCommand( "error", Com_Error_f );
-		Cmd_AddCommand( "crash", Com_Crash_f );
-		Cmd_AddCommand( "freeze", Com_Freeze_f );
-	}
 
 	Cmd_AddCommand( "quit", Com_Quit_f );
 	Cmd_AddCommand( "changeVectors", MSG_ReportChangeVectors_f );
@@ -2893,16 +2663,6 @@ static void Com_Shutdown( void ) {
 	if ( logfile != FS_INVALID_HANDLE ) {
 		FS_FCloseFile( logfile );
 		logfile = FS_INVALID_HANDLE;
-	}
-
-	if ( com_journalFile != FS_INVALID_HANDLE ) {
-		FS_FCloseFile( com_journalFile );
-		com_journalFile = FS_INVALID_HANDLE;
-	}
-
-	if ( com_journalDataFile != FS_INVALID_HANDLE ) {
-		FS_FCloseFile( com_journalDataFile );
-		com_journalDataFile = FS_INVALID_HANDLE;
 	}
 }
 

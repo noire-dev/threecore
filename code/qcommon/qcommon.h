@@ -939,7 +939,6 @@ static ID_INLINE unsigned int log2pad( unsigned int v, int roundup )
 extern	cvar_t	*com_developer;
 extern	cvar_t	*com_timescale;
 extern	cvar_t	*com_version;
-extern	cvar_t	*com_journal;
 extern	cvar_t	*com_cameraMode;
 extern 	cvar_t	*cl_selectedmod;
 extern 	cvar_t	*cl_changeqvm;
@@ -972,8 +971,6 @@ extern	qboolean	gw_active;
 #endif
 
 extern	qboolean	com_errorEntered;
-
-extern	fileHandle_t	com_journalDataFile;
 
 typedef enum {
 	TAG_FREE,

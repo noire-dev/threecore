@@ -24,12 +24,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #include "qcommon.h"
 #include "unzip.h"
 
-#define USE_PK3_CACHE
-#define USE_PK3_CACHE_FILE
-
-#define USE_HANDLE_CACHE
-#define MAX_CACHED_HANDLES 384
-
+#define MAX_CACHED_HANDLES  512
 #define MAX_ZPATH			256
 #define MAX_FILEHASH_SIZE	4096
 
@@ -56,24 +51,8 @@ typedef struct pack_s {
 
 	int				handleUsed;
 
-#ifdef USE_HANDLE_CACHE
 	struct pack_s	*next_h;						// double-linked list of unreferenced paks with open file handles
 	struct pack_s	*prev_h;
-#endif
-
-	// caching subsystem
-#ifdef USE_PK3_CACHE
-	unsigned int	namehash;
-	fileOffset_t	size;
-	fileTime_t		mtime;
-	fileTime_t		ctime;
-	qboolean		touched;
-	struct pack_s	*next;
-	struct pack_s	*prev;
-	int				checksumFeed;
-	int				*headerLongs;
-	int				numHeaderLongs;
-#endif
 } pack_t;
 
 typedef struct {
@@ -106,9 +85,6 @@ static  cvar_t          *fs_apppath;
 static	cvar_t		*fs_basepath;
 static	cvar_t		*fs_basegame;
 static	cvar_t		*fs_copyfiles;
-#ifndef USE_HANDLE_CACHE
-static	cvar_t		*fs_locked;
-#endif
 static	cvar_t		*fs_excludeReference;
 
 static	searchpath_t	*fs_searchpaths;
@@ -386,11 +362,6 @@ static void FS_CopyFile( const char *fromOSPath, const char *toOSPath ) {
 	byte	*buf;
 
 	Com_Printf( "copy %s to %s\n", fromOSPath, toOSPath );
-
-	if (strstr(fromOSPath, "journal.dat") || strstr(fromOSPath, "journaldata.dat")) {
-		Com_Printf( "Ignoring journal files\n");
-		return;
-	}
 
 	f = Sys_FOpen( fromOSPath, "rb" );
 	if ( !f ) {
@@ -796,8 +767,6 @@ void FS_Rename( const char *from, const char *to ) {
 	}
 }
 
-#ifdef USE_HANDLE_CACHE
-
 static int		hpaksCount;
 static pack_t	*hhead;
 
@@ -870,7 +839,6 @@ static void FS_AddToHandleList( pack_t *pak )
 	hhead = pak;
 	hpaksCount++;
 }
-#endif
 
 
 /*
@@ -900,11 +868,9 @@ void FS_FCloseFile( fileHandle_t f ) {
 		fd->handleFiles.file.z = NULL;
 		fd->zipFile = qfalse;
 		fd->pak->handleUsed--;
-#ifdef USE_HANDLE_CACHE
 		if ( fd->pak->handleUsed == 0 ) {
 			FS_AddToHandleList( fd->pak );
 		}
-#else
 		if ( !fs_locked->integer ) {
 			if ( fd->pak->handle && !fd->pak->handleUsed ) {
 				unzClose( fd->pak->handle );
@@ -1227,11 +1193,9 @@ static int FS_OpenFileInPak( fileHandle_t *file, pack_t *pak, fileInPack_t *pakF
 	fs_lastPakIndex = pak->index;
 	f->pak = pak;
 
-#ifdef USE_HANDLE_CACHE
 	if ( pak->next_h ) {
 		FS_RemoveFromHandleList( pak );
 	}
-#endif
 
 	pak->handleUsed++;
 
@@ -1786,72 +1750,14 @@ int FS_ReadFile( const char *qpath, void **buffer ) {
 	buf = NULL;	// quiet compiler warning
 	isConfig = qfalse;
 
-	// if this is a .sbscript file and we are playing back a journal, read
-	// it from the journal file
-	if ( com_journalDataFile != FS_INVALID_HANDLE && strstr( qpath, ".sbscript" ) ) {
-		if ( com_journal->integer == 2 ) {
-			int		r;
-
-			Com_DPrintf( "Loading %s from journal file.\n", qpath );
-			r = FS_Read( &len, sizeof( len ), com_journalDataFile );
-			if ( r != sizeof( len ) ) {
-				if (buffer != NULL) *buffer = NULL;
-				return -1;
-			}
-			// if the file didn't exist when the journal was created
-			if (!len) {
-				if (buffer == NULL) {
-					return 1;			// hack for old journal files
-				}
-				*buffer = NULL;
-				return -1;
-			}
-			if (buffer == NULL) {
-				return len;
-			}
-
-			buf = Hunk_AllocateTempMemory(len+1);
-			*buffer = buf;
-
-			r = FS_Read( buf, len, com_journalDataFile );
-			if ( r != len ) {
-				Com_Error( ERR_FATAL, "Read from journalDataFile failed" );
-			}
-
-			fs_loadCount++;
-			fs_loadStack++;
-
-			// guarantee that it will have a trailing 0 for string operations
-			buf[len] = '\0';
-
-			return len;
-		} else if ( com_journal->integer == 1 ) {
-			isConfig = qtrue;
-		}
-	}
-
 	// look for it in the filesystem or pack files
 	len = FS_FOpenFileRead( qpath, &h, qfalse );
 	if ( h == FS_INVALID_HANDLE ) {
-		if ( buffer ) {
-			*buffer = NULL;
-		}
-		// if we are journaling and it is a config file, write a zero to the journal file
-		if ( isConfig ) {
-			Com_DPrintf( "Writing zero for %s to journal file.\n", qpath );
-			len = 0;
-			FS_Write( &len, sizeof( len ), com_journalDataFile );
-			FS_Flush( com_journalDataFile );
-		}
+		if ( buffer ) *buffer = NULL;
 		return -1;
 	}
 
 	if ( !buffer ) {
-		if ( isConfig ) {
-			Com_DPrintf( "Writing len for %s to journal file.\n", qpath );
-			FS_Write( &len, sizeof( len ), com_journalDataFile );
-			FS_Flush( com_journalDataFile );
-		}
 		FS_FCloseFile( h );
 		return len;
 	}
@@ -1867,14 +1773,7 @@ int FS_ReadFile( const char *qpath, void **buffer ) {
 	// guarantee that it will have a trailing 0 for string operations
 	buf[ len ] = '\0';
 	FS_FCloseFile( h );
-
-	// if we are journaling and it is a config file, write it to the journal file
-	if ( isConfig ) {
-		Com_DPrintf( "Writing %s to journal file.\n", qpath );
-		FS_Write( &len, sizeof( len ), com_journalDataFile );
-		FS_Write( buf, len, com_journalDataFile );
-		FS_Flush( com_journalDataFile );
-	}
+	
 	return len;
 }
 
@@ -1986,609 +1885,6 @@ static void FS_ConvertFilename( char *name )
 	}
 }
 
-
-#ifdef USE_PK3_CACHE
-
-#define PK3_HASH_SIZE 512
-
-static void FS_FreePak( pack_t *pak );
-
-static pack_t *pakHashTable[ PK3_HASH_SIZE ];
-
-#ifdef USE_PK3_CACHE_FILE
-
-#define CACHE_FILE_NAME "pk3cache.dat"
-
-#define CACHE_SYNC_CONDITION ( fs_paksReaded + fs_paksSkipped + fs_paksReleased >= 8 )
-
-static int fs_paksCached;	// readed from cache file
-static int fs_paksSkipped;	// outdated/non-existent cache file pk3 entries
-
-static int fs_paksReaded;	// actually readed from the disk
-static int fs_paksReleased;	// unreferenced paks since last FS restart
-
-static qboolean fs_cacheLoaded = qfalse;
-static qboolean fs_cacheSynced = qtrue;
-
-#pragma pack( push, 1 )
-
-// platform-specific 4-byte signature:
-// 0: [version] anything following depends from it
-// 1: [endianess] 0 - LSB, 1 - MSB
-// 2: [path separation] '/' or '\\'
-// 3: [size of file offset and file time]
-// non-matching header will cause whole file being ignored
-static const byte cache_header[ 4 ] = {
-	0, //version
-#ifdef Q3_LITTLE_ENDIAN
-	0x0,
-#else
-	0x1,
-#endif
-	PATH_SEP,
-	( ( sizeof( fileOffset_t ) - 1 ) << 4 ) | ( sizeof( fileTime_t ) - 1 )
-};
-
-typedef struct pk3cacheHeader_s {
-	int pakNameLen;		// full path
-	int namesLen;
-	int numFiles;
-	int numHeaderLongs; // including first uninitialized
-	int contentLen;
-	fileTime_t ctime;	// creation/status change time
-	fileTime_t mtime;	// modification time
-	fileOffset_t size;	// zip file size
-} pk3cacheHeader_t;
-
-typedef struct pk3cacheFileItem_s {
-	unsigned long name; // offset in namebuffer
-	unsigned long size;
-	unsigned long pos;	// info position in pk3 file
-} pk3cacheFileItem_t;
-
-#pragma pack( pop )
-
-#endif // USE_PK3_CACHE_FILE
-
-
-static int FS_HashPK3( const char *name )
-{
-	unsigned int c, hash = 0;
-	while ( (c = *name++) != '\0' )
-	{
-		hash = hash * 101 + c;
-	}
-	hash = hash ^ (hash >> 16);
-	return hash & (PK3_HASH_SIZE-1);
-}
-
-
-static pack_t *FS_FindInCache( const char *zipfile )
-{
-	pack_t *pack;
-	unsigned int hash;
-
-	hash = FS_HashPK3( zipfile );
-	pack = pakHashTable[ hash ];
-	while ( pack )
-	{
-		if ( !strcmp( zipfile, pack->pakFilename ) )
-		{
-			return pack;
-		}
-		pack = pack->next;
-	}
-
-	return NULL;
-}
-
-
-static void FS_AddToCache( pack_t *pack )
-{
-	pack->namehash = FS_HashPK3( pack->pakFilename );
-	pack->next = pakHashTable[ pack->namehash ];
-	pack->prev = NULL;
-	if ( pakHashTable[ pack->namehash ] )
-		pakHashTable[ pack->namehash ]->prev = pack;
-	pakHashTable[ pack->namehash ] = pack;
-}
-
-
-static void FS_RemoveFromCache( pack_t *pack )
-{
-	if ( !pack->next && !pack->prev && pakHashTable[ pack->namehash ] != pack )
-	{
-		Com_Error( ERR_FATAL, "Invalid pak link" );
-	} 
-
-	if ( pack->prev != NULL )
-		pack->prev->next = pack->next;
-	else
-		pakHashTable[ pack->namehash ] = pack->next;
-
-	if ( pack->next != NULL )
-		pack->next->prev = pack->prev;
-}
-
-
-static pack_t *FS_LoadCachedPK3( const char *zipfile )
-{
-	fileOffset_t size;
-	fileTime_t mtime;
-	fileTime_t ctime;
-	pack_t *pak;
-
-	pak = FS_FindInCache( zipfile );
-	if ( pak == NULL )
-		return NULL;
-	
-	if ( !Sys_GetFileStats( zipfile, &size, &mtime, &ctime ) )
-	{
-		FS_RemoveFromCache( pak );
-		FS_FreePak( pak );
-		return NULL;
-	}
-
-	if ( pak->size != size || pak->mtime != mtime || pak->ctime != ctime )
-	{
-		// release outdated information
-		FS_RemoveFromCache( pak );
-		FS_FreePak( pak );
-		return NULL;
-	}
-
-	return pak;
-}
-
-
-static void FS_InsertPK3ToCache( pack_t *pak )
-{
-	if ( Sys_GetFileStats( pak->pakFilename, &pak->size, &pak->mtime, &pak->ctime ) )
-	{
-		FS_AddToCache( pak );
-		pak->touched = qtrue;
-	}
-}
-
-
-static void FS_ResetCacheReferences( void )
-{
-	pack_t *pak;
-	int i;
-	for ( i = 0; i < ARRAY_LEN( pakHashTable ); i++ )
-	{
-		pak = pakHashTable[ i ];
-		while ( pak )
-		{
-			pak->touched = qfalse;
-			pak->referenced = 0;
-			pak = pak->next;
-		}
-	}
-}
-
-
-static void FS_FreeUnusedCache( void )
-{
-	pack_t *next, *pak;
-	int i;
-
-	for ( i = 0; i < ARRAY_LEN( pakHashTable ); i++ )
-	{
-		pak = pakHashTable[ i ];
-		while ( pak ) 
-		{
-			next = pak->next;
-			if ( !pak->touched )
-			{
-				FS_RemoveFromCache( pak );
-				FS_FreePak( pak );
-#ifdef USE_PK3_CACHE_FILE
-				fs_paksReleased++;
-#endif
-			}
-			pak = next;
-		}
-	}
-}
-
-#ifdef USE_PK3_CACHE_FILE
-
-static void FS_WriteCacheHeader( FILE *f )
-{
-	fwrite( cache_header, sizeof( cache_header ), 1, f );
-}
-
-
-static qboolean FS_ValidateCacheHeader( FILE *f )
-{
-	byte buf[ sizeof(cache_header) ];
-
-	if ( fread( buf, sizeof( buf ), 1, f ) != 1 )
-		return qfalse;
-
-	if ( memcmp( buf, cache_header, sizeof( buf ) ) != 0 )
-		return qfalse;
-
-	return qtrue;
-}
-
-
-static qboolean FS_SavePackToFile( const pack_t *pak, FILE *f )
-{
-	const char *namePtr;
-	const char *pakName;
-	int i, pakNameLen;
-	pk3cacheHeader_t pk;
-	pk3cacheFileItem_t it;
-	int namesLen, contentLen;
-	
-	namePtr = (char*)(pak->buildBuffer + pak->numfiles);
-
-	pakName = pak->pakFilename;
-	pakNameLen = (int) strlen( pakName ) + 1;
-	pakNameLen = PAD( pakNameLen, sizeof( int ) );
-
-	namesLen = pakName - namePtr;
-
-	// file content length
-	contentLen = 0;
-
-	// pak filename length
-	pk.pakNameLen = pakNameLen;
-	// filenames length
-	pk.namesLen = namesLen;
-	// number of files
-	pk.numFiles = pak->numfiles;
-	// number of checksums
-	pk.numHeaderLongs = pak->numHeaderLongs;
-	// content of some files
-	pk.contentLen = contentLen;
-	// creation/status change time
-	pk.ctime = pak->ctime;
-	// modification time
-	pk.mtime = pak->mtime;
-	// pak file size
-	pk.size = pak->size;
-
-	// dump header
-	fwrite( &pk, sizeof( pk ), 1, f );
-
-	// pak filename
-	fwrite( pakName, pakNameLen, 1, f );
-
-	// filenames
-	fwrite( namePtr, namesLen, 1, f );
-
-	// file entries
-	for ( i = 0; i < pak->numfiles; i++ )
-	{
-		it.name = (unsigned long)(pak->buildBuffer[i].name - namePtr);
-		it.size = pak->buildBuffer[i].size;
-		it.pos = pak->buildBuffer[i].pos;
-		fwrite( &it, sizeof( it ), 1, f );
-	}
-
-	// pure checksums, excluding first uninitialized
-	fwrite( pak->headerLongs + 1, (pak->numHeaderLongs - 1) * sizeof( pak->headerLongs[0] ), 1, f );
-
-	return qtrue;
-}
-
-
-static qboolean FS_LoadPakFromFile( FILE *f )
-{
-	fileTime_t ctime, mtime;
-	fileOffset_t fsize;
-	fileInPack_t *curFile;
-	char pakName[ PAD( MAX_OSPATH*3+1, sizeof( int ) ) ];
-	char pakBase[ PAD( MAX_OSPATH, sizeof( int ) ) ], *basename;
-	char *filename_inzip;
-	pk3cacheHeader_t pk;
-	pk3cacheFileItem_t it;
-	pack_t *pack;
-	char *namePtr;
-	int size, i;
-	int pakBaseLen;
-	int hashSize;
-	long hash;
-
-	if ( fread( &pk, sizeof( pk ), 1, f ) != 1 )
-		return qfalse; // probably EOF
-
-	// validate header data
-
-	if ( pk.pakNameLen > sizeof( pakName ) || pk.pakNameLen & 3 || pk.pakNameLen == 0 )
-	{
-		//Com_Printf( "bad pakNameLen: %08X\n", pk.pakNameLen );
-		return qfalse;
-	}
-
-	if ( pk.namesLen & 3 || pk.namesLen < pk.numFiles )
-	{
-		//Com_Printf( "bad namesLen: %i\n", pk.namesLen );
-		return qfalse;
-	}
-
-	if ( pk.numHeaderLongs == 0 || pk.numHeaderLongs > pk.numFiles + 1 )
-	{
-		//Com_Printf( "bad numHeaderLongs: %i\n", pk.numHeaderLongs );
-		return qfalse;
-	}
-
-	if ( pk.contentLen & 3 || pk.contentLen < 0 )
-	{
-		//Com_Printf( "bad contentLen: %i\n", pk.contentLen );
-		return qfalse;
-	}
-
-	// load filename
-	if ( fread( pakName, pk.pakNameLen, 1, f ) != 1 )
-	{
-		//Com_Printf( "error reading pakname\n" );
-		return qfalse;
-	}
-
-	// pakName must be zero-terminated
-	if ( pakName[ pk.pakNameLen - 1 ] != '\0' )
-	{
-		//Com_Printf( "pakname is not zero-terminated!\n" );
-		return qfalse;
-	}
-
-	if ( !Sys_GetFileStats( pakName, &fsize, &mtime, &ctime ) || fsize != pk.size || mtime != pk.mtime || ctime != pk.ctime )
-	{
-		const int seek_len = pk.namesLen + pk.numFiles * sizeof( it ) + (pk.numHeaderLongs-1) * sizeof( pack->headerLongs[0] ) + pk.contentLen;
-		if ( fseek( f, seek_len, SEEK_CUR ) != 0 )
-		{
-			return qfalse;
-		}
-		else
-		{
-			fs_paksSkipped++;
-			return qtrue; // just outdated info, we can continue
-		}
-	}
-
-	// extract basename from zip path
-	basename = strrchr( pakName, PATH_SEP );
-	if ( basename == NULL )
-		basename = pakName;
-	else
-		basename++;
-
-	Q_strncpyz( pakBase, basename, sizeof( pakBase ) );
-	FS_StripExt( pakBase, ".pk3" );
-	pakBaseLen = (int) strlen( pakBase ) + 1;
-	pakBaseLen = PAD( pakBaseLen, sizeof( int ) );
-
-	hashSize = FS_PakHashSize( pk.numFiles );
-
-	size = sizeof( *pack ) + pk.namesLen + pk.numFiles * sizeof( pack->buildBuffer[0] );
-	size += hashSize * sizeof( pack->hashTable[0] );
-	size += pk.pakNameLen;
-	size += pakBaseLen;
-	size += pk.numHeaderLongs * sizeof( pack->headerLongs[0] );
-
-	pack = Z_TagMalloc( size, TAG_PACK );
-	Com_Memset( pack, 0, size );
-
-	pack->mtime = pk.mtime;
-	pack->ctime = pk.ctime;
-	pack->size = pk.size;
-
-//	pack->handle = uf;
-	pack->numfiles = pk.numFiles;
-	pack->numHeaderLongs = pk.numHeaderLongs;
-
-	// setup memory layout
-	pack->hashSize = hashSize;
-	pack->hashTable = (fileInPack_t **)( pack + 1 );
-
-	pack->buildBuffer = (fileInPack_t*)( pack->hashTable + pack->hashSize );
-
-	namePtr = (char*)( pack->buildBuffer + pack->numfiles );
-
-	pack->pakFilename = (char*)( namePtr + pk.namesLen );
-	pack->pakBasename = (char*)( pack->pakFilename + pk.pakNameLen );
-	pack->headerLongs = (int*)( pack->pakBasename + pakBaseLen );
-
-	strcpy( pack->pakFilename, pakName );
-	strcpy( pack->pakBasename, pakBase );
-
-	if ( fread( namePtr, pk.namesLen, 1, f ) != 1 )
-	{
-		//Com_Printf( "error reading pak filenames\n" );
-		goto __error;
-	}
-
-	// filenames buffer must be zero-terminated
-	if ( namePtr[ pk.namesLen - 1 ] != '\0' )
-	{
-		//Com_Printf( "not zero terminated filenames\n" );
-		goto __error;
-	}
-
-	curFile = pack->buildBuffer;
-	for ( i = 0; i < pk.numFiles; i++ )
-	{
-		if ( fread( &it, sizeof( it ), 1, f ) != 1 )
-		{
-			//Com_Printf( "error reading file item[%i]\n", i );
-			goto __error;
-		}
-		if ( it.name >= pk.namesLen )
-		{
-			//Com_Printf( "bad name offset: %i (expecting less than %i)\n", it.name, pk.namesLen );
-			goto __error;
-		}
-
-		filename_inzip = namePtr + it.name;
-		FS_ConvertFilename( filename_inzip );
-		if ( !FS_BannedPakFile( filename_inzip ) ) {
-			// store the file position in the zip
-			curFile->name = filename_inzip;
-			curFile->size = it.size;
-			curFile->pos = it.pos;
-
-			// update hash table
-			hash = FS_HashFileName( filename_inzip, pack->hashSize );
-			curFile->next = pack->hashTable[ hash ];
-			pack->hashTable[ hash ] = curFile;
-			curFile++;
-		} else {
-			pack->numfiles--;
-		}
-	}
-
-	if ( fread( pack->headerLongs + 1, ( pack->numHeaderLongs - 1 ) * sizeof( pack->headerLongs[0] ), 1, f ) != 1 )
-	{
-		//Com_Printf( "error reading headerLongs\n" );
-		goto __error;
-	}
-
-	pack->checksumFeed = fs_checksumFeed;
-	pack->headerLongs[ 0 ] = LittleLong( fs_checksumFeed );
-
-	pack->checksum = Com_BlockChecksum( pack->headerLongs + 1, sizeof( pack->headerLongs[0] ) * ( pack->numHeaderLongs - 1 ) );
-	pack->checksum = LittleLong( pack->checksum );
-
-	// seek through unused content
-	if ( pk.contentLen > 0 )
-	{
-		if ( fseek( f, pk.contentLen, SEEK_CUR ) != 0 )
-			goto __error;
-	}
-	else if ( pk.contentLen < 0 )
-	{
-		goto __error;
-	}
-
-	fs_paksCached++;
-
-	FS_InsertPK3ToCache( pack );
-
-	return qtrue;
-
-__error:
-	FS_FreePak( pack );
-	return qfalse;
-}
-
-
-/*
-============
-FS_SaveCache
-
-Called at the end of FS_Startup() after releasing unused paks
-============
-*/
-static qboolean FS_SaveCache( void )
-{
-	const char *filename = CACHE_FILE_NAME;
-	const char *ospath;
-	const searchpath_t *sp;
-	FILE *f;
-
-	if ( !fs_searchpaths )
-		return qfalse;
-
-	if ( !fs_cacheLoaded )
-	{
-		Com_DPrintf( "synced FS cache on startup\n" );
-		fs_cacheSynced = qfalse;
-		fs_cacheLoaded = qtrue;
-	}
-	else if ( CACHE_SYNC_CONDITION )
-	{
-		Com_DPrintf( "synced FS cache on readed=%i, released=%i, skipped=%i\n",
-			fs_paksReaded, fs_paksReleased, fs_paksSkipped );
-		fs_cacheSynced = qfalse;
-	}
-
-	if ( fs_cacheSynced )
-		return qtrue;
-
-	sp = fs_searchpaths;
-
-	ospath = FS_BuildOSPath( fs_homepath->string, filename, NULL );
-
-	f = Sys_FOpen( ospath, "wb" );
-	if ( f == NULL )
-		return qfalse;
-
-	FS_WriteCacheHeader( f );
-
-	while ( sp != NULL )
-	{
-		if ( sp->pack )
-		{
-			FS_SavePackToFile( sp->pack, f );
-		}
-		sp = sp->next;
-	}
-
-	fclose( f );
-
-	fs_paksReleased = 0;
-	fs_paksSkipped = 0;
-	fs_paksReaded = 0;
-
-	fs_cacheSynced = qtrue;
-
-	return qtrue;
-}
-
-
-/*
-============
-FS_LoadCache
-
-Called at FS_Startup() before loading any pk3 file
-============
-*/
-static void FS_LoadCache( void )
-{
-	const char *filename = CACHE_FILE_NAME;
-	const char *ospath;
-	FILE *f;
-
-	fs_paksReaded = 0;
-	fs_paksReleased = 0;
-
-	if ( fs_cacheLoaded )
-		return;
-
-	fs_paksCached = 0;
-	fs_paksSkipped = 0;
-
-	ospath = FS_BuildOSPath( fs_homepath->string, filename, NULL );
-
-	f = Sys_FOpen( ospath, "rb" );
-	if ( f == NULL )
-		return;
-
-	if ( !FS_ValidateCacheHeader( f ) )
-	{
-		fclose( f );
-		return;
-	}
-
-	while ( FS_LoadPakFromFile( f ) )
-		;
-
-	fclose( f );
-
-	fs_cacheLoaded = qtrue;
-
-	Com_Printf( "...found %i cached paks\n", fs_paksCached );
-}
-
-#endif // USE_PK3_CACHE_FILE
-
-#endif // USE_PK3_CACHE
-
-
 /*
 =================
 FS_LoadZipFile
@@ -2615,22 +1911,6 @@ static pack_t *FS_LoadZipFile( const char *zipfile )
 	const char		*basename;
 	int				fileNameLen;
 	int				baseNameLen;
-
-#ifdef USE_PK3_CACHE
-	pack = FS_LoadCachedPK3( zipfile );
-	if ( pack )
-	{
-		// update pure checksum
-		if ( pack->checksumFeed != fs_checksumFeed )
-		{
-			pack->headerLongs[ 0 ] = LittleLong( fs_checksumFeed );
-			pack->checksumFeed = fs_checksumFeed;
-		}
-
-		pack->touched = qtrue;
-		return pack; // loaded from cache
-	}
-#endif
 
 	// extract basename from zip path
 	basename = strrchr( zipfile, PATH_SEP );
@@ -2683,9 +1963,7 @@ static pack_t *FS_LoadZipFile( const char *zipfile )
 	size = sizeof( *pack ) + hashSize * sizeof( pack->hashTable[0] ) + filecount * sizeof( pack->buildBuffer[0] ) + namelen;
 	size += PAD( fileNameLen, sizeof( int ) );
 	size += PAD( baseNameLen, sizeof( int ) );
-#ifdef USE_PK3_CACHE
-	size += ( filecount + 1 ) * sizeof( fs_headerLongs[0] );
-#endif
+
 	pack = Z_TagMalloc( size, TAG_PACK );
 	Com_Memset( pack, 0, size );
 
@@ -2700,11 +1978,7 @@ static pack_t *FS_LoadZipFile( const char *zipfile )
 	pack->pakFilename = (char*)( namePtr + namelen );
 	pack->pakBasename = (char*)( pack->pakFilename + PAD( fileNameLen, sizeof( int ) ) );
 
-#ifdef USE_PK3_CACHE
-	fs_headerLongs = (int*)( pack->pakBasename + PAD( baseNameLen, sizeof( int ) ) );
-#else
 	fs_headerLongs = Z_Malloc( ( filecount + 1 ) * sizeof( fs_headerLongs[0] ) );
-#endif
 
 	fs_numHeaderLongs = 0;
 	fs_headerLongs[ fs_numHeaderLongs++ ] = LittleLong( fs_checksumFeed );
@@ -2756,30 +2030,9 @@ static pack_t *FS_LoadZipFile( const char *zipfile )
 	pack->checksum = Com_BlockChecksum( fs_headerLongs + 1, sizeof( fs_headerLongs[0] ) * ( fs_numHeaderLongs - 1 ) );
 	pack->checksum = LittleLong( pack->checksum );
 
-#ifdef USE_PK3_CACHE
-	pack->headerLongs = fs_headerLongs;
-	pack->numHeaderLongs = fs_numHeaderLongs;
-	pack->checksumFeed = fs_checksumFeed;
-#else
 	Z_Free( fs_headerLongs );
-#endif
 
-#ifdef USE_HANDLE_CACHE
 	FS_AddToHandleList( pack );
-#else
-	if ( fs_locked->integer == 0 )
-	{
-		unzClose( pack->handle );
-		pack->handle = NULL;
-	}
-#endif
-
-#ifdef USE_PK3_CACHE
-	FS_InsertPK3ToCache( pack );
-#ifdef USE_PK3_CACHE_FILE
-	fs_paksReaded++;
-#endif
-#endif
 
 	return pack;
 }
@@ -2796,10 +2049,7 @@ static void FS_FreePak( pack_t *pak )
 {
 	if ( pak->handle )
 	{
-#ifdef USE_HANDLE_CACHE
-		if ( pak->next_h )
-			FS_RemoveFromHandleList( pak );
-#endif
+		if ( pak->next_h ) FS_RemoveFromHandleList( pak );
 		unzClose( pak->handle );
 		pak->handle = NULL;
 	}
@@ -2826,10 +2076,8 @@ qboolean FS_CompareZipChecksum(const char *zipfile)
 		return qfalse;
 	
 	checksum = thepak->checksum;
-#ifndef USE_PK3_CACHE
 	FS_FreePak(thepak);
-#endif
-	
+
 	for(index = 0; index < fs_numServerReferencedPaks; index++)
 	{
 		if(checksum == fs_serverReferencedPaks[index])
@@ -2856,9 +2104,7 @@ int FS_GetZipChecksum( const char *zipfile )
 		return 0xFFFFFFFF;
 	
 	checksum = pak->checksum;
-#ifndef USE_PK3_CACHE
 	FS_FreePak( pak );
-#endif
 
 	return checksum;
 } 
@@ -3998,10 +3244,6 @@ void FS_Shutdown( qboolean closemfp )
 
 	if ( fs_searchpaths ) Com_WriteConfiguration();
 
-#ifdef USE_PK3_CACHE
-	FS_ResetCacheReferences();
-#endif
-
 	// free everything
 	for( p = fs_searchpaths; p; p = next )
 	{
@@ -4009,14 +3251,7 @@ void FS_Shutdown( qboolean closemfp )
 
 		if ( p->pack )
 		{
-#ifdef USE_PK3_CACHE
-#ifdef USE_HANDLE_CACHE
-			if ( p->pack->next_h )
-				FS_RemoveFromHandleList( p->pack );
-#endif
-#else
 			FS_FreePak( p->pack );
-#endif
 			p->pack = NULL;
 		}
 
@@ -4115,10 +3350,6 @@ static void FS_Startup( void ) {
 
 	if ( fs_basegame->string[0] == '\0' ) Com_Error( ERR_FATAL, "* fs_basegame is not set *" );
 
-#ifndef USE_HANDLE_CACHE
-	fs_locked = Cvar_Get( "fs_locked", "0", 0 );
-#endif
-
 	homePath = Sys_DefaultHomePath();
 	if ( homePath == NULL || homePath[0] == '\0' ) {
 		homePath = fs_basepath->string;
@@ -4128,12 +3359,6 @@ static void FS_Startup( void ) {
 	fs_excludeReference = Cvar_Get( "fs_excludeReference", "", CVAR_ARCHIVE | CVAR_LATCH );
 
 	start = Sys_Milliseconds();
-
-#ifdef USE_PK3_CACHE
-#ifdef USE_PK3_CACHE_FILE
-	FS_LoadCache();
-#endif
-#endif
 
 	if (fs_basepath->string[0])
 		FS_AddGameDirectory( fs_basepath->string, fs_basegame->string );
@@ -4176,13 +3401,6 @@ static void FS_Startup( void ) {
 	if (missingFiles == NULL) {
 		missingFiles = Sys_FOpen( "\\missing.txt", "ab" );
 	}
-#endif
-
-#ifdef USE_PK3_CACHE
-	FS_FreeUnusedCache();
-#ifdef USE_PK3_CACHE_FILE
-	FS_SaveCache();
-#endif
 #endif
 }
 
