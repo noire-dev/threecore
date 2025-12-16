@@ -426,8 +426,6 @@ static void CL_ParseGamestate( msg_t *msg ) {
 	const char		*s;
 	const char 		*info, *mapname;	//for client switching
 
-	Con_Close();
-
 	clc.connectPacketCount = 0;
 
 	Com_Memset( &nullstate, 0, sizeof( nullstate ) );

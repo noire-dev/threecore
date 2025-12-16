@@ -206,10 +206,6 @@ rescan:
 	}
 
 	if(!strcmp(cmd, "map_restart")) {
-		// clear notify lines and outgoing commands before passing
-		// the restart to the cgame
-		Con_ClearNotify();
-		// reparse the string, because Con_ClearNotify() may have done another Cmd_TokenizeString()
 		Cmd_TokenizeString(s);
 		Com_Memset(cl.cmds, 0, sizeof(cl.cmds));
 		cls.lastVidRestart = Sys_Milliseconds();  // hack for OSP mod
@@ -293,7 +289,6 @@ void CL_InitCGame(void) {
 
 	Cbuf_NestedReset();
 	t1 = Sys_Milliseconds();
-	Con_Close();
 
 	cgvm = VM_Create(VM_CGAME, CL_CgameSystemCalls);
 	if(!cgvm) Com_Error(ERR_DROP, "VM_Create on cgame failed");
@@ -311,8 +306,6 @@ void CL_InitCGame(void) {
 	Com_Printf("CL_InitCGame: %5.2f seconds\n", (t2 - t1) / 1000.0);
 
 	if(!Sys_LowPhysicalMemory()) Com_TouchMemory();
-
-	Con_ClearNotify();
 
 	cls.lastVidRestart = Sys_Milliseconds();
 }

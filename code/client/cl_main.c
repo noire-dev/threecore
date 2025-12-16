@@ -693,9 +693,6 @@ static void CL_PlayDemo_f( void ) {
 
 	Q_strncpyz( clc.demoName, shortname, sizeof( clc.demoName ) );
 
-	Con_Close();
-
-	cls.state = CA_CONNECTED;
 	clc.demoplaying = qtrue;
 	Q_strncpyz( cls.servername, shortname, sizeof( cls.servername ) );
 
@@ -799,8 +796,7 @@ void CL_MapLoading( void ) {
 	if ( !com_cl_running->integer ) {
 		return;
 	}
-
-	Con_Close();
+	
 	Key_SetCatcher( 0 );
 
 	// if we are already connected to the local host, stay connected
@@ -1139,7 +1135,6 @@ static void CL_Connect_f( void ) {
 	SV_Frame( 0 );
 
 	CL_Disconnect( qtrue );
-	Con_Close();
 
 	Q_strncpyz( cls.servername, server, sizeof( cls.servername ) );
 
