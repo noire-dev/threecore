@@ -879,14 +879,6 @@ portable_samplepair_t *S_GetRawSamplePointer( void )
 	return s_rawsamples;
 }
 
-
-/*
-============
-S_RawSamples
-
-Music streaming
-============
-*/
 static void S_Base_RawSamples( int samples, int rate, int width, int n_channels, const byte *data, float volume ) {
 	int		i;
 	int		src, dst;
@@ -900,7 +892,6 @@ static void S_Base_RawSamples( int samples, int rate, int width, int n_channels,
 	intVolume = 256 * volume;
 
 	if ( s_rawend - s_soundtime < 0 ) {
-		Com_DPrintf( "S_RawSamples: resetting minimum: %i < %i\n", s_rawend, s_soundtime );
 		s_rawend = s_soundtime;
 	}
 
@@ -975,10 +966,6 @@ static void S_Base_RawSamples( int samples, int rate, int width, int n_channels,
 			s_rawsamples[dst].left = (((byte *)data)[src]-128) * intVolume;
 			s_rawsamples[dst].right = (((byte *)data)[src]-128) * intVolume;
 		}
-	}
-
-	if ( s_rawend - s_soundtime > MAX_RAW_SAMPLES ) {
-		Com_DPrintf( "S_RawSamples: overflowed %i > %i\n", s_rawend, s_soundtime );
 	}
 }
 
@@ -1359,8 +1346,7 @@ static void S_UpdateBackgroundTrack( void ) {
 		if ( r > 0 )
 		{
 			// add to raw buffer
-			S_Base_RawSamples( fileSamples, s_backgroundStream->info.rate,
-				s_backgroundStream->info.width, s_backgroundStream->info.channels, raw, s_musicVolume->value );
+			S_Base_RawSamples( fileSamples, s_backgroundStream->info.rate, s_backgroundStream->info.width, s_backgroundStream->info.channels, raw, s_musicVolume->value );
 		}
 		else
 		{
@@ -1510,7 +1496,6 @@ qboolean S_Base_Init( soundInterface_t *si ) {
 	si->StartLocalSound = S_Base_StartLocalSound;
 	si->StartBackgroundTrack = S_Base_StartBackgroundTrack;
 	si->StopBackgroundTrack = S_Base_StopBackgroundTrack;
-	si->RawSamples = S_Base_RawSamples;
 	si->StopAllSounds = S_Base_StopAllSounds;
 	si->ClearLoopingSounds = S_Base_ClearLoopingSounds;
 	si->AddLoopingSound = S_Base_AddLoopingSound;

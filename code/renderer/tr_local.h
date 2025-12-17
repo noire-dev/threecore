@@ -976,7 +976,6 @@ typedef struct {
 
 	shader_t				*defaultShader;
 	shader_t				*whiteShader;
-	shader_t				*cinematicShader;
 
 	shader_t				*sunShader;
 
@@ -1214,9 +1213,6 @@ void	GL_Cull( cullType_t cullType );
 #define CLS_COLOR_ARRAY							0x00000001
 #define CLS_TEXCOORD_ARRAY						0x00000002
 #define CLS_NORMAL_ARRAY						0x00000004
-
-void		RE_StretchRaw( int x, int y, int w, int h, int cols, int rows, byte *data, int client, qboolean dirty );
-void		RE_UploadCinematic( int w, int h, int cols, int rows, byte *data, int client, qboolean dirty );
 
 void		RE_BeginFrame( void );
 void		RE_BeginRegistration( glconfig_t *glconfig );

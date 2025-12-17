@@ -808,7 +808,6 @@ void CL_MapLoading( void ) {
 		cls.framecount++;
 		SCR_UpdateScreen();
 	} else {
-		// clear nextmap so the cinematic shutdown doesn't execute it
 		Cvar_Set( "nextmap", "" );
 		CL_Disconnect( qtrue );
 		Q_strncpyz( cls.servername, "localhost", sizeof(cls.servername) );
@@ -863,7 +862,7 @@ static void CL_UpdateGUID( const char *prefix, int prefix_len )
 =====================
 CL_Disconnect
 
-Called when a connection, demo, or cinematic is being terminated.
+Called when a connection or demo is being terminated.
 Goes from a connected state to either a menu state or a console state
 Sends a disconnect message to the server
 This is also called on Com_Error and Com_Quit, so it shouldn't cause any errors
@@ -914,7 +913,6 @@ qboolean CL_Disconnect( qboolean showMainMenu ) {
 		CL_ShutdownCGame();
 	}
 
-	SCR_StopCinematic();
 	//S_StopAllSounds();
 	Key_ClearStates();
 
@@ -932,7 +930,7 @@ qboolean CL_Disconnect( qboolean showMainMenu ) {
 
 	// send a disconnect message to the server
 	// send it a few times in case one is dropped
-	if ( cls.state >= CA_CONNECTED && cls.state != CA_CINEMATIC && !clc.demoplaying ) {
+	if ( cls.state >= CA_CONNECTED && !clc.demoplaying ) {
 		CL_AddReliableCommand( "disconnect", qtrue );
 		CL_WritePacket( 2 );
 	}
@@ -1020,9 +1018,8 @@ CL_Disconnect_f
 ==================
 */
 void CL_Disconnect_f( void ) {
-	SCR_StopCinematic();
 	Cvar_Set( "cl_changeqvm", "0" );
-	if ( cls.state != CA_DISCONNECTED && cls.state != CA_CINEMATIC ) {
+	if ( cls.state != CA_DISCONNECTED ) {
 		if ( (uivm && uivm->callLevel) || (cgvm && cgvm->callLevel) ) {
 			Com_Error( ERR_DISCONNECT, "Disconnected from server" );
 		} else {
@@ -1285,7 +1282,7 @@ static void CL_Vid_Restart( refShutdownCode_t shutdownCode ) {
 	CL_StartHunkUsers();
 
 	// start the cgame if connected
-	if ( ( cls.state > CA_CONNECTED && cls.state != CA_CINEMATIC ) || cls.startCgame ) {
+	if ( cls.state > CA_CONNECTED || cls.startCgame ) {
 		cls.cgameStarted = qtrue;
 		CL_InitCGame();
 	}
@@ -2124,9 +2121,7 @@ static void CL_CheckTimeout( void ) {
 	//
 	// check timeout
 	//
-	if ( ( !CL_CheckPaused() || !sv_paused->integer )
-		&& cls.state >= CA_CONNECTED && cls.state != CA_CINEMATIC
-		&& cls.realtime - clc.lastPacketTime > cl_timeout->integer * 1000 ) {
+	if ( ( !CL_CheckPaused() || !sv_paused->integer ) && cls.state >= CA_CONNECTED && cls.realtime - clc.lastPacketTime > cl_timeout->integer * 1000 ) {
 		if ( ++cl.timeoutcount > 5 ) { // timeoutcount saves debugger
 			Com_Printf( "\nServer connection timed out.\n" );
 			Cvar_Set( "com_errorMessage", "Server connection timed out." );
@@ -2262,9 +2257,6 @@ void CL_Frame( int msec, int realMsec ) {
 
 	// update audio
 	S_Update( realMsec );
-
-	// advance local effects for next frame
-	SCR_RunCinematic();
 }
 
 
@@ -3228,7 +3220,6 @@ void CL_Init( void ) {
 	Cmd_SetCommandCompletionFunc( "record", CL_CompleteRecordName );
 	Cmd_AddCommand ("demo", CL_PlayDemo_f);
 	Cmd_SetCommandCompletionFunc( "demo", CL_CompleteDemoName );
-	Cmd_AddCommand ("cinematic", CL_PlayCinematic_f);
 	Cmd_AddCommand ("stoprecord", CL_StopRecord_f);
 	Cmd_AddCommand ("connect", CL_Connect_f);
 	Cmd_AddCommand ("localservers", CL_LocalServers_f);
@@ -3299,7 +3290,6 @@ void CL_Shutdown( const char *finalmsg, qboolean quit ) {
 	Cmd_RemoveCommand ("disconnect");
 	Cmd_RemoveCommand ("record");
 	Cmd_RemoveCommand ("demo");
-	Cmd_RemoveCommand ("cinematic");
 	Cmd_RemoveCommand ("stoprecord");
 	Cmd_RemoveCommand ("connect");
 	Cmd_RemoveCommand ("localservers");

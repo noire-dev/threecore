@@ -154,7 +154,7 @@ void CL_InitUI(void) {
 	if(!uivm) Com_Error(ERR_DROP, "VM_Create on UI failed");
 
 	// init for this gamestate
-	VM_Call(uivm, 1, UI_INIT, (cls.state >= CA_AUTHORIZING && cls.state < CA_ACTIVE));
+	VM_Call(uivm, 1, UI_INIT, (cls.state >= CA_CONNECTING && cls.state < CA_ACTIVE));
 }
 
 qboolean UI_GameCommand(void) {

@@ -616,7 +616,7 @@ static qboolean CL_ReadyToSendPacket( void ) {
 	int		delta;
 
 	// don't send anything if playing back a demo
-	if ( clc.demoplaying || cls.state == CA_CINEMATIC ) {
+	if ( clc.demoplaying ) {
 		return qfalse;
 	}
 
@@ -687,7 +687,7 @@ void CL_WritePacket( int repeat ) {
 	int			count, key;
 
 	// don't send anything if playing back a demo
-	if ( clc.demoplaying || cls.state == CA_CINEMATIC ) {
+	if ( clc.demoplaying ) {
 		return;
 	}
 
@@ -775,7 +775,7 @@ void CL_WritePacket( int repeat ) {
 	MSG_WriteByte( &buf, clc_EOF );
 
 	if ( buf.overflowed ) {
-		if ( cls.state >= CA_CONNECTED && cls.state != CA_CINEMATIC ) {
+		if ( cls.state >= CA_CONNECTED ) {
 			cls.state = CA_CONNECTING; // to avoid recursive error
 		}
 		Com_Error( ERR_DROP, "%s: message overflowed", __func__ );

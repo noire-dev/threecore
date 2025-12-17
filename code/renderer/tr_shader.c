@@ -3223,14 +3223,6 @@ static void CreateInternalShaders( void ) {
 	stages[0].rgbGen = CGEN_EXACT_VERTEX;
 	stages[0].stateBits = GLS_DEPTHTEST_DISABLE | GLS_SRCBLEND_SRC_ALPHA | GLS_DSTBLEND_ONE_MINUS_SRC_ALPHA;
 	tr.whiteShader = FinishShader();
-
-	InitShader( "<cinematic>", LIGHTMAP_NONE );
-	stages[0].bundle[0].image[0] = tr.defaultImage; // will be updated by specific cinematic images
-	stages[0].bundle[0].tcGen = TCGEN_TEXTURE;
-	stages[0].active = qtrue;
-	stages[0].rgbGen = CGEN_IDENTITY_LIGHTING;
-	stages[0].stateBits = GLS_DEPTHTEST_DISABLE;
-	tr.cinematicShader = FinishShader();
 }
 
 

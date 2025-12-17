@@ -1109,12 +1109,6 @@ static void R_CreateBuiltinImages( void ) {
 
 	tr.identityLightImage = R_CreateImage( "*identityLight", NULL, (byte *)data, 8, 8, IMGFLAG_NONE );
 
-	//for ( x = 0; x < ARRAY_LEN( tr.scratchImage ); x++ ) {
-		// scratchimage is usually used for cinematic drawing
-		//tr.scratchImage[x] = R_CreateImage( "*scratch", NULL, DEFAULT_SIZE, DEFAULT_SIZE,
-		//	IMGFLAG_PICMIP | IMGFLAG_CLAMPTOEDGE | IMGFLAG_RGB );
-	//}
-
 	R_CreateDlightImage();
 	R_CreateFogImage();
 }

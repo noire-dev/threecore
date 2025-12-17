@@ -52,9 +52,6 @@ static void CL_KeyDownEvent( int key, unsigned time )
 		return;
 	}
 
-	// keys can still be used for bound actions
-	if ( ( key < 128 || key == K_MOUSE1 ) && cls.state == CA_CINEMATIC && Key_GetCatcher() == 0 ) key = K_ESCAPE;
-
 	// escape is always handled special
 	if ( key == K_ESCAPE ) {
 		// escape always gets out of CGAME stuff
@@ -70,9 +67,7 @@ static void CL_KeyDownEvent( int key, unsigned time )
 			else if ( cls.state != CA_DISCONNECTED ) {
 				Cmd_Clear();
 				Cvar_Set( "com_errorMessage", "" );
-				if ( cls.state == CA_CINEMATIC ) {
-					SCR_StopCinematic();
-				} else if ( !CL_Disconnect( qfalse ) ) { // restart client if not done already
+				if ( !CL_Disconnect( qfalse ) ) { // restart client if not done already
 					CL_FlushMemory();
 				}
 				VM_Call( uivm, 1, UI_SET_ACTIVE_MENU, UIMENU_MAIN );

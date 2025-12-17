@@ -30,11 +30,6 @@ void S_StartLocalSound( sfxHandle_t sfx, int channelNum );
 
 void S_StartBackgroundTrack( const char *intro, const char *loop );
 
-// cinematics and voice-over-network will send raw samples
-// 1.0 volume will be direct output of source samples
-void S_RawSamples (int samples, int rate, int width, int channels, 
-				   const byte *data, float volume);
-
 // stop all sounds and the background track
 void S_StopAllSounds( void );
 
