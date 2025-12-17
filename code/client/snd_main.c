@@ -104,6 +104,14 @@ void S_StartBackgroundTrack( const char *intro, const char *loop )
 	}
 }
 
+void S_RawSamples (int samples, int rate, int width, int channels,
+		   const byte *data, float volume)
+{
+	if( si.RawSamples ) {
+		si.RawSamples( samples, rate, width, channels, data, volume );
+	}
+}
+
 /*
 =================
 S_StopAllSounds
