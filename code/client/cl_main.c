@@ -692,6 +692,7 @@ static void CL_PlayDemo_f( void ) {
 
 	Q_strncpyz( clc.demoName, shortname, sizeof( clc.demoName ) );
 
+    cls.state = CA_CONNECTED;
 	clc.demoplaying = qtrue;
 	Q_strncpyz( cls.servername, shortname, sizeof( cls.servername ) );
 
@@ -2421,21 +2422,6 @@ CL_IsMinimized
 static qboolean CL_IsMininized( void ) {
 	return gw_minimized;
 }
-
-
-/*
-============
-CL_SetScaling
-
-Sets console chars height
-============
-*/
-static void CL_SetScaling( float factor, int captureWidth, int captureHeight ) {
-	// set custom capture resolution
-	cls.captureWidth = captureWidth;
-	cls.captureHeight = captureHeight;
-}
-
 
 /*
 ============

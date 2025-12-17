@@ -179,8 +179,7 @@ typedef struct {
 	void	(*CL_LoadJPG)( const char *filename, unsigned char **pic, int *width, int *height );
 
 	qboolean (*CL_IsMinimized)( void );
-	void	(*CL_SetScaling)( float factor, int captureWidth, int captureHeight );
-
+	
 	void	(*Sys_SetClipboardBitmap)( const byte *bitmap, int size );
 	qboolean(*Sys_LowPhysicalMemory)( void );
 

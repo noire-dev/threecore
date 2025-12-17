@@ -99,7 +99,6 @@ cvar_t	*r_ext_max_anisotropy;
 cvar_t	*r_ignoreGLErrors;
 
 cvar_t	*r_ext_multisample;
-cvar_t	*r_ext_supersample;
 
 cvar_t	*r_colorMipLevels;
 cvar_t	*r_picmip;
@@ -503,19 +502,9 @@ static void InitOpenGL( void )
 		gls.captureWidth = glConfig.vidWidth;
 		gls.captureHeight = glConfig.vidHeight;
 
-		ri.CL_SetScaling( 1.0, gls.captureWidth, gls.captureHeight );
-
 		if ( r_modernMode->integer && qglGenProgramsARB && qglGenFramebuffers ) {
 			gls.captureWidth = glConfig.vidWidth;
 			gls.captureHeight = glConfig.vidHeight;
-
-			ri.CL_SetScaling( 1.0, gls.captureWidth, gls.captureHeight );
-
-			if ( r_ext_supersample->integer ) {
-				glConfig.vidWidth *= 2;
-				glConfig.vidHeight *= 2;
-				ri.CL_SetScaling( 2.0, gls.captureWidth, gls.captureHeight );
-			}
 		}
 
 		QGL_InitARB();
@@ -1230,7 +1219,6 @@ static void R_Register( void ) {
 	r_ext_texture_filter_anisotropic = ri.Cvar_Get( "r_ext_texture_filter_anisotropic",	"1", CVAR_ARCHIVE | CVAR_LATCH );
 	r_ext_max_anisotropy = ri.Cvar_Get( "r_ext_max_anisotropy", "8", CVAR_ARCHIVE | CVAR_LATCH );
 	r_ignorehwgamma = ri.Cvar_Get( "r_ignorehwgamma", "0", CVAR_ARCHIVE | CVAR_LATCH );
-	r_ext_supersample = ri.Cvar_Get( "r_ext_supersample", "0", CVAR_ARCHIVE | CVAR_LATCH );
 }
 
 #define EPSILON 1e-6f

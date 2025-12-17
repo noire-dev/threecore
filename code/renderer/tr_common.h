@@ -71,7 +71,6 @@ extern int       gl_version;
 // cvars
 //
 extern cvar_t *r_ext_multisample;
-extern cvar_t *r_ext_supersample;
 
 extern cvar_t *r_allowExtensions;				// global enable/disable of OpenGL extensions
 extern cvar_t *r_ext_compressed_textures;		// these control use of specific extensions
