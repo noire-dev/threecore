@@ -151,10 +151,8 @@ void CL_ShutdownUI(void) {
 
 void CL_InitUI(void) {
 	uivm = VM_Create(VM_UI, CL_UISystemCalls);
-	if(!uivm) Com_Error(ERR_DROP, "VM_Create on UI failed");
-
-	// init for this gamestate
-	VM_Call(uivm, 1, UI_INIT, (cls.state >= CA_CONNECTING && cls.state < CA_ACTIVE));
+	if(!uivm) Com_Error(ERR_DROP, "VM_Create - ui.qvm failed");
+	VM_Call(uivm, 1, UI_INIT);
 }
 
 qboolean UI_GameCommand(void) {
