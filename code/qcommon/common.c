@@ -138,18 +138,10 @@ void FORMAT_PRINTF(1, 2) QDECL Com_Printf( const char *fmt, ... ) {
 	va_list		argptr;
 	char		msg[MAXPRINTMSG];
 	int			len;
-    qtime_t     realtime;
 
 	va_start( argptr, fmt );
 	len = Q_vsnprintf( msg, sizeof( msg ), fmt, argptr );
 	va_end( argptr );
-	
-	Com_RealTime(&realtime);
-    snprintf(msg, sizeof(msg), "[%02d:%02d]  %s", realtime.tm_hour, realtime.tm_min, msg);
-    
-#ifndef DEDICATED
-    CL_ConsolePrint( msg );
-#endif
     
 	if ( rd_buffer && !rd_flushing ) {
 		if ( len + (int)strlen( rd_buffer ) > ( rd_buffersize - 1 ) ) {
@@ -161,6 +153,10 @@ void FORMAT_PRINTF(1, 2) QDECL Com_Printf( const char *fmt, ... ) {
 		Q_strcat( rd_buffer, rd_buffersize, msg );
 		return;
 	}
+	
+#ifndef DEDICATED
+    CL_ConsolePrint( msg );
+#endif
 
 	Sys_Print( msg );
 
