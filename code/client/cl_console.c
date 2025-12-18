@@ -22,15 +22,6 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 #include "client.h"
 
-#define CON_MAXLINES 16384
-#define CON_MAXLINE 256
-#define CON_PURGE_AMOUNT 1024
-
-typedef struct console_s {
-    char lines[CON_MAXLINES][CON_MAXLINE];
-    int linecount;
-} console_t;
-
 console_t con;
 
 void CL_ConsolePrint(const char *txt) {

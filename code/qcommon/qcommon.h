@@ -1071,6 +1071,15 @@ void CL_JoystickEvent( int axis, int value, int time );
 
 void CL_PacketEvent( const netadr_t *from, msg_t *msg );
 
+#define CON_MAXLINES 16384
+#define CON_MAXLINE 256
+#define CON_PURGE_AMOUNT 1024
+
+typedef struct console_s {
+    char lines[CON_MAXLINES][CON_MAXLINE];
+    int linecount;
+} console_t;
+
 void CL_ConsolePrint( const char *text );
 void CL_ConsoleSync(console_t* vmconsole, int currentLines);
 
