@@ -143,10 +143,14 @@ void FORMAT_PRINTF(1, 2) QDECL Com_Printf( const char *fmt, ... ) {
 	va_start( argptr, fmt );
 	len = Q_vsnprintf( msg, sizeof( msg ), fmt, argptr );
 	va_end( argptr );
+	
+	Com_RealTime(&realtime);
+    Q_vsnprintf(msg, sizeof(msg), "[%02d:%02d]  %s", realtime.tm_hour, realtime.tm_min, msg);
     
-    Com_RealTime(&realtime);
-    snprintf(msg, sizeof(msg), "[%02d:%02d]  %s", realtime.tm_hour, realtime.tm_min, msg);
-
+#ifndef DEDICATED
+    CL_ConsolePrint( msg );
+#endif
+    
 	if ( rd_buffer && !rd_flushing ) {
 		if ( len + (int)strlen( rd_buffer ) > ( rd_buffersize - 1 ) ) {
 			rd_flushing = qtrue;
@@ -158,15 +162,11 @@ void FORMAT_PRINTF(1, 2) QDECL Com_Printf( const char *fmt, ... ) {
 		return;
 	}
 
-#ifndef DEDICATED
-    CL_ConsolePrint( msg );
-#endif
-
 	Sys_Print( msg );
 
 	if ( com_log && com_log->integer ) {
 		if ( logfile == FS_INVALID_HANDLE && FS_Initialized() && !opening_qconsole ) {
-			const char *logName = "qconsole.log";
+			const char *logName = "console.log";
 			opening_qconsole = qtrue;
 		    logfile = FS_FOpenFileAppend( logName );
 
