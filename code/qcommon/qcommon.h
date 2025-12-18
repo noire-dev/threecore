@@ -1077,7 +1077,7 @@ void CL_PacketEvent( const netadr_t *from, msg_t *msg );
 
 typedef struct console_s {
     char lines[CON_MAXLINES][CON_MAXLINE];
-    int linecount;
+    int linescount;
 } console_t;
 
 void CL_ConsolePrint( const char *text );
