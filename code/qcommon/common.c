@@ -145,7 +145,7 @@ void FORMAT_PRINTF(1, 2) QDECL Com_Printf( const char *fmt, ... ) {
 	va_end( argptr );
 	
 	Com_RealTime(&realtime);
-    Q_vsnprintf(msg, sizeof(msg), "[%02d:%02d]  %s", realtime.tm_hour, realtime.tm_min, msg);
+    snprintf(msg, sizeof(msg), "[%02d:%02d]  %s", realtime.tm_hour, realtime.tm_min, msg);
     
 #ifndef DEDICATED
     CL_ConsolePrint( msg );
