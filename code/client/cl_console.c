@@ -26,25 +26,27 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #define CON_MAXLINE 256
 #define CON_PURGE_AMOUNT 1024
 
-char con_lines[CON_MAXLINES][CON_MAXLINE];
-int con_linescount = 0;
+typedef struct console_s {
+    char lines[CON_MAXLINES][CON_MAXLINE];
+    int linecount;
+} console_t;
+
+console_t con;
 
 void CL_ConsolePrint(const char *txt) {
     if (!txt) return;
     
-    if (con_linescount >= CON_MAXLINES) {
-        for (int i = 0; i < CON_MAXLINES - CON_PURGE_AMOUNT; i++) memcpy(con_lines[i], con_lines[i + CON_PURGE_AMOUNT], CON_MAXLINE);
-        for (int i = CON_MAXLINES - CON_PURGE_AMOUNT; i < CON_MAXLINES; i++) con_lines[i][0] = '\0';
-        con_linescount = CON_MAXLINES - CON_PURGE_AMOUNT;
+    if (con.linescount >= CON_MAXLINES) {
+        for (int i = 0; i < CON_MAXLINES - CON_PURGE_AMOUNT; i++) memcpy(con.lines[i], con.lines[i + CON_PURGE_AMOUNT], CON_MAXLINE);
+        for (int i = CON_MAXLINES - CON_PURGE_AMOUNT; i < CON_MAXLINES; i++) con.lines[i][0] = '\0';
+        con.linescount = CON_MAXLINES - CON_PURGE_AMOUNT;
     }
     
-    char formatted[CON_MAXLINE];
-    qtime_t realtime;
-    
-    Com_RealTime(&realtime);
-    snprintf(formatted, sizeof(formatted), "[%02d:%02d]  %s", realtime.tm_hour, realtime.tm_min, txt);
-    
-    strncpy(con_lines[con_linescount], formatted, CON_MAXLINE - 1);
-    con_lines[con_linescount][CON_MAXLINE - 1] = '\0';
-    con_linescount++;
+    strncpy(con.lines[con.linescount], txt, CON_MAXLINE - 1);
+    con.lines[con.linescount][CON_MAXLINE - 1] = '\0';
+    con.linescount++;
+}
+
+void CL_ConsoleSync(console_t* vmconsole, int currentLines) {
+    if(con.linescount != currentLines) memcpy(vmconsole, &con, sizeof(console_t));
 }
