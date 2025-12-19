@@ -167,7 +167,7 @@ static duk_ret_t jsexport_vmcall(duk_context* ctx) {
     memset(&vm_result, 0, sizeof(vm_result));
     
     if(qvm_id == VM_GAME && gvm) {
-        VM_Call(gvm, 3, G_VMCALL, func_id, &vm_args, &vm_result);
+        VM_Call(gvm, 3, GAME_VMCALL, func_id, &vm_args, &vm_result);
         success = qtrue;
     }
 #ifndef DEDICATED
