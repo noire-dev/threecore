@@ -5,6 +5,10 @@
 #include "q_shared.h"
 #include "qcommon.h"
 #include "duktape.h"
+#include "../server/server.h"
+#ifndef DEDICATED
+#include "../client/client.h"
+#endif
 
 static duk_context *js_ctx = NULL;
 
@@ -121,6 +125,78 @@ static duk_ret_t jsexport_cvar_set(duk_context *ctx) {
     return 0;
 }
 
+static duk_ret_t jsexport_vmcall(duk_context* ctx) {
+    duk_idx_t nargs = duk_get_top(ctx);
+    
+    if (nargs < 2) {
+        duk_push_error_object(ctx, DUK_ERR_TYPE_ERROR, "^1VMCall requires at least func_id and qvm_id");
+        return duk_throw(ctx);
+    }
+    
+    int func_id = duk_require_int(ctx, 0);
+    int qvm_id = duk_require_int(ctx, 1);
+    
+    js_args_t vm_args;
+    memset(&vm_args, 0, sizeof(vm_args));
+    
+    for (int i = 0; i < nargs - 2 && i < MAX_JS_ARGS; i++) {
+        duk_int_t arg_idx = i + 2;
+        
+        if (duk_is_number(ctx, arg_idx)) {
+            double val = duk_get_number(ctx, arg_idx);
+            if (val == (int)val) {
+                vm_args.type[i] = JS_TYPE_INT;
+                vm_args.value[i].int_val = (int)val;
+            } else {
+                vm_args.type[i] = JS_TYPE_FLOAT;
+                vm_args.value[i].float_val = (float)val;
+            }
+        } else if (duk_is_boolean(ctx, arg_idx)) {
+            vm_args.type[i] = JS_TYPE_BOOL;
+            vm_args.value[i].bool_val = duk_get_boolean(ctx, arg_idx) ? qtrue : qfalse;
+        } else if (duk_is_string(ctx, arg_idx)) {
+            vm_args.type[i] = JS_TYPE_STRING;
+            const char* str = duk_safe_to_string(ctx, arg_idx);
+            Q_strncpyz(vm_args.value[i].string_val, str, MAX_JS_STRINGSIZE);
+        } else if (duk_is_null_or_undefined(ctx, arg_idx)) {
+            vm_args.type[i] = JS_TYPE_NONE;
+        }
+    }
+    
+    js_result_t vm_result;
+    memset(&vm_result, 0, sizeof(vm_result));
+    
+    if(qvm_id == VM_GAME && gvm) {
+        VM_Call(gvm, 3, G_VMCALL, func_id, &vm_args, &vm_result);
+        success = qtrue;
+    }
+#ifndef DEDICATED
+    if(qvm_id == VM_CGAME && cgvm) {
+        VM_Call(cgvm, 3, CG_VMCALL, func_id, &vm_args, &vm_result);
+        success = qtrue;
+    }
+    if(qvm_id == VM_UI && uivm) { 
+        VM_Call(uivm, 3, UI_VMCALL, func_id, &vm_args, &vm_result);
+        success = qtrue;
+    }
+#endif
+
+    if (!success) {
+        duk_push_error_object(ctx, DUK_ERR_TYPE_ERROR, "^1VMCall failed");
+        return duk_throw(ctx);
+    }
+    
+    switch (vm_result.type) {
+        case JS_TYPE_INT: duk_push_int(ctx, vm_result.value.int_val); break;
+        case JS_TYPE_FLOAT: duk_push_number(ctx, (double)vm_result.value.float_val); break;
+        case JS_TYPE_BOOL: duk_push_boolean(ctx, vm_result.value.bool_val ? 1 : 0); break;
+        case JS_TYPE_STRING: duk_push_string(ctx, vm_result.value.string_val); break;
+        default: duk_push_undefined(ctx); break;
+    }
+    
+    return 1;
+}
+
 qboolean JSOpenFile(const char* filename) {
     union {
 		char* c;
@@ -129,7 +205,7 @@ qboolean JSOpenFile(const char* filename) {
 	char fullpath[MAX_QEXTENDEDPATH];
 	
 	if (!js_ctx) {
-        Com_Printf("^1Error: JavaScript VM not initialized");
+        Com_Printf("^1JavaScript VM not initialized");
         return qfalse;
     }
     
@@ -138,7 +214,7 @@ qboolean JSOpenFile(const char* filename) {
 	FS_ReadFile(fullpath, &f.v);
         
     if(f.v == NULL) {
-        Com_Printf("^1Error: Could not load file '%s'\n", fullpath);
+        Com_Printf("^1Could not load file '%s'\n", fullpath);
         return qfalse;
     }
     
@@ -201,7 +277,7 @@ qboolean JSCall(int func_id, js_result_t* result, js_args_t* args) {
     int arg_count;
     
     if (!js_ctx) {
-        Com_Printf("^1Error: JavaScript VM not initialized\n");
+        Com_Printf("^1JavaScript VM not initialized\n");
         return qfalse;
     }
     
@@ -209,7 +285,7 @@ qboolean JSCall(int func_id, js_result_t* result, js_args_t* args) {
     if (JSCall_compiled) {
         duk_push_heapptr(js_ctx, JSCall_ref);
     } else {
-        Com_Printf("^1Error: JavaScript JSCall not compiled\n");
+        Com_Printf("^1JavaScript JSCall not compiled\n");
         return qfalse;
     }
     
@@ -280,6 +356,20 @@ void JS_Init(void) {
         duk_push_c_function(js_ctx, jsexport_cvar_set, 2);
         duk_put_prop_string(js_ctx, -2, "set");
         duk_put_prop_string(js_ctx, -2, "cvar");
+        
+        // qvm
+        duk_push_object(js_ctx);
+        duk_push_c_function(js_ctx, jsexport_vmcall, DUK_VARARGS);
+        duk_put_prop_string(js_ctx, -2, "call");
+        duk_push_int(js_ctx, VM_GAME);
+        duk_put_prop_string(js_ctx, -2, "game");
+#ifndef DEDICATED
+        duk_push_int(js_ctx, VM_CGAME); 
+        duk_put_prop_string(js_ctx, -2, "cgame");
+        duk_push_int(js_ctx, VM_UI);
+        duk_put_prop_string(js_ctx, -2, "ui");
+#endif
+        duk_put_prop_string(js_ctx, -2, "qvm");
         
         duk_pop(js_ctx);
         
