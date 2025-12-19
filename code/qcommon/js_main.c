@@ -164,6 +164,7 @@ static duk_ret_t jsexport_vmcall(duk_context* ctx) {
     }
     
     js_result_t vm_result;
+    qboolean success = qfalse;
     memset(&vm_result, 0, sizeof(vm_result));
     
     if(qvm_id == VM_GAME && gvm) {
@@ -187,6 +188,7 @@ static duk_ret_t jsexport_vmcall(duk_context* ctx) {
     }
     
     switch (vm_result.type) {
+        case JS_TYPE_NONE: duk_push_undefined(ctx); break;
         case JS_TYPE_INT: duk_push_int(ctx, vm_result.value.int_val); break;
         case JS_TYPE_FLOAT: duk_push_number(ctx, (double)vm_result.value.float_val); break;
         case JS_TYPE_BOOL: duk_push_boolean(ctx, vm_result.value.bool_val ? 1 : 0); break;
