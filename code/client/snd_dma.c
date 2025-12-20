@@ -426,6 +426,55 @@ static void S_SpatializeOrigin( const vec3_t origin, int master_vol, int *left_v
 			lscale = 0.0;
 		}
 	}
+	
+    {   // 3D sound
+        const int steps = 4;
+        vec3_t    step_vec, check_pos;
+        trace_t    tr;
+        float    wallAtten = 1.0f;
+        qboolean  blocked = qfalse;
+        float    scale;
+        int      i;
+    
+        VectorSubtract( origin, listener_origin, step_vec );
+        VectorScale( step_vec, 1.0f / steps, step_vec );
+        VectorCopy( listener_origin, check_pos );
+    
+        for ( i = 0; i < steps; i++ ) {
+            vec3_t next_pos;
+            VectorAdd( check_pos, step_vec, next_pos );
+    
+            CM_Trace( &tr, check_pos, next_pos, vec3_origin, vec3_origin, 0, vec3_origin, MASK_SOLID );
+    
+            if ( tr.fraction < 1.0f ) {
+                wallAtten *= 0.7f;
+                blocked = qtrue;
+            }
+    
+            VectorCopy( next_pos, check_pos );
+        }
+    
+        if ( blocked ) {
+            rscale *= 0.2f + 0.8f * wallAtten;
+            lscale *= 0.2f + 0.8f * wallAtten;
+        } else {
+            rscale *= wallAtten;
+            lscale *= wallAtten;
+        }
+    
+        if ( !blocked ) {
+            scale = ( 1.0f - dist ) * rscale;
+            *right_vol = ( master_vol * scale );
+            if ( *right_vol < 0 ) *right_vol = 0;
+    
+            scale = ( 1.0f - dist ) * lscale;
+            *left_vol = ( master_vol * scale );
+            if ( *left_vol < 0 ) *left_vol = 0;
+        } else {
+            *right_vol = (int) ( master_vol * rscale );
+            *left_vol = (int) ( master_vol * lscale );
+        }
+    }
 
 	// add in distance effect
 	scale = (1.0 - dist) * rscale;

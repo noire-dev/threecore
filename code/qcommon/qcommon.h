@@ -339,17 +339,9 @@ VIRTUAL MACHINE
 ==============================================================
 */
 typedef struct vm_s vm_t;
-
+#define GETVMCONTEXT 1000
 typedef enum {
-	TRAP_MEMSET = 1000,
-	TRAP_MEMCPY,
-	TRAP_STRNCPY,
-	TRAP_SIN,
-	TRAP_COS,
-	TRAP_ACOS,
-	TRAP_ATAN2,
-	TRAP_SQRT,
-	TRAP_PRINT,
+	TRAP_PRINT = 1000,
 	TRAP_ERROR,
 	TRAP_MILLISECONDS,
 	TRAP_CVAR_REGISTER,
@@ -368,9 +360,20 @@ typedef enum {
 	TRAP_CMD,
 	TRAP_REAL_TIME,
 	TRAP_SYSTEM,
+	TRAP_JS_CONTEXT,
 	TRAP_JS_OPENFILE,
+	TRAP_JS_LOADSCRIPTS,
 	TRAP_JS_EVAL,
 	TRAP_JS_CALL,
+	
+	TRAP_MEMSET = 3000,
+	TRAP_MEMCPY,
+	TRAP_STRNCPY,
+	TRAP_SIN,
+	TRAP_COS,
+	TRAP_ACOS,
+	TRAP_ATAN2,
+	TRAP_SQRT,
 	
 	TRAP_UPDATESCREEN = 1500,
 	TRAP_S_STARTLOCALSOUND,
@@ -404,7 +407,7 @@ typedef enum {
 } vmIndex_t;
 
 // we don't need more than 4 arguments (counting callnum) for vmMain, at least in Vanilla Quake3
-#define MAX_VMMAIN_CALL_ARGS 4
+#define MAX_VMMAIN_CALL_ARGS 3
 
 typedef intptr_t (QDECL *vmMainFunc_t)( int command, int arg0, int arg1, int arg2 );
 
