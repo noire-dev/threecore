@@ -53,7 +53,7 @@ void JSLoadScripts(const char* path, const char* name) {
         Com_sprintf(fullpath, sizeof(fullpath), "%s/%s", path, filename);
         Com_Printf("  ^5[%d/%d] %s: \n", i+1, numfiles, filename);
         
-        JSOpenFile(fullpath));
+        JSOpenFile(fullpath);
         
         if(next) fileptr = next + 1;
         else break;
@@ -148,6 +148,7 @@ static duk_ret_t jsexport_vmcall(duk_context* ctx) {
         qvmcall_using = qfalse;
         return duk_throw(ctx);
     }
+#ifndef DEDICATED
     if(qvm_id == VM_CGAME && !cgvm) {
         duk_push_error_object(ctx, DUK_ERR_ERROR, "^1cgame.qvm not initialized");
         qvmcall_using = qfalse;
@@ -158,6 +159,7 @@ static duk_ret_t jsexport_vmcall(duk_context* ctx) {
         qvmcall_using = qfalse;
         return duk_throw(ctx);
     }
+#endif
     
     if(qvm_id == VM_GAME) VM_Call(gvm, 0, GETVMCONTEXT);
 #ifndef DEDICATED
