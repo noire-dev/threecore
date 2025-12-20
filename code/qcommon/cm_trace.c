@@ -542,8 +542,7 @@ static void CM_TraceThroughTree( traceWork_t *tw, int num, float p1f, float p2f,
 CM_Trace
 ==================
 */
-static void CM_Trace( trace_t *results, const vec3_t start, const vec3_t end, const vec3_t mins, const vec3_t maxs,
-						clipHandle_t model, const vec3_t origin, int brushmask ) {
+void CM_Trace( trace_t *results, const vec3_t start, const vec3_t end, const vec3_t mins, const vec3_t maxs, clipHandle_t model, const vec3_t origin, int brushmask ) {
 	int			i;
 	traceWork_t	tw;
 	vec3_t		offset;
