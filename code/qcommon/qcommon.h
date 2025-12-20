@@ -407,7 +407,7 @@ typedef enum {
 } vmIndex_t;
 
 // we don't need more than 4 arguments (counting callnum) for vmMain, at least in Vanilla Quake3
-#define MAX_VMMAIN_CALL_ARGS 3
+#define MAX_VMMAIN_CALL_ARGS 4
 
 typedef intptr_t (QDECL *vmMainFunc_t)( int command, int arg0, int arg1, int arg2 );
 
