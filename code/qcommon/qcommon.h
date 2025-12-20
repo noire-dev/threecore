@@ -340,6 +340,7 @@ VIRTUAL MACHINE
 */
 typedef struct vm_s vm_t;
 #define GETVMCONTEXT 1000
+#define VMCALL 1001
 typedef enum {
 	TRAP_PRINT = 1000,
 	TRAP_ERROR,

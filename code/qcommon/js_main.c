@@ -191,10 +191,10 @@ static duk_ret_t jsexport_vmcall(duk_context* ctx) {
         }
     }
     
-    if(qvm_id == VM_GAME) VM_Call(gvm, 1, GAME_VMCALL, func_id);
+    if(qvm_id == VM_GAME) VM_Call(gvm, 1, VMCALL, func_id);
 #ifndef DEDICATED
-    if(qvm_id == VM_CGAME) VM_Call(cgvm, 1, CG_VMCALL, func_id);
-    if(qvm_id == VM_UI) VM_Call(uivm, 1, UI_VMCALL, func_id);
+    if(qvm_id == VM_CGAME) VM_Call(cgvm, 1, VMCALL, func_id);
+    if(qvm_id == VM_UI) VM_Call(uivm, 1, VMCALL, func_id);
 #endif
     
     switch(vmresult->type) {
