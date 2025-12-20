@@ -5,9 +5,6 @@
 #define MAX_JS_ARGS 32
 #define MAX_JS_STRINGSIZE 4096
 
-extern js_args_t* vmargs;
-extern js_result_t* vmresult;
-
 typedef enum {
     JS_TYPE_NONE,
     JS_TYPE_INT,
@@ -32,6 +29,9 @@ typedef struct {
     js_type_t type;
     js_value_t value;
 } js_result_t;
+
+extern js_args_t* vmargs;
+extern js_result_t* vmresult;
 
 void JS_Init(void);
 void JSContext(js_args_t* args, js_result_t* result);
