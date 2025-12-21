@@ -267,7 +267,7 @@ BotImport_HunkAlloc
 =================
 */
 static void *BotImport_HunkAlloc( int size ) {
-	return Hunk_Alloc( size, h_high );
+	return Hunk_Alloc( size );
 }
 
 /*

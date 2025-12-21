@@ -120,8 +120,6 @@ void MSG_ReadDeltaEntity( msg_t *msg, const entityState_t *from, entityState_t *
 void MSG_WriteDeltaPlayerstate( msg_t *msg, const playerState_t *from, const playerState_t *to );
 void MSG_ReadDeltaPlayerstate( msg_t *msg, const playerState_t *from, playerState_t *to );
 
-void MSG_ReportChangeVectors_f( void );
-
 //============================================================================
 
 /*
@@ -942,11 +940,8 @@ static ID_INLINE unsigned int log2pad( unsigned int v, int roundup )
 
 extern	cvar_t	*com_developer;
 extern	cvar_t	*com_timescale;
-extern	cvar_t	*com_version;
-extern	cvar_t	*com_cameraMode;
 extern 	cvar_t	*cl_selectedmod;
 extern 	cvar_t	*cl_changeqvm;
-extern 	cvar_t	*os_32bit;
 extern 	cvar_t	*os_linux;
 extern 	cvar_t	*os_windows;
 extern 	cvar_t	*os_macos;
@@ -957,7 +952,6 @@ extern	cvar_t	*sv_packetdelay;
 extern	cvar_t	*com_sv_running;
 
 #ifndef DEDICATED
-extern	cvar_t	*cl_paused;
 extern	cvar_t	*cl_packetdelay;
 extern	cvar_t	*com_cl_running;
 extern	cvar_t	*com_yieldCPU;

@@ -267,12 +267,6 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 // Platform string
 
-#ifdef NDEBUG
-#define PLATFORM_STRING OS_STRING "-" ARCH_STRING
-#else
-#define PLATFORM_STRING OS_STRING "-" ARCH_STRING "-debug"
-#endif
-
 #if idx64
 #ifdef _MSC_VER
 #define _MSC_SSE2

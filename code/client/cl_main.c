@@ -1200,7 +1200,6 @@ an unconnected command.
 */
 static void CL_Rcon_f( void ) {
 	char message[MAX_RCON_MESSAGE];
-	const char *sp;
 	int len;
 
 	if ( !rcon_client_password->string[0] ) {
@@ -1273,9 +1272,6 @@ static void CL_Vid_Restart( refShutdownCode_t shutdownCode ) {
 		FS_ConditionalRestart( clc.checksumFeed, qfalse );
 
 	cls.soundRegistered = qfalse;
-
-	// unpause so the cgame definitely gets a snapshot and renders a frame
-	Cvar_Set( "cl_paused", "0" );
 
 	CL_ClearMemory();
 
@@ -2122,7 +2118,7 @@ static void CL_CheckTimeout( void ) {
 	//
 	// check timeout
 	//
-	if ( ( !CL_CheckPaused() || !sv_paused->integer ) && cls.state >= CA_CONNECTED && cls.realtime - clc.lastPacketTime > cl_timeout->integer * 1000 ) {
+	if (!sv_paused->integer && cls.state >= CA_CONNECTED && cls.realtime - clc.lastPacketTime > cl_timeout->integer * 1000) {
 		if ( ++cl.timeoutcount > 5 ) { // timeoutcount saves debugger
 			Com_Printf( "\nServer connection timed out.\n" );
 			Cvar_Set( "com_errorMessage", "Server connection timed out." );
@@ -2139,24 +2135,6 @@ static void CL_CheckTimeout( void ) {
 	}
 }
 
-
-/*
-==================
-CL_CheckPaused
-Check whether client has been paused.
-==================
-*/
-qboolean CL_CheckPaused( void )
-{
-	// if cl_paused->modified is set, the cvar has only been changed in
-	// this frame. Keep paused in this frame to ensure the server doesn't
-	// lag behind.
-	if(cl_paused->integer || cl_paused->modified)
-		return qtrue;
-
-	return qfalse;
-}
-
 /*
 ==================
 CL_CheckUserinfo
@@ -2169,8 +2147,7 @@ static void CL_CheckUserinfo( void ) {
 		return;
 
 	// don't overflow the reliable command buffer when paused
-	if ( CL_CheckPaused() )
-		return;
+	if(sv_paused->integer) return;
 
 	// send a reliable userinfo update if needed
 	if ( cvar_modifiedFlags & CVAR_USERINFO )
@@ -2450,11 +2427,7 @@ static void CL_InitRef( void ) {
 	rimp.Malloc = CL_RefMalloc;
 	rimp.FreeAll = CL_RefFreeAll;
 	rimp.Free = Z_Free;
-#ifdef HUNK_DEBUG
-	rimp.Hunk_AllocDebug = Hunk_AllocDebug;
-#else
 	rimp.Hunk_Alloc = Hunk_Alloc;
-#endif
 	rimp.Hunk_AllocateTempMemory = Hunk_AllocateTempMemory;
 	rimp.Hunk_FreeTempMemory = Hunk_FreeTempMemory;
 
@@ -2515,9 +2488,6 @@ static void CL_InitRef( void ) {
 	}
 
 	re = *ret;
-
-	// unpause so the cgame definitely gets a snapshot and renders a frame
-	Cvar_Set( "cl_paused", "0" );
 }
 
 /*
@@ -3152,7 +3122,6 @@ CL_Init
 ====================
 */
 void CL_Init( void ) {
-	cvar_t *cv;
 
 	Com_Printf( "----- Client Initialization -----\n" );
 

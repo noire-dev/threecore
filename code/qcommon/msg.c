@@ -606,22 +606,6 @@ entityState_t communication
 =============================================================================
 */
 
-/*
-=================
-MSG_ReportChangeVectors_f
-
-Prints out a table from the current statistics for copying to code
-=================
-*/
-void MSG_ReportChangeVectors_f( void ) {
-	int i;
-	for(i=0;i<256;i++) {
-		if (pcount[i]) {
-			Com_Printf("%d used %d\n", i, pcount[i]);
-		}
-	}
-}
-
 typedef struct {
 	const char	*name;
 	const int	offset;

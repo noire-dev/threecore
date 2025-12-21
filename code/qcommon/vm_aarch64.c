@@ -2643,7 +2643,7 @@ qboolean VM_Compile( vm_t *vm, vmHeader_t *header )
 	}
 
 	if ( !vm->instructionPointers ) {
-		vm->instructionPointers = Hunk_Alloc( header->instructionCount * sizeof(vm->instructionPointers[0]), h_high );
+		vm->instructionPointers = Hunk_Alloc( header->instructionCount * sizeof(vm->instructionPointers[0]) );
 	}
 
 	litBase = NULL;

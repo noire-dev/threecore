@@ -356,7 +356,7 @@ void SV_SpawnServer( const char *mapname ) {
 	FS_ClearPakReferences( 0 );
 
 	// allocate the snapshot entities on the hunk
-	svs.snapshotEntities = Hunk_Alloc( sizeof(entityState_t)*svs.numSnapshotEntities, h_high );
+	svs.snapshotEntities = Hunk_Alloc( sizeof(entityState_t)*svs.numSnapshotEntities );
 
 	// initialize snapshot storage
 	SV_InitSnapshotStorage();
@@ -394,11 +394,6 @@ void SV_SpawnServer( const char *mapname ) {
 	for ( i = 0; i < MAX_CONFIGSTRINGS; i++ ) {
 		sv.configstrings[i] = CopyString("");
 	}
-
-	// make sure we are not paused
-#ifndef DEDICATED
-	Cvar_Set( "cl_paused", "0" );
-#endif
 
 	// get a new checksum feed and restart the file system
 	srand( Com_Milliseconds() );

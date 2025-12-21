@@ -410,10 +410,7 @@ void CL_SetCGameTime(void) {
 	}
 
 	// allow pause in single player
-	if(sv_paused->integer && CL_CheckPaused() && com_sv_running->integer) {
-		// paused
-		return;
-	}
+	if(sv_paused->integer) return;
 
 	if(cl.snap.serverTime - cl.oldFrameServerTime < 0) {
 		Com_Error(ERR_DROP, "cl.snap.serverTime < cl.oldFrameServerTime");

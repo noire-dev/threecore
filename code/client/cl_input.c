@@ -804,7 +804,7 @@ void CL_SendCmd( void ) {
 	}
 
 	// don't send commands if paused
-	if ( com_sv_running->integer && sv_paused->integer && cl_paused->integer ) {
+	if ( com_sv_running->integer && sv_paused->integer ) {
 		return;
 	}
 

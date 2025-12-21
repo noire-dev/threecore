@@ -45,17 +45,13 @@ static fileHandle_t logfile = FS_INVALID_HANDLE;
 
 cvar_t	*com_developer;
 cvar_t	*com_timescale;
-static cvar_t *com_fixedtime;
 #ifndef DEDICATED
 cvar_t	*com_maxfps;
 cvar_t	*com_maxfpsUnfocused;
-cvar_t	*com_yieldCPU;
 #endif
 static cvar_t *com_log;
-cvar_t	*com_version;
 
 #ifndef DEDICATED
-cvar_t	*cl_paused;
 cvar_t	*cl_packetdelay;
 cvar_t	*com_cl_running;
 #endif
@@ -65,12 +61,9 @@ cvar_t  *sv_packetdelay;
 cvar_t	*com_sv_running;
 cvar_t	*cl_selectedmod;
 cvar_t	*cl_changeqvm;
-cvar_t	*os_32bit;
 cvar_t	*os_linux;
 cvar_t	*os_windows;
 cvar_t	*os_macos;
-
-cvar_t	*com_cameraMode;
 
 static int	lastTime;
 int			com_frameTime;
@@ -1361,21 +1354,12 @@ static const memstatic_t numberstring[] = {
 };
 #endif // USE_STATIC_TAGS
 
-/*
-========================
-CopyString
-
- NOTE:	never write over the memory CopyString returns because
-		memory from a memstatic_t might be returned
-========================
-*/
 char *CopyString( const char *in ) {
 	char *out;
 #ifdef USE_STATIC_TAGS
 	if ( in[0] == '\0' ) {
 		return ((char *)&emptystring) + sizeof(memblock_t);
-	}
-	else if ( in[0] >= '0' && in[0] <= '9' && in[1] == '\0' ) {
+	} else if ( in[0] >= '0' && in[0] <= '9' && in[1] == '\0' ) {
 		return ((char *)&numberstring[in[0]-'0']) + sizeof(memblock_t);
 	}
 #endif
@@ -1383,49 +1367,6 @@ char *CopyString( const char *in ) {
 	strcpy( out, in );
 	return out;
 }
-
-
-/*
-==============================================================================
-
-Goals:
-	reproducible without history effects -- no out of memory errors on weird map to map changes
-	allow restarting of the client without fragmentation
-	minimize total pages in use at run time
-	minimize total pages needed during load time
-
-  Single block of memory with stack allocators coming from both ends towards the middle.
-
-  One side is designated the temporary memory allocator.
-
-  Temporary memory can be allocated and freed in any order.
-
-  A highwater mark is kept of the most in use at any time.
-
-  When there is no temporary memory allocated, the permanent and temp sides
-  can be switched, allowing the already touched temp memory to be used for
-  permanent storage.
-
-  Temp memory must never be allocated on two ends at once, or fragmentation
-  could occur.
-
-  If we have any in-use temp memory, additional temp allocations must come from
-  that side.
-
-  If not, we can choose to make either side the new temp side and push future
-  permanent allocations to the other side.  Permanent allocations should be
-  kept on the side that has the current greatest wasted highwater mark.
-
-==============================================================================
-*/
-
-#define	HUNK_MAGIC	0x89537892
-#define	HUNK_FREE_MAGIC	0x89537893
-
-typedef struct {
-	unsigned int magic;
-	unsigned int size;
-} hunkHeader_t;
 
 static	byte	*s_hunkData = NULL;
 static	int		s_hunkTotal;
@@ -1442,13 +1383,12 @@ unsigned int Com_TouchMemory( void ) {
 	Z_CheckHeap();
 
     if (s_hunkData == NULL || s_hunkTotal == 0) {
-        Com_Printf("Com_TouchMemory: Hunk not initialized\n");
+        Com_Printf("^1Com_TouchMemory: Hunk not initialized\n");
         return 0;
     }
 
 	end = Sys_Milliseconds();
 
-	Com_Printf( "Com_TouchMemory: %i msec\n", end - start );
 	return sum; // just to silent compiler warning
 }
 
@@ -1474,47 +1414,38 @@ static void Com_InitZoneMemory( void ) {
 	Z_ClearZone( mainzone, mainzone, mainZoneSize, 1 );
 }
 
-static void Com_Meminfo_f( void ) {
-	Com_Printf("Hunk_Alloc (used=%dmb, total=%dmb) \n", s_hunkUsed/1024/1024, s_hunkTotal/1024/1024);
-}
+static void Com_Meminfo_f(void) { Com_Printf("Hunk_Alloc (used=%dmb, total=%dmb) \n", s_hunkUsed / 1024 / 1024, s_hunkTotal / 1024 / 1024); }
 
-static void Com_InitHunkMemory( void ) {
-	if ( FS_LoadStack() != 0 ) Com_Error( ERR_FATAL, "Hunk initialization failed. File system load stack not zero" );
+static void Com_InitHunkMemory(void) {
+	if(FS_LoadStack() != 0) Com_Error(ERR_FATAL, "Hunk initialization failed. File system load stack not zero");
 
 	s_hunkTotal = DEF_COMHUNKMEGS * 1024 * 1024;
-	s_hunkData = calloc( s_hunkTotal + 63, 1 );
-	
-	if ( !s_hunkData ) Com_Error( ERR_FATAL, "Hunk data failed to allocate %i megs", s_hunkTotal / (1024*1024) );
+	s_hunkData = calloc(s_hunkTotal + 63, 1);
 
-	// cacheline align
-	s_hunkData = PADP( s_hunkData, 64 );
+	if(!s_hunkData) Com_Error(ERR_FATAL, "Hunk data failed to allocate %i megs", s_hunkTotal / (1024 * 1024));
+
+	s_hunkData = PADP(s_hunkData, 64);
 	s_hunkUsed = 0;
-	
-	Cmd_AddCommand( "meminfo", Com_Meminfo_f );
+
+	Cmd_AddCommand("meminfo", Com_Meminfo_f);
 }
 
-int	Hunk_MemoryRemaining( void ) {
-	return s_hunkTotal - s_hunkUsed;
-}
+int Hunk_MemoryRemaining(void) { return s_hunkTotal - s_hunkUsed; }
 
-void Hunk_SetMark( void ) {
-	s_hunkMark = s_hunkUsed;
-}
+void Hunk_SetMark(void) { s_hunkMark = s_hunkUsed; }
 
-void Hunk_ClearToMark( void ) {
-	s_hunkUsed = s_hunkMark;
-}
+void Hunk_ClearToMark(void) { s_hunkUsed = s_hunkMark; }
 
-qboolean Hunk_CheckMark( void ) {
-	if( s_hunkMark ) return qtrue;
+qboolean Hunk_CheckMark(void) {
+	if(s_hunkMark) return qtrue;
 	return qfalse;
 }
 
-void CL_ShutdownCGame( void );
-void CL_ShutdownUI( void );
-void SV_ShutdownGameProgs( void );
+void CL_ShutdownCGame(void);
+void CL_ShutdownUI(void);
+void SV_ShutdownGameProgs(void);
 
-void Hunk_Clear( void ) {
+void Hunk_Clear(void) {
 #ifndef DEDICATED
 	CL_ShutdownCGame();
 	CL_ShutdownUI();
@@ -1522,36 +1453,30 @@ void Hunk_Clear( void ) {
 	SV_ShutdownGameProgs();
 
 	s_hunkUsed = 0;
-	Com_Printf( "Hunk_Clear: reset ok\n" );
+	Com_Printf("Hunk_Clear: reset ok\n");
 	VM_Clear();
 }
 
-void *Hunk_Alloc( int size, ha_pref preference ) {
-	void	*buf;
+void* Hunk_Alloc(int size) {
+	void* buf;
 
-	if ( s_hunkData == NULL) Com_Error( ERR_FATAL, "Hunk_Alloc: Hunk memory system not initialized" );
+	if(s_hunkData == NULL) Com_Error(ERR_FATAL, "Hunk_Alloc: Hunk memory system not initialized");
 
-	size = PAD( size, 64 ); // round to cacheline
+	size = PAD(size, 64);
 
-	if ( s_hunkUsed + size > s_hunkTotal ) Com_Error(ERR_DROP, "Hunk_Alloc failed on %i (used=%dmb, total=%dmb) \n", size, s_hunkUsed/1024/1024, s_hunkTotal/1024/1024);
-    
-    buf = (void *)(s_hunkData + s_hunkUsed);
-    s_hunkUsed += size;
-    //Com_Printf("Hunk_Alloc: allocating %.2fkb (used=%dmb, total=%dmb) \n", (float)size/1024.0f, s_hunkUsed/1024/1024, s_hunkTotal/1024/1024);
+	if(s_hunkUsed + size > s_hunkTotal) Com_Error(ERR_DROP, "Hunk_Alloc failed on %i (used=%dmb, total=%dmb) \n", size, s_hunkUsed / 1024 / 1024, s_hunkTotal / 1024 / 1024);
 
-    Com_Memset( buf, 0, size );
+	buf = (void*)(s_hunkData + s_hunkUsed);
+	s_hunkUsed += size;
+	Com_Memset(buf, 0, size);
 	return buf;
 }
 
-void *Hunk_AllocateTempMemory( int size ) {
-	return Z_Malloc(size);
-}
+void* Hunk_AllocateTempMemory(int size) { return Z_Malloc(size); }
 
-void Hunk_FreeTempMemory( void *buf ) {
-	Z_Free(buf);
-}
+void Hunk_FreeTempMemory(void* buf) { Z_Free(buf); }
 
-void Hunk_ClearTempMemory( void ) {}
+void Hunk_ClearTempMemory(void) {}
 
 /*
 ========================================================================
@@ -1825,193 +1750,6 @@ Expose possibility to change current running mod to the user
 static void Com_GameRestart_f( void ) {	Com_GameRestart( 0, qtrue ); }
 
 /*
-** --------------------------------------------------------------------------------
-**
-** PROCESSOR STUFF
-**
-** --------------------------------------------------------------------------------
-*/
-
-#if (idx64 || id386)
-
-#if defined _MSC_VER
-#include <intrin.h>
-static void CPUID( int func, unsigned int *regs )
-{
-	__cpuid( (int*)regs, func );
-}
-
-#else // clang/gcc/mingw
-
-static void CPUID( int func, unsigned int *regs )
-{
-	__asm__ __volatile__( "cpuid" :
-		"=a"(regs[0]),
-		"=b"(regs[1]),
-		"=c"(regs[2]),
-		"=d"(regs[3]) :
-		"a"(func) );
-}
-
-#endif  // clang/gcc/mingw
-
-static void Sys_GetProcessorId( char *vendor )
-{
-	uint32_t regs[4]; // EAX, EBX, ECX, EDX
-	uint32_t cpuid_level_ex;
-	char vendor_str[12 + 1]; // short CPU vendor string
-
-	// setup initial features
-#if idx64
-	CPU_Flags |= CPU_SSE | CPU_SSE2 | CPU_FCOM;
-#else
-	CPU_Flags = 0;
-#endif
-	vendor[0] = '\0';
-
-	CPUID( 0x80000000, regs );
-	cpuid_level_ex = regs[0];
-
-	// get CPUID level & short CPU vendor string
-	CPUID( 0x0, regs );
-	memcpy(vendor_str + 0, (char*)&regs[1], 4);
-	memcpy(vendor_str + 4, (char*)&regs[3], 4);
-	memcpy(vendor_str + 8, (char*)&regs[2], 4);
-	vendor_str[12] = '\0';
-
-	// get CPU feature bits
-	CPUID( 0x1, regs );
-
-	// bit 15 of EDX denotes CMOV/FCMOV/FCOMI existence
-	if ( regs[3] & ( 1 << 15 ) )
-		CPU_Flags |= CPU_FCOM;
-
-	// bit 23 of EDX denotes MMX existence
-	if ( regs[3] & ( 1 << 23 ) )
-		CPU_Flags |= CPU_MMX;
-
-	// bit 25 of EDX denotes SSE existence
-	if ( regs[3] & ( 1 << 25 ) )
-		CPU_Flags |= CPU_SSE;
-
-	// bit 26 of EDX denotes SSE2 existence
-	if ( regs[3] & ( 1 << 26 ) )
-		CPU_Flags |= CPU_SSE2;
-
-	// bit 0 of ECX denotes SSE3 existence
-	//if ( regs[2] & ( 1 << 0 ) )
-	//	CPU_Flags |= CPU_SSE3;
-
-	// bit 19 of ECX denotes SSE41 existence
-	if ( regs[ 2 ] & ( 1 << 19 ) )
-		CPU_Flags |= CPU_SSE41;
-
-	if ( vendor ) {
-		if ( cpuid_level_ex >= 0x80000004 ) {
-			// read CPU Brand string
-			uint32_t i;
-			for ( i = 0x80000002; i <= 0x80000004; i++) {
-				CPUID( i, regs );
-				memcpy( vendor+0, (char*)&regs[0], 4 );
-				memcpy( vendor+4, (char*)&regs[1], 4 );
-				memcpy( vendor+8, (char*)&regs[2], 4 );
-				memcpy( vendor+12, (char*)&regs[3], 4 );
-				vendor[16] = '\0';
-				vendor += strlen( vendor );
-			}
-		} else {
-			const int print_flags = CPU_Flags;
-			vendor = Q_stradd( vendor, vendor_str );
-			if (print_flags) {
-				// print features
-				strcat(vendor, " w/");
-				if (print_flags & CPU_FCOM)
-					strcat(vendor, " CMOV");
-				if (print_flags & CPU_MMX)
-					strcat(vendor, " MMX");
-				if (print_flags & CPU_SSE)
-					strcat(vendor, " SSE");
-				if (print_flags & CPU_SSE2)
-					strcat(vendor, " SSE2");
-				//if ( CPU_Flags & CPU_SSE3 )
-				//	strcat( vendor, " SSE3" );
-				if (print_flags & CPU_SSE41)
-					strcat(vendor, " SSE4.1");
-			}
-		}
-	}
-}
-
-#else // non-x86
-
-#ifndef __linux__
-
-static void Sys_GetProcessorId( char *vendor )
-{
-	Com_sprintf( vendor, 100, "%s", ARCH_STRING );
-}
-
-#else // __linux__
-
-#include <sys/auxv.h>
-
-#if arm32
-#include <asm/hwcap.h>
-#endif
-
-static void Sys_GetProcessorId( char *vendor )
-{
-#if arm32
-	const char *platform;
-	long hwcaps;
-	CPU_Flags = 0;
-
-	platform = (const char*)getauxval( AT_PLATFORM );
-
-	if ( !platform || *platform == '\0' ) {
-		platform = "(unknown)";
-	}
-
-	if ( platform[0] == 'v' || platform[0] == 'V' ) {
-		if ( atoi( platform + 1 ) >= 7 ) {
-			CPU_Flags |= CPU_ARMv7;
-		}
-	}
-
-	Com_sprintf( vendor, 100, "ARM %s", platform );
-	hwcaps = getauxval( AT_HWCAP );
-	if ( hwcaps & ( HWCAP_IDIVA | HWCAP_VFPv3 ) ) {
-		strcat( vendor, " /w" );
-
-		if ( hwcaps & HWCAP_IDIVA ) {
-			CPU_Flags |= CPU_IDIVA;
-			strcat( vendor, " IDIVA" );
-		}
-
-		if ( hwcaps & HWCAP_VFPv3 ) {
-			CPU_Flags |= CPU_VFPv3;
-			strcat( vendor, " VFPv3" );
-		}
-
-		if ( ( CPU_Flags & ( CPU_ARMv7 | CPU_VFPv3 ) ) == ( CPU_ARMv7 | CPU_VFPv3 ) ) {
-			strcat( vendor, " QVM-bytecode" );
-		}
-	}
-#else // !arm32
-	CPU_Flags = 0;
-#if arm64
-	Com_sprintf( vendor, 100, "%s", ARCH_STRING );
-#else
-	Com_sprintf( vendor, 128, "%s %s", ARCH_STRING, (const char*)getauxval( AT_PLATFORM ) );
-#endif
-#endif // !arm32
-}
-
-#endif // __linux__
-
-#endif // non-x86
-
-/*
 =================
 Com_Init
 =================
@@ -2023,11 +1761,9 @@ void Com_Init( char *commandLine ) {
 	// get the initial time base
 	Sys_Milliseconds();
 
-	Com_Printf( "%s %s %s\n", ENGINE_VERSION, PLATFORM_STRING, __DATE__ );
+	Com_Printf( "^5%s %s\n", ENGINE_VERSION, __DATE__ );
 
-	if ( Q_setjmp( abortframe ) ) {
-		Sys_Error ("Error during initialization");
-	}
+	if (Q_setjmp( abortframe )) Sys_Error ("Error during initialization");
 
 	Com_InitSmallZoneMemory();
 	Cvar_Init();
@@ -2051,11 +1787,6 @@ void Com_Init( char *commandLine ) {
 	
 	cl_selectedmod = Cvar_Get("cl_selectedmod", "default", CVAR_ARCHIVE | CVAR_SERVERINFO);
 	cl_changeqvm = Cvar_Get("cl_changeqvm", "0", 0);
-	#if defined(__i386__)
-	os_32bit = Cvar_Get("os_32bit", "1", CVAR_ARCHIVE);
-	#else
-	os_32bit = Cvar_Get("os_32bit", "0", CVAR_ARCHIVE);
-	#endif
 
 	#if defined(__linux__)
 	os_linux = Cvar_Get("os_linux", "1", CVAR_ARCHIVE);
@@ -2080,31 +1811,19 @@ void Com_Init( char *commandLine ) {
 	com_log = Cvar_Get( "log", "0", 0 );
 
 	Com_ExecuteCfg();
-
-	// allocate the stack based hunk allocator
 	Com_InitHunkMemory();
-	
 	JS_Init();
 
-	// if any archived cvars are modified after this, we will trigger a writing
-	// of the config file
 	cvar_modifiedFlags &= ~CVAR_ARCHIVE;
 
-	//
-	// init commands and vars
-	//
 #ifndef DEDICATED
 	com_maxfps = Cvar_Get( "com_maxfps", "60", CVAR_ARCHIVE ); // try to force that in some light way
 	com_maxfpsUnfocused = Cvar_Get( "com_maxfpsUnfocused", "60", CVAR_ARCHIVE );
-	com_yieldCPU = Cvar_Get( "com_yieldCPU", "1", CVAR_ARCHIVE );
 #endif
 
 	com_timescale = Cvar_Get( "timescale", "1", CVAR_CHEAT | CVAR_SYSTEMINFO );
-	com_fixedtime = Cvar_Get( "fixedtime", "0", CVAR_CHEAT );
-	com_cameraMode = Cvar_Get( "com_cameraMode", "0", CVAR_CHEAT );
 
 #ifndef DEDICATED
-	cl_paused = Cvar_Get( "cl_paused", "0", 0 );
 	cl_packetdelay = Cvar_Get( "cl_packetdelay", "0", CVAR_CHEAT );
 	com_cl_running = Cvar_Get( "cl_running", "0", 0 );
 #endif
@@ -2117,25 +1836,11 @@ void Com_Init( char *commandLine ) {
 	gw_minimized = qfalse;
 
 	Cmd_AddCommand( "quit", Com_Quit_f );
-	Cmd_AddCommand( "changeVectors", MSG_ReportChangeVectors_f );
 	Cmd_AddCommand( "writeconfig", Com_WriteConfig_f );
 	Cmd_SetCommandCompletionFunc( "writeconfig", Cmd_CompleteWriteCfgName );
 	Cmd_AddCommand( "game_restart", Com_GameRestart_f );
 
-	s = va( "%s %s %s", ENGINE_VERSION, PLATFORM_STRING, __DATE__ );
-	com_version = Cvar_Get( "version", s, CVAR_SERVERINFO );
-
 	Sys_Init();
-
-	// CPU detection
-	Cvar_Get( "sys_cpustring", "detect", 0 );
-	if ( !Q_stricmp( Cvar_VariableString( "sys_cpustring" ), "detect" ) ) {
-		char vendor[128];
-		Com_Printf( "...detecting CPU, found " );
-		Sys_GetProcessorId( vendor );
-		Cvar_Set( "sys_cpustring", vendor );
-	}
-	Com_Printf( "%s\n", Cvar_VariableString( "sys_cpustring" ) );
 
 	// Pick a random port value
 	Com_RandomBytes( (byte*)&qport, sizeof( qport ) );
@@ -2149,19 +1854,13 @@ void Com_Init( char *commandLine ) {
 	CL_StartHunkUsers();
 #endif
 
-	// set com_frameTime so that if a map is started on the
-	// command line it will still be able to count on com_frameTime
-	// being random enough for a serverid
-	// lastTime = com_frameTime = Com_Milliseconds();
 	Com_FrameInit();
 
 	com_fullyInitialized = qtrue;
 
-	Com_Printf( "--- Common Initialization Complete ---\n" );
+	Com_Printf( "^2Common initialization complete\n" );
 
 	NET_Init();
-
-	Com_Printf( "Working directory: %s\n", Sys_Pwd() );
 }
 
 static void Com_WriteConfigToFile( const char *filename ) {
@@ -2317,8 +2016,6 @@ void Com_Frame( void ) {
 		}
 		sleepMsec = timeVal;
 #ifndef DEDICATED
-		if ( !gw_minimized && timeVal > com_yieldCPU->integer )
-			sleepMsec = com_yieldCPU->integer;
 		if ( timeVal > sleepMsec )
 			Com_EventLoop();
 #endif
@@ -2796,12 +2493,10 @@ static void Com_SortList( char **list, int n )
 	i = 0;
 	j = n;
 	m = list[ n >> 1 ];
-	do
-	{
+	do {
 		while ( strcmp( list[i], m ) < 0 ) i++;
 		while ( strcmp( list[j], m ) > 0 ) j--;
-		if ( i <= j )
-		{
+		if ( i <= j ) {
 			temp = list[i];
 			list[i] = list[j];
 			list[j] = temp;
@@ -2822,12 +2517,9 @@ Com_SortFileList
 */
 void Com_SortFileList( char **list, int nfiles, int fastSort )
 {
-	if ( nfiles > 1 && fastSort )
-	{
+	if ( nfiles > 1 && fastSort ) {
 		Com_SortList( list, nfiles-1 );
-	}
-	else // defrag mod demo UI can't handle _properly_ sorted directories
-	{
+	} else {
 		int i, flag;
 		do {
 			flag = 0;

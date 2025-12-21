@@ -1717,19 +1717,9 @@ qboolean FS_FileIsInPAK( const char *filename, char *pakName ) {
 	return qfalse;
 }
 
-
-/*
-============
-FS_ReadFile
-
-Filename are relative to the quake search path
-a null buffer will just return the file length without loading
-============
-*/
 int FS_ReadFile( const char *qpath, void **buffer ) {
 	fileHandle_t	h;
 	byte*			buf;
-	qboolean		isConfig;
 	long			len;
 
 	if ( !fs_searchpaths ) {
@@ -1770,12 +1760,6 @@ int FS_ReadFile( const char *qpath, void **buffer ) {
 	return len;
 }
 
-
-/*
-=============
-FS_FreeFile
-=============
-*/
 void FS_FreeFile( void *buffer ) {
 	if ( !fs_searchpaths ) {
 		Com_Error( ERR_FATAL, "Filesystem call made without initialization" );

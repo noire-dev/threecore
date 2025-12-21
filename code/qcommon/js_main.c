@@ -299,6 +299,7 @@ qboolean JSCall(int func_id, js_args_t* args, js_result_t* result) {
         for (int i = 0; i < MAX_JS_ARGS; i++) {
             if(args->type[i] == JS_TYPE_NONE) break;
             switch (args->type[i]) {
+                case JS_TYPE_NONE: break;
                 case JS_TYPE_INT:
                     duk_push_int(js_ctx, args->value[i].i);
                     break;
