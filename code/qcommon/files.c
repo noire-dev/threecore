@@ -1731,7 +1731,6 @@ int FS_ReadFile( const char *qpath, void **buffer ) {
 	}
 
 	buf = NULL;	// quiet compiler warning
-	isConfig = qfalse;
 
 	// look for it in the filesystem or pack files
 	len = FS_FOpenFileRead( qpath, &h, qfalse );

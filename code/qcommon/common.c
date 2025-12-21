@@ -1220,113 +1220,6 @@ void *S_Malloc( int size ) {
 }
 #endif
 
-
-/*
-========================
-Z_CheckHeap
-========================
-*/
-static void Z_CheckHeap( void ) {
-	const memblock_t *block;
-	const memzone_t *zone;
-
-	zone =  mainzone;
-	for ( block = zone->blocklist.next ; ; ) {
-		if ( block->next == &zone->blocklist ) {
-			break;	// all blocks have been hit
-		}
-		if ( (byte *)block + block->size != (byte *)block->next) {
-			const memblock_t *next = block->next;
-			if ( next->size == 0 && next->id == -ZONEID && next->tag == TAG_GENERAL ) {
-				block = next; // new zone segment
-			} else
-			Com_Error( ERR_FATAL, "Z_CheckHeap: block size does not touch the next block" );
-		}
-		if ( block->next->prev != block) {
-			Com_Error( ERR_FATAL, "Z_CheckHeap: next block doesn't have proper back link" );
-		}
-		if ( block->tag == TAG_FREE && block->next->tag == TAG_FREE ) {
-			Com_Error( ERR_FATAL, "Z_CheckHeap: two consecutive free blocks" );
-		}
-		block = block->next;
-	}
-}
-
-
-/*
-========================
-Z_LogZoneHeap
-========================
-*/
-static void Z_LogZoneHeap( memzone_t *zone, const char *name ) {
-#ifdef ZONE_DEBUG
-	char dump[32], *ptr;
-	int  i, j;
-#endif
-	memblock_t	*block;
-	char		buf[4096];
-	int size, allocSize, numBlocks;
-	int len;
-
-	if ( logfile == FS_INVALID_HANDLE || !FS_Initialized() )
-		return;
-
-	size = numBlocks = 0;
-#ifdef ZONE_DEBUG
-	allocSize = 0;
-#endif
-	len = Com_sprintf( buf, sizeof(buf), "\r\n================\r\n%s log\r\n================\r\n", name );
-	FS_Write( buf, len, logfile );
-	for ( block = zone->blocklist.next ; ; ) {
-		if ( block->tag != TAG_FREE ) {
-#ifdef ZONE_DEBUG
-			ptr = ((char *) block) + sizeof(memblock_t);
-			j = 0;
-			for (i = 0; i < 20 && i < block->d.allocSize; i++) {
-				if (ptr[i] >= 32 && ptr[i] < 127) {
-					dump[j++] = ptr[i];
-				}
-				else {
-					dump[j++] = '_';
-				}
-			}
-			dump[j] = '\0';
-			len = Com_sprintf(buf, sizeof(buf), "size = %8d: %s, line: %d (%s) [%s]\r\n", block->d.allocSize, block->d.file, block->d.line, block->d.label, dump);
-			FS_Write( buf, len, logfile );
-			allocSize += block->d.allocSize;
-#endif
-			size += block->size;
-			numBlocks++;
-		}
-		if ( block->next == &zone->blocklist ) {
-			break; // all blocks have been hit
-		}
-		block = block->next;
-	}
-#ifdef ZONE_DEBUG
-	// subtract debug memory
-	size -= numBlocks * sizeof(zonedebug_t);
-#else
-	allocSize = numBlocks * sizeof(memblock_t); // + 32 bit alignment
-#endif
-	len = Com_sprintf( buf, sizeof( buf ), "%d %s memory in %d blocks\r\n", size, name, numBlocks );
-	FS_Write( buf, len, logfile );
-	len = Com_sprintf( buf, sizeof( buf ), "%d %s memory overhead\r\n", size - allocSize, name );
-	FS_Write( buf, len, logfile );
-	FS_Flush( logfile );
-}
-
-
-/*
-========================
-Z_LogHeap
-========================
-*/
-void Z_LogHeap( void ) {
-	Z_LogZoneHeap( mainzone, "MAIN" );
-	Z_LogZoneHeap( smallzone, "SMALL" );
-}
-
 #ifdef USE_STATIC_TAGS
 
 // static mem blocks to reduce a lot of small zone overhead
@@ -1372,25 +1265,6 @@ static	byte	*s_hunkData = NULL;
 static	int		s_hunkTotal;
 static  int     s_hunkUsed = 0;
 static  int     s_hunkMark = 0;
-
-unsigned int Com_TouchMemory( void ) {
-	int		start, end;
-	unsigned int sum;
-
-	start = Sys_Milliseconds();
-	sum = 0;
-	
-	Z_CheckHeap();
-
-    if (s_hunkData == NULL || s_hunkTotal == 0) {
-        Com_Printf("^1Com_TouchMemory: Hunk not initialized\n");
-        return 0;
-    }
-
-	end = Sys_Milliseconds();
-
-	return sum; // just to silent compiler warning
-}
 
 static void Com_InitSmallZoneMemory( void ) {
 	static byte s_buf[ 512 * 1024 ];

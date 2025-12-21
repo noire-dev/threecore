@@ -1023,7 +1023,6 @@ void *S_Malloc( int size );			// NOT 0 filled memory only for small allocations
 void Z_Free( void *ptr );
 int Z_FreeTags( memtag_t tag );
 int Z_AvailableMemory( void );
-void Z_LogHeap( void );
 
 void Hunk_Clear( void );
 void Hunk_ClearToMark( void );
@@ -1034,8 +1033,6 @@ void *Hunk_AllocateTempMemory( int size );
 void Hunk_FreeTempMemory( void *buf );
 int	Hunk_MemoryRemaining( void );
 void Hunk_Log( void);
-
-unsigned int Com_TouchMemory( void );
 
 // commandLine should not include the executable name (argv[0])
 void Com_Init( char *commandLine );
