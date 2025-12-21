@@ -733,13 +733,7 @@ void CL_ShutdownAll( void ) {
 	CL_ShutdownVMs();
 
 	// shutdown the renderer
-	if ( re.Shutdown ) {
-		if ( CL_GameSwitch() ) {
-			CL_ShutdownRef( REF_DESTROY_WINDOW ); // shutdown renderer & GLimp
-		} else {
-			re.Shutdown( REF_KEEP_CONTEXT ); // don't destroy window or context
-		}
-	}
+	if ( re.Shutdown ) re.Shutdown( REF_KEEP_CONTEXT ); // don't destroy window or context
 
 	cls.rendererStarted = qfalse;
 	cls.soundRegistered = qfalse;
@@ -922,12 +916,6 @@ qboolean CL_Disconnect( qboolean showMainMenu ) {
 	}
 
 	FS_ClearPakReferences( FS_GENERAL_REF | FS_UI_REF | FS_CGAME_REF );
-
-	if ( CL_GameSwitch() ) {
-		// keep current gamestate and connection
-		cl_disconnecting = qfalse;
-		return qfalse;
-	}
 
 	// send a disconnect message to the server
 	// send it a few times in case one is dropped

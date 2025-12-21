@@ -1112,7 +1112,6 @@ void S_ClearSoundBuffer( void );
 // call before filesystem access
 
 void CL_SystemInfoChanged( qboolean onlyGame );
-qboolean CL_GameSwitch( void );
 
 void CL_StartConvertOBJ(const char *name);
 

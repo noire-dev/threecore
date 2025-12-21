@@ -269,7 +269,6 @@ typedef struct {
 
 typedef struct {
 	connstate_t	state;				// connection status
-	qboolean	gameSwitch;
 
 	char		servername[MAX_OSPATH];		// name of server from original connect (used by reconnect)
 

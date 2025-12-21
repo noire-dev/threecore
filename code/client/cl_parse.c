@@ -370,18 +370,6 @@ void CL_SystemInfoChanged( qboolean onlyGame ) {
 	while ( *s != '\0' );
 }
 
-
-/*
-==================
-CL_GameSwitch
-==================
-*/
-qboolean CL_GameSwitch( void )
-{
-	return (cls.gameSwitch && !com_errorEntered);
-}
-
-
 /*
 ==================
 CL_ParseServerInfo

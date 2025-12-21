@@ -1594,11 +1594,6 @@ void Com_GameRestart( int checksumFeed, qboolean clientRestart )
 		// Clean out any user and VM created cvars
 		Cvar_Restart();
 
-#ifndef DEDICATED
-		if ( CL_GameSwitch() )
-			CL_SystemInfoChanged( qfalse );
-#endif
-
 		FS_Restart( checksumFeed );
 
 		// Load new configuration

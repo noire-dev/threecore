@@ -33,8 +33,9 @@ typedef struct {
 extern js_args_t* vmargs;
 extern js_result_t* vmresult;
 
+void JS_Restart(void);
 void JS_Init(void);
-void JSContext(js_args_t* args, js_result_t* result);
+void VMContext(js_args_t* args, js_result_t* result);
 qboolean JSOpenFile(const char* filename);
 void JSLoadScripts(const char* path, const char* name);
 qboolean JSEval(const char* code, qboolean doPrint, qboolean doResult, js_result_t* result);

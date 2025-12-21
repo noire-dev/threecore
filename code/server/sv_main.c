@@ -1150,7 +1150,7 @@ void SV_Frame( int msec ) {
 		return;
 	}
 
-	if(sv_paused.integer) return;
+	if(sv_paused->integer) return;
 
 	frameMsec = 1000 / sv_fps->integer * com_timescale->value;
 	// don't let it scale below 1ms

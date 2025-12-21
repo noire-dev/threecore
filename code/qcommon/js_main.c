@@ -331,12 +331,33 @@ qboolean JSCall(int func_id, js_args_t* args, js_result_t* result) {
     return qtrue;
 }
 
-static void Cmd_CompleteJSName(const char* args, int argNum) {
-	if(argNum == 2) Field_CompleteFilename("", "js", qfalse, FS_MATCH_ANY | FS_MATCH_STICK | FS_MATCH_SUBDIRS);
+void JS_Restart(void) {
+    Com_Printf("^5Restarting JavaScript VM...\n");
+    
+    Cmd_RemoveCommand("js.open");
+    Cmd_RemoveCommand("js.eval");
+    Cmd_RemoveCommand("js.restart");
+    
+    if(js_ctx) {
+        duk_destroy_heap(js_ctx);
+        js_ctx = NULL;
+        JSCall_ref = NULL;
+        JSCall_compiled = qfalse;
+        qvmcall_using = qfalse;
+    }
+    
+    vmargs = NULL;
+    vmresult = NULL;
+    
+    Cvar_Set("js_error", "");
+    JS_Init();
 }
+
+static void Cmd_JSRestart_f(void) { JS_Restart(); }
 
 void JS_Init(void) {
     if(!js_ctx) {
+        Com_Printf("^5Creating JavaScript context...\n");
         js_ctx = duk_create_heap_default();
         if(!js_ctx) {
             Com_Error(ERR_FATAL, "^1Failed to create JavaScript VM");
@@ -379,8 +400,8 @@ void JS_Init(void) {
         
         Com_Printf("^2JavaScript VM initialized!\n");
         Cmd_AddCommand("js.open", Cmd_JSOpenFile_f);
-        Cmd_SetCommandCompletionFunc("js.open", Cmd_CompleteJSName);
         Cmd_AddCommand("js.eval", Cmd_JSEval_f);
+        Cmd_AddCommand("js.restart", Cmd_JSRestart_f);
         
         js_error = Cvar_Get("js_error", "", 0);
         

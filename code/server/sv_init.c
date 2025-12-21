@@ -325,6 +325,7 @@ void SV_SpawnServer( const char *mapname ) {
 
 	// shut down the existing game if it is running
 	SV_ShutdownGameProgs();
+	JS_Restart();
 
 	Com_Printf( "------ Server Initialization ------\n" );
 	Com_Printf( "Server: %s\n", mapname );
