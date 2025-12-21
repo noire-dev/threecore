@@ -280,11 +280,6 @@ static void SV_Startup( void ) {
 
 	svs.initialized = qtrue;
 
-	// Don't respect sv_killserver unless a server is actually running
-	if ( sv_killserver->integer ) {
-		Cvar_Set( "sv_killserver", "0" );
-	}
-
 	Cvar_Set( "sv_running", "1" );
 
 	// Join the ipv6 multicast group now that a map is running so clients can scan for us on the local network.
@@ -551,7 +546,6 @@ void SV_Init( void )
 
 	sv_reconnectlimit = Cvar_Get( "sv_reconnectlimit", "3", 0 );
 	sv_padPackets = Cvar_Get( "sv_padPackets", "0", 0 );
-	sv_killserver = Cvar_Get( "sv_killserver", "0", 0 );
 	sv_lanForceRate = Cvar_Get( "sv_lanForceRate", "1", CVAR_ARCHIVE );
 	sv_anticheatengine = Cvar_Get( "sv_anticheatengine", "0", CVAR_ARCHIVE | CVAR_SERVERINFO );
 	sv_ace_wallhack = Cvar_Get( "sv_ace_wallhack", "2", CVAR_ARCHIVE );
@@ -619,7 +613,7 @@ void SV_Shutdown( const char *finalmsg ) {
 		return;
 	}
 
-	Com_Printf( "----- Server Shutdown (%s) -----\n", finalmsg );
+	Com_Printf( "Server shutdown... (%s)\n", finalmsg );
 
 #ifdef USE_IPV6
 	NET_LeaveMulticast6();
@@ -649,16 +643,6 @@ void SV_Shutdown( const char *finalmsg ) {
 	sv.time = 0;
 
 	Cvar_Set( "sv_running", "0" );
-
-	Com_Printf( "---------------------------\n" );
-
-#ifndef DEDICATED
-	// disconnect any local clients
-	if ( sv_killserver->integer != 2 )
-		CL_Disconnect( qfalse );
-#endif
-
-	// clean some server cvars
 	Cvar_Set( "sv_referencedPakNames", "" );
 	Cvar_Set( "sv_serverid", "0" );
 }

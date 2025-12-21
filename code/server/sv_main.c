@@ -39,7 +39,6 @@ cvar_t	*sv_hostname;
 cvar_t	*sv_master[MAX_MASTER_SERVERS];		// master server ip address
 cvar_t	*sv_reconnectlimit;		// minimum seconds between connect messages
 cvar_t	*sv_padPackets;			// add nop bytes to messages
-cvar_t	*sv_killserver;			// menu system can set to 1 to shut server down
 cvar_t	*sv_mapname;
 cvar_t	*sv_referencedPakNames;
 cvar_t	*sv_serverid;
@@ -1042,17 +1041,6 @@ static void SV_CheckTimeouts( void ) {
 	}
 }
 
-
-/*
-==================
-SV_CheckPaused
-==================
-*/
-static qboolean SV_CheckPaused( void ) {
-	return qfalse;
-}
-
-
 /*
 ==================
 SV_FrameMsec
@@ -1155,13 +1143,6 @@ void SV_Frame( int msec ) {
 	if ( Cvar_CheckGroup( CVG_SERVER ) )
 		SV_TrackCvarChanges(); // update rate settings, etc.
 
-	// the menu kills the server with this cvar
-	if ( sv_killserver->integer ) {
-		SV_Shutdown( "Server was killed" );
-		Cvar_Set( "sv_killserver", "0" );
-		return;
-	}
-
 	if ( !com_sv_running->integer ) {
 #ifdef DEDICATED
 			Sys_Sleep( -1 );
@@ -1169,12 +1150,7 @@ void SV_Frame( int msec ) {
 		return;
 	}
 
-	// allow pause if only the local client is connected
-	if ( SV_CheckPaused() ) {
-		return;
-	}
-
-	// if it isn't time for the next frame, do nothing
+	if(sv_paused.integer) return;
 
 	frameMsec = 1000 / sv_fps->integer * com_timescale->value;
 	// don't let it scale below 1ms
