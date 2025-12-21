@@ -40,8 +40,8 @@ void JSLoadScripts(const char* path, const char* name) {
     char *fileptr;
     
     int numfiles = FS_GetFileList(path, ".js", filelist, sizeof(filelist));
-    if(numfiles == 0) return;
     Com_Printf("^5Loading %d JS %s scripts...\n", numfiles, name);
+    if(numfiles == 0) return;
     fileptr = filelist;
     
     for(int i = 0; i < numfiles; i++) {
