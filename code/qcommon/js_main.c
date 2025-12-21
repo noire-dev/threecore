@@ -21,7 +21,7 @@ static cvar_t* js_error;
 static void *JSCall_ref = NULL;
 static qboolean JSCall_compiled = qfalse;
 
-void JSContext(js_args_t* args, js_result_t* result) {
+void VMContext(js_args_t* args, js_result_t* result) {
     vmargs = args;
     vmresult = result;
 }
