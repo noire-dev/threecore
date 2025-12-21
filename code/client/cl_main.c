@@ -3149,7 +3149,6 @@ void CL_Init( void ) {
 	rconAddress = Cvar_Get ("rconAddress", "", 0);
 	cl_allowDownload = Cvar_Get( "cl_allowDownload", "1", CVAR_ARCHIVE );
 	cl_serverStatusResendTime = Cvar_Get ("cl_serverStatusResendTime", "750", 0);
-	cv = Cvar_Get( "cl_maxPing", "999", CVAR_ARCHIVE );
 	cl_lanForcePackets = Cvar_Get( "cl_lanForcePackets", "1", CVAR_ARCHIVE );
 	Cvar_Get ("name", "Sandbox Player", CVAR_USERINFO | CVAR_ARCHIVE );
 	Cvar_Get ("rate", "125000", CVAR_USERINFO | CVAR_ARCHIVE );
@@ -3776,7 +3775,7 @@ void CL_GetPing( int n, char *buf, int buflen, int *pingtime )
 	{
 		// check for timeout
 		time = Sys_Milliseconds() - cl_pinglist[n].start;
-		maxPing = Cvar_VariableIntegerValue( "cl_maxPing" );
+		maxPing = 999;
 		if ( time < maxPing )
 		{
 			// not timed out yet
@@ -4027,7 +4026,7 @@ qboolean CL_UpdateVisiblePings_f(int source) {
 						}
 					}
 				}
-				// if the server has a ping higher than cl_maxPing or
+				// if the server has a ping higher than 999 or
 				// the ping packet got lost
 				else if (server[i].ping == 0) {
 					// if we are updating global servers

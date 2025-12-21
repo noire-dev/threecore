@@ -1629,7 +1629,6 @@ Com_Init
 =================
 */
 void Com_Init( char *commandLine ) {
-	const char *s;
 	int	qport;
 
 	// get the initial time base
