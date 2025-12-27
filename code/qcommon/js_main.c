@@ -14,7 +14,6 @@ static duk_context *js_ctx = NULL;
 
 js_args_t* vmargs;
 js_result_t* vmresult;
-static qboolean qvmcall_using = qfalse;
 
 static cvar_t* js_error;
 
@@ -133,30 +132,20 @@ static duk_ret_t jsexport_vmcall(duk_context* ctx) {
         return duk_throw(ctx);
     }
     
-    if(!qvmcall_using) {
-        qvmcall_using = qtrue;
-    } else {
-        duk_push_error_object(ctx, DUK_ERR_ERROR, "^1Recursive qvm.call detected");
-        return duk_throw(ctx);
-    }
-    
     int func_id = duk_require_int(ctx, 0);
     int qvm_id = duk_require_int(ctx, 1);
     
     if(qvm_id == VM_GAME && !gvm) {
         duk_push_error_object(ctx, DUK_ERR_ERROR, "^1game.qvm not initialized");
-        qvmcall_using = qfalse;
         return duk_throw(ctx);
     }
 #ifndef DEDICATED
     if(qvm_id == VM_CGAME && !cgvm) {
         duk_push_error_object(ctx, DUK_ERR_ERROR, "^1cgame.qvm not initialized");
-        qvmcall_using = qfalse;
         return duk_throw(ctx);
     }
     if(qvm_id == VM_UI && !uivm) {
         duk_push_error_object(ctx, DUK_ERR_ERROR, "^1ui.qvm not initialized");
-        qvmcall_using = qfalse;
         return duk_throw(ctx);
     }
 #endif
@@ -206,7 +195,6 @@ static duk_ret_t jsexport_vmcall(duk_context* ctx) {
         default: duk_push_undefined(ctx); break;
     }
     
-    qvmcall_using = qfalse;
     return 1;
 }
 
@@ -343,7 +331,6 @@ void JS_Restart(void) {
         js_ctx = NULL;
         JSCall_ref = NULL;
         JSCall_compiled = qfalse;
-        qvmcall_using = qfalse;
     }
     
     vmargs = NULL;
