@@ -267,9 +267,9 @@ qboolean Cvar_Command(void) {
 	} else if(Cmd_Argc() >= 2) {
 		ftype = GetFuncType();
 		if(ftype == FT_SET) {
-			Cvar_Set(v->name, Cmd_ArgsFrom(2));
+			Cvar_Set(Cmd_Argv(0), Cmd_ArgsFrom(2));
 			return qtrue;
-		} else if(ftype == FT_RESET) {
+		} else if(ftype == FT_RESET && v) {
 			Cvar_Set(v->name, NULL);
 			return qtrue;
 		}
