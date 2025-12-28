@@ -28,22 +28,6 @@ static long generateHashValue(const char* fname) {
     return hash & (FILE_HASH_SIZE - 1);
 }
 
-static int ParseCvarFlags(const char *flagsStr) {
-    int flags = 0;
-    const char *p = flagsStr;
-    
-    if (!p || !*p) return 0;
-    
-    if (strstr(p, "ARCHIVE")) flags |= CVAR_ARCHIVE;
-    if (strstr(p, "USERINFO")) flags |= CVAR_USERINFO;
-    if (strstr(p, "SYSTEMINFO")) flags |= CVAR_SYSTEMINFO;
-    if (strstr(p, "SERVERINFO")) flags |= CVAR_SERVERINFO;
-    if (strstr(p, "LATCH")) flags |= CVAR_LATCH;
-    if (strstr(p, "CHEAT")) flags |= CVAR_CHEAT;
-    
-    return flags;
-}
-
 static qboolean Cvar_ValidateName(const char* name) {
 	const char* s;
 	int c;
@@ -251,95 +235,17 @@ void Cvar_SetCheatState(void) {
 
 typedef enum {
 	FT_BAD = 0,
-	FT_CREATE,
 	FT_SET,
 	FT_RESET,
-	FT_DESC,
-	FT_ADD,
-	FT_SUB,
-	FT_MUL,
-	FT_DIV,
-	FT_MOD,
-	FT_RAND,
 } funcType_t;
 
 static funcType_t GetFuncType(void) {
 	const char* cmd;
 	cmd = Cmd_Argv(1);
-	if(!Q_stricmp(cmd, ":=")) return FT_CREATE;
 	if(!Q_stricmp(cmd, "=")) return FT_SET;
 	if(!Q_stricmp(cmd, "*")) return FT_RESET;
-	if(!Q_stricmp(cmd, "?")) return FT_DESC;
-	if(!Q_stricmp(cmd, "+=")) return FT_ADD;
-	if(!Q_stricmp(cmd, "-=")) return FT_SUB;
-	if(!Q_stricmp(cmd, "*=")) return FT_MUL;
-	if(!Q_stricmp(cmd, "/=")) return FT_DIV;
-	if(!Q_stricmp(cmd, "%=")) return FT_MOD;
-	if(!Q_stricmp(cmd, "?=")) return FT_RAND;
 
 	return FT_BAD;
-}
-
-static const char* GetValue(int index, float* val) {
-	static char buf[MAX_CVAR_VALUE_STRING];
-	const char* cmd;
-
-	cmd = Cmd_Argv(index);
-
-	if((*cmd == '-' && *(cmd + 1) == '\0') || *cmd == '\0') {
-		*val = 0.0f;
-		buf[0] = '\0';
-		return NULL;
-	}
-
-	*val = atof(cmd);
-	Q_strncpyz(buf, cmd, sizeof(buf));
-	return buf;
-}
-
-static void Cvar_Op(funcType_t ftype, float* val) {
-	float cap, mod;
-
-	GetValue(2, &mod);
-
-	switch(ftype) {
-		case FT_ADD: *val += mod; break;
-		case FT_SUB: *val -= mod; break;
-		case FT_MUL: *val *= mod; break;
-		case FT_DIV:
-			if(mod) *val /= mod;
-			break;
-		case FT_MOD:
-			if(mod) *val = fmodf(*val, mod);
-			break;
-		default: break;
-	}
-
-	if(Cmd_Argc() > 3) {  // low bound
-		if(GetValue(3, &cap)) {
-			if(*val < cap) *val = cap;
-		}
-	}
-	if(Cmd_Argc() > 4) {  // high bound
-		if(GetValue(4, &cap)) {
-			if(*val > cap) *val = cap;
-		}
-	}
-}
-
-static void Cvar_Rand(float* val) {
-	float cap;
-
-	*val = rand();
-
-	if(Cmd_Argc() > 2) {  // base
-		if(GetValue(2, &cap)) *val += cap;
-	}
-	if(Cmd_Argc() > 3) {  // modulus
-		if(GetValue(3, &cap)) {
-			if(cap) *val = fmodf(*val, cap);
-		}
-	}
 }
 
 static void Cvar_SetDescription(cvar_t* var, const char* var_description) {
@@ -352,8 +258,6 @@ static void Cvar_SetDescription(cvar_t* var, const char* var_description) {
 qboolean Cvar_Command(void) {
 	cvar_t* v;
 	funcType_t ftype;
-	char value[MAX_CVAR_VALUE_STRING];
-	float val;
 
 	v = Cvar_FindVar(Cmd_Argv(0));
 
@@ -362,39 +266,13 @@ qboolean Cvar_Command(void) {
 		return qtrue;
 	} else if(Cmd_Argc() >= 2) {
 		ftype = GetFuncType();
-		if(ftype == FT_CREATE) {
-			Cvar_Get(Cmd_Argv(0), Cmd_ArgsFrom(3), ParseCvarFlags(Cmd_Argv(2)));
+		if(ftype == FT_SET) {
+			Cvar_Set(v->name, Cmd_ArgsFrom(2));
 			return qtrue;
-		} else if(ftype == FT_SET) {
-			Cvar_Set(Cmd_Argv(0), Cmd_ArgsFrom(2));
-			return qtrue;
-		} else if(ftype == FT_RESET && v) {
+		} else if(ftype == FT_RESET) {
 			Cvar_Set(v->name, NULL);
 			return qtrue;
-		} else if(ftype == FT_DESC && v) {
-		    Cvar_SetDescription(v, Cmd_ArgsFrom(2));
-		    return qtrue;
 		}
-	}
-
-	if(!v) return qfalse;
-
-	ftype = GetFuncType();
-	if(ftype == FT_BAD) {
-		Cvar_Set(v->name, Cmd_ArgsFrom(1));
-		return qtrue;
-	} else {
-		val = v->value;
-
-		if(ftype == FT_RAND)
-			Cvar_Rand(&val);
-		else
-			Cvar_Op(ftype, &val);
-
-		sprintf(value, "%g", val);
-
-		Cvar_Set(v->name, value);
-		return qtrue;
 	}
 }
 

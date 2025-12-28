@@ -5,29 +5,22 @@
 #define MAX_JS_ARGS 32
 #define MAX_JS_STRINGSIZE 4096
 
-typedef enum {
-    JS_TYPE_NONE,
-    JS_TYPE_INT,
-    JS_TYPE_FLOAT,
-    JS_TYPE_BOOL,
-    JS_TYPE_STRING
-} js_type_t;
+typedef enum { JS_TYPE_NONE, JS_TYPE_INT, JS_TYPE_FLOAT, JS_TYPE_STRING } js_type_t;
 
-typedef union {
+typedef {
     int i;
     float f;
-    qboolean b;
     char s[MAX_JS_STRINGSIZE];
 } js_value_t;
 
 typedef struct {
-    js_type_t type[MAX_JS_ARGS];
-    js_value_t value[MAX_JS_ARGS];
+    js_type_t t[MAX_JS_ARGS];
+    js_value_t v[MAX_JS_ARGS];
 } js_args_t;
 
 typedef struct {
-    js_type_t type;
-    js_value_t value;
+    js_type_t t;
+    js_value_t v;
 } js_result_t;
 
 extern js_args_t* vmargs;

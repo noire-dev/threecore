@@ -61,21 +61,15 @@ void JSLoadScripts(const char* path, const char* name) {
 }
 
 static void ParseDuktapeResult(duk_context* ctx, js_result_t* result) {
-    if(duk_is_number(ctx, -1)) {
+    if(duk_is_number(ctx, -1) || duk_is_boolean(ctx, -1)) {
         double val = duk_get_number(ctx, -1);
-        if(val == (int)val) {
-            result->type = JS_TYPE_INT;
-            result->value.i = (int)val;
-        } else {
-            result->type = JS_TYPE_FLOAT;
-            result->value.f = (float)val;
-        }
-    } else if(duk_is_boolean(ctx, -1)) {
-        result->type = JS_TYPE_BOOL;
-        result->value.b = duk_get_boolean(ctx, -1);
+        if(val == (int)val) result->t = JS_TYPE_INT;
+        else result->t = JS_TYPE_FLOAT;
+        result->v.i = (int)val;
+        result->v.f = (float)val;
     } else {
-        result->type = JS_TYPE_STRING;
-        Q_strncpyz(result->value.s, duk_safe_to_string(ctx, -1), MAX_JS_STRINGSIZE);
+        result->t = JS_TYPE_STRING;
+        Q_strncpyz(result->v.s, duk_safe_to_string(ctx, -1), MAX_JS_STRINGSIZE);
     }
 }
 
@@ -133,12 +127,12 @@ static duk_ret_t jsexport_vmcall(duk_context* ctx) {
         return duk_throw(ctx);
     }
     
-    if(!qvmcall_using) {
-        qvmcall_using = qtrue;
-    } else {
+    if(qvmcall_using) {
         duk_push_error_object(ctx, DUK_ERR_ERROR, "^1Recursive qvm.call detected");
         return duk_throw(ctx);
     }
+    
+    qvmcall_using = qtrue;
     
     int func_id = duk_require_int(ctx, 0);
     int qvm_id = duk_require_int(ctx, 1);
@@ -172,22 +166,16 @@ static duk_ret_t jsexport_vmcall(duk_context* ctx) {
         
         if(duk_is_number(ctx, arg_idx)) {
             double val = duk_get_number(ctx, arg_idx);
-            if(val == (int)val) {
-                vmargs->type[i] = JS_TYPE_INT;
-                vmargs->value[i].i = (int)val;
-            } else {
-                vmargs->type[i] = JS_TYPE_FLOAT;
-                vmargs->value[i].f = (float)val;
-            }
-        } else if(duk_is_boolean(ctx, arg_idx)) {
-            vmargs->type[i] = JS_TYPE_BOOL;
-            vmargs->value[i].b = duk_get_boolean(ctx, arg_idx) ? qtrue : qfalse;
+            if(val == (int)val) vmargs->t[i] = JS_TYPE_INT;
+            else vmargs->t[i] = JS_TYPE_FLOAT;
+            vmargs->v[i].i = (int)val;
+            vmargs->v[i].f = (float)val;
         } else if(duk_is_string(ctx, arg_idx)) {
-            vmargs->type[i] = JS_TYPE_STRING;
+            vmargs->t[i] = JS_TYPE_STRING;
             const char* str = duk_safe_to_string(ctx, arg_idx);
-            Q_strncpyz(vmargs->value[i].s, str, MAX_JS_STRINGSIZE);
+            Q_strncpyz(vmargs->v[i].s, str, MAX_JS_STRINGSIZE);
         } else if(duk_is_null_or_undefined(ctx, arg_idx)) {
-            vmargs->type[i] = JS_TYPE_NONE;
+            vmargs->t[i] = JS_TYPE_NONE;
         }
     }
     
@@ -199,10 +187,9 @@ static duk_ret_t jsexport_vmcall(duk_context* ctx) {
     
     switch(vmresult->type) {
         case JS_TYPE_NONE: duk_push_undefined(ctx); break;
-        case JS_TYPE_INT: duk_push_int(ctx, vmresult->value.i); break;
-        case JS_TYPE_FLOAT: duk_push_number(ctx, (double)vmresult->value.f); break;
-        case JS_TYPE_BOOL: duk_push_boolean(ctx, vmresult->value.b ? 1 : 0); break;
-        case JS_TYPE_STRING: duk_push_string(ctx, vmresult->value.s); break;
+        case JS_TYPE_INT: duk_push_int(ctx, vmresult->v.i); break;
+        case JS_TYPE_FLOAT: duk_push_number(ctx, (double)vmresult->v.f); break;
+        case JS_TYPE_STRING: duk_push_string(ctx, vmresult->v.s); break;
         default: duk_push_undefined(ctx); break;
     }
     
@@ -297,20 +284,17 @@ qboolean JSCall(int func_id, js_args_t* args, js_result_t* result) {
     
     if(args) {
         for (int i = 0; i < MAX_JS_ARGS; i++) {
-            if(args->type[i] == JS_TYPE_NONE) break;
-            switch (args->type[i]) {
+            if(args->t[i] == JS_TYPE_NONE) break;
+            switch (args->t[i]) {
                 case JS_TYPE_NONE: break;
                 case JS_TYPE_INT:
-                    duk_push_int(js_ctx, args->value[i].i);
+                    duk_push_int(js_ctx, args->v[i].i);
                     break;
                 case JS_TYPE_FLOAT:
-                    duk_push_number(js_ctx, args->value[i].f);
-                    break;
-                case JS_TYPE_BOOL:
-                    duk_push_boolean(js_ctx, args->value[i].b);
+                    duk_push_number(js_ctx, args->v[i].f);
                     break;
                 case JS_TYPE_STRING:
-                    duk_push_string(js_ctx, args->value[i].s);
+                    duk_push_string(js_ctx, args->v[i].s);
                     break;
             }
             arg_count++;
