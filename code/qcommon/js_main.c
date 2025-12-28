@@ -185,7 +185,7 @@ static duk_ret_t jsexport_vmcall(duk_context* ctx) {
     if(qvm_id == VM_UI) VM_Call(uivm, 1, VMCALL, func_id);
 #endif
     
-    switch(vmresult->type) {
+    switch(vmresult->t) {
         case JS_TYPE_NONE: duk_push_undefined(ctx); break;
         case JS_TYPE_INT: duk_push_int(ctx, vmresult->v.i); break;
         case JS_TYPE_FLOAT: duk_push_number(ctx, (double)vmresult->v.f); break;
