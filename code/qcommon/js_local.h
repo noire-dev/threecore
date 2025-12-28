@@ -7,7 +7,7 @@
 
 typedef enum { JS_TYPE_NONE, JS_TYPE_INT, JS_TYPE_FLOAT, JS_TYPE_STRING } js_type_t;
 
-typedef {
+typedef struct {
     int i;
     float f;
     char s[MAX_JS_STRINGSIZE];
