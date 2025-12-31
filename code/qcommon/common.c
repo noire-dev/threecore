@@ -148,7 +148,7 @@ void FORMAT_PRINTF(1, 2) QDECL Com_Printf( const char *fmt, ... ) {
 	}
 	
 #ifndef DEDICATED
-    CL_ConsolePrint( msg );
+    CL_ConsolePrint(msg);
 #endif
 
 	Sys_Print( msg );

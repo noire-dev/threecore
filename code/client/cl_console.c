@@ -34,7 +34,6 @@ void CL_ConsolePrint(const char *txt) {
     }
     
     strncpy(con.lines[con.linescount], txt, CON_MAXLINE - 1);
-    con.lines[con.linescount][CON_MAXLINE - 1] = '\0';
     con.linescount++;
 }
 

@@ -274,6 +274,8 @@ qboolean Cvar_Command(void) {
 			return qtrue;
 		}
 	}
+	
+	return qfalse;
 }
 
 static void Cvar_Toggle_f(void) {
