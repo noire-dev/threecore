@@ -85,11 +85,43 @@ static duk_ret_t jsexport_console_cmd(duk_context *ctx) {
     return 0;
 }
 
-static duk_ret_t jsexport_cvar_get(duk_context *ctx) {
+static duk_ret_t jsexport_cvar_int(duk_context *ctx) {
     const char *cvar_name = duk_safe_to_string(ctx, 0);
     
     if(!cvar_name) {
-        Com_Printf("^1Calling cvar.get without name\n");
+        Com_Printf("^1Calling cvar.int without name\n");
+        duk_push_null(ctx);
+        return 1;
+    }
+    
+    cvar_t *var = Cvar_FindVar(cvar_name);
+    if(var) duk_push_int(ctx, var->integer);
+    else duk_push_null(ctx);
+    
+    return 1;  // return 1 value
+}
+
+static duk_ret_t jsexport_cvar_float(duk_context *ctx) {
+    const char *cvar_name = duk_safe_to_string(ctx, 0);
+    
+    if(!cvar_name) {
+        Com_Printf("^1Calling cvar.float without name\n");
+        duk_push_null(ctx);
+        return 1;
+    }
+    
+    cvar_t *var = Cvar_FindVar(cvar_name);
+    if(var) duk_push_number(ctx, (double)var->value);
+    else duk_push_null(ctx);
+    
+    return 1;  // return 1 value
+}
+
+static duk_ret_t jsexport_cvar_string(duk_context *ctx) {
+    const char *cvar_name = duk_safe_to_string(ctx, 0);
+    
+    if(!cvar_name) {
+        Com_Printf("^1Calling cvar.string without name\n");
         duk_push_null(ctx);
         return 1;
     }
@@ -99,6 +131,25 @@ static duk_ret_t jsexport_cvar_get(duk_context *ctx) {
     else duk_push_null(ctx);
     
     return 1;  // return 1 value
+}
+
+static duk_ret_t jsexport_cvar_register(duk_context *ctx) {
+    const char *cvar_name = duk_safe_to_string(ctx, 0);
+    const char *cvar_value = duk_safe_to_string(ctx, 1);
+    int flags = duk_get_number(ctx, 2);
+    
+    if(!cvar_name) {
+        Com_Printf("^1Calling cvar.register without name\n");
+        return 0;
+    }
+    
+    if(!cvar_value) {
+        Com_Printf("^1Calling cvar.register without value\n");
+        return 0;
+    }
+    
+    Cvar_Get(cvar_name, cvar_value, flags);
+    return 0;
 }
 
 static duk_ret_t jsexport_cvar_set(duk_context *ctx) {
@@ -360,10 +411,16 @@ void JS_Init(void) {
         
         // cvar
         duk_push_object(js_ctx);
-        duk_push_c_function(js_ctx, jsexport_cvar_get, 1);
-        duk_put_prop_string(js_ctx, -2, "get");
+        duk_push_c_function(js_ctx, jsexport_cvar_register, 3);
+        duk_put_prop_string(js_ctx, -2, "register");
         duk_push_c_function(js_ctx, jsexport_cvar_set, 2);
         duk_put_prop_string(js_ctx, -2, "set");
+        duk_push_c_function(js_ctx, jsexport_cvar_int, 1);
+        duk_put_prop_string(js_ctx, -2, "int");
+        duk_push_c_function(js_ctx, jsexport_cvar_float, 1);
+        duk_put_prop_string(js_ctx, -2, "float");
+        duk_push_c_function(js_ctx, jsexport_cvar_string, 1);
+        duk_put_prop_string(js_ctx, -2, "string");
         duk_put_prop_string(js_ctx, -2, "cvar");
         
         // qvm
