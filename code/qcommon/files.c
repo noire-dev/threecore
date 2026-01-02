@@ -1834,7 +1834,7 @@ Check if file should NOT be added to hash search table
 */
 static qboolean FS_BannedPakFile( const char *filename )
 {
-	if ( !strcmp( filename, "autoexec.sbscript" ) || !strcmp( filename, CONFIG_CFG ) )
+	if ( !strcmp( filename, "autoexec.cfg" ) || !strcmp( filename, CONFIG_CFG ) )
 		return qtrue;
 	else
 		return qfalse;
@@ -3553,10 +3553,10 @@ void FS_Restart( int checksumFeed ) {
 	// try to start up normally
 	FS_Startup();
 
-	// if we can't find default.sbscript, assume that the paths are
+	// if we can't find default.cfg, assume that the paths are
 	// busted and error out now, rather than getting an unreadable
 	// graphics screen when the font fails to load
-	if ( FS_ReadFile( "default.sbscript", NULL ) <= 0 ) {
+	if ( FS_ReadFile( "default.cfg", NULL ) <= 0 ) {
 		if (lastValidBase[0]) {
 			Cvar_Set( "fs_basepath", lastValidBase );
 			lastValidBase[0] = '\0';
@@ -3566,7 +3566,7 @@ void FS_Restart( int checksumFeed ) {
 			Com_Error( ERR_DROP, "Invalid game folder" );
 			return;
 		}
-		Com_Error( ERR_FATAL, "Couldn't load default.sbscript" );
+		Com_Error( ERR_FATAL, "Couldn't load default.cfg" );
 	}
 
 	// new check before safeMode

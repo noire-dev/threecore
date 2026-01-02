@@ -34,6 +34,8 @@ void CL_ConsolePrint(const char *txt) {
     }
     
     strncpy(con.lines[con.linescount], txt, CON_MAXLINE - 1);
+    size_t len = strlen(con.lines[con.linescount]);
+    if (len > 0) con.lines[con.linescount][len - 1] = ' ';
     con.linescount++;
 }
 

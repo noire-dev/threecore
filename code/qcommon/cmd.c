@@ -230,7 +230,7 @@ static void Cmd_Exec_f(void) {
 	}
 
 	Q_strncpyz(filename, Cmd_Argv(1), sizeof(filename));
-	COM_DefaultExtension(filename, sizeof(filename), ".sbscript");
+	COM_DefaultExtension(filename, sizeof(filename), ".cfg");
 	FS_ReadFile(filename, &f.v);
 	if(f.v == NULL) {
 		Com_Printf("couldn't exec %s\n", filename);
@@ -505,11 +505,11 @@ void Cmd_ExecuteString(const char* text) {
 }
 
 static void Cmd_CompleteCfgName(const char* args, int argNum) {
-	if(argNum == 2) Field_CompleteFilename("", "sbscript", qfalse, FS_MATCH_ANY | FS_MATCH_STICK | FS_MATCH_SUBDIRS);
+	if(argNum == 2) Field_CompleteFilename("", "cfg", qfalse, FS_MATCH_ANY | FS_MATCH_STICK | FS_MATCH_SUBDIRS);
 }
 
 void Cmd_CompleteWriteCfgName(const char* args, int argNum) {
-	if(argNum == 2) Field_CompleteFilename("", "sbscript", qfalse, FS_MATCH_EXTERN | FS_MATCH_STICK);
+	if(argNum == 2) Field_CompleteFilename("", "cfg", qfalse, FS_MATCH_EXTERN | FS_MATCH_STICK);
 }
 
 void Cmd_Init(void) {

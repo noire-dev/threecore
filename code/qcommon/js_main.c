@@ -51,9 +51,9 @@ void JSLoadScripts(const char* path, const char* name) {
         Q_strncpyz(filename, fileptr, sizeof(filename));
         char fullpath[MAX_QPATH];
         Com_sprintf(fullpath, sizeof(fullpath), "%s/%s", path, filename);
-        Com_Printf("  ^5[%d/%d] %s: \n", i+1, numfiles, filename);
+        Com_Printf("  ^5[%d/%d] %s\n", i+1, numfiles, filename);
         
-        JSOpenFile(fullpath);
+        JSOpenFile(fullpath, qfalse);
         
         if(next) fileptr = next + 1;
         else break;
@@ -248,7 +248,7 @@ static duk_ret_t jsexport_vmcall(duk_context* ctx) {
     return 1;
 }
 
-qboolean JSOpenFile(const char* filename) {
+qboolean JSOpenFile(const char* filename, int notify) {
     union {
 		char* c;
 		void* v;
@@ -260,14 +260,16 @@ qboolean JSOpenFile(const char* filename) {
 	FS_ReadFile(fullpath, &f.v);
         
     if(f.v == NULL) {
-        Com_Printf("^1Could not load file '%s'\n", fullpath);
+        Com_Printf("^1Could not load script '%s'\n", fullpath);
         return qfalse;
     }
     
+    if(notify) Com_Printf("^5Loading %s JS script...\n", filename);
+    
     if(duk_peval_string(js_ctx, f.c) != 0) {
         const char* error = duk_safe_to_string(js_ctx, -1);
-        Com_Printf("^1%s - %s\n", filename, error);
-        Cvar_Set("js_error", va("%s - %s", filename, error));
+        Com_Printf("^1%s: %s\n", filename, error);
+        Cvar_Set("js_error", va("%s: %s", filename, error));
         duk_pop(js_ctx);
         FS_FreeFile(f.v);
         return qfalse;
@@ -287,7 +289,7 @@ static void Cmd_JSOpenFile_f(void) {
     }
     
     Q_strncpyz(filename, Cmd_Argv(1), sizeof(filename));
-    JSOpenFile(filename);
+    JSOpenFile(filename, qtrue);
 }
 
 qboolean JSEval(const char* code, qboolean doPrint, qboolean doResult, js_result_t* result) {
@@ -446,8 +448,9 @@ void JS_Init(void) {
         
         js_error = Cvar_Get("js_error", "", 0);
         
-        JSLoadScripts("js/system", "system");
-        JSLoadScripts("js/core", "core");
+        JSOpenFile("js/init.js", qtrue);
+        JSLoadScripts("js/framework", "framework");
+        JSOpenFile("js/main.js", qtrue);
         JS_InitCompiler();
     }
 }

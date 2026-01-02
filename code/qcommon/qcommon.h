@@ -659,10 +659,10 @@ issues.
 #define	MAX_FOUND_FILES		0x5000
 
 #ifdef DEDICATED
-#define CONFIG_CFG "sandbox_server.sbscript"
+#define CONFIG_CFG "sandbox_server.cfg"
 #define CONSOLE_HISTORY_FILE "history_server"
 #else
-#define CONFIG_CFG "sandbox.sbscript"
+#define CONFIG_CFG "sandbox.cfg"
 #define CONSOLE_HISTORY_FILE "history"
 #endif
 

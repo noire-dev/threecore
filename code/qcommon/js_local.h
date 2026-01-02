@@ -29,7 +29,7 @@ extern js_result_t* vmresult;
 void JS_Restart(void);
 void JS_Init(void);
 void VMContext(js_args_t* args, js_result_t* result);
-qboolean JSOpenFile(const char* filename);
+qboolean JSOpenFile(const char* filename, int notify);
 void JSLoadScripts(const char* path, const char* name);
 qboolean JSEval(const char* code, qboolean doPrint, qboolean doResult, js_result_t* result);
 qboolean JSCall(int func_id, js_args_t* args, js_result_t* result);

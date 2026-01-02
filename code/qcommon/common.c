@@ -1548,11 +1548,11 @@ For controlling environment variables
 ==================
 */
 static void Com_ExecuteCfg( void ) {
-	Cbuf_ExecuteText(EXEC_NOW, "exec default.sbscript\n");
+	Cbuf_ExecuteText(EXEC_NOW, "exec default.cfg\n");
 	Cbuf_Execute();
 	Cbuf_ExecuteText(EXEC_NOW, "exec " CONFIG_CFG "\n");
 	Cbuf_Execute();
-	Cbuf_ExecuteText(EXEC_NOW, "exec autoexec.sbscript\n");
+	Cbuf_ExecuteText(EXEC_NOW, "exec autoexec.cfg\n");
 	Cbuf_Execute();
 }
 
@@ -1781,7 +1781,7 @@ static void Com_WriteConfig_f( void ) {
 	}
 
 	Q_strncpyz( filename, Cmd_Argv(1), sizeof( filename ) );
-	COM_DefaultExtension( filename, sizeof( filename ), ".sbscript" );
+	COM_DefaultExtension( filename, sizeof( filename ), ".cfg" );
 
 	if ( !FS_AllowedExtension( filename, qfalse, &ext ) ) {
 		Com_Printf( "%s: Invalid filename extension: '%s'.\n", __func__, ext );
