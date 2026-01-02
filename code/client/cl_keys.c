@@ -42,13 +42,8 @@ static void CL_KeyDownEvent( int key, unsigned time )
 
 	if ( keys[key].repeats == 1 ) anykeydown++;
 
-	// hardcoded screenshot key
-	if ( key == K_PRINT ) {
-		if ( keys[K_SHIFT].down ) {
-			Cbuf_ExecuteText( EXEC_APPEND, "screenshotBMP\n" );
-		} else {
-			Cbuf_ExecuteText( EXEC_APPEND, "screenshotBMP clipboard\n" );
-		}
+	if(key == K_F5) {
+		Cbuf_ExecuteText(EXEC_APPEND, "js.restart\n");
 		return;
 	}
 
@@ -66,7 +61,6 @@ static void CL_KeyDownEvent( int key, unsigned time )
 			}
 			else if ( cls.state != CA_DISCONNECTED ) {
 				Cmd_Clear();
-				Cvar_Set( "com_errorMessage", "" );
 				if ( !CL_Disconnect( qfalse ) ) { // restart client if not done already
 					CL_FlushMemory();
 				}

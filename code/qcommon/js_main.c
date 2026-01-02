@@ -51,7 +51,7 @@ void JSLoadScripts(const char* path, const char* name) {
         Q_strncpyz(filename, fileptr, sizeof(filename));
         char fullpath[MAX_QPATH];
         Com_sprintf(fullpath, sizeof(fullpath), "%s/%s", path, filename);
-        Com_Printf("  ^5[%d/%d] %s\n", i+1, numfiles, filename);
+        Com_Printf("^5[%d/%d] %s\n", i+1, numfiles, filename);
         
         JSOpenFile(fullpath, qfalse);
         
@@ -82,6 +82,61 @@ static duk_ret_t jsexport_console_log(duk_context *ctx) {
 static duk_ret_t jsexport_console_cmd(duk_context *ctx) {
     const char *str = duk_safe_to_string(ctx, 0);
     Cmd_ExecuteString(str);
+    return 0;
+}
+
+static duk_ret_t jsexport_openjs_file(duk_context *ctx) {
+    const char *str = duk_safe_to_string(ctx, 0);
+    JSOpenFile(str, qtrue);
+    return 0;
+}
+
+static duk_ret_t jsexport_openjs_folder(duk_context *ctx) {
+    const char *str = duk_safe_to_string(ctx, 0);
+    const char *name = duk_safe_to_string(ctx, 1);
+    JSLoadScripts(str, name);
+    return 0;
+}
+
+static duk_ret_t jsexport_file_open(duk_context *ctx) {
+    const char *filename = duk_safe_to_string(ctx, 0);
+    union {
+		char* c;
+		void* v;
+	} f;
+    
+    if(!filename) {
+        Com_Printf("^1Calling file.open without filename\n");
+        duk_push_null(ctx);
+        return 1;
+    }
+    
+    FS_ReadFile(filename, &f.v);
+    
+    if(f.v == NULL) {
+        Com_Printf("^1Could not open file '%s'\n", filename);
+        FS_FreeFile(f.v);
+        duk_push_null(ctx);
+        return 1;
+    }
+    
+    duk_push_string(ctx, f.v);
+    FS_FreeFile(f.v);
+    
+    return 1;  // return 1 value
+}
+
+static duk_ret_t jsexport_file_save(duk_context *ctx) {
+    const char *filename = duk_safe_to_string(ctx, 0);
+    const char *buffer = duk_safe_to_string(ctx, 1);
+    
+    if(!filename) {
+        Com_Printf("^1Calling file.save without filename\n");
+        return 0;
+    }
+    
+    FS_WriteFile(filename, buffer, sizeof(buffer))
+    
     return 0;
 }
 
@@ -260,7 +315,7 @@ qboolean JSOpenFile(const char* filename, int notify) {
 	FS_ReadFile(fullpath, &f.v);
         
     if(f.v == NULL) {
-        Com_Printf("^1Could not load script '%s'\n", fullpath);
+        Com_Printf("^3Could not load script '%s'\n", fullpath);
         return qfalse;
     }
     
@@ -410,6 +465,22 @@ void JS_Init(void) {
         duk_push_c_function(js_ctx, jsexport_console_cmd, 1);
         duk_put_prop_string(js_ctx, -2, "cmd");
         duk_put_prop_string(js_ctx, -2, "console");
+        
+        // openjs
+        duk_push_object(js_ctx);
+        duk_push_c_function(js_ctx, jsexport_openjs_file, 1);
+        duk_put_prop_string(js_ctx, -2, "file");
+        duk_push_c_function(js_ctx, jsexport_openjs_folder, 2);
+        duk_put_prop_string(js_ctx, -2, "folder");
+        duk_put_prop_string(js_ctx, -2, "openjs");
+        
+        // file
+        duk_push_object(js_ctx);
+        duk_push_c_function(js_ctx, jsexport_file_open, 1);
+        duk_put_prop_string(js_ctx, -2, "open");
+        duk_push_c_function(js_ctx, jsexport_file_save, 2);
+        duk_put_prop_string(js_ctx, -2, "save");
+        duk_put_prop_string(js_ctx, -2, "file");
         
         // cvar
         duk_push_object(js_ctx);
