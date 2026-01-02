@@ -35,28 +35,20 @@ static void JS_InitCompiler(void) {
 }
 
 void JSLoadScripts(const char* path, const char* name) {
-    char filelist[8192];
-    char filename[MAX_QPATH];
-    char *fileptr;
-    
+    char filelist[32000];
     int numfiles = FS_GetFileList(path, ".js", filelist, sizeof(filelist));
-    Com_Printf("^5Loading %d JS %s scripts...\n", numfiles, name);
-    if(numfiles == 0) return;
-    fileptr = filelist;
+    char *file;
     
+    Com_Printf("^5Loading %d JS %s scripts...\n", numfiles, name);
+    
+    file = filelist;
     for(int i = 0; i < numfiles; i++) {
-        char *next = strchr(fileptr, '\n');
-        if(next) *next = '\0';
-        
-        Q_strncpyz(filename, fileptr, sizeof(filename));
         char fullpath[MAX_QPATH];
-        Com_sprintf(fullpath, sizeof(fullpath), "%s/%s", path, filename);
-        Com_Printf("^5[%d/%d] %s\n", i+1, numfiles, filename);
+        Com_sprintf(fullpath, sizeof(fullpath), "%s/%s", path, file);
+        Com_Printf("^5[%d/%d] %s\n", i+1, numfiles, file);
         
         JSOpenFile(fullpath, qfalse);
-        
-        if(next) fileptr = next + 1;
-        else break;
+        file += strlen(file) + 1;
     }
 }
 
