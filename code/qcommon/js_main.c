@@ -135,7 +135,7 @@ static duk_ret_t jsexport_file_save(duk_context *ctx) {
         return 0;
     }
     
-    FS_WriteFile(filename, buffer, sizeof(buffer))
+    FS_WriteFile(filename, buffer, sizeof(buffer));
     
     return 0;
 }
