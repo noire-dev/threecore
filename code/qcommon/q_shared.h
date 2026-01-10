@@ -911,7 +911,7 @@ struct cvar_s {
 	char		*resetString;		// cvar_restart will reset to this value
 	char		*latchedString;		// for CVAR_LATCH vars
 	int			flags;
-	qboolean	modified;			// set each time the cvar is changed
+	int	        modified;			// set each time the cvar is changed
 	float		value;				// Q_atof( string )
 	int			integer;			// atoi( string )
 	char		*description;
@@ -924,7 +924,10 @@ struct cvar_s {
 	cvarGroup_t	group;				// to track changes
 };
 
-#define	MAX_CVAR_VALUE_STRING	256
+#define CVARMOD_GAME 1
+#define CVARMOD_CGAME 2
+#define CVARMOD_UI 4
+#define CVARMOD_ALL 7
 
 typedef int	cvarHandle_t;
 
@@ -933,7 +936,7 @@ typedef int	cvarHandle_t;
 typedef struct {
 	float		value;
 	int			integer;
-	char		string[MAX_CVAR_VALUE_STRING];
+	char		string[MAX_CVAR_STRING];
 } vmCvar_t;
 
 /*

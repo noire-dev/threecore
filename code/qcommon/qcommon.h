@@ -565,7 +565,7 @@ cvar_t *Cvar_Get( const char *var_name, const char *value, int flags );
 // that allows variables to be unarchived without needing bitflags
 // if value is "", the value will not override a previously set value.
 
-void	Cvar_Update( vmCvar_t *vmCvar, int cvarID );
+void Cvar_Update(vmCvar_t* vmCvar, int cvarID, int vmIndex);
 // updates an interpreted modules' version of a cvar
 
 void Cvar_Reload(void);

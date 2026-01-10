@@ -102,7 +102,7 @@ cvar_t* Cvar_Get(const char* var_name, const char* var_value, int flags) {
 		if (var->latchedString) {
 		    var->string = CopyString(var->latchedString);
 		    var->latchedString = NULL;
-	        var->modified = qtrue;
+	        var->modified = CVARMOD_ALL;
 	        var->value = atof(var->string);
 	        var->integer = atoi(var->string);
 	    }
@@ -125,7 +125,7 @@ cvar_t* Cvar_Get(const char* var_name, const char* var_value, int flags) {
 
 	var->name = CopyString(var_name);
 	var->string = CopyString(var_value);
-	var->modified = qtrue;
+	var->modified = CVARMOD_ALL;
 	var->value = atof(var->string);
 	var->integer = atoi(var->string);
 	var->resetString = CopyString(var_value);
@@ -191,12 +191,12 @@ cvar_t* Cvar_Set(const char* var_name, const char* value) {
 	if(var->flags & CVAR_LATCH) {
 		Com_Printf("%s will be changed upon restarting.\n", var_name);
 		var->latchedString = CopyString(value);
-		var->modified = qtrue;
+		var->modified = CVARMOD_ALL;
 		cvar_group[var->group] = 1;
 		return var;
 	}
 
-	var->modified = qtrue;
+	var->modified = CVARMOD_ALL;
 	cvar_group[var->group] = 1;
 
 	Z_Free(var->string);  // free the old value string
@@ -385,15 +385,15 @@ void Cvar_ResetGroup(cvarGroup_t group) {
 	if(group < CVG_MAX) cvar_group[group] = 0;
 }
 
-void Cvar_Update(vmCvar_t* vmCvar, int cvarID) {
+void Cvar_Update(vmCvar_t* vmCvar, int cvarID, int vmIndex) {
 	cvar_t* cv = NULL;
 	assert(vmCvar);
 
 	cv = cvar_indexes + cvarID;
 
-	if(!cv->modified) return;
+	if(!(cv->modified & vmIndex)) return;
 	if(!cv->string) return;  // variable might have been cleared by a cvar_restart
-	cv->modified = qfalse;
+	cv->modified &= ~vmIndex;
 
 	Q_strncpyz(vmCvar->string, cv->string, sizeof(vmCvar->string));
 	vmCvar->value = cv->value;
@@ -403,9 +403,7 @@ void Cvar_Update(vmCvar_t* vmCvar, int cvarID) {
 void Cvar_Reload(void) {
     cvar_t* var;
     
-    for(var = cvar_vars; var; var = var->next) {
-        var->modified = qtrue;  
-    }
+    for(var = cvar_vars; var; var = var->next) var->modified = CVARMOD_ALL;  
 }
 
 int Cvar_ID(const char* name) {
