@@ -3,7 +3,11 @@ case TRAP_ERROR: Com_Error(ERR_DROP, "%s", (const char*)VMA(1)); return 0;
 case TRAP_MILLISECONDS: return Sys_Milliseconds();
 case TRAP_CVAR_REGISTER: Cvar_Get(VMA(1), VMA(2), args[3]); return 0;
 case TRAP_CVAR_ID: return Cvar_ID(VMA(1));
-case TRAP_CVAR_UPDATE: Cvar_Update(VMA(1), args[2]); return 0;
+case TRAP_CVAR_UPDATE: { 
+if(vmIndex == VM_GAME){ Cvar_Update(VMA(1), args[2], CVARMOD_GAME); return 0; }
+if(vmIndex == VM_CGAME){ Cvar_Update(VMA(1), args[2], CVARMOD_CGAME); return 0; }
+if(vmIndex == VM_UI){ Cvar_Update(VMA(1), args[2], CVARMOD_UI); return 0; }
+}
 case TRAP_CVAR_RELOAD: Cvar_Reload(); return 0;
 case TRAP_CVAR_SET: Cvar_Set(VMA(1), VMA(2)); return 0;
 case TRAP_ARGC: return Cmd_Argc();
