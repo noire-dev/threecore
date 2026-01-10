@@ -924,6 +924,8 @@ struct cvar_s {
 	cvarGroup_t	group;				// to track changes
 };
 
+#define	MAX_CVAR_STRING 256
+
 #define CVARMOD_GAME 1
 #define CVARMOD_CGAME 2
 #define CVARMOD_UI 4
