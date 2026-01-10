@@ -1041,7 +1041,7 @@ static void CL_Connect_f( void ) {
 	netadrtype_t family;
 	netadr_t	addr;
 	char	buffer[ sizeof( cls.servername ) ];  // same length as cls.servername
-	char	args[ sizeof( cls.servername ) + MAX_CVAR_VALUE_STRING ];
+	char	args[ sizeof( cls.servername ) + MAX_CVAR_STRING ];
 	const char	*server;
 	const char	*serverString;
 	int		len;

@@ -245,6 +245,7 @@ static void* VM_ArgPtr(intptr_t intValue) {
 }
 
 static intptr_t CL_CgameSystemCalls(intptr_t* args) {
+    int qvmIndex = VM_CGAME;
 	switch(args[0]) {
 		case CG_ADDCOMMAND: CL_AddCgameCommand(VMA(1)); return 0;
 		case CG_SENDCLIENTCOMMAND: CL_AddReliableCommand(VMA(1), qfalse); return 0;
