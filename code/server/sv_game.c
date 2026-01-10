@@ -186,6 +186,7 @@ static void* VM_ArgPtr(intptr_t intValue) {
 void* GVM_ArgPtr(intptr_t intValue) { return VM_ArgPtr(intValue); }
 
 static intptr_t SV_GameSystemCalls(intptr_t* args) {
+    int qvmIndex = VM_GAME;
 	switch(args[0]) {
 		case G_LOCATE_GAME_DATA: SV_LocateGameData(VMA(1), args[2], args[3], VMA(4), args[5]); return 0;
 		case G_DROP_CLIENT: SV_GameDropClient(args[1], VMA(2)); return 0;
