@@ -69,7 +69,7 @@ static void CL_GetClipboardData(char* buf, int buflen) {
 	Z_Free(cbd);
 }
 
-static void Key_KeynumToStringBuf(int keynum, char* buf, int buflen) { Q_strncpyz(buf, Key_KeynumToString(keynum), buflen); }
+static void Key_KeynumToStringBuf(int keynum, char* buf, int buflen) { Q_strncpyz(buf, Key_KeynumToString(keynum), buflen); } //move to shared
 
 static void Key_GetBindingBuf(int keynum, char* buf, int buflen) {
 	const char* value;
