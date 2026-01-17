@@ -118,9 +118,6 @@ static intptr_t CL_UISystemCalls(intptr_t* args) {
 		case UI_KEY_KEYNUMTOSTRINGBUF: Key_KeynumToStringBuf(args[1], VMA(2), args[3]); return 0;
 		case UI_KEY_GETBINDINGBUF: Key_GetBindingBuf(args[1], VMA(2), args[3]); return 0;
 		case UI_KEY_SETBINDING: Key_SetBinding(args[1], VMA(2)); return 0;
-		case UI_KEY_ISDOWN: return Key_IsDown(args[1]);
-		case UI_KEY_GETOVERSTRIKEMODE: return Key_GetOverstrikeMode();
-		case UI_KEY_SETOVERSTRIKEMODE: Key_SetOverstrikeMode(args[1]); return 0;
 		case UI_KEY_CLEARSTATES: Key_ClearStates(); return 0;
 		case UI_KEY_SETCATCHER: Key_SetCatcher(args[1] | (Key_GetCatcher() & KEYCATCH_CONSOLE)); return 0;
 		case UI_GETCLIPBOARDDATA: CL_GetClipboardData(VMA(1), args[2]); return 0;

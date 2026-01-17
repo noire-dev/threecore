@@ -44,10 +44,6 @@ int Key_GetKey( const char *binding );
 const char *Key_KeynumToString( int keynum );
 int Key_StringToKeynum( const char *str );
 
-qboolean Key_IsDown( int keynum );
 void Key_ClearStates( void );
-
-qboolean Key_GetOverstrikeMode( void );
-void Key_SetOverstrikeMode( qboolean state );
 
 void Com_InitKeyCommands( void );

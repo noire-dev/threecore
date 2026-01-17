@@ -249,45 +249,6 @@ static const keyname_t keynames[] =
 	{NULL,0}
 };
 
-
-/*
-===================
-Key_SetOverstrikeMode
-===================
-*/
-qboolean Key_GetOverstrikeMode( void )
-{
-	return key_overstrikeMode;
-}
-
-
-/*
-===================
-Key_SetOverstrikeMode
-===================
-*/
-void Key_SetOverstrikeMode( qboolean state )
-{
-	key_overstrikeMode = state;
-}
-
-
-/*
-===================
-Key_IsDown
-===================
-*/
-qboolean Key_IsDown( int keynum )
-{
-	if ( keynum < 0 || keynum >= MAX_KEYS )
-	{
-		return qfalse;
-	}
-
-	return keys[keynum].down;
-}
-
-
 /*
 ===================
 Key_StringToKeynum
