@@ -115,8 +115,6 @@ static void* VM_ArgPtr(intptr_t intValue) {
 static intptr_t CL_UISystemCalls(intptr_t* args) {
     int qvmIndex = VM_UI;
 	switch(args[0]) {
-		case UI_KEY_KEYNUMTOSTRINGBUF: Key_KeynumToStringBuf(args[1], VMA(2), args[3]); return 0;
-		case UI_KEY_GETBINDINGBUF: Key_GetBindingBuf(args[1], VMA(2), args[3]); return 0;
 		case UI_KEY_SETBINDING: Key_SetBinding(args[1], VMA(2)); return 0;
 		case UI_KEY_CLEARSTATES: Key_ClearStates(); return 0;
 		case UI_KEY_SETCATCHER: Key_SetCatcher(args[1] | (Key_GetCatcher() & KEYCATCH_CONSOLE)); return 0;

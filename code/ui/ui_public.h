@@ -12,8 +12,6 @@ typedef struct {
 } uiClientState_t;
 
 typedef enum {
-    UI_KEY_KEYNUMTOSTRINGBUF,
-    UI_KEY_GETBINDINGBUF,
     UI_KEY_SETBINDING,
     UI_KEY_CLEARSTATES,
     UI_KEY_SETCATCHER,

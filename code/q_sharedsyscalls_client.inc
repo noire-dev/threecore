@@ -17,8 +17,9 @@ case TRAP_R_LERPTAG: return re.LerpTag(VMA(1), args[2], args[3], args[4], VMF(5)
 case TRAP_GETGLCONFIG: CL_GetGlconfig(VMA(1)); return 0;
 case TRAP_KEY_GETCATCHER: return Key_GetCatcher();
 case TRAP_R_REMAP_SHADER: re.RemapShader(VMA(1), VMA(2), VMA(3)); return 0;
-case UI_KEY_KEYNUMTOSTRINGBUF: Q_strncpyz(VMA(2), Key_KeynumToString(args[1]), args[3]); return 0;
-case UI_KEY_GETBINDINGBUF: {
+case TRAP_KEY_KEYNUMTOSTRINGBUF: Q_strncpyz(VMA(2), Key_KeynumToString(args[1]), args[3]); return 0;
+case TRAP_KEY_GETBINDINGBUF: {
 char* bind = Key_GetBinding(args[1]);
 Q_strncpyz(VMA(2),bind ? bind : "", args[3]);
 return 0;
+}
