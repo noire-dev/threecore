@@ -327,22 +327,6 @@ static keyNum_t IN_TranslateSDLToQ3Key( SDL_Keysym *keysym, qboolean down )
 	if ( in_keyboardDebug->integer )
 		IN_PrintKey( keysym, key, down );
 
-	if ( keysym->scancode == SDL_SCANCODE_GRAVE )
-	{
-		//SDL_Keycode translated = SDL_GetKeyFromScancode( SDL_SCANCODE_GRAVE );
-
-		//if ( translated == SDLK_CARET )
-		{
-			// Console keys can't be bound or generate characters
-			key = K_CONSOLE;
-		}
-	}
-	else if ( IN_IsConsoleKey( key, 0 ) )
-	{
-		// Console keys can't be bound or generate characters
-		key = K_CONSOLE;
-	}
-
 	return key;
 }
 
@@ -544,51 +528,48 @@ void HandleEvents( void )
 				break;
 
 			case SDL_TEXTINPUT:
-				if( lastKeyDown != K_CONSOLE )
+				char *c = e.text.text;
+
+				key = IN_TranslateSDLToQ3Key( &e.key.keysym, qfalse );
+
+				// Quick and dirty UTF-8 to UTF-32 conversion
+				while ( *c )
 				{
-					char *c = e.text.text;
+					int utf32 = 0;
 
-					key = IN_TranslateSDLToQ3Key( &e.key.keysym, qfalse );
-
-					// Quick and dirty UTF-8 to UTF-32 conversion
-					while ( *c )
+					if( ( *c & 0x80 ) == 0 )
+						utf32 = *c++;
+					else if( ( *c & 0xE0 ) == 0xC0 ) // 110x xxxx
 					{
-						int utf32 = 0;
+						utf32 |= ( *c++ & 0x1F ) << 6;
+						utf32 |= ( *c++ & 0x3F );
+					}
+					else if( ( *c & 0xF0 ) == 0xE0 ) // 1110 xxxx
+					{
+						utf32 |= ( *c++ & 0x0F ) << 12;
+						utf32 |= ( *c++ & 0x3F ) << 6;
+						utf32 |= ( *c++ & 0x3F );
+					}
+					else if( ( *c & 0xF8 ) == 0xF0 ) // 1111 0xxx
+					{
+						utf32 |= ( *c++ & 0x07 ) << 18;
+						utf32 |= ( *c++ & 0x3F ) << 12;
+						utf32 |= ( *c++ & 0x3F ) << 6;
+						utf32 |= ( *c++ & 0x3F );
+					}
+					else
+					{
+						Com_DPrintf( "Unrecognised UTF-8 lead byte: 0x%x\n", (unsigned int)*c );
+						c++;
+					}
 
-						if( ( *c & 0x80 ) == 0 )
-							utf32 = *c++;
-						else if( ( *c & 0xE0 ) == 0xC0 ) // 110x xxxx
-						{
-							utf32 |= ( *c++ & 0x1F ) << 6;
-							utf32 |= ( *c++ & 0x3F );
-						}
-						else if( ( *c & 0xF0 ) == 0xE0 ) // 1110 xxxx
-						{
-							utf32 |= ( *c++ & 0x0F ) << 12;
-							utf32 |= ( *c++ & 0x3F ) << 6;
-							utf32 |= ( *c++ & 0x3F );
-						}
-						else if( ( *c & 0xF8 ) == 0xF0 ) // 1111 0xxx
-						{
-							utf32 |= ( *c++ & 0x07 ) << 18;
-							utf32 |= ( *c++ & 0x3F ) << 12;
-							utf32 |= ( *c++ & 0x3F ) << 6;
-							utf32 |= ( *c++ & 0x3F );
-						}
-						else
-						{
-							Com_DPrintf( "Unrecognised UTF-8 lead byte: 0x%x\n", (unsigned int)*c );
-							c++;
-						}
-
-						if( utf32 != 0 )
-						{
-							if ( IN_IsConsoleKey( 0, utf32 ) ) {
-								Com_QueueEvent( in_eventTime, SE_KEY, K_CONSOLE, qtrue, 0, NULL );
-								Com_QueueEvent( in_eventTime, SE_KEY, K_CONSOLE, qfalse, 0, NULL );
-							} else {
-								Com_QueueEvent( in_eventTime, SE_CHAR, utf32, 0, 0, NULL );
-							}
+					if( utf32 != 0 )
+					{
+						if ( IN_IsConsoleKey( 0, utf32 ) ) {
+							Com_QueueEvent( in_eventTime, SE_KEY, K_CONSOLE, qtrue, 0, NULL );
+							Com_QueueEvent( in_eventTime, SE_KEY, K_CONSOLE, qfalse, 0, NULL );
+						} else {
+							Com_QueueEvent( in_eventTime, SE_CHAR, utf32, 0, 0, NULL );
 						}
 					}
 				}
