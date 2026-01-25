@@ -1062,8 +1062,6 @@ void CL_CharEvent( int key );
 
 void CL_MouseEvent( int dx, int dy /*, int time*/ );
 
-void CL_JoystickEvent( int axis, int value, int time );
-
 void CL_PacketEvent( const netadr_t *from, msg_t *msg );
 
 #define CON_MAXLINES 16384
@@ -1162,7 +1160,6 @@ typedef enum {
 	SE_KEY,		// evValue is a key code, evValue2 is the down flag
 	SE_CHAR,	// evValue is an ascii char
 	SE_MOUSE,	// evValue and evValue2 are relative signed x / y moves
-	SE_JOYSTICK_AXIS,	// evValue is an axis number and evValue2 is the current state (-127 to 127)
 	SE_CONSOLE,	// evPtr is a char*
 	SE_MAX,
 } sysEventType_t;

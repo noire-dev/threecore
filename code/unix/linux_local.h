@@ -28,10 +28,6 @@ void IN_Init (void);
 void IN_Frame (void);
 void IN_Shutdown (void);
 
-
-void IN_JoyMove( void );
-void IN_StartupJoystick( void );
-
 // OpenGL subsystem
 qboolean QGL_Init( const char *dllname );
 void QGL_Shutdown( qboolean unloadDLL );
@@ -39,10 +35,6 @@ void QGL_Shutdown( qboolean unloadDLL );
 // Vulkan subsystem
 qboolean QVK_Init( void );
 void QVK_Shutdown( qboolean unloadDLL );
-
-
-// bk001130 - win32
-// void IN_JoystickCommands (void);
 
 char *strlwr (char *s);
 

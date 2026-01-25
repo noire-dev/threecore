@@ -143,20 +143,6 @@ void EA_Command( int client, const char *command )
 // Returns:				-
 // Changes Globals:		-
 //===========================================================================
-void EA_SelectWeapon(int client, int weapon)
-{
-	bot_input_t *bi;
-
-	bi = &botinputs[client];
-
-	bi->weapon = weapon;
-} //end of the function EA_SelectWeapon
-//===========================================================================
-//
-// Parameter:			-
-// Returns:				-
-// Changes Globals:		-
-//===========================================================================
 void EA_Attack(int client)
 {
 	bot_input_t *bi;

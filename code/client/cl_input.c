@@ -366,61 +366,6 @@ void CL_MouseEvent( int dx, int dy /*, int time*/ ) {
 	}
 }
 
-
-/*
-=================
-CL_JoystickEvent
-
-Joystick values stay set until changed
-=================
-*/
-void CL_JoystickEvent( int axis, int value, int time ) {
-	if ( axis < 0 || axis >= MAX_JOYSTICK_AXIS ) {
-		Com_Error( ERR_DROP, "CL_JoystickEvent: bad axis %i", axis );
-	} else {
-		cl.joystickAxis[axis] = value;
-	}
-}
-
-
-/*
-=================
-CL_JoystickMove
-=================
-*/
-static void CL_JoystickMove( usercmd_t *cmd ) {
-	//int		movespeed;
-	float	anglespeed;
-
-	if ( in_speed.active ^ cl_run->integer ) {
-		//movespeed = 2;
-	} else {
-		//movespeed = 1;
-		cmd->buttons |= BUTTON_WALKING;
-	}
-
-	if ( in_speed.active ) {
-		anglespeed = 0.001 * cls.frametime * cl_anglespeedkey->value;
-	} else {
-		anglespeed = 0.001 * cls.frametime;
-	}
-
-	if ( !in_strafe.active ) {
-		cl.viewangles[YAW] += anglespeed * cl_yawspeed->value * cl.joystickAxis[AXIS_SIDE];
-	} else {
-		cmd->rightmove = ClampCharMove( cmd->rightmove + cl.joystickAxis[AXIS_SIDE] );
-	}
-
-	if ( in_mlooking ) {
-		cl.viewangles[PITCH] += anglespeed * cl_pitchspeed->value * cl.joystickAxis[AXIS_FORWARD];
-	} else {
-		cmd->forwardmove = ClampCharMove( cmd->forwardmove + cl.joystickAxis[AXIS_FORWARD] );
-	}
-
-	cmd->upmove = ClampCharMove( cmd->upmove + cl.joystickAxis[AXIS_UP] );
-}
-
-
 /*
 =================
 CL_MouseMove
@@ -430,13 +375,10 @@ static void CL_MouseMove( usercmd_t *cmd ) {
 	float mx, my;
 
 	// allow mouse smoothing
-	if (m_filter->integer)
-	{
+	if (m_filter->integer) {
 		mx = (cl.mouseDx[0] + cl.mouseDx[1]) * 0.5f;
 		my = (cl.mouseDy[0] + cl.mouseDy[1]) * 0.5f;
-	}
-	else
-	{
+	} else {
 		mx = cl.mouseDx[cl.mouseIndex];
 		my = cl.mouseDy[cl.mouseIndex];
 	}
@@ -455,16 +397,9 @@ static void CL_MouseMove( usercmd_t *cmd ) {
 	mx *= cl.cgameSensitivity;
 	my *= cl.cgameSensitivity;
 
-	// add mouse X/Y movement to cmd
-	if ( in_strafe.active )
-		cmd->rightmove = ClampCharMove( cmd->rightmove + m_side->value * mx );
-	else
-		cl.viewangles[YAW] -= m_yaw->value * mx;
-
-	if ( (in_mlooking || cl_freelook->integer) && !in_strafe.active )
-		cl.viewangles[PITCH] += m_pitch->value * my;
-	else
-		cmd->forwardmove = ClampCharMove( cmd->forwardmove - m_forward->value * my );
+	// add mouse X/Y to cmd
+	cl.viewangles[YAW] -= m_yaw->value * mx;
+	cl.viewangles[PITCH] += m_pitch->value * my;
 }
 
 
@@ -489,7 +424,7 @@ static void CL_CmdButtons( usercmd_t *cmd ) {
 	}
 
 	if ( Key_GetCatcher() ) {
-		cmd->buttons |= BUTTON_TALK;
+		cmd->buttons |= BUTTON_UI;
 	}
 
 	// allow the game to know if any key at all is
@@ -507,9 +442,6 @@ CL_FinishMove
 */
 static void CL_FinishMove( usercmd_t *cmd ) {
 	int		i;
-
-	// copy the state that the cgame is currently sending
-	cmd->weapon = cl.cgameUserCmdValue;
 
 	// send the current server time so the amount of movement
 	// can be determined without allowing cheating
@@ -544,9 +476,6 @@ static usercmd_t CL_CreateCmd( void ) {
 
 	// get basic movement from mouse
 	CL_MouseMove( &cmd );
-
-	// get basic movement from joystick
-	CL_JoystickMove( &cmd );
 
 	// check to make sure the angles haven't wrapped
 	if ( cl.viewangles[PITCH] - oldAngles[PITCH] > 90 ) {

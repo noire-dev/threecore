@@ -51,7 +51,6 @@ void EA_Gesture(int client);
 void EA_Use(int client);
 
 //regular elementary actions
-void EA_SelectWeapon(int client, int weapon);
 void EA_Jump(int client);
 void EA_DelayedJump(int client);
 void EA_Move(int client, vec3_t dir, float speed);
