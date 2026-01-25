@@ -23,18 +23,12 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #ifndef __KEYCODES_H__
 #define __KEYCODES_H__
 
-//
-// these are the key numbers that should be passed to KeyEvent
-//
-
-// normal keys should be passed as lowercased ascii
-
+// keys table
 typedef enum {
 	K_TAB = 9,
 	K_ENTER = 13,
 	K_ESCAPE = 27,
 	K_SPACE = 32,
-
 	K_QUOTE = '\'',
 	K_PLUS = '+',
 	K_COMMA = ',',
@@ -75,10 +69,8 @@ typedef enum {
 	K_Y = 'y',
 	K_Z = 'z',
 
-	// following definitions must not be changed
 	K_BACKSPACE = 127,
-
-	K_COMMAND = 128,
+	K_COMMAND,
 	K_CAPSLOCK,
 	K_POWER,
 	K_PAUSE,
@@ -138,7 +130,6 @@ typedef enum {
 	K_MOUSE3,
 	K_MOUSE4,
 	K_MOUSE5,
-
 	K_MWHEELDOWN,
 	K_MWHEELUP,
 

@@ -36,6 +36,23 @@ typedef struct {
 
 // names not in this list can either be lowercase ascii, or '0xnn' hex sequences
 static const keyname_t keynames[] = {
+    {"TAB", K_TAB},
+	{"ENTER", K_ENTER},
+	{"ESCAPE", K_ESCAPE},
+	{"SPACE", K_SPACE},
+	{"'", K_QUOTE},
+	{"+", K_PLUS},
+	{",", K_COMMA},
+	{"-", K_MINUS},
+	{".", K_DOT},
+	{"/", K_SLASH},
+	{"SEMICOLON", K_SEMICOLON},
+	{"=", K_EQUAL},
+	{"\\",K_BACKSLASH},
+	{"_", K_UNDERSCORE},
+	{"[", K_BRACKET_OPEN},
+	{"]", K_BRACKET_CLOSE},
+	
 	{"a", K_A},
 	{"b", K_B},
 	{"c", K_C},
@@ -63,37 +80,26 @@ static const keyname_t keynames[] = {
 	{"y", K_Y},
 	{"z", K_Z},
 
-	{"TAB", K_TAB},
-	{"ENTER", K_ENTER},
-	{"ESCAPE", K_ESCAPE},
-	{"SPACE", K_SPACE},
-
-	{"'", K_QUOTE},
-	{"+", K_PLUS},
-	{",", K_COMMA},
-	{"-", K_MINUS},
-	{".", K_DOT},
-	{"/", K_SLASH},
-	{"SEMICOLON", K_SEMICOLON},	// because a raw semicolon separates commands
-	{"=", K_EQUAL},
-	{"\\",K_BACKSLASH},
-	{"_", K_UNDERSCORE},
-	{"[", K_BRACKET_OPEN},
-	{"]", K_BRACKET_CLOSE},
-
 	{"BACKSPACE", K_BACKSPACE},
+	{"COMMAND", K_COMMAND},
+	{"CAPSLOCK", K_CAPSLOCK},
+	{"POWER", K_POWER},
+	{"PAUSE", K_PAUSE},
+	
 	{"UPARROW", K_UPARROW},
 	{"DOWNARROW", K_DOWNARROW},
 	{"LEFTARROW", K_LEFTARROW},
 	{"RIGHTARROW", K_RIGHTARROW},
-
+	
 	{"ALT", K_ALT},
 	{"CTRL", K_CTRL},
 	{"SHIFT", K_SHIFT},
-
-	{"COMMAND", K_COMMAND},
-
-	{"CAPSLOCK", K_CAPSLOCK},
+	{"INS", K_INS},
+	{"DEL", K_DEL},
+	{"PGDN", K_PGDN},
+	{"PGUP", K_PGUP},
+	{"HOME", K_HOME},
+	{"END", K_END},
 
 	{"F1", K_F1},
 	{"F2", K_F2},
@@ -110,23 +116,7 @@ static const keyname_t keynames[] = {
 	{"F13", K_F13},
 	{"F14", K_F14},
 	{"F15", K_F15},
-
-	{"INS", K_INS},
-	{"DEL", K_DEL},
-	{"PGDN", K_PGDN},
-	{"PGUP", K_PGUP},
-	{"HOME", K_HOME},
-	{"END", K_END},
-
-	{"MOUSE1", K_MOUSE1},
-	{"MOUSE2", K_MOUSE2},
-	{"MOUSE3", K_MOUSE3},
-	{"MOUSE4", K_MOUSE4},
-	{"MOUSE5", K_MOUSE5},
-
-	{"MWHEELUP",	K_MWHEELUP },
-	{"MWHEELDOWN",	K_MWHEELDOWN },
-
+	
 	{"KP_HOME",			K_KP_HOME },
 	{"KP_UPARROW",		K_KP_UPARROW },
 	{"KP_PGUP",			K_KP_PGUP },
@@ -145,7 +135,13 @@ static const keyname_t keynames[] = {
 	{"KP_NUMLOCK",		K_KP_NUMLOCK },
 	{"KP_EQUALS",		K_KP_EQUALS },
 
-	{"PAUSE", K_PAUSE},
+	{"MOUSE1", K_MOUSE1},
+	{"MOUSE2", K_MOUSE2},
+	{"MOUSE3", K_MOUSE3},
+	{"MOUSE4", K_MOUSE4},
+	{"MOUSE5", K_MOUSE5},
+	{"MWHEELUP",	K_MWHEELUP },
+	{"MWHEELDOWN",	K_MWHEELDOWN },
 
 	{"WINDOWS", K_SUPER},
 	{"COMPOSE", K_COMPOSE},
@@ -156,7 +152,6 @@ static const keyname_t keynames[] = {
 	{"SCROLLOCK", K_SCROLLOCK },
 	{"BREAK", K_BREAK},
 	{"MENU", K_MENU},
-	{"POWER", K_POWER},
 	{"EURO", K_EURO},
 	{"UNDO", K_UNDO},
 
