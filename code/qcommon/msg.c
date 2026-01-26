@@ -548,9 +548,9 @@ void MSG_WriteDeltaUsercmdKey( msg_t *msg, int key, const usercmd_t *from, const
 	MSG_WriteDeltaKey( msg, key, from->angles[0], to->angles[0], 16 );
 	MSG_WriteDeltaKey( msg, key, from->angles[1], to->angles[1], 16 );
 	MSG_WriteDeltaKey( msg, key, from->angles[2], to->angles[2], 16 );
-	MSG_WriteDeltaKey( msg, key, from->forwardmove, to->forwardmove, 8 );
-	MSG_WriteDeltaKey( msg, key, from->rightmove, to->rightmove, 8 );
-	MSG_WriteDeltaKey( msg, key, from->upmove, to->upmove, 8 );
+	MSG_WriteDeltaKey( msg, key, from->forwardmove, to->forwardmove, 2 );
+	MSG_WriteDeltaKey( msg, key, from->rightmove, to->rightmove, 2 );
+	MSG_WriteDeltaKey( msg, key, from->upmove, to->upmove, 2 );
 	MSG_WriteDeltaKey( msg, key, from->buttons, to->buttons, 16 );
 }
 
@@ -571,15 +571,9 @@ void MSG_ReadDeltaUsercmdKey( msg_t *msg, int key, const usercmd_t *from, usercm
 		to->angles[0] = MSG_ReadDeltaKey( msg, key, from->angles[0], 16);
 		to->angles[1] = MSG_ReadDeltaKey( msg, key, from->angles[1], 16);
 		to->angles[2] = MSG_ReadDeltaKey( msg, key, from->angles[2], 16);
-		to->forwardmove = MSG_ReadDeltaKey( msg, key, from->forwardmove, 8);
-		if( to->forwardmove == -128 )
-			to->forwardmove = -127;
-		to->rightmove = MSG_ReadDeltaKey( msg, key, from->rightmove, 8);
-		if( to->rightmove == -128 )
-			to->rightmove = -127;
-		to->upmove = MSG_ReadDeltaKey( msg, key, from->upmove, 8);
-		if( to->upmove == -128 )
-			to->upmove = -127;
+		to->forwardmove = MSG_ReadDeltaKey( msg, key, from->forwardmove, 2);
+		to->rightmove = MSG_ReadDeltaKey( msg, key, from->rightmove, 2);
+		to->upmove = MSG_ReadDeltaKey( msg, key, from->upmove, 2);
 		to->buttons = MSG_ReadDeltaKey( msg, key, from->buttons, 16);
 	} else {
 		to->angles[0] = from->angles[0];

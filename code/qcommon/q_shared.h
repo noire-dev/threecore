@@ -1189,7 +1189,7 @@ typedef struct usercmd_s {
 	int				serverTime;
 	int				angles[3];
 	int 			buttons;
-	signed char	    forwardmove, rightmove, upmove;
+	signed int	    forwardmove, rightmove, upmove;
 } usercmd_t;
 
 //===================================================================

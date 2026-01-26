@@ -26,37 +26,13 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 static unsigned frame_msec;
 static int old_com_frameTime;
 
-/*
-===============================================================================
-
-KEY BUTTONS
-
-Continuous button event tracking is complicated by the fact that two different
-input sources (say, mouse button 1 and the control key) can both press the
-same button, but the button should only be released when both of the
-pressing key have been released.
-
-When a key event issues a button command (+forward, +attack, etc), it appends
-its key number as argv(1) so it can be matched up with the release.
-
-argv(2) will be set to the time the event happened, which allows exact
-control even at low framerates when the down and up events may both get queued
-at the same time.
-
-===============================================================================
-*/
-
 typedef struct {
-	int			down[2];		// key nums holding it down
-	unsigned	downtime;		// msec timestamp
-	unsigned	msec;			// msec down this frame if both a down and up happened
-	qboolean	active;			// current state
+	int			down;		    // key nums holding it down
 	qboolean	wasPressed;		// set when down, not cleared when up
 } kbutton_t;
 
-static kbutton_t in_left, in_right, in_forward, in_back;
-static kbutton_t in_lookup, in_lookdown, in_moveleft, in_moveright;
-static kbutton_t in_strafe, in_speed;
+static kbutton_t in_forward, in_back, in_left, in_right;
+static kbutton_t in_run;
 static kbutton_t in_up, in_down;
 static kbutton_t in_buttons[16];
 
@@ -82,25 +58,6 @@ static cvar_t *m_forward;
 static cvar_t *m_side;
 static cvar_t *m_filter;
 
-static qboolean in_mlooking;
-
-static void IN_CenterView( void ) {
-	cl.viewangles[PITCH] = -SHORT2ANGLE(cl.snap.ps.delta_angles[PITCH]);
-}
-
-static void IN_MLookDown( void ) {
-	in_mlooking = qtrue;
-}
-
-
-static void IN_MLookUp( void ) {
-	in_mlooking = qfalse;
-	if ( !cl_freelook->integer ) {
-		IN_CenterView ();
-	}
-}
-
-
 static void IN_KeyDown( kbutton_t *b ) {
 	const char *c;
 	int	k;
@@ -112,9 +69,7 @@ static void IN_KeyDown( kbutton_t *b ) {
 		k = -1;		// typed manually at the console for continuous down
 	}
 
-	if ( k == b->down[0] || k == b->down[1] ) {
-		return;		// repeating key
-	}
+	if(k == b->down) return;
 
 	if ( !b->down[0] ) {
 		b->down[0] = k;
@@ -178,131 +133,35 @@ static void IN_KeyUp( kbutton_t *b ) {
 	b->active = qfalse;
 }
 
-
-/*
-===============
-CL_KeyState
-
-Returns the fraction of the frame that the key was down
-===============
-*/
-static float CL_KeyState( kbutton_t *key ) {
-	float		val;
-	int			msec;
-
-	msec = key->msec;
-	key->msec = 0;
-
-	if ( key->active ) {
-		// still down
-		if ( !key->downtime ) {
-			msec = com_frameTime;
-		} else {
-			msec += com_frameTime - key->downtime;
-		}
-		key->downtime = com_frameTime;
-	}
-
-	val = (float)msec / frame_msec;
-	if ( val < 0 ) {
-		val = 0;
-	}
-	if ( val > 1 ) {
-		val = 1;
-	}
-
-	return val;
+static int CL_KeyState(kbutton_t *key) {
+	if(key->wasPressed) return 1;
+	return 0;
 }
-
 
 static void IN_UpDown(void) {IN_KeyDown(&in_up);}
 static void IN_UpUp(void) {IN_KeyUp(&in_up);}
 static void IN_DownDown(void) {IN_KeyDown(&in_down);}
 static void IN_DownUp(void) {IN_KeyUp(&in_down);}
-static void IN_LeftDown(void) {IN_KeyDown(&in_left);}
-static void IN_LeftUp(void) {IN_KeyUp(&in_left);}
-static void IN_RightDown(void) {IN_KeyDown(&in_right);}
-static void IN_RightUp(void) {IN_KeyUp(&in_right);}
 static void IN_ForwardDown(void) {IN_KeyDown(&in_forward);}
 static void IN_ForwardUp(void) {IN_KeyUp(&in_forward);}
 static void IN_BackDown(void) {IN_KeyDown(&in_back);}
 static void IN_BackUp(void) {IN_KeyUp(&in_back);}
-static void IN_LookupDown(void) {IN_KeyDown(&in_lookup);}
-static void IN_LookupUp(void) {IN_KeyUp(&in_lookup);}
-static void IN_LookdownDown(void) {IN_KeyDown(&in_lookdown);}
-static void IN_LookdownUp(void) {IN_KeyUp(&in_lookdown);}
-static void IN_MoveleftDown(void) {IN_KeyDown(&in_moveleft);}
-static void IN_MoveleftUp(void) {IN_KeyUp(&in_moveleft);}
-static void IN_MoverightDown(void) {IN_KeyDown(&in_moveright);}
-static void IN_MoverightUp(void) {IN_KeyUp(&in_moveright);}
+static void IN_LeftDown(void) {IN_KeyDown(&in_left);}
+static void IN_LeftUp(void) {IN_KeyUp(&in_left);}
+static void IN_RightDown(void) {IN_KeyDown(&in_right);}
+static void IN_RightUp(void) {IN_KeyUp(&in_right);}
 
-static void IN_SpeedDown(void) {IN_KeyDown(&in_speed);}
-static void IN_SpeedUp(void) {IN_KeyUp(&in_speed);}
-static void IN_StrafeDown(void) {IN_KeyDown(&in_strafe);}
-static void IN_StrafeUp(void) {IN_KeyUp(&in_strafe);}
-
-static void IN_Button0Down(void) {IN_KeyDown(&in_buttons[0]);}
-static void IN_Button0Up(void) {IN_KeyUp(&in_buttons[0]);}
-static void IN_Button1Down(void) {IN_KeyDown(&in_buttons[1]);}
-static void IN_Button1Up(void) {IN_KeyUp(&in_buttons[1]);}
-static void IN_Button2Down(void) {IN_KeyDown(&in_buttons[2]);}
-static void IN_Button2Up(void) {IN_KeyUp(&in_buttons[2]);}
-static void IN_Button3Down(void) {IN_KeyDown(&in_buttons[3]);}
-static void IN_Button3Up(void) {IN_KeyUp(&in_buttons[3]);}
-static void IN_Button4Down(void) {IN_KeyDown(&in_buttons[4]);}
-static void IN_Button4Up(void) {IN_KeyUp(&in_buttons[4]);}
-static void IN_Button5Down(void) {IN_KeyDown(&in_buttons[5]);}
-static void IN_Button5Up(void) {IN_KeyUp(&in_buttons[5]);}
-static void IN_Button6Down(void) {IN_KeyDown(&in_buttons[6]);}
-static void IN_Button6Up(void) {IN_KeyUp(&in_buttons[6]);}
-static void IN_Button7Down(void) {IN_KeyDown(&in_buttons[7]);}
-static void IN_Button7Up(void) {IN_KeyUp(&in_buttons[7]);}
-static void IN_Button8Down(void) {IN_KeyDown(&in_buttons[8]);}
-static void IN_Button8Up(void) {IN_KeyUp(&in_buttons[8]);}
-static void IN_Button9Down(void) {IN_KeyDown(&in_buttons[9]);}
-static void IN_Button9Up(void) {IN_KeyUp(&in_buttons[9]);}
-static void IN_Button10Down(void) {IN_KeyDown(&in_buttons[10]);}
-static void IN_Button10Up(void) {IN_KeyUp(&in_buttons[10]);}
-static void IN_Button11Down(void) {IN_KeyDown(&in_buttons[11]);}
-static void IN_Button11Up(void) {IN_KeyUp(&in_buttons[11]);}
-static void IN_Button12Down(void) {IN_KeyDown(&in_buttons[12]);}
-static void IN_Button12Up(void) {IN_KeyUp(&in_buttons[12]);}
-static void IN_Button13Down(void) {IN_KeyDown(&in_buttons[13]);}
-static void IN_Button13Up(void) {IN_KeyUp(&in_buttons[13]);}
-static void IN_Button14Down(void) {IN_KeyDown(&in_buttons[14]);}
-static void IN_Button14Up(void) {IN_KeyUp(&in_buttons[14]);}
-static void IN_Button15Down(void) {IN_KeyDown(&in_buttons[15]);}
-static void IN_Button15Up(void) {IN_KeyUp(&in_buttons[15]);}
-
-
-//==========================================================================
-
-
-/*
-================
-CL_AdjustAngles
-
-Moves the local angle positions
-================
-*/
-static void CL_AdjustAngles( void ) {
-	float	speed;
-
-	if ( in_speed.active ) {
-		speed = 0.001 * cls.frametime * cl_anglespeedkey->value;
-	} else {
-		speed = 0.001 * cls.frametime;
-	}
-
-	if ( !in_strafe.active ) {
-		cl.viewangles[YAW] -= speed*cl_yawspeed->value*CL_KeyState (&in_right);
-		cl.viewangles[YAW] += speed*cl_yawspeed->value*CL_KeyState (&in_left);
-	}
-
-	cl.viewangles[PITCH] -= speed*cl_pitchspeed->value * CL_KeyState (&in_lookup);
-	cl.viewangles[PITCH] += speed*cl_pitchspeed->value * CL_KeyState (&in_lookdown);
+void IN_ButtonDown(void) {
+    int id = atoi(Cmd_Argv(1));
+    if (id < 0 || id >= MAX_BUTTONS) return;
+    IN_KeyDown(&in_buttons[id]);
 }
 
+void IN_ButtonUp(void) {
+    int id = atoi(Cmd_Argv(1));
+    if (id < 0 || id >= MAX_BUTTONS) return;
+    IN_KeyUp(&in_buttons[id]);
+}
 
 /*
 ================
@@ -312,33 +171,14 @@ Sets the usercmd_t based on key states
 ================
 */
 static void CL_KeyMove( usercmd_t *cmd ) {
-	int		movespeed;
 	int		forward, side, up;
-
-	//
-	// adjust for speed key / running
-	// the walking flag is to keep animations consistent
-	// even during acceleration and deceleration
-	//
-	if ( in_speed.active ^ cl_run->integer ) {
-		movespeed = 127;
-		cmd->buttons &= ~BUTTON_WALKING;
-	} else {
-		cmd->buttons |= BUTTON_WALKING;
-		movespeed = 64;
-	}
 
 	forward = 0;
 	side = 0;
 	up = 0;
-	if ( in_strafe.active ) {
-		side += movespeed * CL_KeyState (&in_right);
-		side -= movespeed * CL_KeyState (&in_left);
-	}
-
-	side += movespeed * CL_KeyState (&in_moveright);
-	side -= movespeed * CL_KeyState (&in_moveleft);
-
+	
+	side = CL_KeyState (&in_left);
+	side = CL_KeyState (&in_right)*2;
 
 	up += movespeed * CL_KeyState (&in_up);
 	up -= movespeed * CL_KeyState (&in_down);
@@ -425,12 +265,6 @@ static void CL_CmdButtons( usercmd_t *cmd ) {
 
 	if ( Key_GetCatcher() ) {
 		cmd->buttons |= BUTTON_UI;
-	}
-
-	// allow the game to know if any key at all is
-	// currently pressed, even if it isn't bound to anything
-	if ( anykeydown && Key_GetCatcher() == 0 ) {
-		cmd->buttons |= BUTTON_ANY;
 	}
 }
 
@@ -663,7 +497,7 @@ void CL_WritePacket( int repeat ) {
 		}
 
 		// begin a client move command
-		if ( cl_nodelta->integer || !cl.snap.valid || clc.demowaiting || clc.serverMessageSequence != cl.snap.messageNum ) {
+		if ( !cl.snap.valid || clc.demowaiting || clc.serverMessageSequence != cl.snap.messageNum ) {
 			MSG_WriteByte( &buf, clc_moveNoDelta );
 		} else {
 			MSG_WriteByte( &buf, clc_move );
@@ -751,19 +585,11 @@ void CL_SendCmd( void ) {
 	CL_WritePacket( 0 );
 }
 
-
-/*
-============
-CL_InitInput
-============
-*/
 void CL_InitInput( void ) {
-	Cmd_AddCommand ("centerview",IN_CenterView);
-
-	Cmd_AddCommand ("+moveup",IN_UpDown);
-	Cmd_AddCommand ("-moveup",IN_UpUp);
-	Cmd_AddCommand ("+movedown",IN_DownDown);
-	Cmd_AddCommand ("-movedown",IN_DownUp);
+	Cmd_AddCommand ("+up",IN_UpDown);
+	Cmd_AddCommand ("-up",IN_UpUp);
+	Cmd_AddCommand ("+down",IN_DownDown);
+	Cmd_AddCommand ("-down",IN_DownUp);
 	Cmd_AddCommand ("+left",IN_LeftDown);
 	Cmd_AddCommand ("-left",IN_LeftUp);
 	Cmd_AddCommand ("+right",IN_RightDown);
@@ -772,54 +598,8 @@ void CL_InitInput( void ) {
 	Cmd_AddCommand ("-forward",IN_ForwardUp);
 	Cmd_AddCommand ("+back",IN_BackDown);
 	Cmd_AddCommand ("-back",IN_BackUp);
-	Cmd_AddCommand ("+lookup", IN_LookupDown);
-	Cmd_AddCommand ("-lookup", IN_LookupUp);
-	Cmd_AddCommand ("+lookdown", IN_LookdownDown);
-	Cmd_AddCommand ("-lookdown", IN_LookdownUp);
-	Cmd_AddCommand ("+strafe", IN_StrafeDown);
-	Cmd_AddCommand ("-strafe", IN_StrafeUp);
-	Cmd_AddCommand ("+moveleft", IN_MoveleftDown);
-	Cmd_AddCommand ("-moveleft", IN_MoveleftUp);
-	Cmd_AddCommand ("+moveright", IN_MoverightDown);
-	Cmd_AddCommand ("-moveright", IN_MoverightUp);
-	Cmd_AddCommand ("+speed", IN_SpeedDown);
-	Cmd_AddCommand ("-speed", IN_SpeedUp);
-	Cmd_AddCommand ("+attack", IN_Button0Down);
-	Cmd_AddCommand ("-attack", IN_Button0Up);
-	Cmd_AddCommand ("+button0", IN_Button0Down);
-	Cmd_AddCommand ("-button0", IN_Button0Up);
-	Cmd_AddCommand ("+button1", IN_Button1Down);
-	Cmd_AddCommand ("-button1", IN_Button1Up);
-	Cmd_AddCommand ("+button2", IN_Button2Down);
-	Cmd_AddCommand ("-button2", IN_Button2Up);
-	Cmd_AddCommand ("+button3", IN_Button3Down);
-	Cmd_AddCommand ("-button3", IN_Button3Up);
-	Cmd_AddCommand ("+button4", IN_Button4Down);
-	Cmd_AddCommand ("-button4", IN_Button4Up);
-	Cmd_AddCommand ("+button5", IN_Button5Down);
-	Cmd_AddCommand ("-button5", IN_Button5Up);
-	Cmd_AddCommand ("+button6", IN_Button6Down);
-	Cmd_AddCommand ("-button6", IN_Button6Up);
-	Cmd_AddCommand ("+button7", IN_Button7Down);
-	Cmd_AddCommand ("-button7", IN_Button7Up);
-	Cmd_AddCommand ("+button8", IN_Button8Down);
-	Cmd_AddCommand ("-button8", IN_Button8Up);
-	Cmd_AddCommand ("+button9", IN_Button9Down);
-	Cmd_AddCommand ("-button9", IN_Button9Up);
-	Cmd_AddCommand ("+button10", IN_Button10Down);
-	Cmd_AddCommand ("-button10", IN_Button10Up);
-	Cmd_AddCommand ("+button11", IN_Button11Down);
-	Cmd_AddCommand ("-button11", IN_Button11Up);
-	Cmd_AddCommand ("+button12", IN_Button12Down);
-	Cmd_AddCommand ("-button12", IN_Button12Up);
-	Cmd_AddCommand ("+button13", IN_Button13Down);
-	Cmd_AddCommand ("-button13", IN_Button13Up);
-	Cmd_AddCommand ("+button14", IN_Button14Down);
-	Cmd_AddCommand ("-button14", IN_Button14Up);
-	Cmd_AddCommand ("+button15", IN_Button15Down);
-	Cmd_AddCommand ("-button15", IN_Button15Up);
-	Cmd_AddCommand ("+mlook", IN_MLookDown);
-	Cmd_AddCommand ("-mlook", IN_MLookUp);
+	Cmd_AddCommand("+button", IN_ButtonDown);
+    Cmd_AddCommand("-button", IN_ButtonUp);
 
 	cl_nodelta = Cvar_Get( "cl_nodelta", "0", 0 );
 	cl_showSend = Cvar_Get( "cl_showSend", "0", 0 );
@@ -838,19 +618,11 @@ void CL_InitInput( void ) {
 	m_filter = Cvar_Get( "m_filter", "0", CVAR_ARCHIVE );
 }
 
-
-/*
-============
-CL_ClearInput
-============
-*/
 void CL_ClearInput( void ) {
-	Cmd_RemoveCommand ("centerview");
-
-	Cmd_RemoveCommand ("+moveup");
-	Cmd_RemoveCommand ("-moveup");
-	Cmd_RemoveCommand ("+movedown");
-	Cmd_RemoveCommand ("-movedown");
+	Cmd_RemoveCommand ("+up");
+	Cmd_RemoveCommand ("-up");
+	Cmd_RemoveCommand ("+down");
+	Cmd_RemoveCommand ("-down");
 	Cmd_RemoveCommand ("+left");
 	Cmd_RemoveCommand ("-left");
 	Cmd_RemoveCommand ("+right");
@@ -859,52 +631,6 @@ void CL_ClearInput( void ) {
 	Cmd_RemoveCommand ("-forward");
 	Cmd_RemoveCommand ("+back");
 	Cmd_RemoveCommand ("-back");
-	Cmd_RemoveCommand ("+lookup");
-	Cmd_RemoveCommand ("-lookup");
-	Cmd_RemoveCommand ("+lookdown");
-	Cmd_RemoveCommand ("-lookdown");
-	Cmd_RemoveCommand ("+strafe");
-	Cmd_RemoveCommand ("-strafe");
-	Cmd_RemoveCommand ("+moveleft");
-	Cmd_RemoveCommand ("-moveleft");
-	Cmd_RemoveCommand ("+moveright");
-	Cmd_RemoveCommand ("-moveright");
-	Cmd_RemoveCommand ("+speed");
-	Cmd_RemoveCommand ("-speed");
-	Cmd_RemoveCommand ("+attack");
-	Cmd_RemoveCommand ("-attack");
-	Cmd_RemoveCommand ("+button0");
-	Cmd_RemoveCommand ("-button0");
-	Cmd_RemoveCommand ("+button1");
-	Cmd_RemoveCommand ("-button1");
-	Cmd_RemoveCommand ("+button2");
-	Cmd_RemoveCommand ("-button2");
-	Cmd_RemoveCommand ("+button3");
-	Cmd_RemoveCommand ("-button3");
-	Cmd_RemoveCommand ("+button4");
-	Cmd_RemoveCommand ("-button4");
-	Cmd_RemoveCommand ("+button5");
-	Cmd_RemoveCommand ("-button5");
-	Cmd_RemoveCommand ("+button6");
-	Cmd_RemoveCommand ("-button6");
-	Cmd_RemoveCommand ("+button7");
-	Cmd_RemoveCommand ("-button7");
-	Cmd_RemoveCommand ("+button8");
-	Cmd_RemoveCommand ("-button8");
-	Cmd_RemoveCommand ("+button9");
-	Cmd_RemoveCommand ("-button9");
-	Cmd_RemoveCommand ("+button10");
-	Cmd_RemoveCommand ("-button10");
-	Cmd_RemoveCommand ("+button11");
-	Cmd_RemoveCommand ("-button11");
-	Cmd_RemoveCommand ("+button12");
-	Cmd_RemoveCommand ("-button12");
-	Cmd_RemoveCommand ("+button13");
-	Cmd_RemoveCommand ("-button13");
-	Cmd_RemoveCommand ("+button14");
-	Cmd_RemoveCommand ("-button14");
-	Cmd_RemoveCommand ("+button15");
-	Cmd_RemoveCommand ("-button15");
-	Cmd_RemoveCommand ("+mlook");
-	Cmd_RemoveCommand ("-mlook");
+	Cmd_RemoveCommand ("+button");
+	Cmd_RemoveCommand ("-button");
 }

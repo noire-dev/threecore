@@ -24,7 +24,6 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #include "../qcommon/qcommon.h"
 #include "../client/keys.h"
 
-int		 anykeydown;
 qkey_t	 keys[MAX_KEYS];
 
 qboolean key_overstrikeMode;
@@ -490,43 +489,29 @@ Key_ParseBinding
 Execute the commands in the bind string
 ===================
 */
-void Key_ParseBinding( int key, qboolean down, unsigned time )
-{
-	char buf[ MAX_STRING_CHARS ], *p, *end;
+void Key_ParseBinding(int key, qboolean down) {
+	char buf[MAX_STRING_CHARS], *p, *end;
 
-	if( !keys[key].binding || keys[key].binding[0] == '\0' )
-		return;
+	if(!keys[key].binding || keys[key].binding[0] == '\0') return;
 
 	p = buf;
 
-	Q_strncpyz( buf, keys[key].binding, sizeof( buf ) );
+	Q_strncpyz(buf, keys[key].binding, sizeof(buf));
 
-	while( 1 )
-	{
-		while ( isspace( *p ) )
-			p++;
-		end = strchr( p, ';' );
-		if ( end )
-			*end = '\0';
-		if ( *p == '+' )
-		{
-			// button commands add keynum and time as parameters
-			// so that multiple sources can be discriminated and
-			// subframe corrected
+	while(1) {
+		while(isspace(*p)) p++;
+		end = strchr(p, ';');
+		if(end) *end = '\0';
+		if(*p == '+') {
 			char cmd[1024];
-			Com_sprintf( cmd, sizeof( cmd ), "%c%s %d %d\n", ( down ) ? '+' : '-', p + 1, key, time );
-			Cbuf_AddText( cmd );
-			if ( down )
-				keys[ key ].bound = qtrue;
+			Com_sprintf(cmd, sizeof(cmd), "%c%s\n", (down) ? '+' : '-', p + 1);
+			Cbuf_AddText(cmd);
+			if(down) keys[key].bound = qtrue;
+		} else if(down) {
+			Cbuf_AddText(p);
+			Cbuf_AddText("\n");
 		}
-		else if ( down )
-		{
-			// normal commands only execute on key press
-			Cbuf_AddText( p );
-			Cbuf_AddText( "\n" );
-		}
-		if( !end )
-			break;
+		if(!end) break;
 		p = end + 1;
 	}
 }

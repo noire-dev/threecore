@@ -23,7 +23,6 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 typedef struct {
 	qboolean	down;
-	qboolean	bound;
 	int			repeats;		// if > 1, it is autorepeating
 	char		*binding;
 } qkey_t;
@@ -31,14 +30,12 @@ typedef struct {
 extern	qboolean	key_overstrikeMode;
 extern	qkey_t		keys[MAX_KEYS];
 
-extern  int         anykeydown;
-
 // NOTE TTimo the declaration of field_t and Field_Clear is now in qcommon/qcommon.h
 
 void Key_WriteBindings( fileHandle_t f );
 void Key_SetBinding( int keynum, const char *binding );
 const char *Key_GetBinding( int keynum );
-void Key_ParseBinding( int key, qboolean down, unsigned time );
+void Key_ParseBinding( int key, qboolean down );
 
 int Key_GetKey( const char *binding );
 const char *Key_KeynumToString( int keynum );

@@ -34,13 +34,9 @@ CL_KeyDownEvent
 Called by CL_KeyEvent to handle a keypress
 ===================
 */
-static void CL_KeyDownEvent( int key, unsigned time )
+static void CL_KeyDownEvent( int key )
 {
 	keys[key].down = qtrue;
-	keys[key].bound = qfalse;
-	keys[key].repeats++;
-
-	if ( keys[key].repeats == 1 ) anykeydown++;
 
 	if(key == K_F5) {
 		Cbuf_ExecuteText(EXEC_APPEND, "js.restart\n");
@@ -77,7 +73,7 @@ static void CL_KeyDownEvent( int key, unsigned time )
 	if ( Key_GetCatcher( ) & KEYCATCH_UI ) {
 		if ( uivm ) VM_Call( uivm, 2, UI_KEY_EVENT, key, qtrue );
 	} else {
-		Key_ParseBinding( key, qtrue, time );
+		Key_ParseBinding( key, qtrue );
 	}
 }
 
@@ -89,15 +85,8 @@ CL_KeyUpEvent
 Called by CL_KeyEvent to handle a keyrelease
 ===================
 */
-static void CL_KeyUpEvent( int key, unsigned time )
-{
-	const qboolean bound = keys[key].bound;
-
-	keys[key].repeats = 0;
+static void CL_KeyUpEvent( int key ){
 	keys[key].down = qfalse;
-	keys[key].bound = qfalse;
-
-	if ( --anykeydown < 0 ) anykeydown = 0;
 
 	// hardcoded screenshot key
 	if ( key == K_PRINT ) return;
@@ -108,11 +97,7 @@ static void CL_KeyUpEvent( int key, unsigned time )
 	// console mode and menu mode, to keep the character from continuing
 	// an action started before a mode switch.
 	//
-	if ( cls.state != CA_DISCONNECTED ) {
-		if ( bound || ( Key_GetCatcher() & KEYCATCH_CGAME ) ) {
-			Key_ParseBinding( key, qfalse, time );
-		}
-	}
+	if ( cls.state != CA_DISCONNECTED ) Key_ParseBinding( key, qfalse );
 
 	if ( Key_GetCatcher() & KEYCATCH_UI ) {
 		if ( uivm ) VM_Call( uivm, 2, UI_KEY_EVENT, key, qfalse );
@@ -166,15 +151,12 @@ void Key_ClearStates( void )
 {
 	int		i;
 
-	anykeydown = 0;
-
 	for ( i = 0 ; i < MAX_KEYS ; i++ )
 	{
 		if ( keys[i].down )
 			CL_KeyEvent( i, qfalse, 0 );
 
 		keys[i].down = qfalse;
-		keys[i].repeats = 0;
 	}
 }
 
