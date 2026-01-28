@@ -71,103 +71,6 @@ static void IN_PrintKey( const SDL_Keysym *keysym, keyNum_t key, qboolean down )
 	Com_Printf( " Q:0x%02x(%s)\n", key, Key_KeynumToString( key ) );
 }
 
-
-#define MAX_CONSOLE_KEYS 16
-
-/*
-===============
-IN_IsConsoleKey
-
-TODO: If the SDL_Scancode situation improves, use it instead of
-      both of these methods
-===============
-*/
-static qboolean IN_IsConsoleKey( keyNum_t key, int character )
-{
-	typedef struct consoleKey_s
-	{
-		enum
-		{
-			QUAKE_KEY,
-			CHARACTER
-		} type;
-
-		union
-		{
-			keyNum_t key;
-			int character;
-		} u;
-	} consoleKey_t;
-
-	static consoleKey_t consoleKeys[ MAX_CONSOLE_KEYS ];
-	static int numConsoleKeys = 0;
-	int i;
-
-	// Only parse the variable when it changes
-	if ( cl_consoleKeys->modified )
-	{
-		const char *text_p, *token;
-
-		cl_consoleKeys->modified = qfalse;
-		text_p = cl_consoleKeys->string;
-		numConsoleKeys = 0;
-
-		while( numConsoleKeys < MAX_CONSOLE_KEYS )
-		{
-			consoleKey_t *c = &consoleKeys[ numConsoleKeys ];
-			int charCode = 0;
-
-			token = COM_Parse( &text_p );
-			if( !token[ 0 ] )
-				break;
-
-			charCode = Com_HexStrToInt( token );
-
-			if( charCode > 0 )
-			{
-				c->type = CHARACTER;
-				c->u.character = charCode;
-			}
-			else
-			{
-				c->type = QUAKE_KEY;
-				c->u.key = Key_StringToKeynum( token );
-
-				// 0 isn't a key
-				if ( c->u.key <= 0 )
-					continue;
-			}
-
-			numConsoleKeys++;
-		}
-	}
-
-	// If the character is the same as the key, prefer the character
-	if ( key == character )
-		key = 0;
-
-	for ( i = 0; i < numConsoleKeys; i++ )
-	{
-		consoleKey_t *c = &consoleKeys[ i ];
-
-		switch ( c->type )
-		{
-			case QUAKE_KEY:
-				if( key && c->u.key == key )
-					return qtrue;
-				break;
-
-			case CHARACTER:
-				if( c->u.character == character )
-					return qtrue;
-				break;
-		}
-	}
-
-	return qfalse;
-}
-
-
 /*
 ===============
 IN_TranslateSDLToQ3Key
@@ -558,15 +461,7 @@ void HandleEvents( void )
 						c++;
 					}
 
-					if( utf32 != 0 )
-					{
-						if ( IN_IsConsoleKey( 0, utf32 ) ) {
-							Sys_QueEvent( SE_KEY, K_CONSOLE, qtrue, 0, NULL );
-							Sys_QueEvent( SE_KEY, K_CONSOLE, qfalse, 0, NULL );
-						} else {
-							Sys_QueEvent( SE_CHAR, utf32, 0, 0, NULL );
-						}
-					}
+					if(utf32 != 0) Sys_QueEvent( SE_CHAR, utf32, 0, 0, NULL );
 				}
 				break;
 
