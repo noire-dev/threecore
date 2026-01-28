@@ -117,15 +117,13 @@ static void CL_CmdButtons( usercmd_t *cmd ) {
 	// less than a frame
 	//
 	for ( i = 0 ; i < ARRAY_LEN( in_buttons ); i++ ) {
-		if ( in_buttons[i].active || in_buttons[i].wasPressed ) {
+		if ( in_buttons[i].wasPressed ) {
 			cmd->buttons |= 1 << i;
 		}
 		in_buttons[i].wasPressed = qfalse;
 	}
 
-	if ( Key_GetCatcher() ) {
-		cmd->buttons |= BUTTON_UI;
-	}
+	if ( Key_GetCatcher() ) cmd->buttons |= BUTTON_UI;
 }
 
 
