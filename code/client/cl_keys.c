@@ -45,9 +45,9 @@ static void CL_KeyUpEvent(int key) {
 	if(Key_GetCatcher() & KEYCATCH_UI && uivm) VM_Call(uivm, 2, UI_KEY_EVENT, key, qfalse);
 }
 
-void CL_KeyEvent(int key, qboolean down, unsigned time) {
-	if(down) CL_KeyDownEvent(key, time);
-	else CL_KeyUpEvent(key, time);
+void CL_KeyEvent(int key, qboolean down) {
+	if(down) CL_KeyDownEvent(key);
+	else CL_KeyUpEvent(key);
 }
 
 void CL_CharEvent(int key) {
@@ -59,7 +59,7 @@ void Key_ClearStates(void) {
 	int i;
 
 	for(i = 0; i < MAX_KEYS; i++) {
-		if(keys[i].down) CL_KeyEvent(i, qfalse, 0);
+		if(keys[i].down) CL_KeyEvent(i, qfalse);
 
 		keys[i].down = qfalse;
 	}
