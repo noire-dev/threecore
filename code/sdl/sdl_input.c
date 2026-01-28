@@ -33,11 +33,8 @@ static qboolean mouseActive = qfalse;
 
 static cvar_t *in_mouse;
 
-#define Com_QueueEvent Sys_QueEvent
-
 static cvar_t *cl_consoleKeys;
 
-static int in_eventTime = 0;
 static qboolean mouse_focus;
 
 #define CTRL(a) ((a)-'a'+1)
@@ -488,8 +485,6 @@ void HandleEvents( void )
 	if ( !SDL_WasInit( SDL_INIT_VIDEO ) )
 			return;
 
-	in_eventTime = Sys_Milliseconds();
-
 	while ( SDL_PollEvent( &e ) )
 	{
 		switch( e.type )
@@ -506,14 +501,14 @@ void HandleEvents( void )
 				}
 
 				if ( key ) {
-					Com_QueueEvent( in_eventTime, SE_KEY, key, qtrue, 0, NULL );
+					Sys_QueEvent( SE_KEY, key, qtrue, 0, NULL );
 
 					if ( key == K_BACKSPACE )
-						Com_QueueEvent( in_eventTime, SE_CHAR, CTRL('h'), 0, 0, NULL );
+						Sys_QueEvent( SE_CHAR, CTRL('h'), 0, 0, NULL );
 					else if ( key == K_ESCAPE )
-						Com_QueueEvent( in_eventTime, SE_CHAR, key, 0, 0, NULL );
+						Sys_QueEvent( SE_CHAR, key, 0, 0, NULL );
 					else if( keys[K_CTRL].down && key >= 'a' && key <= 'z' )
-						Com_QueueEvent( in_eventTime, SE_CHAR, CTRL(key), 0, 0, NULL );
+						Sys_QueEvent( SE_CHAR, CTRL(key), 0, 0, NULL );
 				}
 
 				lastKeyDown = key;
@@ -521,7 +516,7 @@ void HandleEvents( void )
 
 			case SDL_KEYUP:
 				if( ( key = IN_TranslateSDLToQ3Key( &e.key.keysym, qfalse ) ) ){
-					Com_QueueEvent( in_eventTime, SE_KEY, key, qfalse, 0, NULL );
+					Sys_QueEvent( SE_KEY, key, qfalse, 0, NULL );
 				}
 
 				lastKeyDown = 0;
@@ -566,10 +561,10 @@ void HandleEvents( void )
 					if( utf32 != 0 )
 					{
 						if ( IN_IsConsoleKey( 0, utf32 ) ) {
-							Com_QueueEvent( in_eventTime, SE_KEY, K_CONSOLE, qtrue, 0, NULL );
-							Com_QueueEvent( in_eventTime, SE_KEY, K_CONSOLE, qfalse, 0, NULL );
+							Sys_QueEvent( SE_KEY, K_CONSOLE, qtrue, 0, NULL );
+							Sys_QueEvent( SE_KEY, K_CONSOLE, qfalse, 0, NULL );
 						} else {
-							Com_QueueEvent( in_eventTime, SE_CHAR, utf32, 0, 0, NULL );
+							Sys_QueEvent( SE_CHAR, utf32, 0, 0, NULL );
 						}
 					}
 				}
@@ -580,7 +575,7 @@ void HandleEvents( void )
 				{
 					if( !e.motion.xrel && !e.motion.yrel )
 						break;
-					Com_QueueEvent( in_eventTime, SE_MOUSE, e.motion.xrel, e.motion.yrel, 0, NULL );
+					Sys_QueEvent( SE_MOUSE, e.motion.xrel, e.motion.yrel, 0, NULL );
 				}
 				break;
 
@@ -597,7 +592,7 @@ void HandleEvents( void )
 						case SDL_BUTTON_X2:     b = K_MOUSE5;     break;
 						default:                b = K_AUX1 + ( e.button.button - SDL_BUTTON_X2 + 1 ) % 16; break;
 					}
-					Com_QueueEvent( in_eventTime, SE_KEY, b,
+					Sys_QueEvent( SE_KEY, b,
 						( e.type == SDL_MOUSEBUTTONDOWN ? qtrue : qfalse ), 0, NULL );
 				}
 				break;
@@ -605,13 +600,13 @@ void HandleEvents( void )
 			case SDL_MOUSEWHEEL:
 				if( e.wheel.y > 0 )
 				{
-					Com_QueueEvent( in_eventTime, SE_KEY, K_MWHEELUP, qtrue, 0, NULL );
-					Com_QueueEvent( in_eventTime, SE_KEY, K_MWHEELUP, qfalse, 0, NULL );
+					Sys_QueEvent( SE_KEY, K_MWHEELUP, qtrue, 0, NULL );
+					Sys_QueEvent( SE_KEY, K_MWHEELUP, qfalse, 0, NULL );
 				}
 				else if( e.wheel.y < 0 )
 				{
-					Com_QueueEvent( in_eventTime, SE_KEY, K_MWHEELDOWN, qtrue, 0, NULL );
-					Com_QueueEvent( in_eventTime, SE_KEY, K_MWHEELDOWN, qfalse, 0, NULL );
+					Sys_QueEvent( SE_KEY, K_MWHEELDOWN, qtrue, 0, NULL );
+					Sys_QueEvent( SE_KEY, K_MWHEELDOWN, qfalse, 0, NULL );
 				}
 				break;
 
