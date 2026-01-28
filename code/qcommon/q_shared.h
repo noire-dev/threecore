@@ -1181,8 +1181,6 @@ typedef struct playerState_s {
 #define	BUTTON_UI			2
 #define	BUTTON_USE	        4
 #define	BUTTON_GESTURE		8
-#define	BUTTON_WALKING		16
-#define	BUTTON_ANY			32768
 
 // usercmd_t is sent to the server each client frame
 typedef struct usercmd_s {

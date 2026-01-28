@@ -506,7 +506,6 @@ void Key_ParseBinding(int key, qboolean down) {
 			char cmd[1024];
 			Com_sprintf(cmd, sizeof(cmd), "%c%s\n", (down) ? '+' : '-', p + 1);
 			Cbuf_AddText(cmd);
-			if(down) keys[key].bound = qtrue;
 		} else if(down) {
 			Cbuf_AddText(p);
 			Cbuf_AddText("\n");
