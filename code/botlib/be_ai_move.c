@@ -73,8 +73,6 @@ typedef struct bot_movestate_s
 	int reachareanum;							//area number of the reachabilty
 	int moveflags;								//movement flags
 	int jumpreach;								//set when jumped
-	float grapplevisible_time;					//last time the grapple was visible
-	float lastgrappledist;						//last distance to the grapple end
 	float reachability_time;					//time to use current reachability
 	int avoidreach[MAX_AVOIDREACH];				//reachabilities to avoid
 	float avoidreachtimes[MAX_AVOIDREACH];		//times to avoid the reachabilities
@@ -105,11 +103,7 @@ static libvar_t *sv_maxbarrier;
 static libvar_t *sv_gravity;
 static libvar_t *weapindex_rocketlauncher;
 static libvar_t *weapindex_bfg10k;
-static libvar_t *weapindex_grapple;
 static libvar_t *entitytypemissile;
-static libvar_t *offhandgrapple;
-static libvar_t *cmd_grappleoff;
-static libvar_t *cmd_grappleon;
 //type of model, func_plat or func_bobbing
 static int modeltypes[MAX_MODELS];
 
@@ -1554,133 +1548,6 @@ static bot_moveresult_t BotFinishTravel_WalkOffLedge(bot_movestate_t *ms, aas_re
 	//
 	return result;
 } //end of the function BotFinishTravel_WalkOffLedge
-//===========================================================================
-//
-// Parameter:				-
-// Returns:					-
-// Changes Globals:		-
-//===========================================================================
-/*
-static bot_moveresult_t BotTravel_Jump(bot_movestate_t *ms, aas_reachability_t *reach)
-{
-	vec3_t hordir;
-	float dist, gapdist, speed, horspeed, sv_jumpvel;
-	bot_moveresult_t_cleared( result );
-
-	//
-	sv_jumpvel = botlibglobals.sv_jumpvel->value;
-	//walk straight to the reachability start
-	hordir[0] = reach->start[0] - ms->origin[0];
-	hordir[1] = reach->start[1] - ms->origin[1];
-	hordir[2] = 0;
-	dist = VectorNormalize(hordir);
-	//
-	speed = 350;
-	//
-	gapdist = BotGapDistance(ms, hordir, ms->entitynum);
-	//if pretty close to the start focus on the reachability end
-	if (dist < 50 || (gapdist && gapdist < 50))
-	{
-		//NOTE: using max speed (400) works best
-		//if (AAS_HorizontalVelocityForJump(sv_jumpvel, ms->origin, reach->end, &horspeed))
-		//{
-		//	speed = horspeed * 400 / botlibglobals.sv_maxwalkvelocity->value;
-		//} //end if
-		hordir[0] = reach->end[0] - ms->origin[0];
-		hordir[1] = reach->end[1] - ms->origin[1];
-		VectorNormalize(hordir);
-		//elementary action jump
-		EA_Jump(ms->client);
-		//
-		ms->jumpreach = ms->lastreachnum;
-		speed = 600;
-	} //end if
-	else
-	{
-		if (AAS_HorizontalVelocityForJump(sv_jumpvel, reach->start, reach->end, &horspeed))
-		{
-			speed = horspeed * 400 / botlibglobals.sv_maxwalkvelocity->value;
-		} //end if
-	} //end else
-	//elementary action
-	EA_Move(ms->client, hordir, speed);
-	VectorCopy(hordir, result.movedir);
-	//
-	return result;
-} //end of the function BotTravel_Jump*/
-/*
-static bot_moveresult_t BotTravel_Jump(bot_movestate_t *ms, aas_reachability_t *reach)
-{
-	vec3_t hordir, dir1, dir2, mins, maxs, start, end;
-	int gapdist;
-	float dist1, dist2, speed;
-	bot_moveresult_t_cleared( result );
-	bsp_trace_t trace;
-
-	//
-	hordir[0] = reach->start[0] - reach->end[0];
-	hordir[1] = reach->start[1] - reach->end[1];
-	hordir[2] = 0;
-	VectorNormalize(hordir);
-	//
-	VectorCopy(reach->start, start);
-	start[2] += 1;
-	//minus back the bouding box size plus 16
-	VectorMA(reach->start, 80, hordir, end);
-	//
-	AAS_PresenceTypeBoundingBox(PRESENCE_NORMAL, mins, maxs);
-	//check for solids
-	trace = AAS_Trace(start, mins, maxs, end, ms->entitynum, MASK_PLAYERSOLID);
-	if (trace.startsolid) VectorCopy(start, trace.endpos);
-	//check for a gap
-	for (gapdist = 0; gapdist < 80; gapdist += 10)
-	{
-		VectorMA(start, gapdist+10, hordir, end);
-		end[2] += 1;
-		if (AAS_PointAreaNum(end) != ms->reachareanum) break;
-	} //end for
-	if (gapdist < 80) VectorMA(reach->start, gapdist, hordir, trace.endpos);
-//	dist1 = BotGapDistance(start, hordir, ms->entitynum);
-//	if (dist1 && dist1 <= trace.fraction * 80) VectorMA(reach->start, dist1-20, hordir, trace.endpos);
-	//
-	VectorSubtract(ms->origin, reach->start, dir1);
-	dir1[2] = 0;
-	dist1 = VectorNormalize(dir1);
-	VectorSubtract(ms->origin, trace.endpos, dir2);
-	dir2[2] = 0;
-	dist2 = VectorNormalize(dir2);
-	//if just before the reachability start
-	if (DotProduct(dir1, dir2) < -0.8 || dist2 < 5)
-	{
-		//botimport.Print(PRT_MESSAGE, "between jump start and run to point\n");
-		hordir[0] = reach->end[0] - ms->origin[0];
-		hordir[1] = reach->end[1] - ms->origin[1];
-		hordir[2] = 0;
-		VectorNormalize(hordir);
-		//elementary action jump
-		if (dist1 < 24) EA_Jump(ms->client);
-		else if (dist1 < 32) EA_DelayedJump(ms->client);
-		EA_Move(ms->client, hordir, 600);
-		//
-		ms->jumpreach = ms->lastreachnum;
-	} //end if
-	else
-	{
-		//botimport.Print(PRT_MESSAGE, "going towards run to point\n");
-		hordir[0] = trace.endpos[0] - ms->origin[0];
-		hordir[1] = trace.endpos[1] - ms->origin[1];
-		hordir[2] = 0;
-		VectorNormalize(hordir);
-		//
-		if (dist2 > 80) dist2 = 80;
-		speed = 400 - (400 - 5 * dist2);
-		EA_Move(ms->client, hordir, speed);
-	} //end else
-	VectorCopy(hordir, result.movedir);
-	//
-	return result;
-} //end of the function BotTravel_Jump*/
-//*
 static bot_moveresult_t BotTravel_Jump(bot_movestate_t *ms, aas_reachability_t *reach)
 {
 	vec3_t hordir, dir1, dir2, start, end, runstart;
@@ -2311,375 +2178,6 @@ static bot_moveresult_t BotFinishTravel_FuncBobbing(bot_movestate_t *ms, aas_rea
 	return result;
 } //end of the function BotFinishTravel_FuncBobbing
 //===========================================================================
-// 0  no valid grapple hook visible
-// 1  the grapple hook is still flying
-// 2  the grapple hooked into a wall
-//
-// Parameter:				-
-// Returns:					-
-// Changes Globals:		-
-//===========================================================================
-static int GrappleState(bot_movestate_t *ms, aas_reachability_t *reach)
-{
-	int i;
-	aas_entityinfo_t entinfo;
-
-	//if the grapple hook is pulling
-	if (ms->moveflags & MFL_GRAPPLEPULL)
-		return 2;
-	//check for a visible grapple missile entity
-	//or visible grapple entity
-	for (i = AAS_NextEntity(0); i; i = AAS_NextEntity(i))
-	{
-		if (AAS_EntityType(i) == (int) entitytypemissile->value)
-		{
-			AAS_EntityInfo(i, &entinfo);
-			if (entinfo.weapon == (int) weapindex_grapple->value)
-			{
-				return 1;
-			} //end if
-		} //end if
-	} //end for
-	//no valid grapple at all
-	return 0;
-} //end of the function GrappleState
-//===========================================================================
-//
-// Parameter:				-
-// Returns:					-
-// Changes Globals:		-
-//===========================================================================
-static void BotResetGrapple(bot_movestate_t *ms)
-{
-	aas_reachability_t reach;
-
-	AAS_ReachabilityFromNum(ms->lastreachnum, &reach);
-	//if not using the grapple hook reachability anymore
-	if ((reach.traveltype & TRAVELTYPE_MASK) != TRAVEL_GRAPPLEHOOK)
-	{
-		if ((ms->moveflags & MFL_ACTIVEGRAPPLE) || ms->grapplevisible_time)
-		{
-			if (offhandgrapple->value)
-				EA_Command(ms->client, cmd_grappleoff->string);
-			ms->moveflags &= ~MFL_ACTIVEGRAPPLE;
-			ms->grapplevisible_time = 0;
-#ifdef DEBUG_GRAPPLE
-			botimport.Print(PRT_MESSAGE, "reset grapple\n");
-#endif //DEBUG_GRAPPLE
-		} //end if
-	} //end if
-} //end of the function BotResetGrapple
-//===========================================================================
-//
-// Parameter:			-
-// Returns:				-
-// Changes Globals:		-
-//===========================================================================
-static bot_moveresult_t BotTravel_Grapple(bot_movestate_t *ms, aas_reachability_t *reach)
-{
-	bot_moveresult_t_cleared( result );
-	float dist, speed;
-	vec3_t dir, viewdir, org;
-	int state, areanum;
-	bsp_trace_t trace;
-
-	//
-	if (ms->moveflags & MFL_GRAPPLERESET)
-	{
-		if (offhandgrapple->value)
-			EA_Command(ms->client, cmd_grappleoff->string);
-		ms->moveflags &= ~MFL_ACTIVEGRAPPLE;
-		return result;
-	} //end if
-	//
-	if (!(int) offhandgrapple->value)
-	{
-		result.weapon = weapindex_grapple->value;
-		result.flags |= MOVERESULT_MOVEMENTWEAPON;
-	} //end if
-	//
-	if (ms->moveflags & MFL_ACTIVEGRAPPLE)
-	{
-#ifdef DEBUG_GRAPPLE
-		botimport.Print(PRT_MESSAGE, "BotTravel_Grapple: active grapple\n");
-#endif //DEBUG_GRAPPLE
-		//
-		state = GrappleState(ms, reach);
-		//
-		VectorSubtract(reach->end, ms->origin, dir);
-		dir[2] = 0;
-		dist = VectorLength(dir);
-		//if very close to the grapple end or the grappled is hooked and
-		//the bot doesn't get any closer
-		if (state && dist < 48)
-		{
-			if (ms->lastgrappledist - dist < 1)
-			{
-#ifdef DEBUG_GRAPPLE
-				botimport.Print(PRT_ERROR, "grapple normal end\n");
-#endif //DEBUG_GRAPPLE
-				if (offhandgrapple->value)
-					EA_Command(ms->client, cmd_grappleoff->string);
-				ms->moveflags &= ~MFL_ACTIVEGRAPPLE;
-				ms->moveflags |= MFL_GRAPPLERESET;
-				ms->reachability_time = 0;	//end the reachability
-				return result;
-			} //end if
-		} //end if
-		//if no valid grapple at all, or the grapple hooked and the bot
-		//isn't moving anymore
-		else if (!state || (state == 2 && dist > ms->lastgrappledist - 2))
-		{
-			if (ms->grapplevisible_time < AAS_Time() - 0.4)
-			{
-#ifdef DEBUG_GRAPPLE
-				botimport.Print(PRT_ERROR, "grapple not visible\n");
-#endif //DEBUG_GRAPPLE
-				if (offhandgrapple->value)
-					EA_Command(ms->client, cmd_grappleoff->string);
-				ms->moveflags &= ~MFL_ACTIVEGRAPPLE;
-				ms->moveflags |= MFL_GRAPPLERESET;
-				ms->reachability_time = 0;	//end the reachability
-				return result;
-			} //end if
-		} //end if
-		else
-		{
-			ms->grapplevisible_time = AAS_Time();
-		} //end else
-		//
-		if (!(int) offhandgrapple->value)
-		{
-			EA_Attack(ms->client);
-		} //end if
-		//remember the current grapple distance
-		ms->lastgrappledist = dist;
-	} //end if
-	else
-	{
-#ifdef DEBUG_GRAPPLE
-		botimport.Print(PRT_MESSAGE, "BotTravel_Grapple: inactive grapple\n");
-#endif //DEBUG_GRAPPLE
-		//
-		ms->grapplevisible_time = AAS_Time();
-		//
-		VectorSubtract(reach->start, ms->origin, dir);
-		if (!(ms->moveflags & MFL_SWIMMING)) dir[2] = 0;
-		VectorAdd(ms->origin, ms->viewoffset, org);
-		VectorSubtract(reach->end, org, viewdir);
-		//
-		dist = VectorNormalize(dir);
-		Vector2Angles(viewdir, result.ideal_viewangles);
-		result.flags |= MOVERESULT_MOVEMENTVIEW;
-		//
-		if (dist < 5 &&
-			fabs(AngleDiff(result.ideal_viewangles[0], ms->viewangles[0])) < 2 &&
-			fabs(AngleDiff(result.ideal_viewangles[1], ms->viewangles[1])) < 2)
-		{
-#ifdef DEBUG_GRAPPLE
-			botimport.Print(PRT_MESSAGE, "BotTravel_Grapple: activating grapple\n");
-#endif //DEBUG_GRAPPLE
-			//check if the grapple missile path is clear
-			VectorAdd(ms->origin, ms->viewoffset, org);
-			trace = AAS_Trace(org, NULL, NULL, reach->end, ms->entitynum, CONTENTS_SOLID);
-			VectorSubtract(reach->end, trace.endpos, dir);
-			if (VectorLength(dir) > 16)
-			{
-				result.failure = qtrue;
-				return result;
-			} //end if
-			//activate the grapple
-			if (offhandgrapple->value)
-			{
-				EA_Command(ms->client, cmd_grappleon->string);
-			} //end if
-			else
-			{
-				EA_Attack(ms->client);
-			} //end else
-			ms->moveflags |= MFL_ACTIVEGRAPPLE;
-			ms->lastgrappledist = 999999;
-		} //end if
-		else
-		{
-			if (dist < 70) speed = 300 - (300 - 4 * dist);
-			else speed = 400;
-			//
-			BotCheckBlocked(ms, dir, qtrue, &result);
-			//elementary action move in direction
-			EA_Move(ms->client, dir, speed);
-			VectorCopy(dir, result.movedir);
-		} //end else
-		//if in another area before actually grappling
-		areanum = AAS_PointAreaNum(ms->origin);
-		if (areanum && areanum != ms->reachareanum) ms->reachability_time = 0;
-	} //end else
-	return result;
-} //end of the function BotTravel_Grapple
-//===========================================================================
-//
-// Parameter:				-
-// Returns:					-
-// Changes Globals:			-
-//===========================================================================
-static bot_moveresult_t BotTravel_RocketJump(bot_movestate_t *ms, aas_reachability_t *reach)
-{
-	vec3_t hordir;
-	float dist, speed;
-	bot_moveresult_t_cleared( result );
-
-	//botimport.Print(PRT_MESSAGE, "BotTravel_RocketJump: bah\n");
-	//
-	hordir[0] = reach->start[0] - ms->origin[0];
-	hordir[1] = reach->start[1] - ms->origin[1];
-	hordir[2] = 0;
-	//
-	dist = VectorNormalize(hordir);
-	//look in the movement direction
-	Vector2Angles(hordir, result.ideal_viewangles);
-	//look straight down
-	result.ideal_viewangles[PITCH] = 90;
-	//
-	if (dist < 5 &&
-			fabs(AngleDiff(result.ideal_viewangles[0], ms->viewangles[0])) < 5 &&
-			fabs(AngleDiff(result.ideal_viewangles[1], ms->viewangles[1])) < 5)
-	{
-		//botimport.Print(PRT_MESSAGE, "between jump start and run start point\n");
-		hordir[0] = reach->end[0] - ms->origin[0];
-		hordir[1] = reach->end[1] - ms->origin[1];
-		hordir[2] = 0;
-		VectorNormalize(hordir);
-		//elementary action jump
-		EA_Jump(ms->client);
-		EA_Attack(ms->client);
-		EA_Move(ms->client, hordir, 800);
-		//
-		ms->jumpreach = ms->lastreachnum;
-	} //end if
-	else
-	{
-		if (dist > 80) dist = 80;
-		speed = 400 - (400 - 5 * dist);
-		EA_Move(ms->client, hordir, speed);
-	} //end else
-	//look in the movement direction
-	Vector2Angles(hordir, result.ideal_viewangles);
-	//look straight down
-	result.ideal_viewangles[PITCH] = 90;
-	//set the view angles directly
-	EA_View(ms->client, result.ideal_viewangles);
-	//view is important for the movement
-	result.flags |= MOVERESULT_MOVEMENTVIEWSET;
-	//select the rocket launcher
-	EA_SelectWeapon(ms->client, (int) weapindex_rocketlauncher->value);
-	//weapon is used for movement
-	result.weapon = (int) weapindex_rocketlauncher->value;
-	result.flags |= MOVERESULT_MOVEMENTWEAPON;
-	//
-	VectorCopy(hordir, result.movedir);
-	//
-	return result;
-} //end of the function BotTravel_RocketJump
-//===========================================================================
-//
-// Parameter:				-
-// Returns:					-
-// Changes Globals:		-
-//===========================================================================
-static bot_moveresult_t BotTravel_BFGJump(bot_movestate_t *ms, aas_reachability_t *reach)
-{
-	vec3_t hordir;
-	float dist, speed;
-	bot_moveresult_t_cleared( result );
-
-	//botimport.Print(PRT_MESSAGE, "BotTravel_BFGJump: bah\n");
-	//
-	hordir[0] = reach->start[0] - ms->origin[0];
-	hordir[1] = reach->start[1] - ms->origin[1];
-	hordir[2] = 0;
-	//
-	dist = VectorNormalize(hordir);
-	//
-	if (dist < 5 &&
-			fabs(AngleDiff(result.ideal_viewangles[0], ms->viewangles[0])) < 5 &&
-			fabs(AngleDiff(result.ideal_viewangles[1], ms->viewangles[1])) < 5)
-	{
-		//botimport.Print(PRT_MESSAGE, "between jump start and run start point\n");
-		hordir[0] = reach->end[0] - ms->origin[0];
-		hordir[1] = reach->end[1] - ms->origin[1];
-		hordir[2] = 0;
-		VectorNormalize(hordir);
-		//elementary action jump
-		EA_Jump(ms->client);
-		EA_Attack(ms->client);
-		EA_Move(ms->client, hordir, 800);
-		//
-		ms->jumpreach = ms->lastreachnum;
-	} //end if
-	else
-	{
-		if (dist > 80) dist = 80;
-		speed = 400 - (400 - 5 * dist);
-		EA_Move(ms->client, hordir, speed);
-	} //end else
-	//look in the movement direction
-	Vector2Angles(hordir, result.ideal_viewangles);
-	//look straight down
-	result.ideal_viewangles[PITCH] = 90;
-	//set the view angles directly
-	EA_View(ms->client, result.ideal_viewangles);
-	//view is important for the movement
-	result.flags |= MOVERESULT_MOVEMENTVIEWSET;
-	//select the rocket launcher
-	EA_SelectWeapon(ms->client, (int) weapindex_bfg10k->value);
-	//weapon is used for movement
-	result.weapon = (int) weapindex_bfg10k->value;
-	result.flags |= MOVERESULT_MOVEMENTWEAPON;
-	//
-	VectorCopy(hordir, result.movedir);
-	//
-	return result;
-} //end of the function BotTravel_BFGJump
-//===========================================================================
-//
-// Parameter:				-
-// Returns:					-
-// Changes Globals:		-
-//===========================================================================
-static bot_moveresult_t BotFinishTravel_WeaponJump(bot_movestate_t *ms, aas_reachability_t *reach)
-{
-	vec3_t hordir;
-	float speed;
-	bot_moveresult_t_cleared( result );
-
-	//if not jumped yet
-	if (!ms->jumpreach) return result;
-	/*
-	//go straight to the reachability end
-	hordir[0] = reach->end[0] - ms->origin[0];
-	hordir[1] = reach->end[1] - ms->origin[1];
-	hordir[2] = 0;
-	VectorNormalize(hordir);
-	//always use max speed when traveling through the air
-	EA_Move(ms->client, hordir, 800);
-	VectorCopy(hordir, result.movedir);
-	*/
-	//
-	if (!BotAirControl(ms->origin, ms->velocity, reach->end, hordir, &speed))
-	{
-		//go straight to the reachability end
-		VectorSubtract(reach->end, ms->origin, hordir);
-		hordir[2] = 0;
-		VectorNormalize(hordir);
-		speed = 400;
-	} //end if
-	//
-	EA_Move(ms->client, hordir, speed);
-	VectorCopy(hordir, result.movedir);
-	//
-	return result;
-} //end of the function BotFinishTravel_WeaponJump
-//===========================================================================
 //
 // Parameter:				-
 // Returns:					-
@@ -2828,10 +2326,6 @@ void BotMoveToGoal(int movestate, bot_goal_t *goal, int travelflags)
 	//
 	ms = BotMoveStateFromHandle(movestate);
 	if (!ms) return;
-	//reset the grapple before testing if the bot has a valid goal
-	//because the bot could lose all its goals when stuck to a wall
-	BotResetGrapple(ms);
-	//
 	if (!goal)
 	{
 #ifdef DEBUG
@@ -2963,15 +2457,6 @@ void BotMoveToGoal(int movestate, bot_goal_t *goal, int travelflags)
 			{
 				reachnum = 0;
 			} //end if
-			//special grapple hook case
-			else if ((reach.traveltype & TRAVELTYPE_MASK) == TRAVEL_GRAPPLEHOOK)
-			{
-				if (ms->reachability_time < AAS_Time() ||
-					(ms->moveflags & MFL_GRAPPLERESET))
-				{
-					reachnum = 0;
-				} //end if
-			} //end if
 			//special elevator case
 			else if ((reach.traveltype & TRAVELTYPE_MASK) == TRAVEL_ELEVATOR ||
 				(reach.traveltype & TRAVELTYPE_MASK) == TRAVEL_FUNCBOB)
@@ -3090,9 +2575,6 @@ void BotMoveToGoal(int movestate, bot_goal_t *goal, int travelflags)
 				case TRAVEL_WATERJUMP: BotTravel_WaterJump(ms, &reach); break;
 				case TRAVEL_TELEPORT: BotTravel_Teleport(ms, &reach); break;
 				case TRAVEL_ELEVATOR: BotTravel_Elevator(ms, &reach); break;
-				case TRAVEL_GRAPPLEHOOK: BotTravel_Grapple(ms, &reach); break;
-				case TRAVEL_ROCKETJUMP: BotTravel_RocketJump(ms, &reach); break;
-				case TRAVEL_BFGJUMP: BotTravel_BFGJump(ms, &reach); break;
 				case TRAVEL_JUMPPAD: BotTravel_JumpPad(ms, &reach); break;
 				case TRAVEL_FUNCBOB: BotTravel_FuncBobbing(ms, &reach); break;
 				default:
@@ -3176,9 +2658,6 @@ void BotMoveToGoal(int movestate, bot_goal_t *goal, int travelflags)
 				case TRAVEL_WATERJUMP: BotFinishTravel_WaterJump(ms, &reach); break;
 				case TRAVEL_TELEPORT: /*do nothing*/ break;
 				case TRAVEL_ELEVATOR: BotFinishTravel_Elevator(ms, &reach); break;
-				case TRAVEL_GRAPPLEHOOK: BotTravel_Grapple(ms, &reach); break;
-				case TRAVEL_ROCKETJUMP:
-				case TRAVEL_BFGJUMP: BotFinishTravel_WeaponJump(ms, &reach); break;
 				case TRAVEL_JUMPPAD: BotFinishTravel_JumpPad(ms, &reach); break;
 				case TRAVEL_FUNCBOB: BotFinishTravel_FuncBobbing(ms, &reach); break;
 				default:
@@ -3266,11 +2745,7 @@ int BotSetupMoveAI(void)
 	sv_gravity = LibVar("sv_gravity", "800");
 	weapindex_rocketlauncher = LibVar("weapindex_rocketlauncher", "5");
 	weapindex_bfg10k = LibVar("weapindex_bfg10k", "9");
-	weapindex_grapple = LibVar("weapindex_grapple", "10");
 	entitytypemissile = LibVar("entitytypemissile", "3");
-	offhandgrapple = LibVar("offhandgrapple", "0");
-	cmd_grappleon = LibVar("cmd_grappleon", "grappleon");
-	cmd_grappleoff = LibVar("cmd_grappleoff", "grappleoff");
 	return BLERR_NOERROR;
 } //end of the function BotSetupMoveAI
 //===========================================================================

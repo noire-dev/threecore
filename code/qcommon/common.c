@@ -1377,18 +1377,13 @@ Ptr should either be null, or point to a block of data that can
 be freed by the game later.
 ================
 */
-void Sys_QueEvent( int evTime, sysEventType_t evType, int value, int value2, int ptrLength, void *ptr ) {
+void Sys_QueEvent( sysEventType_t evType, int value, int value2, int ptrLength, void *ptr ) {
 	sysEvent_t	*ev;
-
-	if ( evTime == 0 ) {
-		evTime = Sys_Milliseconds();
-	}
 
 	// try to combine all sequential mouse moves in one event
 	if ( evType == SE_MOUSE && lastEvent->evType == SE_MOUSE && eventHead != eventTail ) {
 		lastEvent->evValue += value;
 		lastEvent->evValue2 += value2;
-		lastEvent->evTime = evTime;
 		return;
 	}
 
@@ -1404,7 +1399,6 @@ void Sys_QueEvent( int evTime, sysEventType_t evType, int value, int value2, int
 
 	eventHead++;
 
-	ev->evTime = evTime;
 	ev->evType = evType;
 	ev->evValue = value;
 	ev->evValue2 = value2;
@@ -1423,15 +1417,12 @@ Com_GetSystemEvent
 static sysEvent_t Com_GetSystemEvent( void ) {
 	sysEvent_t  ev;
 	const char	*s;
-	int			evTime;
 
 	// return if we have data
 	if ( eventHead - eventTail > 0 )
 		return eventQue[ ( eventTail++ ) & MASK_QUED_EVENTS ];
 
 	Sys_SendKeyEvents();
-
-	evTime = Sys_Milliseconds();
 
 	// check for console commands
 	s = Sys_ConsoleInput();
@@ -1442,7 +1433,7 @@ static sysEvent_t Com_GetSystemEvent( void ) {
 		len = strlen( s ) + 1;
 		b = Z_Malloc( len );
 		strcpy( b, s );
-		Sys_QueEvent( evTime, SE_CONSOLE, 0, 0, len, b );
+		Sys_QueEvent( SE_CONSOLE, 0, 0, len, b );
 	}
 
 	// return if we have data
@@ -1451,7 +1442,6 @@ static sysEvent_t Com_GetSystemEvent( void ) {
 
 	// create an empty event to return
 	memset( &ev, 0, sizeof( ev ) );
-	ev.evTime = evTime;
 
 	return ev;
 }
@@ -1499,19 +1489,19 @@ int Com_EventLoop( void ) {
 				}
 			}
 #endif // !DEDICATED
-			return ev.evTime;
+			return Sys_Milliseconds();
 		}
 
 		switch ( ev.evType ) {
 #ifndef DEDICATED
 		case SE_KEY:
-			CL_KeyEvent( ev.evValue, ev.evValue2, ev.evTime );
+			CL_KeyEvent( ev.evValue, ev.evValue2 );
 			break;
 		case SE_CHAR:
 			CL_CharEvent( ev.evValue );
 			break;
 		case SE_MOUSE:
-			CL_MouseEvent( ev.evValue, ev.evValue2 /*, ev.evTime*/ );
+			CL_MouseEvent( ev.evValue, ev.evValue2 );
 			break;
 #endif // !DEDICATED
 		case SE_CONSOLE:

@@ -911,10 +911,6 @@ qboolean CL_Disconnect( qboolean showMainMenu ) {
 	//S_StopAllSounds();
 	Key_ClearStates();
 
-	if ( uivm && showMainMenu ) {
-		VM_Call( uivm, 1, UI_SET_ACTIVE_MENU, UIMENU_NONE );
-	}
-
 	FS_ClearPakReferences( FS_GENERAL_REF | FS_UI_REF | FS_CGAME_REF );
 
 	// send a disconnect message to the server

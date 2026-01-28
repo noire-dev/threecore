@@ -245,7 +245,6 @@ static intptr_t SV_GameSystemCalls(intptr_t* args) {
         case BOTLIB_EA_GESTURE: botlib_export->ea.EA_Gesture(args[1]); return 0;
 		case BOTLIB_EA_ATTACK: botlib_export->ea.EA_Attack(args[1]); return 0;
 		case BOTLIB_EA_USE: botlib_export->ea.EA_Use(args[1]); return 0;
-		case BOTLIB_EA_SELECT_WEAPON: botlib_export->ea.EA_SelectWeapon(args[1], args[2]); return 0;
 		case BOTLIB_EA_VIEW: botlib_export->ea.EA_View(args[1], VMA(2)); return 0;
 		case BOTLIB_EA_GET_INPUT: botlib_export->ea.EA_GetInput(args[1], VMF(2), VMA(3)); return 0;
 		case BOTLIB_EA_RESET_INPUT: botlib_export->ea.EA_ResetInput(args[1]); return 0;

@@ -336,8 +336,6 @@ static void Init_EA_Export( ea_export_t *ea ) {
 	ea->EA_Use = EA_Use;
 	ea->EA_Respawn = EA_Respawn;
 	ea->EA_Crouch = EA_Crouch;
-
-	ea->EA_SelectWeapon = EA_SelectWeapon;
 	ea->EA_View = EA_View;
 	ea->EA_GetInput = EA_GetInput;
 	ea->EA_ResetInput = EA_ResetInput;

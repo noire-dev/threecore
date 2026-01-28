@@ -1055,7 +1055,7 @@ qboolean CL_Disconnect( qboolean showMainMenu );
 void CL_Shutdown( const char *finalmsg, qboolean quit );
 void CL_Frame( int msec, int realMsec );
 qboolean CL_GameCommand( void );
-void CL_KeyEvent (int key, qboolean down, unsigned time);
+void CL_KeyEvent (int key, qboolean down);
 
 void CL_CharEvent( int key );
 // char events are for field typing, not game control
@@ -1155,8 +1155,7 @@ typedef enum {
 } joystickAxis_t;
 
 typedef enum {
-  // bk001129 - make sure SE_NONE is zero
-	SE_NONE = 0,	// evTime is still valid
+	SE_NONE = 0,	// time is still valid
 	SE_KEY,		// evValue is a key code, evValue2 is the down flag
 	SE_CHAR,	// evValue is an ascii char
 	SE_MOUSE,	// evValue and evValue2 are relative signed x / y moves
@@ -1165,7 +1164,6 @@ typedef enum {
 } sysEventType_t;
 
 typedef struct {
-	int				evTime;
 	sysEventType_t	evType;
 	int				evValue, evValue2;
 	int				evPtrLength;	// bytes of data pointed to by evPtr, for journaling
@@ -1173,7 +1171,7 @@ typedef struct {
 } sysEvent_t;
 
 void	Sys_Init( void );
-void	Sys_QueEvent( int evTime, sysEventType_t evType, int value, int value2, int ptrLength, void *ptr );
+void	Sys_QueEvent( sysEventType_t evType, int value, int value2, int ptrLength, void *ptr );
 void	Sys_SendKeyEvents( void );
 void	Sys_Sleep( int msec );
 char	*Sys_ConsoleInput( void );

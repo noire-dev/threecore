@@ -282,8 +282,6 @@ typedef struct ea_export_s
 	void	(*EA_Use)(int client);
 	void	(*EA_Respawn)(int client);
 	void	(*EA_Crouch)(int client);
-
-	void	(*EA_SelectWeapon)(int client, int weapon);
 	void	(*EA_View)(int client, vec3_t viewangles);
 	//send regular input to the server
 	void	(*EA_GetInput)(int client, float thinktime, bot_input_t *input);
