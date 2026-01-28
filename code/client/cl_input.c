@@ -116,11 +116,11 @@ static void CL_CmdButtons( usercmd_t *cmd ) {
 	// send a button bit even if the key was pressed and released in
 	// less than a frame
 	//
-	for ( i = 0 ; i < ARRAY_LEN( in_buttons ); i++ ) {
-		if ( in_buttons[i].wasPressed ) {
+	for ( i = 0 ; i < MAX_BUTTONS; i++ ) {
+		if ( in_buttons[i] ) {
 			cmd->buttons |= 1 << i;
 		}
-		in_buttons[i].wasPressed = qfalse;
+		in_buttons[i] = qfalse;
 	}
 
 	if ( Key_GetCatcher() ) cmd->buttons |= BUTTON_UI;
