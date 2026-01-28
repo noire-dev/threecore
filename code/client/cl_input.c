@@ -26,15 +26,9 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 static unsigned frame_msec;
 static int old_com_frameTime;
 
-typedef struct {
-	int			down;		    // key nums holding it down
-	qboolean	wasPressed;		// set when down, not cleared when up
-} kbutton_t;
-
-static kbutton_t in_forward, in_back, in_left, in_right;
-static kbutton_t in_run;
-static kbutton_t in_up, in_down;
-static kbutton_t in_buttons[16];
+static qboolean in_forward, in_back, in_left, in_right;
+static qboolean in_up, in_down;
+static qboolean in_buttons[16];
 
 static cvar_t *cl_nodelta;
 
@@ -58,109 +52,29 @@ static cvar_t *m_forward;
 static cvar_t *m_side;
 static cvar_t *m_filter;
 
-static void IN_KeyDown( kbutton_t *b ) {
-	const char *c;
-	int	k;
-
-	c = Cmd_Argv(1);
-	if ( c[0] ) {
-		k = atoi(c);
-	} else {
-		k = -1;		// typed manually at the console for continuous down
-	}
-
-	if(k == b->down) return;
-
-	if ( !b->down[0] ) {
-		b->down[0] = k;
-	} else if ( !b->down[1] ) {
-		b->down[1] = k;
-	} else {
-		Com_Printf ("Three keys down for a button!\n");
-		return;
-	}
-
-	if ( b->active ) {
-		return;		// still down
-	}
-
-	// save timestamp for partial frame summing
-	c = Cmd_Argv(2);
-	b->downtime = atoi(c);
-
-	b->active = qtrue;
-	b->wasPressed = qtrue;
-}
-
-
-static void IN_KeyUp( kbutton_t *b ) {
-	unsigned uptime;
-	const char *c;
-	int		k;
-
-	c = Cmd_Argv(1);
-	if ( c[0] ) {
-		k = atoi(c);
-	} else {
-		// typed manually at the console, assume for unsticking, so clear all
-		b->down[0] = b->down[1] = 0;
-		b->active = qfalse;
-		return;
-	}
-
-	if ( b->down[0] == k ) {
-		b->down[0] = 0;
-	} else if ( b->down[1] == k ) {
-		b->down[1] = 0;
-	} else {
-		return;		// key up without corresponding down (menu pass through)
-	}
-	if ( b->down[0] || b->down[1] ) {
-		return;		// some other key is still holding it down
-	}
-
-	b->active = qfalse;
-
-	// save timestamp for partial frame summing
-	c = Cmd_Argv(2);
-	uptime = atoi(c);
-	if ( uptime ) {
-		b->msec += uptime - b->downtime;
-	} else {
-		b->msec += frame_msec / 2;
-	}
-
-	b->active = qfalse;
-}
-
-static int CL_KeyState(kbutton_t *key) {
-	if(key->wasPressed) return 1;
-	return 0;
-}
-
-static void IN_UpDown(void) {IN_KeyDown(&in_up);}
-static void IN_UpUp(void) {IN_KeyUp(&in_up);}
-static void IN_DownDown(void) {IN_KeyDown(&in_down);}
-static void IN_DownUp(void) {IN_KeyUp(&in_down);}
-static void IN_ForwardDown(void) {IN_KeyDown(&in_forward);}
-static void IN_ForwardUp(void) {IN_KeyUp(&in_forward);}
-static void IN_BackDown(void) {IN_KeyDown(&in_back);}
-static void IN_BackUp(void) {IN_KeyUp(&in_back);}
-static void IN_LeftDown(void) {IN_KeyDown(&in_left);}
-static void IN_LeftUp(void) {IN_KeyUp(&in_left);}
-static void IN_RightDown(void) {IN_KeyDown(&in_right);}
-static void IN_RightUp(void) {IN_KeyUp(&in_right);}
+static void IN_UpDown(void) {in_up = qtrue;}
+static void IN_UpUp(void) {in_up = qfalse;}
+static void IN_DownDown(void) {in_down = qtrue;}
+static void IN_DownUp(void) {in_down = qfalse;}
+static void IN_ForwardDown(void) {in_forward = qtrue;}
+static void IN_ForwardUp(void) {in_forward = qfalse;}
+static void IN_BackDown(void) {in_back = qtrue;}
+static void IN_BackUp(void) {in_back = qfalse;}
+static void IN_LeftDown(void) {in_left = qtrue;}
+static void IN_LeftUp(void) {in_left = qfalse;}
+static void IN_RightDown(void) {in_right = qtrue;}
+static void IN_RightUp(void) {in_right = qfalse;}
 
 void IN_ButtonDown(void) {
     int id = atoi(Cmd_Argv(1));
     if (id < 0 || id >= MAX_BUTTONS) return;
-    IN_KeyDown(&in_buttons[id]);
+    in_buttons[id] = qtrue;
 }
 
 void IN_ButtonUp(void) {
     int id = atoi(Cmd_Argv(1));
     if (id < 0 || id >= MAX_BUTTONS) return;
-    IN_KeyUp(&in_buttons[id]);
+    in_buttons[id] = qfalse;
 }
 
 /*
@@ -177,20 +91,19 @@ static void CL_KeyMove( usercmd_t *cmd ) {
 	side = 0;
 	up = 0;
 	
-	side = CL_KeyState (&in_left);
-	side = CL_KeyState (&in_right)*2;
+	side = in_left;
+	side = in_right*2;
 
-	up += movespeed * CL_KeyState (&in_up);
-	up -= movespeed * CL_KeyState (&in_down);
+	up += movespeed * in_up;
+	up -= movespeed * in_down;
 
-	forward += movespeed * CL_KeyState (&in_forward);
-	forward -= movespeed * CL_KeyState (&in_back);
+	forward += movespeed * in_forward;
+	forward -= movespeed * in_back;
 
 	cmd->forwardmove = ClampCharMove( forward );
 	cmd->rightmove = ClampCharMove( side );
 	cmd->upmove = ClampCharMove( up );
 }
-
 
 /*
 =================
