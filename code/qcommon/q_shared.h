@@ -1182,14 +1182,13 @@ typedef struct playerState_s {
 #define	BUTTON_USE	        4
 #define	BUTTON_GESTURE		8
 
-#define	MAX_BUTTONS	        16
+#define	MAX_BUTTONS	        32
 
 // usercmd_t is sent to the server each client frame
 typedef struct usercmd_s {
 	int				serverTime;
-	int				angles[3];
+	int				angles[2];
 	int 			buttons;
-	signed int	    forwardmove, rightmove, upmove;
 } usercmd_t;
 
 //===================================================================

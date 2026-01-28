@@ -26,9 +26,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 static unsigned frame_msec;
 static int old_com_frameTime;
 
-static qboolean in_forward, in_back, in_left, in_right;
-static qboolean in_up, in_down;
-static qboolean in_buttons[16];
+static qboolean in_buttons[32];
 
 static cvar_t *cl_nodelta;
 
@@ -52,19 +50,6 @@ static cvar_t *m_forward;
 static cvar_t *m_side;
 static cvar_t *m_filter;
 
-static void IN_UpDown(void) {in_up = qtrue;}
-static void IN_UpUp(void) {in_up = qfalse;}
-static void IN_DownDown(void) {in_down = qtrue;}
-static void IN_DownUp(void) {in_down = qfalse;}
-static void IN_ForwardDown(void) {in_forward = qtrue;}
-static void IN_ForwardUp(void) {in_forward = qfalse;}
-static void IN_BackDown(void) {in_back = qtrue;}
-static void IN_BackUp(void) {in_back = qfalse;}
-static void IN_LeftDown(void) {in_left = qtrue;}
-static void IN_LeftUp(void) {in_left = qfalse;}
-static void IN_RightDown(void) {in_right = qtrue;}
-static void IN_RightUp(void) {in_right = qfalse;}
-
 void IN_ButtonDown(void) {
     int id = atoi(Cmd_Argv(1));
     if (id < 0 || id >= MAX_BUTTONS) return;
@@ -77,39 +62,6 @@ void IN_ButtonUp(void) {
     in_buttons[id] = qfalse;
 }
 
-/*
-================
-CL_KeyMove
-
-Sets the usercmd_t based on key states
-================
-*/
-static void CL_KeyMove( usercmd_t *cmd ) {
-	int		forward, side, up;
-
-	forward = 0;
-	side = 0;
-	up = 0;
-	
-	side = in_left;
-	side = in_right*2;
-
-	up += movespeed * in_up;
-	up -= movespeed * in_down;
-
-	forward += movespeed * in_forward;
-	forward -= movespeed * in_back;
-
-	cmd->forwardmove = ClampCharMove( forward );
-	cmd->rightmove = ClampCharMove( side );
-	cmd->upmove = ClampCharMove( up );
-}
-
-/*
-=================
-CL_MouseEvent
-=================
-*/
 void CL_MouseEvent( int dx, int dy /*, int time*/ ) {
 	if ( Key_GetCatcher() & KEYCATCH_UI ) {
 		VM_Call( uivm, 2, UI_MOUSE_EVENT, dx, dy );
@@ -119,11 +71,6 @@ void CL_MouseEvent( int dx, int dy /*, int time*/ ) {
 	}
 }
 
-/*
-=================
-CL_MouseMove
-=================
-*/
 static void CL_MouseMove( usercmd_t *cmd ) {
 	float mx, my;
 
@@ -211,17 +158,9 @@ static usercmd_t CL_CreateCmd( void ) {
 
 	VectorCopy( cl.viewangles, oldAngles );
 
-	// keyboard angle adjustment
-	CL_AdjustAngles ();
-
 	Com_Memset( &cmd, 0, sizeof( cmd ) );
 
 	CL_CmdButtons( &cmd );
-
-	// get basic movement from keyboard
-	CL_KeyMove( &cmd );
-
-	// get basic movement from mouse
 	CL_MouseMove( &cmd );
 
 	// check to make sure the angles haven't wrapped
@@ -499,18 +438,6 @@ void CL_SendCmd( void ) {
 }
 
 void CL_InitInput( void ) {
-	Cmd_AddCommand ("+up",IN_UpDown);
-	Cmd_AddCommand ("-up",IN_UpUp);
-	Cmd_AddCommand ("+down",IN_DownDown);
-	Cmd_AddCommand ("-down",IN_DownUp);
-	Cmd_AddCommand ("+left",IN_LeftDown);
-	Cmd_AddCommand ("-left",IN_LeftUp);
-	Cmd_AddCommand ("+right",IN_RightDown);
-	Cmd_AddCommand ("-right",IN_RightUp);
-	Cmd_AddCommand ("+forward",IN_ForwardDown);
-	Cmd_AddCommand ("-forward",IN_ForwardUp);
-	Cmd_AddCommand ("+back",IN_BackDown);
-	Cmd_AddCommand ("-back",IN_BackUp);
 	Cmd_AddCommand("+button", IN_ButtonDown);
     Cmd_AddCommand("-button", IN_ButtonUp);
 
@@ -532,18 +459,6 @@ void CL_InitInput( void ) {
 }
 
 void CL_ClearInput( void ) {
-	Cmd_RemoveCommand ("+up");
-	Cmd_RemoveCommand ("-up");
-	Cmd_RemoveCommand ("+down");
-	Cmd_RemoveCommand ("-down");
-	Cmd_RemoveCommand ("+left");
-	Cmd_RemoveCommand ("-left");
-	Cmd_RemoveCommand ("+right");
-	Cmd_RemoveCommand ("-right");
-	Cmd_RemoveCommand ("+forward");
-	Cmd_RemoveCommand ("-forward");
-	Cmd_RemoveCommand ("+back");
-	Cmd_RemoveCommand ("-back");
 	Cmd_RemoveCommand ("+button");
 	Cmd_RemoveCommand ("-button");
 }
