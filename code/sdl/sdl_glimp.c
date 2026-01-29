@@ -133,13 +133,6 @@ static int FindNearestDisplay( int *x, int *y, int w, int h ) {
 	return index;
 }
 
-static SDL_HitTestResult SDL_HitTestFunc( SDL_Window *win, const SDL_Point *area, void *data ) {
-	if ( Key_GetCatcher() & KEYCATCH_CONSOLE && keys[ K_ALT ].down )
-		return SDL_HITTEST_DRAGGABLE;
-
-	return SDL_HITTEST_NORMAL;
-}
-
 #define MAX_RESOLUTIONS 25
 
 void GLW_DetectDisplayModes( int display ) {
@@ -343,7 +336,7 @@ static int GLW_SetMode( const char *resolution, int fullscreen ) {
 	}
 
 	if ( r_fullscreen->integer == 1 )
-		SDL_SetWindowHitTest( SDL_window, SDL_HitTestFunc, NULL );
+		SDL_SetWindowHitTest( SDL_window, SDL_HITTEST_NORMAL, NULL );
 
 #ifdef USE_VULKAN_API
 		SDL_Vulkan_GetDrawableSize( SDL_window, &config->vidWidth, &config->vidHeight );

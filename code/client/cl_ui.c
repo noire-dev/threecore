@@ -117,7 +117,7 @@ static intptr_t CL_UISystemCalls(intptr_t* args) {
 	switch(args[0]) {
 		case UI_KEY_SETBINDING: Key_SetBinding(args[1], VMA(2)); return 0;
 		case UI_KEY_CLEARSTATES: Key_ClearStates(); return 0;
-		case UI_KEY_SETCATCHER: Key_SetCatcher(args[1] | (Key_GetCatcher() & KEYCATCH_CONSOLE)); return 0;
+		case UI_KEY_SETCATCHER: Key_SetCatcher(args[1]); return 0;
 		case UI_GETCLIPBOARDDATA: CL_GetClipboardData(VMA(1), args[2]); return 0;
 		case UI_GETCLIENTSTATE: GetClientState(VMA(1)); return 0;
 		case UI_GETCONFIGSTRING: return GetConfigString(args[1], VMA(2), args[3]);

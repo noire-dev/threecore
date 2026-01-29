@@ -485,7 +485,6 @@ void HandleEvents( void )
 						case SDL_BUTTON_RIGHT:  b = K_MOUSE2;     break;
 						case SDL_BUTTON_X1:     b = K_MOUSE4;     break;
 						case SDL_BUTTON_X2:     b = K_MOUSE5;     break;
-						default:                b = K_AUX1 + ( e.button.button - SDL_BUTTON_X2 + 1 ) % 16; break;
 					}
 					Sys_QueEvent( SE_KEY, b,
 						( e.type == SDL_MOUSEBUTTONDOWN ? qtrue : qfalse ), 0, NULL );
@@ -561,15 +560,6 @@ IN_Frame
 ===============
 */
 void IN_Frame( void ) {
-	if ( Key_GetCatcher() & KEYCATCH_CONSOLE ) {
-		// temporarily deactivate if not in the game and
-		// running on the desktop with multimonitor configuration
-		if ( !glw_state.isFullscreen || glw_state.monitorCount > 1 ) {
-			IN_DeactivateMouse();
-			return;
-		}
-	}
-
 	if ( !gw_active || !mouse_focus || in_nograb->integer ) {
 		IN_DeactivateMouse();
 		return;
