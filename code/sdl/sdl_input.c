@@ -378,12 +378,10 @@ static const char *eventName( SDL_WindowEventID event )
 HandleEvents
 ===============
 */
-//static void IN_ProcessEvents( void )
-void HandleEvents( void )
-{
+void HandleEvents( void ) {
 	SDL_Event e;
 	keyNum_t key = 0;
-	static keyNum_t lastKeyDown = 0;
+	char *c;
 
 	if ( !SDL_WasInit( SDL_INIT_VIDEO ) )
 			return;
@@ -413,20 +411,16 @@ void HandleEvents( void )
 					else if( keys[K_CTRL].down && key >= 'a' && key <= 'z' )
 						Sys_QueEvent( SE_CHAR, CTRL(key), 0, 0, NULL );
 				}
-
-				lastKeyDown = key;
 				break;
 
 			case SDL_KEYUP:
 				if( ( key = IN_TranslateSDLToQ3Key( &e.key.keysym, qfalse ) ) ){
 					Sys_QueEvent( SE_KEY, key, qfalse, 0, NULL );
 				}
-
-				lastKeyDown = 0;
 				break;
 
 			case SDL_TEXTINPUT:
-				char *c = e.text.text;
+				c = e.text.text;
 
 				key = IN_TranslateSDLToQ3Key( &e.key.keysym, qfalse );
 
@@ -523,8 +517,8 @@ void HandleEvents( void )
 					case SDL_WINDOWEVENT_RESTORED:
 					case SDL_WINDOWEVENT_MAXIMIZED:		gw_minimized = qfalse; break;
 					// keyboard focus:
-					case SDL_WINDOWEVENT_FOCUS_LOST:	lastKeyDown = 0; Key_ClearStates(); gw_active = qfalse; break;
-					case SDL_WINDOWEVENT_FOCUS_GAINED:	lastKeyDown = 0; Key_ClearStates(); gw_active = qtrue; gw_minimized = qfalse;
+					case SDL_WINDOWEVENT_FOCUS_LOST:	Key_ClearStates(); gw_active = qfalse; break;
+					case SDL_WINDOWEVENT_FOCUS_GAINED:	Key_ClearStates(); gw_active = qtrue; gw_minimized = qfalse;
 						if ( re.SetColorMappings ) {
 							re.SetColorMappings();
 						}
