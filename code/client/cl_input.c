@@ -110,20 +110,13 @@ CL_CmdButtons
 */
 static void CL_CmdButtons( usercmd_t *cmd ) {
 	int		i;
-
-	//
-	// figure button bits
-	// send a button bit even if the key was pressed and released in
-	// less than a frame
-	//
+	
 	for ( i = 0 ; i < MAX_BUTTONS; i++ ) {
 		if ( in_buttons[i] ) {
 			cmd->buttons |= 1 << i;
 		}
 		in_buttons[i] = qfalse;
 	}
-
-	if ( Key_GetCatcher() ) cmd->buttons |= BUTTON_UI;
 }
 
 
