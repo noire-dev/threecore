@@ -105,10 +105,7 @@ static void CL_CmdButtons( usercmd_t *cmd ) {
 	int		i;
 	
 	for ( i = 0 ; i < MAX_BUTTONS; i++ ) {
-		if ( in_buttons[i] ) {
-			cmd->buttons |= 1 << i;
-		}
-		in_buttons[i] = qfalse;
+		if ( in_buttons[i] ) cmd->buttons |= 1 << i;
 	}
 }
 
