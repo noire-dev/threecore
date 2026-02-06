@@ -5,7 +5,6 @@
 #include "client.h"
 
 static void CL_KeyDownEvent(int key) {
-
 	if(key == K_ESCAPE) {
 		if(Key_GetCatcher() & KEYCATCH_CGAME) {
 			Key_SetCatcher(Key_GetCatcher() & ~KEYCATCH_CGAME);
@@ -27,7 +26,6 @@ static void CL_KeyDownEvent(int key) {
 		return;
 	}
 
-	// distribute the key down event to the appropriate handler
 	if(Key_GetCatcher() & KEYCATCH_UI) {
 		if(uivm) VM_Call(uivm, 2, UI_KEY_EVENT, key, qtrue);
 	} else {

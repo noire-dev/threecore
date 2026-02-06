@@ -271,7 +271,7 @@ static intptr_t CL_CgameSystemCalls(intptr_t* args) {
 		case CG_GETSERVERCOMMAND: return CL_GetServerCommand(args[1]);
 		case CG_GETCURRENTCMDNUMBER: return CL_GetCurrentCmdNumber();
 		case CG_GETUSERCMD: return CL_GetUserCmd(args[1], VMA(2));
-		case CG_SETUSERCMDVALUE: CL_SetUserCmdValue(VMF(2)); return 0;
+		case CG_SETUSERCMDVALUE: CL_SetUserCmdValue(VMF(1)); return 0;
 		case CG_KEY_GETKEY: return Key_GetKey(VMA(1));
 		case CG_S_ADDREALLOOPINGSOUND: S_AddRealLoopingSound(args[1], VMA(2), VMA(3), args[4]); return 0;
 		case CG_S_STOPLOOPINGSOUND: S_StopLoopingSound(args[1]); return 0;

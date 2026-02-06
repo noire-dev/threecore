@@ -103,8 +103,7 @@ typedef struct {
 
 	int			parseEntitiesNum;	// index (not anded off) into cl_parse_entities[]
 
-	int			mouseDx[2], mouseDy[2];	// added to by mouse events
-	int			mouseIndex;
+	int			mouseDx, mouseDy;	// added to by mouse events
 
 	// cgame communicates a few values to the client system
 	float		cgameSensitivity;

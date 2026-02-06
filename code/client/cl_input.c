@@ -62,30 +62,23 @@ void IN_ButtonUp(void) {
     in_buttons[id] = qfalse;
 }
 
-void CL_MouseEvent( int dx, int dy /*, int time*/ ) {
+void CL_MouseEvent( int dx, int dy ) {
 	if ( Key_GetCatcher() & KEYCATCH_UI ) {
 		VM_Call( uivm, 2, UI_MOUSE_EVENT, dx, dy );
 	} else {
-		cl.mouseDx[cl.mouseIndex] += dx;
-		cl.mouseDy[cl.mouseIndex] += dy;
+		cl.mouseDx += dx;
+		cl.mouseDy += dy;
 	}
 }
 
 static void CL_MouseMove( usercmd_t *cmd ) {
 	float mx, my;
 
-	// allow mouse smoothing
-	if (m_filter->integer) {
-		mx = (cl.mouseDx[0] + cl.mouseDx[1]) * 0.5f;
-		my = (cl.mouseDy[0] + cl.mouseDy[1]) * 0.5f;
-	} else {
-		mx = cl.mouseDx[cl.mouseIndex];
-		my = cl.mouseDy[cl.mouseIndex];
-	}
+	mx = cl.mouseDx;
+	my = cl.mouseDy;
 
-	cl.mouseIndex ^= 1;
-	cl.mouseDx[cl.mouseIndex] = 0;
-	cl.mouseDy[cl.mouseIndex] = 0;
+	cl.mouseDx = 0;
+	cl.mouseDy = 0;
 
 	if (mx == 0.0f && my == 0.0f)
 		return;
