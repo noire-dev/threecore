@@ -5,11 +5,8 @@
 #include "client.h"
 
 static void CL_KeyDownEvent(int key) {
-	keys[key].down = qtrue;
 
-	// escape is always handled special
 	if(key == K_ESCAPE) {
-		// escape always gets out of CGAME stuff
 		if(Key_GetCatcher() & KEYCATCH_CGAME) {
 			Key_SetCatcher(Key_GetCatcher() & ~KEYCATCH_CGAME);
 			return;
@@ -39,8 +36,6 @@ static void CL_KeyDownEvent(int key) {
 }
 
 static void CL_KeyUpEvent(int key) {
-	keys[key].down = qfalse;
-
 	if(cls.state != CA_DISCONNECTED) Key_ParseBinding(key, qfalse);
 	if(Key_GetCatcher() & KEYCATCH_UI && uivm) VM_Call(uivm, 2, UI_KEY_EVENT, key, qfalse);
 }
