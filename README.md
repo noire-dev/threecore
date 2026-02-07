@@ -1,77 +1,16 @@
 # SourceTech Engine
 
-<a href="https://discord.com/invite/TZubjHHKty"><img src="https://img.shields.io/discord/1145198169441960067?color=7289da&logo=discord&logoColor=white" alt="NMod Discord" /></a>
+<a href="https://discord.com/invite/TZubjHHKty"><img src="https://img.shields.io/discord/1145198169441960067?color=7289da&logo=discord&logoColor=white" alt="VSand Discord" /></a>
 
-This is a modern engine created for OpenSandbox.
+This is a modern engine created for VøidSandbox.
 
 ## Features:
 
-**From Quake3e**:
-
-* Optimized OpenGL renderer
-* Optimized Vulkan renderer
-* Raw mouse input support, enabled automatically instead of DirectInput(**\in_mouse 1**) if available
-* Unlagged mouse events processing, can be reverted by setting **\in_lagged 1**
-* **\video-pipe** - to use external ffmpeg binary as an encoder for better quality and smaller output files
-* Significally reworked QVM (Quake Virtual Machine)
-* Improved server-side DoS protection, much reduced memory usage
-* Raised filesystem limits (up to 20,000 maps can be handled in a single directory)
-* Reworked Zone memory allocator, no more out-of-memory errors
-* Non-intrusive support for SDL2 backend (video, audio, input), selectable at compile time
-* Tons of bug fixes and other improvements
-
-**SourceTech features**:
-
-* Brush limit up to 524288
-* Entity limit up to 4096-16384 (4096 by default)
-* Model limit up to 4096
-* Sound limit up to 4096
-* Brush model limit up to 4096
-* Cvar limit up to 16384
-* Players and bots limit up to 64-512 (99 by default)
-* New weapon system with limit up to 65535
-* Up to 80000000 polygons per scene
-* Up to 1000000 polygons per model
-* New addon system
-* Simple physics (QVM-side)
-* Map in UI background (for single player games)
-* Per map QVMs
-* Improved lighting (high resolution lightmaps and post-processing)
-* Render distance for entity (server-side)
-* NSGui interface system with QVM and map integration
-* Vehicles and additional properties of the entity
-* Support huge size maps up to 4GB
-* PostFX (bunch a ARB shaders)
-* BSP collision files for visible models
-* Anticheat engine (anti wallhack)
-
-## Vulkan renderer
-
-Based on [Quake-III-Arena-Kenny-Edition](https://github.com/kennyalive/Quake-III-Arena-Kenny-Edition)/[quake3e](https://github.com/ec-/Quake3e) with many additions:
-
-* 4K textures support
-* High-quality per-pixel dynamic lighting
-* Merged lightmaps (atlases)
-* Smooth shader animations with 64 frames
-* Rendering a huge number of entities
-
-Highly recommended to use on modern systems
-
-## OpenGL renderer
-
-Based on classic OpenGL renderers from [idq3](https://github.com/id-Software/Quake-III-Arena)/[ioquake3](https://github.com/ioquake/ioq3)/[cnq3](https://bitbucket.org/CPMADevs/cnq3)/[openarena](https://github.com/OpenArena/engine)/[quake3e](https://github.com/ec-/Quake3e), features:
-
-* 4K textures support
-* High-quality per-pixel dynamic lighting
-* Merged lightmaps (atlases)
-* Smooth shader animations with 64 frames
-* Rendering a huge number of entities
-
-Performance is usually greater or equal to other opengl1 renderers
-
-## [Build Instructions](BUILD.md)
+**Core**:
+* Voxel world format
+* JavaScript engine
 
 ## Links
 
-* https://www.moddb.com/games/opensandbox - OpenSandbox ModDB page
-* https://discord.gg/TZubjHHKty - OpenSandbox Discord
+* https://www.moddb.com/games/voidsandbox - VøidSandbox ModDB page
+* https://discord.gg/TZubjHHKty - VøidSandbox Discord
