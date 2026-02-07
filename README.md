@@ -2,7 +2,7 @@
 
 <a href="https://discord.com/invite/TZubjHHKty"><img src="https://img.shields.io/discord/1145198169441960067?color=7289da&logo=discord&logoColor=white" alt="VSand Discord" /></a>
 
-This is a modern engine created for VøidSandbox.
+This is a modern engine created for Void Sandbox.
 
 ## Features:
 
@@ -12,5 +12,5 @@ This is a modern engine created for VøidSandbox.
 
 ## Links
 
-* https://www.moddb.com/games/voidsandbox - VøidSandbox ModDB page
-* https://discord.gg/TZubjHHKty - VøidSandbox Discord
+* https://www.moddb.com/games/voidsandbox - Void Sandbox ModDB page
+* https://discord.gg/TZubjHHKty - Void Sandbox Discord
