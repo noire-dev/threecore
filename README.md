@@ -1,8 +1,8 @@
 # SourceTech Engine
 
-<a href="https://discord.com/invite/TZubjHHKty"><img src="https://img.shields.io/discord/1145198169441960067?color=7289da&logo=discord&logoColor=white" alt="VSand Discord" /></a>
+<a href="https://discord.com/invite/TZubjHHKty"><img src="https://img.shields.io/discord/1145198169441960067?color=7289da&logo=discord&logoColor=white" alt="OpenSandbox Discord" /></a>
 
-This is a modern engine created for Void Sandbox.
+This is a modern engine created for OpenSandbox.
 
 ## Features:
 
@@ -12,5 +12,5 @@ This is a modern engine created for Void Sandbox.
 
 ## Links
 
-* https://www.moddb.com/games/voidsandbox - Void Sandbox ModDB page
-* https://discord.gg/TZubjHHKty - Void Sandbox Discord
+* https://www.moddb.com/games/opensandbox - OpenSandbox ModDB page
+* https://discord.gg/TZubjHHKty - OpenSandbox Discord
