@@ -313,8 +313,6 @@ static void CL_ParseSnapshot( msg_t *msg ) {
 	}
 
 	cl.newSnapshots = qtrue;
-
-	clc.eventMask |= EM_SNAPSHOT;
 }
 
 
@@ -460,8 +458,6 @@ static void CL_ParseGamestate( msg_t *msg ) {
 		}
 	}
 
-	clc.eventMask |= EM_GAMESTATE;
-
 	clc.clientNum = MSG_ReadLong(msg);
 	// read the checksum feed
 	clc.checksumFeed = MSG_ReadLong( msg );
@@ -537,8 +533,6 @@ static void CL_ParseCommandString( msg_t *msg ) {
 	index = seq & (MAX_RELIABLE_COMMANDS-1);
 	Q_strncpyz( clc.serverCommands[ index ], s, sizeof( clc.serverCommands[ index ] ) );
 	clc.serverCommandsIgnore[ index ] = qfalse;
-
-	clc.eventMask |= EM_COMMAND;
 }
 
 
@@ -556,7 +550,6 @@ void CL_ParseServerMessage( msg_t *msg ) {
 		Com_Printf( "------------------\n" );
 	}
 
-	clc.eventMask = 0;
 	MSG_Bitstream( msg );
 
 	// get the reliable sequence acknowledge number
