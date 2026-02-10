@@ -141,6 +141,7 @@ int	fs_lastPakIndex;
 static FILE*		missingFiles = NULL;
 #endif
 
+static int FS_GetModList( char *listbuf, int bufsize );
 void FS_Reload( void );
 
 
@@ -410,12 +411,83 @@ static void FS_CopyFile( const char *fromOSPath, const char *toOSPath ) {
 static const char *FS_HasExt( const char *fileName, const char **extList, int extCount );
 
 /*
+=================
+FS_AllowedExtension
+=================
+*/
+qboolean FS_AllowedExtension( const char *fileName, qboolean allowPk3s, const char **ext ) 
+{
+	static const char *extlist[] =	{ "dll", "exe", "so", "dylib", "qvm", "pk3" };
+	const char *e;
+	int i, n;
+
+	e = strrchr( fileName, '.' );
+
+	// check for unix '.so.[0-9]' pattern
+	if ( e >= (fileName + 3) && *(e+1) >= '0' && *(e+1) <= '9' && *(e+2) == '\0' ) 
+	{
+		if ( *(e-3) == '.' && (*(e-2) == 's' || *(e-2) == 'S') && (*(e-1) == 'o' || *(e-1) == 'O') )
+		{
+			if ( ext )
+			{
+				*ext = (e-2);
+			}
+			return qfalse;
+		}
+	}
+	if ( !e )
+		return qtrue;
+
+	e++; // skip '.'
+
+	if ( allowPk3s )
+		n = ARRAY_LEN( extlist ) - 1;
+	else
+		n = ARRAY_LEN( extlist );
+	
+	for ( i = 0; i < n; i++ ) 
+	{
+		if ( Q_stricmp( e, extlist[i] ) == 0 ) 
+		{
+			if ( ext )
+				*ext = e;
+			return qfalse;
+		}
+	}
+
+	return qtrue;
+}
+
+
+/*
+=================
+FS_CheckFilenameIsNotExecutable
+
+ERR_FATAL if trying to manipulate a file with the platform library extension
+=================
+ */
+static void FS_CheckFilenameIsNotAllowed( const char *filename, const char *function, qboolean allowPk3s )
+{
+	const char *extension;
+	// Check if the filename ends with the library extension
+	if ( FS_AllowedExtension( filename, allowPk3s, &extension ) == qfalse ) 
+	{
+		Com_Error( ERR_FATAL, "%s: Not allowed to manipulate '%s' due "
+			"to %s extension", function, filename, extension );
+	}
+}
+
+
+/*
 ===========
 FS_Remove
 
 ===========
 */
-void FS_Remove( const char *osPath ) {
+void FS_Remove( const char *osPath ) 
+{
+	FS_CheckFilenameIsNotAllowed( osPath, __func__, qtrue );
+
 	remove( osPath );
 }
 
@@ -425,8 +497,12 @@ void FS_Remove( const char *osPath ) {
 FS_HomeRemove
 ===========
 */
-void FS_HomeRemove( const char *osPath ) {
-	remove( FS_BuildOSPath( fs_homepath->string, fs_gamedir, osPath ) );
+void FS_HomeRemove( const char *osPath ) 
+{
+	FS_CheckFilenameIsNotAllowed( osPath, __func__, qfalse );
+
+	remove( FS_BuildOSPath( fs_homepath->string,
+			fs_gamedir, osPath ) );
 }
 
 
@@ -529,6 +605,8 @@ fileHandle_t FS_SV_FOpenFileWrite( const char *filename ) {
 	if ( fs_debug->integer ) {
 		Com_Printf( "FS_SV_FOpenFileWrite: %s\n", ospath );
 	}
+
+	FS_CheckFilenameIsNotAllowed( ospath, __func__, qtrue );
 
 	Com_DPrintf( "writing to: %s\n", ospath );
 
@@ -842,6 +920,8 @@ fileHandle_t FS_FOpenFileWrite( const char *filename ) {
 		Com_Printf( "FS_FOpenFileWrite: %s\n", ospath );
 	}
 
+	FS_CheckFilenameIsNotAllowed( ospath, __func__, qfalse );
+
 	f = FS_HandleForFile();
 	fd = &fsh[ f ];
 	FS_InitHandle( fd );
@@ -896,6 +976,8 @@ fileHandle_t FS_FOpenFileAppend( const char *filename ) {
 	if ( fs_debug->integer ) {
 		Com_Printf( "FS_FOpenFileAppend: %s\n", ospath );
 	}
+
+	FS_CheckFilenameIsNotAllowed( ospath, __func__, qfalse );
 
 	f = FS_HandleForFile();
 	fd = &fsh[ f ];
@@ -2277,6 +2359,10 @@ int	FS_GetFileList( const char *path, const char *extension, char *listbuf, int 
 	nFiles = 0;
 	nTotal = 0;
 
+	if (Q_stricmp(path, "$modlist") == 0) {
+		return FS_GetModList(listbuf, bufsize);
+	}
+
 	pFiles = FS_ListFiles(path, extension, &nFiles);
 
 	for (i =0; i < nFiles; i++) {
@@ -2361,6 +2447,208 @@ static char** Sys_ConcatenateFileLists( char **list0, char **list1 )
 	return cat;
 }
 
+
+/*
+================
+FS_GetModDescription
+================
+*/
+static void FS_GetModDescription( const char *modDir, char *description, int descriptionLen ) {
+	fileHandle_t	descHandle;
+	char			descPath[MAX_QEXTENDEDPATH];
+	int				nDescLen;
+
+	Com_sprintf( descPath, sizeof ( descPath ), "%s%cdescription.txt", modDir, PATH_SEP );
+	FS_ReplaceSeparators( descPath );
+	nDescLen = FS_SV_FOpenFileRead( descPath, &descHandle );
+
+	if ( descHandle != FS_INVALID_HANDLE ) {
+		if ( nDescLen > 0 ) {
+			if ( nDescLen > descriptionLen - 1 )
+				nDescLen = descriptionLen - 1;
+			nDescLen = FS_Read( description, nDescLen, descHandle );
+			if ( nDescLen >= 0 ) {
+				description[ nDescLen ] = '\0';
+			}
+		} else {
+			Q_strncpyz( description, modDir, descriptionLen );
+		}
+		FS_FCloseFile( descHandle ); 
+	} else {
+		Q_strncpyz( description, modDir, descriptionLen );
+	}
+}
+
+
+/*
+================
+FS_IsBaseGame
+================
+*/
+static qboolean FS_IsBaseGame( const char *game ) {
+
+	if ( game == NULL || *game == '\0' ) return qtrue;
+
+	if ( Q_stricmp( fs_basegame->string, game ) == 0 ) return qtrue;
+
+	return qfalse;
+}
+
+
+/*
+================
+FS_GetModList
+
+Returns a list of mod directory names
+A mod directory is a peer to baseq3 with a pk3 in it
+================
+*/
+static int FS_GetModList( char *listbuf, int bufsize ) {
+	int i, j, k;
+	int	nMods, nTotal, nLen, nPaks, nPotential, nDescLen;
+	int nDirs, nPakDirs;
+	char **pFiles = NULL;
+	char **pPaks = NULL;
+	char **pDirs = NULL;
+	const char *name, *path;
+	char description[ MAX_OSPATH ];
+
+	int dummy;
+	char **pFiles0 = NULL;
+	qboolean bDrop = qfalse;
+
+	// paths to search for mods
+	cvar_t *const *paths[] = { &fs_basepath, &fs_homepath };
+
+	*listbuf = '\0';
+	nMods = nTotal = 0;
+
+	// iterate through paths and get list of potential mods
+	for (i = 0; i < ARRAY_LEN( paths ); i++) {
+		if ( !*paths[ i ] || !(*paths[i])->string[0] )
+			continue;
+		pFiles0 = Sys_ListFiles( (*paths[i])->string, NULL, NULL, &dummy, qtrue );
+		// Sys_ConcatenateFileLists frees the lists so Sys_FreeFileList isn't required
+		pFiles = Sys_ConcatenateFileLists( pFiles, pFiles0 );
+	}
+
+	nPotential = Sys_CountFileList( pFiles );
+
+	for ( i = 0 ; i < nPotential ; i++ ) {
+		name = pFiles[i];
+		// NOTE: cleaner would involve more changes
+		// ignore duplicate mod directories
+		if ( i != 0 ) {
+			bDrop = qfalse;
+			for ( j = 0; j < i; j++ ) {
+				if ( Q_stricmp( pFiles[j], name ) == 0 ) {
+					// this one can be dropped
+					bDrop = qtrue;
+					break;
+				}
+			}
+		}
+
+		// we also drop BASEGAME, "." and ".."
+		if ( bDrop || strcmp(name, "." ) == 0 || strcmp( name, ".." ) == 0 ) {
+			continue;
+		}
+
+		if ( FS_IsBaseGame( name ) ) {
+			continue;
+		}
+
+		// in order to be a valid mod the directory must contain at least one .pk3
+		// we didn't keep the information when we merged the directory names, as to what OS Path it was found under
+		// so we will try each of them here
+		nPaks = nPakDirs = 0;
+		for ( j = 0; j < ARRAY_LEN( paths ); j++ ) {
+			if ( !*paths[ j ] || !(*paths[ j ])->string[0] )
+				break;
+			path = FS_BuildOSPath( (*paths[j])->string, name, NULL );
+
+			nPaks = nDirs = nPakDirs = 0;
+			pPaks = Sys_ListFiles( path, ".pk3", NULL, &nPaks, qfalse );
+			pDirs = Sys_ListFiles( path, "/", NULL, &nDirs, qfalse );
+			for ( k = 0; k < nDirs; k++ ) {
+				// we only want to count directories ending with ".pk3dir"
+				if ( FS_IsExt( pDirs[k], va(".%s",cl_selectedmod->string), strlen( pDirs[k] ) ) ) {
+					nPakDirs++;
+				}
+			}
+
+			// we only use Sys_ListFiles to check whether files are present
+			Sys_FreeFileList( pDirs );
+			Sys_FreeFileList( pPaks );
+			if ( nPaks > 0 || nPakDirs > 0 ) {
+				break;
+			}
+		}
+
+		if ( nPaks > 0 || nPakDirs > 0 ) {
+			nLen = strlen( name ) + 1;
+			// nLen is the length of the mod path
+			// we need to see if there is a description available
+			FS_GetModDescription( name, description, sizeof( description ) );
+			nDescLen = strlen( description ) + 1;
+
+			if ( nTotal + nLen + 1 + nDescLen + 1 < bufsize ) {
+				strcpy( listbuf, name );
+				listbuf += nLen;
+				strcpy( listbuf, description );
+				listbuf += nDescLen;
+				nTotal += nLen + nDescLen;
+				nMods++;
+			} else {
+				break;
+			}
+		}
+	}
+	Sys_FreeFileList( pFiles );
+
+	return nMods;
+}
+
+
+//============================================================================
+
+/*
+================
+FS_Dir_f
+================
+*/
+static void FS_Dir_f( void ) {
+	const char *path;
+	const char *extension;
+	char **dirnames;
+	int ndirs;
+	int i;
+
+	if ( Cmd_Argc() < 2 || Cmd_Argc() > 3 ) {
+		Com_Printf( "usage: dir <directory> [extension]\n" );
+		return;
+	}
+
+	if ( Cmd_Argc() == 2 ) {
+		path = Cmd_Argv( 1 );
+		extension = "";
+	} else {
+		path = Cmd_Argv( 1 );
+		extension = Cmd_Argv( 2 );
+	}
+
+	Com_Printf( "Directory of %s %s\n", path, extension );
+	Com_Printf( "---------------\n" );
+
+	dirnames = FS_ListFiles( path, extension, &ndirs );
+
+	for ( i = 0; i < ndirs; i++ ) {
+		Com_Printf( "%s\n", dirnames[i] );
+	}
+	FS_FreeFileList( dirnames );
+}
+
+
 /*
 ===========
 FS_ConvertPath
@@ -2442,6 +2730,185 @@ static void FS_SortFileList( char **list, int n ) {
 	if ( j > 0 ) FS_SortFileList( list, j );
 	if ( n > i ) FS_SortFileList( list+i, n-i );
 }
+
+
+/*
+================
+FS_NewDir_f
+================
+*/
+static void FS_NewDir_f( void ) {
+	const char *filter;
+	char	**dirnames;
+	char	dirname[ MAX_STRING_CHARS ];
+	int		ndirs;
+	int		i;
+
+	if ( Cmd_Argc() < 2 ) {
+		Com_Printf( "usage: fdir <filter>\n" );
+		Com_Printf( "example: fdir *q3dm*.bsp\n");
+		return;
+	}
+
+	filter = Cmd_Argv( 1 );
+
+	Com_Printf( "---------------\n" );
+
+	dirnames = FS_ListFilteredFiles( "", "", filter, &ndirs, FS_MATCH_ANY );
+
+	if ( ndirs >= 2 )
+		FS_SortFileList( dirnames, ndirs - 1 );
+
+	for ( i = 0; i < ndirs; i++ ) {
+		Q_strncpyz( dirname, dirnames[i], sizeof( dirname ) );
+		FS_ConvertPath( dirname );
+		Com_Printf( "%s\n", dirname );
+	}
+
+	Com_Printf( "%d files listed\n", ndirs );
+	FS_FreeFileList( dirnames );
+}
+
+
+/*
+============
+FS_Path_f
+============
+*/
+static void FS_Path_f( void ) {
+	const searchpath_t *s;
+	int i;
+
+	Com_Printf( "Current search path:\n" );
+	for ( s = fs_searchpaths; s; s = s->next ) {
+		if ( s->pack ) {
+			Com_Printf( "%s (%i files)\n", s->pack->pakFilename, s->pack->numfiles );
+		} else {
+			Com_Printf( "%s%c%s\n", s->dir->path, PATH_SEP, s->dir->gamedir );
+		}
+	}
+
+	Com_Printf( "\n" );
+	for ( i = 1 ; i < MAX_FILE_HANDLES ; i++ ) {
+		if ( fsh[i].handleFiles.file.o ) {
+			Com_Printf( "handle %i: %s\n", i, fsh[i].name );
+		}
+	}
+}
+
+
+/*
+============
+FS_TouchFile_f
+
+The only purpose of this function is to allow game script files to copy
+arbitrary files furing an "fs_copyfiles 1" run.
+============
+*/
+static void FS_TouchFile_f( void ) {
+	fileHandle_t	f;
+
+	if ( Cmd_Argc() != 2 ) {
+		Com_Printf( "Usage: touchFile <file>\n" );
+		return;
+	}
+
+	FS_FOpenFileRead( Cmd_Argv( 1 ), &f, qfalse );
+	if ( f != FS_INVALID_HANDLE ) {
+		FS_FCloseFile( f );
+	}
+}
+
+
+/*
+============
+FS_CompleteFileName
+============
+*/
+static void FS_CompleteFileName( const char *args, int argNum ) {
+	if( argNum == 2 ) {
+		Field_CompleteFilename( "", "", qfalse, FS_MATCH_ANY );
+	}
+}
+
+
+/*
+============
+FS_Which_f
+============
+*/
+static void FS_Which_f( void ) {
+	const searchpath_t *search;
+	char			*netpath;
+	pack_t			*pak;
+	fileInPack_t	*pakFile;
+	directory_t		*dir;
+	long			hash;
+	FILE			*temp;
+	const char			*filename;
+	char			buf[ MAX_OSPATH*2 + 1 ];
+	int				numfound;
+
+	hash = 0;
+	numfound = 0;
+	filename = Cmd_Argv(1);
+
+	if ( !filename[0] ) {
+		Com_Printf( "Usage: which <file>\n" );
+		return;
+	}
+
+	// qpaths are not supposed to have a leading slash
+	if ( filename[0] == '/' || filename[0] == '\\' ) {
+		filename++;
+	}
+
+	// just wants to see if file is there
+	for ( search = fs_searchpaths ; search ; search = search->next ) {
+		if ( search->pack ) {
+			hash = FS_HashFileName(filename, search->pack->hashSize);
+		}
+		// is the element a pak file?
+		if ( search->pack && search->pack->hashTable[hash] ) {
+			// look through all the pak file elements
+			pak = search->pack;
+			pakFile = pak->hashTable[hash];
+			do {
+				// case and separator insensitive comparisons
+				if ( !FS_FilenameCompare( pakFile->name, filename ) ) {
+					// found it!
+					Com_Printf( "File \"%s\" found in \"%s\"\n", filename, pak->pakFilename );
+					if ( ++numfound >= 32 ) {
+						return;
+					}
+				}
+				pakFile = pakFile->next;
+			} while(pakFile != NULL);
+		} else if ( search->dir ) {
+			dir = search->dir;
+
+			netpath = FS_BuildOSPath( dir->path, dir->gamedir, filename );
+			temp = Sys_FOpen( netpath, "rb" );
+			if ( !temp ) {
+				continue;
+			}
+			fclose(temp);
+			Com_sprintf( buf, sizeof( buf ), "%s%c%s", dir->path, PATH_SEP, dir->gamedir );
+			FS_ReplaceSeparators( buf );
+			Com_Printf( "File \"%s\" found at \"%s\"\n", filename, buf );
+			if ( ++numfound >= 32 ) {
+				return;
+			}
+		}
+	}
+
+	if ( !numfound ) {
+		Com_Printf( "File not found: \"%s\"\n", filename );
+	}
+}
+
+
+//===========================================================================
 
 /*
 ================
@@ -2775,6 +3242,12 @@ void FS_Shutdown( qboolean closemfp )
 	fs_packCount = 0;
 	fs_dirCount = 0;
 
+	Cmd_RemoveCommand( "path" );
+	Cmd_RemoveCommand( "dir" );
+	Cmd_RemoveCommand( "fdir" );
+	Cmd_RemoveCommand( "touchFile" );
+	Cmd_RemoveCommand( "which" );
+	Cmd_RemoveCommand( "lsof" );
 	Cmd_RemoveCommand( "fs_restart" );
 }
 
@@ -2817,6 +3290,22 @@ static void FS_ReorderSearchPaths( void ) {
 	list[cnt-1]->next = NULL;
 
 	Z_Free( list );
+}
+
+/*
+================
+FS_ListOpenFiles
+================
+*/
+static void FS_ListOpenFiles_f( void ) {
+	int i;
+	fileHandleData_t *fh;
+	fh = fsh;
+	for ( i = 0; i < MAX_FILE_HANDLES; i++, fh++ ) {
+		if ( !fh->handleFiles.file.v )
+			continue;
+		Com_Printf( "%2i %s\n", i, fh->name );
+	}
 }
 
 /*
@@ -2868,8 +3357,17 @@ static void FS_Startup( void ) {
 	end = Sys_Milliseconds();
 
 	// add our commands
+	Cmd_AddCommand( "path", FS_Path_f );
+	Cmd_AddCommand( "dir", FS_Dir_f );
+	Cmd_AddCommand( "fdir", FS_NewDir_f );
+	Cmd_AddCommand( "touchFile", FS_TouchFile_f );
+	Cmd_AddCommand( "lsof", FS_ListOpenFiles_f );
+ 	Cmd_AddCommand( "which", FS_Which_f );
+	Cmd_SetCommandCompletionFunc( "which", FS_CompleteFileName );
 	Cmd_AddCommand( "fs_restart", FS_Reload );
 
+	// print the current search paths
+	//FS_Path_f();
 	Com_Printf( "...loaded in %i milliseconds\n", end - start );
 
 	Com_Printf( "----------------------\n" );
@@ -2984,7 +3482,7 @@ const char *FS_ReferencedPakNames( void ) {
 			if ( search->pack->exclude ) {
 				continue;
 			}
-			if ( search->pack->referenced ) {
+			if ( search->pack->referenced || !FS_IsBaseGame( search->pack->pakGamename ) ) {
 				pakName = va( "%s/%s", search->pack->pakGamename, search->pack->pakBasename );
 				if ( *info != '\0' ) {
 					Q_strcat( info, sizeof( info ), " " );
@@ -3181,6 +3679,38 @@ void FS_Flush( fileHandle_t f )
 	fflush( fsh[f].handleFiles.file.o );
 }
 
+
+void	FS_FilenameCompletion( const char *dir, const char *ext,
+		qboolean stripExt, void(*callback)(const char *s), int flags ) {
+	char	filename[ MAX_STRING_CHARS ];
+	char	**filenames;
+	int		nfiles;
+	int		i;
+
+	filenames = FS_ListFilteredFiles( dir, ext, NULL, &nfiles, flags );
+
+	if ( nfiles >= 2 )
+		FS_SortFileList( filenames, nfiles-1 );
+
+	for( i = 0; i < nfiles; i++ ) {
+
+		Q_strncpyz( filename, filenames[ i ], sizeof( filename ) );
+		FS_ConvertPath( filename );
+
+		if ( stripExt ) {
+			COM_StripExtension( filename, filename, sizeof( filename ) );
+		}
+
+		callback( filename );
+	}
+	FS_FreeFileList( filenames );
+}
+
+
+/*
+	Secure VM functions
+*/
+
 int FS_VM_OpenFile( const char *qpath, fileHandle_t *f, fsMode_t mode ) {
 	int r;
 
@@ -3259,6 +3789,8 @@ fileHandle_t FS_PipeOpenWrite( const char *cmd, const char *filename ) {
 	if ( fs_debug->integer ) {
 		Com_Printf( "FS_PipeOpenWrite: %s\n", ospath );
 	}
+
+	FS_CheckFilenameIsNotAllowed( ospath, __func__, qfalse );
 
 	f = FS_HandleForFile();
 	fd = &fsh[ f ];

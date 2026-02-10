@@ -2476,106 +2476,6 @@ static void CL_InitRef( void ) {
 
 /*
 ===============
-CL_Video_f
-
-video
-video [filename]
-===============
-*/
-static void CL_Video_f( void )
-{
-	char filename[ MAX_OSPATH ];
-	const char *ext;
-	qboolean pipe;
-	int i;
-
-	if( !clc.demoplaying )
-	{
-		Com_Printf( "The %s command can only be used when playing back demos\n", Cmd_Argv( 0 ) );
-		return;
-	}
-
-	pipe = ( Q_stricmp( Cmd_Argv( 0 ), "video-pipe" ) == 0 );
-
-	if ( pipe )
-		ext = "mp4";
-	else
-		ext = "avi";
-
-	if ( Cmd_Argc() == 2 )
-	{
-		// explicit filename
-		Com_sprintf( filename, sizeof( filename ), "videos/%s", Cmd_Argv( 1 ) );
-
-		// override video file extension
-		if ( pipe )
-		{
-			char *sep = strrchr( filename, '/' ); // last path separator
-			char *e = strrchr( filename, '.' );
-
-			if ( e && e > sep && *(e+1) != '\0' ) {
-				ext = e + 1;
-				*e = '\0';
-			}
-		}
-	}
-	else
-	{
-		 // scan for a free filename
-		for ( i = 0; i <= 9999; i++ )
-		{
-			Com_sprintf( filename, sizeof( filename ), "videos/video%04d.%s", i, ext );
-			if ( !FS_FileExists( filename ) )
-				break; // file doesn't exist
-		}
-
-		if ( i > 9999 )
-		{
-			Com_Printf( S_COLOR_RED "ERROR: no free file names to create video\n" );
-			return;
-		}
-
-		// without extension
-		Com_sprintf( filename, sizeof( filename ), "videos/video%04d", i );
-	}
-
-
-	clc.aviSoundFrameRemainder = 0.0f;
-	clc.aviVideoFrameRemainder = 0.0f;
-
-	Q_strncpyz( clc.videoName, filename, sizeof( clc.videoName ) );
-	clc.videoIndex = 0;
-
-	CL_OpenAVIForWriting( va( "%s.%s", clc.videoName, ext ), pipe, qfalse );
-}
-
-
-/*
-===============
-CL_StopVideo_f
-===============
-*/
-static void CL_StopVideo_f( void )
-{
-	CL_CloseAVI( qfalse );
-}
-
-
-/*
-====================
-CL_CompleteRecordName
-====================
-*/
-static void CL_CompleteVideoName(const char *args, int argNum )
-{
-	if ( argNum == 2 )
-	{
-		Field_CompleteFilename( "videos", ".avi", qtrue, FS_MATCH_EXTERN | FS_MATCH_STICK );
-	}
-}
-
-/*
-===============
 CL_GenerateQKey
 
 test to see if a valid QKEY_FILE exists.  If one does not, try to generate
@@ -3168,10 +3068,6 @@ void CL_Init( void ) {
 	Cmd_AddCommand ("serverstatus", CL_ServerStatus_f );
 	Cmd_AddCommand ("showip", CL_ShowIP_f );
 	Cmd_AddCommand ("fs_openedList", CL_OpenedPK3List_f );
-	Cmd_AddCommand ("video", CL_Video_f );
-	Cmd_AddCommand ("video-pipe", CL_Video_f );
-	Cmd_SetCommandCompletionFunc( "video", CL_CompleteVideoName );
-	Cmd_AddCommand ("stopvideo", CL_StopVideo_f );
 	Cmd_AddCommand ("serverinfo", CL_Serverinfo_f );
 	Cmd_AddCommand ("systeminfo", CL_Systeminfo_f );
 
