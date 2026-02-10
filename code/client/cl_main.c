@@ -35,8 +35,6 @@ cvar_t	*cl_shownet;
 
 cvar_t	*cl_activeAction;
 
-cvar_t	*cl_allowDownload;
-
 cvar_t	*cl_serverStatusResendTime;
 
 cvar_t	*cl_lanForcePackets;
@@ -183,7 +181,7 @@ void CL_ClearMemory( void ) {
 =================
 CL_FlushMemory
 
-Called by CL_Disconnect_f, CL_DownloadsComplete
+Called by CL_Disconnect_f
 Also called by Com_Error
 =================
 */
@@ -2177,7 +2175,6 @@ void CL_Init( void ) {
 	rcon_client_password = Cvar_Get ("rconPassword", "", 0 );
 	cl_activeAction = Cvar_Get( "activeAction", "", 0 );
 	rconAddress = Cvar_Get ("rconAddress", "", 0);
-	cl_allowDownload = Cvar_Get( "cl_allowDownload", "1", CVAR_ARCHIVE );
 	cl_serverStatusResendTime = Cvar_Get ("cl_serverStatusResendTime", "750", 0);
 	cl_lanForcePackets = Cvar_Get( "cl_lanForcePackets", "1", CVAR_ARCHIVE );
 	Cvar_Get ("name", "Sandbox Player", CVAR_USERINFO | CVAR_ARCHIVE );

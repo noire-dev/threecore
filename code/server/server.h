@@ -245,7 +245,6 @@ extern	cvar_t	*sv_timeout;
 extern	cvar_t	*sv_zombietime;
 extern	cvar_t	*sv_rconPassword;
 extern	cvar_t	*sv_privatePassword;
-extern	cvar_t	*sv_allowDownload;
 extern	cvar_t	*sv_maxclientsPerIP;
 
 extern	cvar_t	*sv_privateClients;
@@ -258,7 +257,6 @@ extern	cvar_t	*sv_referencedPakNames;
 extern	cvar_t	*sv_serverid;
 extern	cvar_t	*sv_minRate;
 extern	cvar_t	*sv_maxRate;
-extern	cvar_t	*sv_dlRate;
 extern	cvar_t	*sv_gametype;
 extern	cvar_t	*sv_floodProtect;
 extern	cvar_t	*sv_lanForceRate;
@@ -316,9 +314,6 @@ void SV_DropClient( client_t *drop, const char *reason );
 
 qboolean SV_ExecuteClientCommand( client_t *cl, const char *s );
 void SV_ClientThink( client_t *cl, usercmd_t *cmd );
-
-int SV_SendDownloadMessages( void );
-int SV_SendQueuedMessages( void );
 
 //
 // sv_ccmds.c

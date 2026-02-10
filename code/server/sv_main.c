@@ -31,7 +31,6 @@ cvar_t	*sv_timeout;			// seconds without any message
 cvar_t	*sv_zombietime;			// seconds to sink messages after disconnect
 cvar_t	*sv_rconPassword;		// password for remote server commands
 cvar_t	*sv_privatePassword;	// password for the privateClient slots
-cvar_t	*sv_allowDownload;
 cvar_t	*sv_maxclientsPerIP;
 
 cvar_t	*sv_privateClients;		// number of clients reserved for password
@@ -44,7 +43,6 @@ cvar_t	*sv_referencedPakNames;
 cvar_t	*sv_serverid;
 cvar_t	*sv_minRate;
 cvar_t	*sv_maxRate;
-cvar_t	*sv_dlRate;
 cvar_t	*sv_gametype;
 cvar_t	*sv_floodProtect;
 cvar_t	*sv_lanForceRate; // dedicated 1 (LAN) server forces local client rates to 99999 (bug #491)

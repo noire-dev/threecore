@@ -373,19 +373,7 @@ static void CL_ParseServerInfo( void )
 	const char *serverInfo;
 	size_t	len;
 
-	serverInfo = cl.gameState.stringData
-		+ cl.gameState.stringOffsets[ CS_SERVERINFO ];
-
-	clc.sv_allowDownload = atoi(Info_ValueForKey(serverInfo,
-		"sv_allowDownload"));
-	Q_strncpyz(clc.sv_dlURL,
-		Info_ValueForKey(serverInfo, "sv_dlURL"),
-		sizeof(clc.sv_dlURL));
-
-	/* remove ending slash in URLs */
-	len = strlen( clc.sv_dlURL );
-	if ( len > 0 &&  clc.sv_dlURL[len-1] == '/' )
-		clc.sv_dlURL[len-1] = '\0';
+	serverInfo = cl.gameState.stringData + cl.gameState.stringOffsets[ CS_SERVERINFO ];
 }
 
 
@@ -489,9 +477,6 @@ static void CL_ParseGamestate( msg_t *msg ) {
 	Cbuf_AddText( "exec maps/default.cfg \n" );				//load default map script on client
 	Cbuf_AddText( va("exec maps/%s.cfg \n", mapname) );		//load map script on client
 	Cvar_Set("cl_changeqvm", mapname);						//load map fs on client
-
-	// This used to call CL_StartHunkUsers, but now we enter the download state before loading the cgame
-	CL_InitDownloads();
 }
 
 
@@ -552,22 +537,6 @@ static void CL_ParseCommandString( msg_t *msg ) {
 	index = seq & (MAX_RELIABLE_COMMANDS-1);
 	Q_strncpyz( clc.serverCommands[ index ], s, sizeof( clc.serverCommands[ index ] ) );
 	clc.serverCommandsIgnore[ index ] = qfalse;
-
-	// -EC- : we may stuck on downloading because of non-working cgvm
-	// or in "awaiting snapshot..." state so handle "disconnect" here
-	if ( ( !cgvm && cls.state == CA_CONNECTED && clc.download != FS_INVALID_HANDLE ) || ( cgvm && cls.state == CA_PRIMED ) ) {
-		const char *text;
-		Cmd_TokenizeString( s );
-		if ( !Q_stricmp( Cmd_Argv(0), "disconnect" ) ) {
-			text = ( Cmd_Argc() > 1 ) ? va( "Server disconnected: %s", Cmd_Argv( 1 ) ) : "Server disconnected.";
-			Cvar_Set( "com_errorMessage", text );
-			Com_Printf( "%s\n", text );
-			if ( !CL_Disconnect( qtrue ) ) { // restart client if not done already
-				CL_FlushMemory();
-			}
-			return;
-		}
-	}
 
 	clc.eventMask |= EM_COMMAND;
 }
@@ -637,9 +606,6 @@ void CL_ParseServerMessage( msg_t *msg ) {
 			break;
 		case svc_snapshot:
 			CL_ParseSnapshot( msg );
-			break;
-		case svc_download:
-			CL_ParseDownload( msg );
 			break;
 		}
 	}

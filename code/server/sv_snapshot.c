@@ -782,7 +782,7 @@ void SV_SendClientMessages( void ) {
 			continue;		// not connected
 
 		if ( c->state == CS_CONNECTED )
-			continue;		// Client is downloading, don't send snapshots
+			continue;
 
 		if ( svs.time - c->lastSnapshotTime < c->snapshotMsec * com_timescale->value )
 			continue;		// It's not time yet

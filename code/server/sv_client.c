@@ -23,8 +23,6 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 #include "server.h"
 
-static void SV_CloseDownload( client_t *cl );
-
 //
 // Server-side Stateless Challenges
 // backported from https://github.com/JACoders/OpenJK/pull/832
@@ -460,7 +458,6 @@ Destructor for data allocated in a client structure
 void SV_FreeClient(client_t *client)
 {
 	SV_Netchan_FreeQueue(client);
-	SV_CloseDownload(client);
 }
 
 
@@ -1322,11 +1319,6 @@ void SV_ExecuteClientMessage( client_t *cl, msg_t *msg ) {
 			}
 		}
 	}
-	// else if ( cl->state == CS_PRIMED ) {
-		// in case of download intention client replies with (messageAcknowledge - gamestateMessageNum) >= 0 and (serverId == sv.serverId), sv.serverId can drift away later
-		// in case of lost gamestate client replies with (messageAcknowledge - gamestateMessageNum) > 0 and (serverId == sv.serverId)
-		// in case of disconnect/etc. client replies with any serverId
-	//}
 
 	// read optional clientCommand strings
 	do {
