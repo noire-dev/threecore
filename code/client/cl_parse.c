@@ -31,7 +31,6 @@ static const char *svc_strings[256] = {
 	"svc_configstring",
 	"svc_baseline",
 	"svc_serverCommand",
-	"svc_download",
 	"svc_snapshot",
 	"svc_EOF",
 };
@@ -235,7 +234,6 @@ static void CL_ParseSnapshot( msg_t *msg ) {
 	if ( newSnap.deltaNum <= 0 ) {
 		newSnap.valid = qtrue;		// uncompressed frame
 		old = NULL;
-		clc.demowaiting = qfalse;	// we can start recording now
 	} else {
 		old = &cl.snapshots[newSnap.deltaNum & PACKET_MASK];
 		if ( !old->valid ) {
@@ -345,11 +343,6 @@ void CL_SystemInfoChanged( qboolean onlyGame ) {
 	// https://zerowing.idsoftware.com/bugzilla/show_bug.cgi?id=475
 	// in some cases, outdated cp commands might get sent with this news serverId
 	cl.serverId = atoi( Info_ValueForKey( systemInfo, "sv_serverid" ) );
-
-	// don't set any vars when playing a demo
-	if ( clc.demoplaying ) {
-		return;
-	}
 
 	s = Info_ValueForKey( systemInfo, "sv_cheats" );
 	cl_connectedToCheatServer = atoi( s );
@@ -531,117 +524,6 @@ qboolean CL_ValidPakSignature( const byte *data, int len )
 	return qfalse;
 }
 
-//=====================================================================
-
-/*
-=====================
-CL_ParseDownload
-
-A download message has been received from the server
-=====================
-*/
-static void CL_ParseDownload( msg_t *msg ) {
-	int		size;
-	unsigned char data[ MAX_MSGLEN ];
-	uint16_t block;
-
-	if (!*clc.downloadTempName) {
-		Com_Printf("Server sending download, but no download was requested\n");
-		CL_AddReliableCommand( "stopdl", qfalse );
-		return;
-	}
-
-	if ( clc.recordfile != FS_INVALID_HANDLE ) {
-		CL_StopRecord_f();
-	}
-
-	// read the data
-	block = MSG_ReadShort ( msg );
-
-	if(!block && !clc.downloadBlock)
-	{
-		// block zero is special, contains file size
-		clc.downloadSize = MSG_ReadLong ( msg );
-
-		Cvar_Set("cl_downloadSize", va("%i", clc.downloadSize));
-
-		if (clc.downloadSize < 0)
-		{
-			Com_Error( ERR_DROP, "%s", MSG_ReadString( msg ) );
-			return;
-		}
-	}
-
-	size = MSG_ReadShort ( msg );
-	if (size < 0 || size > sizeof(data))
-	{
-		Com_Error(ERR_DROP, "CL_ParseDownload: Invalid size %d for download chunk", size);
-		return;
-	}
-
-	MSG_ReadData(msg, data, size);
-
-	if((clc.downloadBlock & 0xFFFF) != block)
-	{
-		Com_DPrintf( "CL_ParseDownload: Expected block %d, got %d\n", (clc.downloadBlock & 0xFFFF), block);
-		return;
-	}
-
-	// open the file if not opened yet
-	if ( clc.download == FS_INVALID_HANDLE )
-	{
-		if ( !CL_ValidPakSignature( data, size ) )
-		{
-			Com_Printf( S_COLOR_YELLOW "Invalid pak signature for %s\n", clc.downloadName );
-			CL_AddReliableCommand( "stopdl", qfalse );
-			CL_NextDownload();
-			return;
-		}
-
-		clc.download = FS_SV_FOpenFileWrite( clc.downloadTempName );
-
-		if ( clc.download == FS_INVALID_HANDLE )
-		{
-			Com_Printf( "Could not create %s\n", clc.downloadTempName );
-			CL_AddReliableCommand( "stopdl", qfalse );
-			CL_NextDownload();
-			return;
-		}
-	}
-
-	if (size)
-		FS_Write( data, size, clc.download );
-
-	CL_AddReliableCommand( va("nextdl %d", clc.downloadBlock), qfalse );
-	clc.downloadBlock++;
-
-	clc.downloadCount += size;
-
-	// So UI gets access to it
-	Cvar_Set("cl_downloadCount", va("%i", clc.downloadCount));
-
-	if ( size == 0 ) { // A zero length block means EOF
-		if ( clc.download != FS_INVALID_HANDLE ) {
-			FS_FCloseFile( clc.download );
-			clc.download = FS_INVALID_HANDLE;
-
-			// rename the file
-			FS_SV_Rename( clc.downloadTempName, clc.downloadName );
-		}
-
-		// send intentions now
-		// We need this because without it, we would hold the last nextdl and then start
-		// loading right away.  If we take a while to load, the server is happily trying
-		// to send us that last block over and over.
-		// Write it twice to help make sure we acknowledge the download
-		CL_WritePacket( 1 );
-
-		// get another file if needed
-		CL_NextDownload();
-	}
-}
-
-
 /*
 =====================
 CL_ParseCommandString
@@ -712,16 +594,10 @@ void CL_ParseServerMessage( msg_t *msg ) {
 	clc.reliableAcknowledge = MSG_ReadLong( msg );
 
 	if ( clc.reliableSequence - clc.reliableAcknowledge > MAX_RELIABLE_COMMANDS ) {
-		if ( !clc.demoplaying ) {
-			Com_Printf( S_COLOR_YELLOW "WARNING: dropping %i commands from server\n", clc.reliableSequence - clc.reliableAcknowledge );
-		}
+		Com_Printf( S_COLOR_YELLOW "WARNING: dropping %i commands from server\n", clc.reliableSequence - clc.reliableAcknowledge );
 		clc.reliableAcknowledge = clc.reliableSequence;
 	} else if ( clc.reliableSequence - clc.reliableAcknowledge < 0 ) {
-		if ( clc.demoplaying ) {
-			clc.reliableSequence = clc.reliableAcknowledge;
-		} else {
-			Com_Error( ERR_DROP, "%s: incorrect reliable sequence acknowledge number", __func__ );
-		}
+		Com_Error( ERR_DROP, "%s: incorrect reliable sequence acknowledge number", __func__ );
 	}
 
 	// parse the message
@@ -763,8 +639,6 @@ void CL_ParseServerMessage( msg_t *msg ) {
 			CL_ParseSnapshot( msg );
 			break;
 		case svc_download:
-			if ( clc.demofile != FS_INVALID_HANDLE )
-				return;
 			CL_ParseDownload( msg );
 			break;
 		}

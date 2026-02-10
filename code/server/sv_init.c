@@ -468,21 +468,6 @@ void SV_SpawnServer( const char *mapname ) {
 	SV_BotFrame( sv.time );
 	svs.time += 100;
 
-	FS_TouchFileInPak( "qvm/cgame.qvm" );
-	FS_TouchFileInPak( "qvm/ui.qvm" );
-
-	// the server sends these to the clients so they can figure
-	// out which pk3s should be auto-downloaded
-	p = FS_ReferencedPakNames();
-	if ( FS_ExcludeReference() ) {
-		// \fs_excludeReference may mask our current ui/cgame qvms
-		FS_TouchFileInPak( "qvm/cgame.qvm" );
-		FS_TouchFileInPak( "qvm/ui.qvm" );
-		// rebuild referenced paks list
-		p = FS_ReferencedPakNames();
-	}
-	Cvar_Set( "sv_referencedPakNames", p );
-
 	// save systeminfo and serverinfo strings
 	SV_SetConfigstring( CS_SYSTEMINFO, Cvar_InfoString( CVAR_SYSTEMINFO, NULL ) );
 	cvar_modifiedFlags &= ~CVAR_SYSTEMINFO;
@@ -499,8 +484,6 @@ void SV_SpawnServer( const char *mapname ) {
 	SV_Heartbeat_f();
 
 	Hunk_SetMark();
-
-	Com_Printf ("-----------------------------------\n");
 
 	// suppress hitch warning
 	Com_FrameInit();

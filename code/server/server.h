@@ -168,21 +168,7 @@ typedef struct client_s {
 	char			name[MAX_NAME_LENGTH];			// extracted from userinfo, high bits masked
 
 	gameStateAck_t	gamestateAck;
-	qboolean		downloading;		// set at "download", reset at gamestate retransmission
-
-	// downloading
-	char			downloadName[MAX_QPATH]; // if not empty string, we are downloading
-	fileHandle_t	download;			// file being downloaded
- 	int				downloadSize;		// total bytes (can't use EOF because of paks)
- 	int				downloadCount;		// bytes sent
-	int				downloadClientBlock;	// last block we sent to the client, awaiting ack
-	int				downloadCurrentBlock;	// current block number
-	int				downloadXmitBlock;	// last block we xmited
-	unsigned char	*downloadBlocks[MAX_DOWNLOAD_WINDOW];	// the buffers for the download blocks
-	int				downloadBlockSize[MAX_DOWNLOAD_WINDOW];
-	qboolean		downloadEOF;		// We have sent the EOF block
-	int				downloadSendTime;	// time we last got an ack from the client
-
+	
 	int				deltaMessage;		// frame last client usercmd message
 	int				lastPacketTime;		// svs.time when packet was last received
 	int				lastConnectTime;	// svs.time when connection started

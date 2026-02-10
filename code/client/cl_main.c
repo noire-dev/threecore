@@ -126,582 +126,6 @@ void CL_AddReliableCommand( const char *cmd, qboolean isDisconnectCmd ) {
 	Q_strncpyz( clc.reliableCommands[ index ], cmd, sizeof( clc.reliableCommands[ index ] ) );
 }
 
-
-/*
-=======================================================================
-
-CLIENT SIDE DEMO RECORDING
-
-=======================================================================
-*/
-
-/*
-====================
-CL_WriteDemoMessage
-
-Dumps the current net message, prefixed by the length
-====================
-*/
-static void CL_WriteDemoMessage( msg_t *msg, int headerBytes ) {
-	int		len, swlen;
-
-	// write the packet sequence
-	len = clc.serverMessageSequence;
-	swlen = LittleLong( len );
-	FS_Write( &swlen, 4, clc.recordfile );
-
-	// skip the packet sequencing information
-	len = msg->cursize - headerBytes;
-	swlen = LittleLong(len);
-	FS_Write( &swlen, 4, clc.recordfile );
-	FS_Write( msg->data + headerBytes, len, clc.recordfile );
-}
-
-
-/*
-====================
-CL_StopRecording_f
-
-stop recording a demo
-====================
-*/
-void CL_StopRecord_f( void ) {
-
-	if ( clc.recordfile != FS_INVALID_HANDLE ) {
-		char tempName[MAX_OSPATH];
-		char finalName[MAX_OSPATH];
-		int	len, sequence;
-
-		// finish up
-		len = -1;
-		FS_Write( &len, 4, clc.recordfile );
-		FS_Write( &len, 4, clc.recordfile );
-		FS_FCloseFile( clc.recordfile );
-		clc.recordfile = FS_INVALID_HANDLE;
-
-		Com_sprintf( tempName, sizeof( tempName ), "%s.tmp", clc.recordName );
-
-		Com_sprintf( finalName, sizeof( finalName ), "%s.%s", clc.recordName, "demo" );
-
-		if ( clc.explicitRecordName ) {
-			FS_Remove( finalName );
-		} else {
-			// add sequence suffix to avoid overwrite
-			sequence = 0;
-			while ( FS_FileExists( finalName ) && ++sequence < 1000 ) {
-				Com_sprintf( finalName, sizeof( finalName ), "%s-%02d.%s",
-					clc.recordName, sequence, "demo" );
-			}
-		}
-
-		FS_Rename( tempName, finalName );
-	}
-
-	if ( !clc.demorecording ) {
-		Com_Printf( "Not recording a demo.\n" );
-	} else {
-		Com_Printf( "Stopped demo recording.\n" );
-	}
-
-	clc.demorecording = qfalse;
-}
-
-
-/*
-====================
-CL_WriteServerCommands
-====================
-*/
-static void CL_WriteServerCommands( msg_t *msg ) {
-	int i;
-
-	if ( clc.serverCommandSequence - clc.demoCommandSequence > 0 ) {
-
-		// do not write more than MAX_RELIABLE_COMMANDS
-		if ( clc.serverCommandSequence - clc.demoCommandSequence > MAX_RELIABLE_COMMANDS ) {
-			clc.demoCommandSequence = clc.serverCommandSequence - MAX_RELIABLE_COMMANDS;
-		}
-
-		for ( i = clc.demoCommandSequence + 1 ; i <= clc.serverCommandSequence; i++ ) {
-			MSG_WriteByte( msg, svc_serverCommand );
-			MSG_WriteLong( msg, i );
-			MSG_WriteString( msg, clc.serverCommands[ i & (MAX_RELIABLE_COMMANDS-1) ] );
-		}
-	}
-
-	clc.demoCommandSequence = clc.serverCommandSequence;
-}
-
-
-/*
-====================
-CL_WriteGamestate
-====================
-*/
-static void CL_WriteGamestate( qboolean initial )
-{
-	byte		bufData[ MAX_MSGLEN_BUF ];
-	char		*s;
-	msg_t		msg;
-	int			i;
-	int			len;
-	entityState_t	*ent;
-	entityState_t	nullstate;
-
-	// write out the gamestate message
-	MSG_Init( &msg, bufData, MAX_MSGLEN );
-	MSG_Bitstream( &msg );
-
-	// NOTE, MRE: all server->client messages now acknowledge
-	MSG_WriteLong( &msg, clc.reliableSequence );
-
-	if ( initial ) {
-		clc.demoMessageSequence = 1;
-		clc.demoCommandSequence = clc.serverCommandSequence;
-	} else {
-		CL_WriteServerCommands( &msg );
-	}
-
-	clc.demoDeltaNum = 0; // reset delta for next snapshot
-
-	MSG_WriteByte( &msg, svc_gamestate );
-	MSG_WriteLong( &msg, clc.serverCommandSequence );
-
-	// configstrings
-	for ( i = 0 ; i < MAX_CONFIGSTRINGS ; i++ ) {
-		if ( !cl.gameState.stringOffsets[i] ) {
-			continue;
-		}
-		s = cl.gameState.stringData + cl.gameState.stringOffsets[i];
-		MSG_WriteByte( &msg, svc_configstring );
-		MSG_WriteShort( &msg, i );
-		MSG_WriteBigString( &msg, s );
-	}
-
-	// baselines
-	Com_Memset( &nullstate, 0, sizeof( nullstate ) );
-	for ( i = 0; i < MAX_GENTITIES ; i++ ) {
-		if ( !cl.baselineUsed[ i ] )
-			continue;
-		ent = &cl.entityBaselines[ i ];
-		MSG_WriteByte( &msg, svc_baseline );
-		MSG_WriteDeltaEntity( &msg, &nullstate, ent, qtrue );
-	}
-
-	// finalize message
-	MSG_WriteByte( &msg, svc_EOF );
-
-	// finished writing the gamestate stuff
-
-	// write the client num
-	MSG_WriteLong( &msg, clc.clientNum );
-
-	// write the checksum feed
-	MSG_WriteLong( &msg, clc.checksumFeed );
-
-	// finished writing the client packet
-	MSG_WriteByte( &msg, svc_EOF );
-
-	// write it to the demo file
-	if ( clc.demoplaying )
-		len = LittleLong( clc.demoMessageSequence - 1 );
-	else
-		len = LittleLong( clc.serverMessageSequence - 1 );
-
-	FS_Write( &len, 4, clc.recordfile );
-
-	len = LittleLong( msg.cursize );
-	FS_Write( &len, 4, clc.recordfile );
-	FS_Write( msg.data, msg.cursize, clc.recordfile );
-}
-
-
-/*
-=============
-CL_EmitPacketEntities
-=============
-*/
-static void CL_EmitPacketEntities( clSnapshot_t *from, clSnapshot_t *to, msg_t *msg, entityState_t *oldents ) {
-	entityState_t	*oldent, *newent;
-	int		oldindex, newindex;
-	int		oldnum, newnum;
-	int		from_num_entities;
-
-	// generate the delta update
-	if ( !from ) {
-		from_num_entities = 0;
-	} else {
-		from_num_entities = from->numEntities;
-	}
-
-	newent = NULL;
-	oldent = NULL;
-	newindex = 0;
-	oldindex = 0;
-	while ( newindex < to->numEntities || oldindex < from_num_entities ) {
-		if ( newindex >= to->numEntities ) {
-			newnum = MAX_GENTITIES+1;
-		} else {
-			newent = &cl.parseEntities[(to->parseEntitiesNum + newindex) % MAX_PARSE_ENTITIES];
-			newnum = newent->number;
-		}
-
-		if ( oldindex >= from_num_entities ) {
-			oldnum = MAX_GENTITIES+1;
-		} else {
-			//oldent = &cl.parseEntities[(from->parseEntitiesNum + oldindex) % MAX_PARSE_ENTITIES];
-			oldent = &oldents[ oldindex ];
-			oldnum = oldent->number;
-		}
-
-		if ( newnum == oldnum ) {
-			// delta update from old position
-			// because the force parm is qfalse, this will not result
-			// in any bytes being emitted if the entity has not changed at all
-			MSG_WriteDeltaEntity (msg, oldent, newent, qfalse );
-			oldindex++;
-			newindex++;
-			continue;
-		}
-
-		if ( newnum < oldnum ) {
-			// this is a new entity, send it from the baseline
-			MSG_WriteDeltaEntity (msg, &cl.entityBaselines[newnum], newent, qtrue );
-			newindex++;
-			continue;
-		}
-
-		if ( newnum > oldnum ) {
-			// the old entity isn't present in the new message
-			MSG_WriteDeltaEntity (msg, oldent, NULL, qtrue );
-			oldindex++;
-			continue;
-		}
-	}
-
-	MSG_WriteBits( msg, (MAX_GENTITIES-1), GENTITYNUM_BITS );	// end of packetentities
-}
-
-
-/*
-====================
-CL_WriteSnapshot
-====================
-*/
-static void CL_WriteSnapshot( void ) {
-
-	static	clSnapshot_t saved_snap;
-	static entityState_t saved_ents[ MAX_SNAPSHOT_ENTITIES ];
-
-	clSnapshot_t *snap, *oldSnap;
-	byte	bufData[ MAX_MSGLEN_BUF ];
-	msg_t	msg;
-	int		i, len;
-
-	snap = &cl.snapshots[ cl.snap.messageNum & PACKET_MASK ]; // current snapshot
-	//if ( !snap->valid ) // should never happen?
-	//	return;
-
-	if ( clc.demoDeltaNum == 0 ) {
-		oldSnap = NULL;
-	} else {
-		oldSnap = &saved_snap;
-	}
-
-	MSG_Init( &msg, bufData, MAX_MSGLEN );
-	MSG_Bitstream( &msg );
-
-	// NOTE, MRE: all server->client messages now acknowledge
-	MSG_WriteLong( &msg, clc.reliableSequence );
-
-	// Write all pending server commands
-	CL_WriteServerCommands( &msg );
-
-	MSG_WriteByte( &msg, svc_snapshot );
-	MSG_WriteLong( &msg, snap->serverTime ); // sv.time
-	MSG_WriteByte( &msg, clc.demoDeltaNum ); // 0 or 1
-	MSG_WriteByte( &msg, snap->snapFlags );  // snapFlags
-	MSG_WriteByte( &msg, snap->areabytes );  // areabytes
-	MSG_WriteData( &msg, snap->areamask, snap->areabytes );
-	if ( oldSnap )
-		MSG_WriteDeltaPlayerstate( &msg, &oldSnap->ps, &snap->ps );
-	else
-		MSG_WriteDeltaPlayerstate( &msg, NULL, &snap->ps );
-
-	CL_EmitPacketEntities( oldSnap, snap, &msg, saved_ents );
-
-	// finished writing the client packet
-	MSG_WriteByte( &msg, svc_EOF );
-
-	// write it to the demo file
-	if ( clc.demoplaying )
-		len = LittleLong( clc.demoMessageSequence );
-	else
-		len = LittleLong( clc.serverMessageSequence );
-	FS_Write( &len, 4, clc.recordfile );
-
-	len = LittleLong( msg.cursize );
-	FS_Write( &len, 4, clc.recordfile );
-	FS_Write( msg.data, msg.cursize, clc.recordfile );
-
-	// save last sent state so if there any need - we can skip any further incoming messages
-	for ( i = 0; i < snap->numEntities; i++ )
-		saved_ents[ i ] = cl.parseEntities[ (snap->parseEntitiesNum + i) % MAX_PARSE_ENTITIES ];
-
-	saved_snap = *snap;
-	saved_snap.parseEntitiesNum = 0;
-
-	clc.demoMessageSequence++;
-	clc.demoDeltaNum = 1;
-}
-
-
-/*
-====================
-CL_Record_f
-
-record <demoname>
-
-Begins recording a demo from the current position
-====================
-*/
-static void CL_Record_f( void ) {
-	char		demoName[MAX_OSPATH];
-	char		name[MAX_OSPATH];
-	qtime_t		t;
-
-	if ( Cmd_Argc() > 2 ) {
-		Com_Printf( "record <demoname>\n" );
-		return;
-	}
-
-	if ( clc.demorecording ) {
-		return;
-	}
-
-	if ( cls.state != CA_ACTIVE ) {
-		Com_Printf( "You must be in a level to record.\n" );
-		return;
-	}
-
-	if ( Cmd_Argc() == 2 ) {
-		// explicit demo name specified
-		Q_strncpyz( demoName, Cmd_Argv( 1 ), sizeof( demoName ) );
-		Com_sprintf( name, sizeof( name ), "demos/%s", demoName );
-
-		clc.explicitRecordName = qtrue;
-	} else {
-		Com_RealTime( &t );
-		Com_sprintf( name, sizeof( name ), "demos/demo-%04d%02d%02d-%02d%02d%02d",
-			1900 + t.tm_year, 1 + t.tm_mon,	t.tm_mday, t.tm_hour, t.tm_min, t.tm_sec );
-
-		clc.explicitRecordName = qfalse;
-	}
-
-	// save desired filename without extension
-	Q_strncpyz( clc.recordName, name, sizeof( clc.recordName ) );
-
-	Com_Printf( "recording to %s.\n", name );
-
-	// start new record with temporary extension
-	Q_strcat( name, sizeof( name ), ".tmp" );
-
-	// open the demo file
-	clc.recordfile = FS_FOpenFileWrite( name );
-	if ( clc.recordfile == FS_INVALID_HANDLE ) {
-		Com_Printf( "ERROR: couldn't open.\n" );
-		clc.recordName[0] = '\0';
-		return;
-	}
-
-	clc.demorecording = qtrue;
-
-	Com_TruncateLongString( clc.recordNameShort, clc.recordName );
-
-	// don't start saving messages until a non-delta compressed message is received
-	clc.demowaiting = qtrue;
-
-	// write out the gamestate message
-	CL_WriteGamestate( qtrue );
-
-	// the rest of the demo file will be copied from net messages
-}
-
-
-/*
-====================
-CL_CompleteRecordName
-====================
-*/
-static void CL_CompleteRecordName(const char *args, int argNum ) {
-	if ( argNum == 2 ){
-		Field_CompleteFilename( "demos", "demo", qtrue, FS_MATCH_EXTERN | FS_MATCH_STICK );
-	}
-}
-
-
-/*
-=======================================================================
-
-CLIENT SIDE DEMO PLAYBACK
-
-=======================================================================
-*/
-
-/*
-=================
-CL_DemoCompleted
-=================
-*/
-static void CL_DemoCompleted( void ) {
-	CL_Disconnect( qtrue );
-}
-
-/*
-=================
-CL_ReadDemoMessage
-=================
-*/
-void CL_ReadDemoMessage( void ) {
-	int			r;
-	msg_t		buf;
-	byte		bufData[ MAX_MSGLEN_BUF ];
-	int			s;
-
-	if ( clc.demofile == FS_INVALID_HANDLE ) {
-		CL_DemoCompleted();
-		return;
-	}
-
-	// get the sequence number
-	r = FS_Read( &s, 4, clc.demofile );
-	if ( r != 4 ) {
-		CL_DemoCompleted();
-		return;
-	}
-	clc.serverMessageSequence = LittleLong( s );
-
-	// init the message
-	MSG_Init( &buf, bufData, MAX_MSGLEN );
-
-	// get the length
-	r = FS_Read( &buf.cursize, 4, clc.demofile );
-	if ( r != 4 ) {
-		CL_DemoCompleted();
-		return;
-	}
-	buf.cursize = LittleLong( buf.cursize );
-	if ( buf.cursize == -1 ) {
-		CL_DemoCompleted();
-		return;
-	}
-	if ( buf.cursize > buf.maxsize ) {
-		Com_Error (ERR_DROP, "CL_ReadDemoMessage: demoMsglen > MAX_MSGLEN");
-	}
-	r = FS_Read( buf.data, buf.cursize, clc.demofile );
-	if ( r != buf.cursize ) {
-		Com_Printf( "Demo file was truncated.\n");
-		CL_DemoCompleted();
-		return;
-	}
-
-	clc.lastPacketTime = cls.realtime;
-	buf.readcount = 0;
-
-	clc.demoCommandSequence = clc.serverCommandSequence;
-
-	CL_ParseServerMessage( &buf );
-
-	if ( clc.demorecording ) {
-		// track changes and write new message
-		if ( clc.eventMask & EM_GAMESTATE ) {
-			CL_WriteGamestate( qfalse );
-			// nothing should came after gamestate in current message
-		} else if ( clc.eventMask & (EM_SNAPSHOT|EM_COMMAND) ) {
-			CL_WriteSnapshot();
-		}
-	}
-}
-
-/*
-====================
-CL_CompleteDemoName
-====================
-*/
-static void CL_CompleteDemoName(const char *args, int argNum ) {
-	if ( argNum == 2 ) {
-		Field_CompleteFilename( "demos", "demo", qfalse, FS_MATCH_ANY | FS_MATCH_STICK );
-		FS_SetFilenameCallback( NULL );
-	}
-}
-
-/*
-====================
-CL_PlayDemo_f
-
-demo <demoname>
-
-====================
-*/
-static void CL_PlayDemo_f( void ) {
-	char		name[MAX_OSPATH];
-	const char	*arg;
-	const char	*shortname, *slash;
-	fileHandle_t hFile;
-
-	if ( Cmd_Argc() != 2 ) {
-		Com_Printf( "demo <demoname>\n" );
-		return;
-	}
-
-	// open the demo file
-	arg = Cmd_Argv( 1 );
-
-	Com_sprintf(name, sizeof(name), "demos/%s", arg);
-	FS_FOpenFileRead( name, &hFile, qtrue );
-
-	if ( hFile == FS_INVALID_HANDLE ) {
-		Com_Printf( S_COLOR_YELLOW "couldn't open %s\n", name );
-		return;
-	}
-
-	FS_FCloseFile( hFile );
-	hFile = FS_INVALID_HANDLE;
-
-	// make sure a local server is killed
-	// 2 means don't force disconnect of local client
-	Cvar_Set( "sv_killserver", "2" );
-
-	CL_Disconnect( qtrue );
-
-	// clc.demofile will be closed during CL_Disconnect so reopen it
-	if ( FS_FOpenFileRead( name, &clc.demofile, qtrue ) == -1 ) {
-		// drop this time
-		Com_Error( ERR_DROP, "couldn't open %s\n", name );
-		return;
-	}
-
-	if ( (slash = strrchr( name, '/' )) != NULL )
-		shortname = slash + 1;
-	else
-		shortname = name;
-
-	Q_strncpyz( clc.demoName, shortname, sizeof( clc.demoName ) );
-
-    cls.state = CA_CONNECTED;
-	clc.demoplaying = qtrue;
-	Q_strncpyz( cls.servername, shortname, sizeof( cls.servername ) );
-
-	// read demo messages until connected
-	while ( cls.state >= CA_CONNECTED && cls.state < CA_PRIMED ) {
-		CL_ReadDemoMessage();
-	}
-
-	// don't get the first snapshot this frame, to prevent the long
-	// time from the gamestate load from messing causing a time skip
-	clc.firstDemoFrameSkipped = qfalse;
-}
-
 /*
 =====================
 CL_ShutdownVMs
@@ -853,7 +277,7 @@ static void CL_UpdateGUID( const char *prefix, int prefix_len )
 =====================
 CL_Disconnect
 
-Called when a connection or demo is being terminated.
+Called when a connection is being terminated.
 Goes from a connected state to either a menu state or a console state
 Sends a disconnect message to the server
 This is also called on Com_Error and Com_Quit, so it shouldn't cause any errors
@@ -872,29 +296,7 @@ qboolean CL_Disconnect( qboolean showMainMenu ) {
 
 	cl_disconnecting = qtrue;
 
-	// Stop demo recording
-	if ( clc.demorecording ) {
-		CL_StopRecord_f();
-	}
-
-	// Stop demo playback
-	if ( clc.demofile != FS_INVALID_HANDLE ) {
-		FS_FCloseFile( clc.demofile );
-		clc.demofile = FS_INVALID_HANDLE;
-	}
-
-	// Finish downloads
-	if ( clc.download != FS_INVALID_HANDLE ) {
-		FS_FCloseFile( clc.download );
-		clc.download = FS_INVALID_HANDLE;
-	}
-	*clc.downloadTempName = *clc.downloadName = '\0';
-	Cvar_Set( "cl_downloadName", "" );
-
-	if ( cgvm ) {
-		// do that right after we rendered last video frame
-		CL_ShutdownCGame();
-	}
+	if ( cgvm ) CL_ShutdownCGame();
 
 	//S_StopAllSounds();
 	Key_ClearStates();
@@ -903,7 +305,7 @@ qboolean CL_Disconnect( qboolean showMainMenu ) {
 
 	// send a disconnect message to the server
 	// send it a few times in case one is dropped
-	if ( cls.state >= CA_CONNECTED && !clc.demoplaying ) {
+	if ( cls.state >= CA_CONNECTED ) {
 		CL_AddReliableCommand( "disconnect", qtrue );
 		CL_WritePacket( 2 );
 	}
@@ -946,7 +348,7 @@ void CL_ForwardCommandToServer( const char *string ) {
 		return;
 	}
 
-	if ( clc.demoplaying || cls.state < CA_CONNECTED || cmd[0] == '+' ) {
+	if ( cls.state < CA_CONNECTED || cmd[0] == '+' ) {
 		Com_Printf( "Unknown command \"%s" S_COLOR_WHITE "\"\n", cmd );
 		return;
 	}
@@ -972,7 +374,7 @@ CL_ForwardToServer_f
 ==================
 */
 static void CL_ForwardToServer_f( void ) {
-	if ( cls.state != CA_ACTIVE || clc.demoplaying ) {
+	if ( cls.state != CA_ACTIVE ) {
 		Com_Printf ("Not connected to a server.\n");
 		return;
 	}
@@ -1220,10 +622,6 @@ doesn't know what graphics to reload
 */
 static void CL_Vid_Restart( refShutdownCode_t shutdownCode ) {
 
-	// Settings may have changed so stop recording now
-	if ( clc.demorecording )
-		CL_StopRecord_f();
-
 	// clear and mute all sounds until next registration
 	S_DisableSounds();
 
@@ -1237,8 +635,7 @@ static void CL_Vid_Restart( refShutdownCode_t shutdownCode ) {
 	FS_ClearPakReferences( FS_UI_REF | FS_CGAME_REF );
 
 	// reinitialize the filesystem if the game directory or checksum has changed
-	if ( !clc.demoplaying ) // -EC-
-		FS_ConditionalRestart( clc.checksumFeed, qfalse );
+	FS_ConditionalRestart( clc.checksumFeed, qfalse );
 
 	cls.soundRegistered = qfalse;
 
@@ -1378,200 +775,6 @@ static void CL_Systeminfo_f( void ) {
 	Info_Print( cl.gameState.stringData + ofs );
 }
 
-//====================================================================
-
-/*
-=================
-CL_DownloadsComplete
-
-Called when all downloading has been completed
-=================
-*/
-static void CL_DownloadsComplete( void ) {
-
-	// if we downloaded files we need to restart the file system
-	if ( clc.downloadRestart  ) {
-		clc.downloadRestart = qfalse;
-
-		FS_Restart(clc.checksumFeed); // We possibly downloaded a pak, restart the file system to load it
-
-		// inform the server so we get new gamestate info
-		CL_AddReliableCommand( "donedl", qfalse );
-
-		// by sending the donedl command we request a new gamestate
-		// so we don't want to load stuff yet
-		return;
-	}
-
-	// let the client game init and load data
-	cls.state = CA_LOADING;
-
-	// Pump the loop, this may change gamestate!
-	Com_EventLoop();
-
-	// if the gamestate was changed by calling Com_EventLoop
-	// then we loaded everything already and we don't want to do it again.
-	if ( cls.state != CA_LOADING ) {
-		return;
-	}
-
-	// flush client memory and start loading stuff
-	// this will also (re)load the UI
-	// if this is a local client then only the client part of the hunk
-	// will be cleared, note that this is done after the hunk mark has been set
-	//if ( !com_sv_running->integer )
-	CL_FlushMemory();
-
-	// initialize the CGame
-	cls.cgameStarted = qtrue;
-	CL_InitCGame();
-
-	CL_WritePacket( 2 );
-}
-
-
-/*
-=================
-CL_BeginDownload
-
-Requests a file to download from the server.  Stores it in the current
-game directory.
-=================
-*/
-static void CL_BeginDownload( const char *localName, const char *remoteName ) {
-
-	Com_DPrintf("***** CL_BeginDownload *****\n"
-				"Localname: %s\n"
-				"Remotename: %s\n"
-				"****************************\n", localName, remoteName);
-
-	Q_strncpyz ( clc.downloadName, localName, sizeof(clc.downloadName) );
-	Com_sprintf( clc.downloadTempName, sizeof(clc.downloadTempName), "%s.tmp", localName );
-
-	// Set so UI gets access to it
-	Cvar_Set( "cl_downloadName", remoteName );
-	Cvar_Set( "cl_downloadSize", "0" );
-	Cvar_Set( "cl_downloadCount", "0" );
-	Cvar_Set( "cl_downloadTime", va("%i", cls.realtime) );
-
-	clc.downloadBlock = 0; // Starting new file
-	clc.downloadCount = 0;
-
-	CL_AddReliableCommand( va("download %s", remoteName), qfalse );
-}
-
-
-/*
-=================
-CL_NextDownload
-
-A download completed or failed
-=================
-*/
-void CL_NextDownload( void )
-{
-	char *s;
-	char *remoteName, *localName;
-
-	// A download has finished, check whether this matches a referenced checksum
-	if(*clc.downloadName)
-	{
-		const char *zippath = FS_BuildOSPath(Cvar_VariableString("fs_homepath"), clc.downloadName, NULL );
-
-		if(!FS_CompareZipChecksum(zippath))
-			Com_Error(ERR_DROP, "Incorrect checksum for file: %s", clc.downloadName);
-	}
-
-	*clc.downloadTempName = *clc.downloadName = '\0';
-	Cvar_Set("cl_downloadName", "");
-
-	// We are looking to start a download here
-	if (*clc.downloadList) {
-		s = clc.downloadList;
-
-		// format is:
-		//  @remotename@localname@remotename@localname, etc.
-
-		if (*s == '@')
-			s++;
-		remoteName = s;
-
-		if ( (s = strchr(s, '@')) == NULL ) {
-			CL_DownloadsComplete();
-			return;
-		}
-
-		*s++ = '\0';
-		localName = s;
-		if ( (s = strchr(s, '@')) != NULL )
-			*s++ = '\0';
-		else
-			s = localName + strlen(localName); // point at the null byte
-
-		if( (cl_allowDownload->integer & DLF_NO_UDP) ) {
-			Com_Error(ERR_DROP, "UDP Downloads are disabled on your client. (cl_allowDownload is %d)", cl_allowDownload->integer);
-			return;
-		} else {
-			CL_BeginDownload( localName, remoteName );
-		}
-		clc.downloadRestart = qtrue;
-
-		// move over the rest
-		memmove( clc.downloadList, s, strlen(s) + 1 );
-
-		return;
-	}
-
-	CL_DownloadsComplete();
-}
-
-
-/*
-=================
-CL_InitDownloads
-
-After receiving a valid game state, we valid the cgame and local zip files here
-and determine if we need to download them
-=================
-*/
-void CL_InitDownloads( void ) {
-
-	if ( !(cl_allowDownload->integer & DLF_ENABLE) )
-	{
-		char missingfiles[ MAXPRINTMSG ];
-
-		// autodownload is disabled on the client
-		// but it's possible that some referenced files on the server are missing
-		if ( FS_ComparePaks( missingfiles, sizeof( missingfiles ), qfalse ) )
-		{
-			// NOTE TTimo I would rather have that printed as a modal message box
-			// but at this point while joining the game we don't know whether we will successfully join or not
-			Com_Printf( "\nWARNING: You are missing some files referenced by the server:\n%s"
-				"You might not be able to join the game\n"
-				"Go to the setting menu to turn on autodownload, or get the file elsewhere\n\n", missingfiles );
-		}
-	}
-	else if ( FS_ComparePaks( clc.downloadList, sizeof( clc.downloadList ) , qtrue ) ) {
-
-		Com_Printf( "Need paks: %s\n", clc.downloadList );
-
-		if ( *clc.downloadList ) {
-			// if autodownloading is not enabled on the server
-			cls.state = CA_CONNECTED;
-
-			*clc.downloadTempName = *clc.downloadName = '\0';
-			Cvar_Set( "cl_downloadName", "" );
-
-			CL_NextDownload();
-			return;
-		}
-
-	}
-
-	CL_DownloadsComplete();
-}
-
-
 /*
 =================
 CL_CheckForResend
@@ -1585,11 +788,6 @@ static void CL_CheckForResend( void ) {
 	char	data[MAX_INFO_STRING];
 	qboolean	notOverflowed;
 	qboolean	infoTruncated;
-
-	// don't send anything if playing back a demo
-	if ( clc.demoplaying ) {
-		return;
-	}
 
 	// resend if we haven't gotten a reply yet
 	if ( cls.state != CA_CONNECTING && cls.state != CA_CHALLENGING ) {
@@ -2067,14 +1265,6 @@ void CL_PacketEvent( const netadr_t *from, msg_t *msg ) {
 
 	clc.lastPacketTime = cls.realtime;
 	CL_ParseServerMessage( msg );
-
-	//
-	// we don't know if it is ok to save a demo message until
-	// after we have parsed the frame
-	//
-	if ( clc.demorecording && !clc.demowaiting && !clc.demoplaying ) {
-		CL_WriteDemoMessage( msg, headerBytes );
-	}
 }
 
 
@@ -2165,7 +1355,7 @@ void CL_Frame( int msec, int realMsec ) {
 	CL_CheckUserinfo();
 
 	// if we haven't gotten a packet in a long time, drop the connection
-	if (!clc.demoplaying) CL_CheckTimeout();
+	CL_CheckTimeout();
 
 	// send intentions now
 	CL_SendCmd();
@@ -3010,11 +2200,6 @@ void CL_Init( void ) {
 	Cmd_AddCommand ("snd_restart", CL_Snd_Restart_f);
 	Cmd_AddCommand ("vid_restart", CL_Vid_Restart_f);
 	Cmd_AddCommand ("disconnect", CL_Disconnect_f);
-	Cmd_AddCommand ("record", CL_Record_f);
-	Cmd_SetCommandCompletionFunc( "record", CL_CompleteRecordName );
-	Cmd_AddCommand ("demo", CL_PlayDemo_f);
-	Cmd_SetCommandCompletionFunc( "demo", CL_CompleteDemoName );
-	Cmd_AddCommand ("stoprecord", CL_StopRecord_f);
 	Cmd_AddCommand ("connect", CL_Connect_f);
 	Cmd_AddCommand ("localservers", CL_LocalServers_f);
 	Cmd_AddCommand ("globalservers", CL_GlobalServers_f);
@@ -3078,9 +2263,6 @@ void CL_Shutdown( const char *finalmsg, qboolean quit ) {
 	Cmd_RemoveCommand ("snd_restart");
 	Cmd_RemoveCommand ("vid_restart");
 	Cmd_RemoveCommand ("disconnect");
-	Cmd_RemoveCommand ("record");
-	Cmd_RemoveCommand ("demo");
-	Cmd_RemoveCommand ("stoprecord");
 	Cmd_RemoveCommand ("connect");
 	Cmd_RemoveCommand ("localservers");
 	Cmd_RemoveCommand ("globalservers");
@@ -3914,8 +3096,7 @@ static void CL_ServerStatus_f( void ) {
 
 	if ( argc != 2 && argc != 3 )
 	{
-		if (cls.state != CA_ACTIVE || clc.demoplaying)
-		{
+		if (cls.state != CA_ACTIVE) {
 			Com_Printf( "Not connected to a server.\n" );
 #ifdef USE_IPV6
 			Com_Printf( "usage: serverstatus [-4|-6] <server>\n" );
