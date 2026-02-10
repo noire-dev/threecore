@@ -447,16 +447,6 @@ void CL_Netchan_Enqueue( netchan_t *chan, msg_t *msg, int times );
 qboolean CL_Netchan_Process( netchan_t *chan, msg_t *msg );
 
 //
-// cl_avi.c
-//
-qboolean CL_OpenAVIForWriting( const char *filename, qboolean pipe, qboolean reopen );
-void CL_TakeVideoFrame( void );
-void CL_WriteAVIVideoFrame( const byte *imageBuffer, int size );
-void CL_WriteAVIAudioFrame( const byte *pcmBuffer, int size );
-qboolean CL_CloseAVI( qboolean reopen );
-qboolean CL_VideoRecording( void );
-
-//
 // cl_jpeg.c
 //
 size_t	CL_SaveJPGToBuffer( byte *buffer, size_t bufSize, int quality, int image_width, int image_height, byte *image_buffer, int padding );

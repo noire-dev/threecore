@@ -895,14 +895,6 @@ qboolean CL_Disconnect( qboolean showMainMenu ) {
 	*clc.downloadTempName = *clc.downloadName = '\0';
 	Cvar_Set( "cl_downloadName", "" );
 
-	// Stop recording any video
-	if ( CL_VideoRecording() ) {
-		// Finish rendering current frame
-		cls.framecount++;
-		SCR_UpdateScreen();
-		CL_CloseAVI( qfalse );
-	}
-
 	if ( cgvm ) {
 		// do that right after we rendered last video frame
 		CL_ShutdownCGame();
@@ -1233,9 +1225,6 @@ doesn't know what graphics to reload
 static void CL_Vid_Restart( refShutdownCode_t shutdownCode ) {
 
 	// Settings may have changed so stop recording now
-	if ( CL_VideoRecording() )
-		CL_CloseAVI( qfalse );
-
 	if ( clc.demorecording )
 		CL_StopRecord_f();
 
@@ -2170,28 +2159,6 @@ void CL_Frame( int msec, int realMsec ) {
 		// if disconnected, bring up the menu
 		//S_StopAllSounds();
 		VM_Call( uivm, 1, UI_SET_ACTIVE_MENU, UIMENU_MAIN );
-	}
-
-	// if recording an avi, lock to a fixed fps
-	if ( CL_VideoRecording() && msec ) {
-		// save the current screen
-		if ( cls.state == CA_ACTIVE ) {
-			float fps, frameDuration;
-
-			if ( com_timescale->value > 0.0001f )
-				fps = MIN( cl_aviFrameRate->value / com_timescale->value, 1000.0f );
-			else
-				fps = 1000.0f;
-
-			frameDuration = MAX( 1000.0f / fps, 1.0f ) + clc.aviVideoFrameRemainder;
-
-			CL_TakeVideoFrame();
-
-			msec = (int)frameDuration;
-			clc.aviVideoFrameRemainder = frameDuration - msec;
-
-			realMsec = msec; // sync sound duration
-		}
 	}
 
 	// decide the simulation time

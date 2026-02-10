@@ -1166,23 +1166,6 @@ static void S_GetSoundtime( void )
 	static	int		buffers;
 	static	int		oldsamplepos;
 
-	if ( CL_VideoRecording() )
-	{
-		const float duration = MAX( (float)dma.speed / cl_aviFrameRate->value, 1.0f );
-		const float frameDuration = duration + clc.aviSoundFrameRemainder;
-		const int msec = (int)frameDuration;
-
-		s_soundtime += msec;
-		clc.aviSoundFrameRemainder = frameDuration - msec;
-
-		// use same offset as in game
-		s_paintedtime = s_soundtime + (int)(s_mixOffset->value * (float)dma.speed);
-
-		// render exactly one frame of audio data
-		clc.aviFrameEndTime = s_paintedtime + (int)(duration + clc.aviSoundFrameRemainder);
-		return;
-	}
-
 	// it is possible to miscount buffers if it has wrapped twice between
 	// calls to S_Update.  Oh well.
 	samplepos = SNDDMA_GetDMAPos();
