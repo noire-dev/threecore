@@ -211,12 +211,6 @@ typedef struct {
 	fileHandle_t	demofile;
 	fileHandle_t	recordfile;
 
-	float	aviVideoFrameRemainder;
-	float	aviSoundFrameRemainder;
-	int		aviFrameEndTime;
-	char	videoName[MAX_QPATH];
-	int		videoIndex;
-
 	// big stuff at end of structure so most offsets are 15 bits or less
 	netchan_t	netchan;
 
@@ -347,10 +341,6 @@ extern	refexport_t		re;		// interface to refresh .dll
 extern	cvar_t	*cl_noprint;
 extern	cvar_t	*cl_timegraph;
 extern	cvar_t	*cl_shownet;
-
-extern	cvar_t	*cl_aviFrameRate;
-extern	cvar_t	*cl_aviMotionJpeg;
-extern	cvar_t	*cl_aviPipeFormat;
 
 extern	cvar_t	*cl_activeAction;
 

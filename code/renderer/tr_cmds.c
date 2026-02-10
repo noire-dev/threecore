@@ -37,7 +37,7 @@ static void R_IssueRenderCommands( void ) {
 	// clear it out, in case this is a sync and not a buffer flip
 	cmdList->used = 0;
 
-	if ( backEnd.screenshotMask == 0 ) {
+	if ( backEnd.screenshotNeed == qfalse ) {
 		if ( ri.CL_IsMinimized() )
 			return; // skip backend when minimized
 		if ( backEnd.throttle )
@@ -275,35 +275,6 @@ void RE_EndFrame( void ) {
 		ri.Cvar_ResetGroup( CVG_RENDERER );
 	}
 }
-
-
-/*
-=============
-RE_TakeVideoFrame
-=============
-*/
-void RE_TakeVideoFrame( int width, int height,
-		byte *captureBuffer, byte *encodeBuffer, qboolean motionJpeg )
-{
-	videoFrameCommand_t	*cmd;
-
-	if( !tr.registered ) {
-		return;
-	}
-
-	backEnd.screenshotMask |= SCREENSHOT_AVI;
-
-	cmd = &backEnd.vcmd;
-
-	//cmd->commandId = RC_VIDEOFRAME;
-
-	cmd->width = width;
-	cmd->height = height;
-	cmd->captureBuffer = captureBuffer;
-	cmd->encodeBuffer = encodeBuffer;
-	cmd->motionJpeg = motionJpeg;
-}
-
 
 void RE_ThrottleBackend( void )
 {

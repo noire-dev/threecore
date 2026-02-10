@@ -295,7 +295,6 @@ typedef struct {
 
 	int				videoMapHandle;
 	int				lightmap;				// LIGHTMAP_INDEX_NONE, LIGHTMAP_INDEX_SHADER, LIGHTMAP_INDEX_OFFSET
-	qboolean		isVideoMap;
 	qboolean		isScreenMap;
 } textureBundle_t;
 
@@ -894,23 +893,6 @@ typedef struct {
 	int		c_lit_vertices_lateculltest;
 } backEndCounters_t;
 
-typedef struct videoFrameCommand_s {
-	int					commandId;
-	int					width;
-	int					height;
-	byte				*captureBuffer;
-	byte				*encodeBuffer;
-	qboolean			motionJpeg;
-} videoFrameCommand_t;
-
-enum {
-	SCREENSHOT_TGA = 1<<0,
-	SCREENSHOT_JPG = 1<<1,
-	SCREENSHOT_BMP = 1<<2,
-	SCREENSHOT_BMP_CLIPBOARD = 1<<3,
-	SCREENSHOT_AVI = 1<<4 // take video frame
-};
-
 // all state modified by the back end is separated
 // from the front end state
 typedef struct {
@@ -926,14 +908,9 @@ typedef struct {
 	qboolean	doneSurfaces;   // done any 3d surfaces already
 	trRefEntity_t	entity2D;	// currentEntity will point at this when doing 2D rendering
 
-	int		screenshotMask;		// tga | jpg | bmp
-	char	screenshotTGA[ MAX_OSPATH ];
+	qboolean screenshotNeed;
 	char	screenshotJPG[ MAX_OSPATH ];
-	char	screenshotBMP[ MAX_OSPATH ];
-	qboolean screenShotTGAsilent;
 	qboolean screenShotJPGsilent;
-	qboolean screenShotBMPsilent;
-	videoFrameCommand_t	vcmd;	// avi capture
 	
 	qboolean throttle;
 	qboolean drawConsole;
@@ -1243,8 +1220,6 @@ void	R_InitSkins( void );
 skin_t	*R_GetSkinByHandle( qhandle_t hSkin );
 
 int R_ComputeLOD( trRefEntity_t *ent );
-
-const void *RB_TakeVideoFrameCmd( const void *data );
 
 //
 // tr_shader.c
@@ -1621,8 +1596,6 @@ extern	backEndData_t	*backEndData;
 
 void RB_ExecuteRenderCommands( const void *data );
 void RB_TakeScreenshot( int x, int y, int width, int height, const char *fileName );
-void RB_TakeScreenshotJPEG( int x, int y, int width, int height, const char *fileName );
-void RB_TakeScreenshotBMP( int x, int y, int width, int height, const char *fileName, int clipboard );
 
 void R_IssuePendingRenderCommands( void );
 
@@ -1633,8 +1606,6 @@ void RE_StretchPic ( float x, float y, float w, float h,
 					  float s1, float t1, float s2, float t2, qhandle_t hShader );
 void RE_BeginFrame( void );
 void RE_EndFrame( void );
-void RE_TakeVideoFrame( int width, int height,
-		byte *captureBuffer, byte *encodeBuffer, qboolean motionJpeg );
 
 void RE_FinishBloom( void );
 void RE_ThrottleBackend( void );

@@ -96,8 +96,6 @@ typedef struct {
 	qboolean (*GetEntityToken)( char *buffer, int size );
 	qboolean (*inPVS)( const vec3_t p1, const vec3_t p2 );
 
-	void	(*TakeVideoFrame)( int h, int w, byte* captureBuffer, byte *encodeBuffer, qboolean motionJpeg );
-
 	void	(*ThrottleBackend)( void );
 	void	(*FinishBloom)( void );
 
@@ -167,8 +165,6 @@ typedef struct {
 	void	(*FS_FreeFileList)( char **filelist );
 	void	(*FS_WriteFile)( const char *qpath, const void *buffer, int size );
 	qboolean (*FS_FileExists)( const char *file );
-
-	void	(*CL_WriteAVIVideoFrame)( const byte *buffer, int size );
 
 	size_t	(*CL_SaveJPGToBuffer)( byte *buffer, size_t bufSize, int quality, int image_width, int image_height, byte *image_buffer, int padding );
 	void	(*CL_SaveJPG)( const char *filename, int quality, int image_width, int image_height, byte *image_buffer, int padding );

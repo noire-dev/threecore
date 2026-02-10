@@ -33,10 +33,6 @@ cvar_t	*cl_timeout;
 
 cvar_t	*cl_shownet;
 
-cvar_t	*cl_aviFrameRate;
-cvar_t	*cl_aviMotionJpeg;
-cvar_t	*cl_aviPipeFormat;
-
 cvar_t	*cl_activeAction;
 
 cvar_t	*cl_allowDownload;
@@ -2400,7 +2396,6 @@ static void CL_InitRef( void ) {
 	rimp.Cvar_CheckGroup = Cvar_CheckGroup;
 	rimp.Cvar_ResetGroup = Cvar_ResetGroup;
 
-	rimp.CL_WriteAVIVideoFrame = CL_WriteAVIVideoFrame;
 	rimp.CL_SaveJPGToBuffer = CL_SaveJPGToBuffer;
 	rimp.CL_SaveJPG = CL_SaveJPG;
 	rimp.CL_LoadJPG = CL_LoadJPG;
@@ -2991,12 +2986,6 @@ void CL_Init( void ) {
 	cl_shownet = Cvar_Get ("cl_shownet", "0", 0 );
 	rcon_client_password = Cvar_Get ("rconPassword", "", 0 );
 	cl_activeAction = Cvar_Get( "activeAction", "", 0 );
-	cl_aviFrameRate = Cvar_Get ("cl_aviFrameRate", "25", CVAR_ARCHIVE);
-	cl_aviMotionJpeg = Cvar_Get ("cl_aviMotionJpeg", "1", CVAR_ARCHIVE);
-	cl_aviPipeFormat = Cvar_Get( "cl_aviPipeFormat",
-		"-preset medium -crf 23 -c:v libx264 -flags +cgop -pix_fmt yuvj420p "
-		"-bf 2 -c:a aac -strict -2 -b:a 160k -movflags faststart",
-		CVAR_ARCHIVE );
 	rconAddress = Cvar_Get ("rconAddress", "", 0);
 	cl_allowDownload = Cvar_Get( "cl_allowDownload", "1", CVAR_ARCHIVE );
 	cl_serverStatusResendTime = Cvar_Get ("cl_serverStatusResendTime", "750", 0);

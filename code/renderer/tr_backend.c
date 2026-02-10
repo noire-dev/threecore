@@ -1068,38 +1068,12 @@ static const void *RB_SwapBuffers( const void *data ) {
 		FBO_PostProcess();
 	}
 
-	if ( backEnd.screenshotMask && tr.frameCount > 1 ) {
-		if ( superSampled ) {
-			qglScissor( 0, 0, gls.captureWidth, gls.captureHeight );
-			qglViewport( 0, 0, gls.captureWidth, gls.captureHeight );
-			FBO_BlitSS();
-		}
-		if ( backEnd.screenshotMask & SCREENSHOT_TGA && backEnd.screenshotTGA[0] ) {
-			RB_TakeScreenshot( 0, 0, gls.captureWidth, gls.captureHeight, backEnd.screenshotTGA );
-			if ( !backEnd.screenShotTGAsilent ) {
-				ri.Printf( PRINT_ALL, "Wrote %s\n", backEnd.screenshotTGA );
-			}
-		}
-		if ( backEnd.screenshotMask & SCREENSHOT_JPG && backEnd.screenshotJPG[0] ) {
-			RB_TakeScreenshotJPEG( 0, 0, gls.captureWidth, gls.captureHeight, backEnd.screenshotJPG );
-			if ( !backEnd.screenShotJPGsilent ) {
-				ri.Printf( PRINT_ALL, "Wrote %s\n", backEnd.screenshotJPG );
-			}
-		}
-		if ( backEnd.screenshotMask & SCREENSHOT_BMP && ( backEnd.screenshotBMP[0] || ( backEnd.screenshotMask & SCREENSHOT_BMP_CLIPBOARD ) ) ) {
-			RB_TakeScreenshotBMP( 0, 0, gls.captureWidth, gls.captureHeight, backEnd.screenshotBMP, backEnd.screenshotMask & SCREENSHOT_BMP_CLIPBOARD );
-			if ( !backEnd.screenShotBMPsilent ) {
-				ri.Printf( PRINT_ALL, "Wrote %s\n", backEnd.screenshotBMP );
-			}
-		}
-		if ( backEnd.screenshotMask & SCREENSHOT_AVI ) {
-			RB_TakeVideoFrameCmd( &backEnd.vcmd );
-		}
+	if ( backEnd.screenshotNeed && tr.frameCount > 1 ) {
+		RB_TakeScreenshot( 0, 0, gls.captureWidth, gls.captureHeight, backEnd.screenshotJPG );
+		ri.Printf( PRINT_ALL, "Screenshot saved to %s\n", backEnd.screenshotJPG );
 
 		backEnd.screenshotJPG[0] = '\0';
-		backEnd.screenshotTGA[0] = '\0';
-		backEnd.screenshotBMP[0] = '\0';
-		backEnd.screenshotMask = 0;
+		backEnd.screenshotNeed = qfalse;
 	}
 
 	ri.GLimp_EndFrame();
