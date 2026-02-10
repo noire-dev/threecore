@@ -700,7 +700,7 @@ static void R_ScreenShot_f( void ) {
 		R_ScreenshotFilename( checkname );
 	}
 
-	backEnd.screenshotMask = qtrue;
+	backEnd.screenshotNeed = qtrue;
 	Q_strncpyz( backEnd.screenshotJPG, checkname, sizeof( backEnd.screenshotJPG ) );
 }
 

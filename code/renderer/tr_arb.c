@@ -2052,13 +2052,13 @@ qboolean FBO_Bloom( const float gamma, const float obScale, qboolean finalStage 
 		GL_State( GLS_DEPTHTEST_DISABLE | GLS_SRCBLEND_ONE | GLS_DSTBLEND_ZERO );
 	}
 
-	if ( windowAdjusted || backEnd.screenshotMask ) {
+	if ( windowAdjusted || backEnd.screenshotNeed ) {
 		finalStage = qfalse; // can't blit directly into back buffer in this case
 	}
 
 	// if we don't need to read pixels later - blend directly to back buffer
 	if ( finalStage ) {
-		if ( backEnd.screenshotMask ) {
+		if ( backEnd.screenshotNeed ) {
 			FBO_Bind( GL_FRAMEBUFFER, frameBuffers[ BLOOM_BASE ].fbo );
 		} else {
 			FBO_Bind( GL_FRAMEBUFFER, 0 );
@@ -2083,7 +2083,7 @@ qboolean FBO_Bloom( const float gamma, const float obScale, qboolean finalStage 
 	ARB_ProgramDisable();
 
 	if ( finalStage ) {
-		if ( backEnd.screenshotMask ) {
+		if ( backEnd.screenshotNeed ) {
 			FBO_BlitToBackBuffer( BLOOM_BASE ); // so any further qglReadPixels() will read from BLOOM_BASE
 			 // fboReadIndex = 0;
 		} else {
@@ -2154,7 +2154,7 @@ void FBO_PostProcess( void )
 	}
 
 	// check if we can perform final draw directly into back buffer
-	if ( backEnd.screenshotMask == 0 && !windowAdjusted && !minimized ) {
+	if ( backEnd.screenshotNeed == qfalse && !windowAdjusted && !minimized ) {
 		FBO_Bind( GL_FRAMEBUFFER, 0 );
 		GL_BindTexture( 0, frameBuffers[ fboReadIndex ].color );
 		ARB_ProgramEnable( DUMMY_VERTEX, GAMMA_FRAGMENT );
