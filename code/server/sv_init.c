@@ -539,9 +539,7 @@ void SV_Init( void )
 	sv_timeout = Cvar_Get( "sv_timeout", "999999", 0 );
 	sv_zombietime = Cvar_Get( "sv_zombietime", "2", 0 );
 	Cvar_Get ("nextmap", "", 0 );
-	sv_allowDownload = Cvar_Get ("sv_allowDownload", "1", CVAR_SERVERINFO);
-	Cvar_Get ("sv_dlURL", "", CVAR_SERVERINFO | CVAR_ARCHIVE);
-
+	
 	for ( index = 0; index < MAX_MASTER_SERVERS; index++ )
 		sv_master[ index ] = Cvar_Get( va( "sv_master%d", index + 1 ), "", CVAR_ARCHIVE );
 

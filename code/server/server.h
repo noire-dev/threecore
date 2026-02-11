@@ -259,7 +259,6 @@ extern	cvar_t	*sv_timeout;
 extern	cvar_t	*sv_zombietime;
 extern	cvar_t	*sv_rconPassword;
 extern	cvar_t	*sv_privatePassword;
-extern	cvar_t	*sv_allowDownload;
 extern	cvar_t	*sv_maxclientsPerIP;
 
 extern	cvar_t	*sv_privateClients;
@@ -272,7 +271,6 @@ extern	cvar_t	*sv_referencedPakNames;
 extern	cvar_t	*sv_serverid;
 extern	cvar_t	*sv_minRate;
 extern	cvar_t	*sv_maxRate;
-extern	cvar_t	*sv_dlRate;
 extern	cvar_t	*sv_gametype;
 extern	cvar_t	*sv_floodProtect;
 extern	cvar_t	*sv_lanForceRate;

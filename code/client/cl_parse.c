@@ -31,7 +31,6 @@ static const char *svc_strings[256] = {
 	"svc_configstring",
 	"svc_baseline",
 	"svc_serverCommand",
-	"svc_download",
 	"svc_snapshot",
 	"svc_EOF",
 };
@@ -374,19 +373,7 @@ static void CL_ParseServerInfo( void )
 	const char *serverInfo;
 	size_t	len;
 
-	serverInfo = cl.gameState.stringData
-		+ cl.gameState.stringOffsets[ CS_SERVERINFO ];
-
-	clc.sv_allowDownload = atoi(Info_ValueForKey(serverInfo,
-		"sv_allowDownload"));
-	Q_strncpyz(clc.sv_dlURL,
-		Info_ValueForKey(serverInfo, "sv_dlURL"),
-		sizeof(clc.sv_dlURL));
-
-	/* remove ending slash in URLs */
-	len = strlen( clc.sv_dlURL );
-	if ( len > 0 &&  clc.sv_dlURL[len-1] == '/' )
-		clc.sv_dlURL[len-1] = '\0';
+	serverInfo = cl.gameState.stringData + cl.gameState.stringOffsets[ CS_SERVERINFO ];
 }
 
 
@@ -490,9 +477,6 @@ static void CL_ParseGamestate( msg_t *msg ) {
 	Cbuf_AddText( "exec maps/default.cfg \n" );				//load default map script on client
 	Cbuf_AddText( va("exec maps/%s.cfg \n", mapname) );		//load map script on client
 	Cvar_Set("cl_changeqvm", mapname);						//load map fs on client
-
-	// This used to call CL_StartHunkUsers, but now we enter the download state before loading the cgame
-	CL_InitDownloads();
 }
 
 
@@ -525,113 +509,6 @@ qboolean CL_ValidPakSignature( const byte *data, int len )
 	return qfalse;
 }
 
-//=====================================================================
-
-/*
-=====================
-CL_ParseDownload
-
-A download message has been received from the server
-=====================
-*/
-static void CL_ParseDownload( msg_t *msg ) {
-	int		size;
-	unsigned char data[ MAX_MSGLEN ];
-	uint16_t block;
-
-	if (!*clc.downloadTempName) {
-		Com_Printf("Server sending download, but no download was requested\n");
-		CL_AddReliableCommand( "stopdl", qfalse );
-		return;
-	}
-
-	// read the data
-	block = MSG_ReadShort ( msg );
-
-	if(!block && !clc.downloadBlock)
-	{
-		// block zero is special, contains file size
-		clc.downloadSize = MSG_ReadLong ( msg );
-
-		Cvar_Set("cl_downloadSize", va("%i", clc.downloadSize));
-
-		if (clc.downloadSize < 0)
-		{
-			Com_Error( ERR_DROP, "%s", MSG_ReadString( msg ) );
-			return;
-		}
-	}
-
-	size = MSG_ReadShort ( msg );
-	if (size < 0 || size > sizeof(data))
-	{
-		Com_Error(ERR_DROP, "CL_ParseDownload: Invalid size %d for download chunk", size);
-		return;
-	}
-
-	MSG_ReadData(msg, data, size);
-
-	if((clc.downloadBlock & 0xFFFF) != block)
-	{
-		Com_DPrintf( "CL_ParseDownload: Expected block %d, got %d\n", (clc.downloadBlock & 0xFFFF), block);
-		return;
-	}
-
-	// open the file if not opened yet
-	if ( clc.download == FS_INVALID_HANDLE )
-	{
-		if ( !CL_ValidPakSignature( data, size ) )
-		{
-			Com_Printf( S_COLOR_YELLOW "Invalid pak signature for %s\n", clc.downloadName );
-			CL_AddReliableCommand( "stopdl", qfalse );
-			CL_NextDownload();
-			return;
-		}
-
-		clc.download = FS_SV_FOpenFileWrite( clc.downloadTempName );
-
-		if ( clc.download == FS_INVALID_HANDLE )
-		{
-			Com_Printf( "Could not create %s\n", clc.downloadTempName );
-			CL_AddReliableCommand( "stopdl", qfalse );
-			CL_NextDownload();
-			return;
-		}
-	}
-
-	if (size)
-		FS_Write( data, size, clc.download );
-
-	CL_AddReliableCommand( va("nextdl %d", clc.downloadBlock), qfalse );
-	clc.downloadBlock++;
-
-	clc.downloadCount += size;
-
-	// So UI gets access to it
-	Cvar_Set("cl_downloadCount", va("%i", clc.downloadCount));
-
-	if ( size == 0 ) { // A zero length block means EOF
-		if ( clc.download != FS_INVALID_HANDLE ) {
-			FS_FCloseFile( clc.download );
-			clc.download = FS_INVALID_HANDLE;
-
-			// rename the file
-			FS_SV_Rename( clc.downloadTempName, clc.downloadName );
-		}
-
-		// send intentions now
-		// We need this because without it, we would hold the last nextdl and then start
-		// loading right away.  If we take a while to load, the server is happily trying
-		// to send us that last block over and over.
-		// Write it twice to help make sure we acknowledge the download
-		CL_WritePacket( 1 );
-
-		// get another file if needed
-		CL_NextDownload();
-	}
-}
-
-
 /*
 =====================
 CL_ParseCommandString
@@ -663,7 +540,7 @@ static void CL_ParseCommandString( msg_t *msg ) {
 
 	// -EC- : we may stuck on downloading because of non-working cgvm
 	// or in "awaiting snapshot..." state so handle "disconnect" here
-	if ( ( !cgvm && cls.state == CA_CONNECTED && clc.download != FS_INVALID_HANDLE ) || ( cgvm && cls.state == CA_PRIMED ) ) {
+	if ( ( !cgvm && cls.state == CA_CONNECTED && 0 ) || ( cgvm && cls.state == CA_PRIMED ) ) { //IFDONTWORK
 		const char *text;
 		Cmd_TokenizeString( s );
 		if ( !Q_stricmp( Cmd_Argv(0), "disconnect" ) ) {
@@ -745,9 +622,6 @@ void CL_ParseServerMessage( msg_t *msg ) {
 			break;
 		case svc_snapshot:
 			CL_ParseSnapshot( msg );
-			break;
-		case svc_download:
-			CL_ParseDownload( msg );
 			break;
 		}
 	}

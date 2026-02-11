@@ -35,8 +35,6 @@ cvar_t	*cl_shownet;
 
 cvar_t	*cl_activeAction;
 
-cvar_t	*cl_allowDownload;
-
 cvar_t	*cl_serverStatusResendTime;
 
 cvar_t	*cl_lanForcePackets;
@@ -183,7 +181,7 @@ void CL_ClearMemory( void ) {
 =================
 CL_FlushMemory
 
-Called by CL_Disconnect_f, CL_DownloadsComplete
+Called by CL_Disconnect_f
 Also called by Com_Error
 =================
 */
@@ -295,14 +293,6 @@ qboolean CL_Disconnect( qboolean showMainMenu ) {
 	}
 
 	cl_disconnecting = qtrue;
-
-	// Finish downloads
-	if ( clc.download != FS_INVALID_HANDLE ) {
-		FS_FCloseFile( clc.download );
-		clc.download = FS_INVALID_HANDLE;
-	}
-	*clc.downloadTempName = *clc.downloadName = '\0';
-	Cvar_Set( "cl_downloadName", "" );
 
 	if ( cgvm ) {
 		// do that right after we rendered last video frame
@@ -783,200 +773,6 @@ static void CL_Systeminfo_f( void ) {
 	Com_Printf( "System info settings:\n" );
 	Info_Print( cl.gameState.stringData + ofs );
 }
-
-//====================================================================
-
-/*
-=================
-CL_DownloadsComplete
-
-Called when all downloading has been completed
-=================
-*/
-static void CL_DownloadsComplete( void ) {
-
-	// if we downloaded files we need to restart the file system
-	if ( clc.downloadRestart  ) {
-		clc.downloadRestart = qfalse;
-
-		FS_Restart(clc.checksumFeed); // We possibly downloaded a pak, restart the file system to load it
-
-		// inform the server so we get new gamestate info
-		CL_AddReliableCommand( "donedl", qfalse );
-
-		// by sending the donedl command we request a new gamestate
-		// so we don't want to load stuff yet
-		return;
-	}
-
-	// let the client game init and load data
-	cls.state = CA_LOADING;
-
-	// Pump the loop, this may change gamestate!
-	Com_EventLoop();
-
-	// if the gamestate was changed by calling Com_EventLoop
-	// then we loaded everything already and we don't want to do it again.
-	if ( cls.state != CA_LOADING ) {
-		return;
-	}
-
-	// flush client memory and start loading stuff
-	// this will also (re)load the UI
-	// if this is a local client then only the client part of the hunk
-	// will be cleared, note that this is done after the hunk mark has been set
-	//if ( !com_sv_running->integer )
-	CL_FlushMemory();
-
-	// initialize the CGame
-	cls.cgameStarted = qtrue;
-	CL_InitCGame();
-
-	CL_WritePacket( 2 );
-}
-
-
-/*
-=================
-CL_BeginDownload
-
-Requests a file to download from the server.  Stores it in the current
-game directory.
-=================
-*/
-static void CL_BeginDownload( const char *localName, const char *remoteName ) {
-
-	Com_DPrintf("***** CL_BeginDownload *****\n"
-				"Localname: %s\n"
-				"Remotename: %s\n"
-				"****************************\n", localName, remoteName);
-
-	Q_strncpyz ( clc.downloadName, localName, sizeof(clc.downloadName) );
-	Com_sprintf( clc.downloadTempName, sizeof(clc.downloadTempName), "%s.tmp", localName );
-
-	// Set so UI gets access to it
-	Cvar_Set( "cl_downloadName", remoteName );
-	Cvar_Set( "cl_downloadSize", "0" );
-	Cvar_Set( "cl_downloadCount", "0" );
-	Cvar_Set( "cl_downloadTime", va("%i", cls.realtime) );
-
-	clc.downloadBlock = 0; // Starting new file
-	clc.downloadCount = 0;
-
-	CL_AddReliableCommand( va("download %s", remoteName), qfalse );
-}
-
-
-/*
-=================
-CL_NextDownload
-
-A download completed or failed
-=================
-*/
-void CL_NextDownload( void )
-{
-	char *s;
-	char *remoteName, *localName;
-
-	// A download has finished, check whether this matches a referenced checksum
-	if(*clc.downloadName)
-	{
-		const char *zippath = FS_BuildOSPath(Cvar_VariableString("fs_homepath"), clc.downloadName, NULL );
-
-		if(!FS_CompareZipChecksum(zippath))
-			Com_Error(ERR_DROP, "Incorrect checksum for file: %s", clc.downloadName);
-	}
-
-	*clc.downloadTempName = *clc.downloadName = '\0';
-	Cvar_Set("cl_downloadName", "");
-
-	// We are looking to start a download here
-	if (*clc.downloadList) {
-		s = clc.downloadList;
-
-		// format is:
-		//  @remotename@localname@remotename@localname, etc.
-
-		if (*s == '@')
-			s++;
-		remoteName = s;
-
-		if ( (s = strchr(s, '@')) == NULL ) {
-			CL_DownloadsComplete();
-			return;
-		}
-
-		*s++ = '\0';
-		localName = s;
-		if ( (s = strchr(s, '@')) != NULL )
-			*s++ = '\0';
-		else
-			s = localName + strlen(localName); // point at the null byte
-
-		if( (cl_allowDownload->integer & DLF_NO_UDP) ) {
-			Com_Error(ERR_DROP, "UDP Downloads are disabled on your client. (cl_allowDownload is %d)", cl_allowDownload->integer);
-			return;
-		} else {
-			CL_BeginDownload( localName, remoteName );
-		}
-		clc.downloadRestart = qtrue;
-
-		// move over the rest
-		memmove( clc.downloadList, s, strlen(s) + 1 );
-
-		return;
-	}
-
-	CL_DownloadsComplete();
-}
-
-
-/*
-=================
-CL_InitDownloads
-
-After receiving a valid game state, we valid the cgame and local zip files here
-and determine if we need to download them
-=================
-*/
-void CL_InitDownloads( void ) {
-
-	if ( !(cl_allowDownload->integer & DLF_ENABLE) )
-	{
-		char missingfiles[ MAXPRINTMSG ];
-
-		// autodownload is disabled on the client
-		// but it's possible that some referenced files on the server are missing
-		if ( FS_ComparePaks( missingfiles, sizeof( missingfiles ), qfalse ) )
-		{
-			// NOTE TTimo I would rather have that printed as a modal message box
-			// but at this point while joining the game we don't know whether we will successfully join or not
-			Com_Printf( "\nWARNING: You are missing some files referenced by the server:\n%s"
-				"You might not be able to join the game\n"
-				"Go to the setting menu to turn on autodownload, or get the file elsewhere\n\n", missingfiles );
-		}
-	}
-	else if ( FS_ComparePaks( clc.downloadList, sizeof( clc.downloadList ) , qtrue ) ) {
-
-		Com_Printf( "Need paks: %s\n", clc.downloadList );
-
-		if ( *clc.downloadList ) {
-			// if autodownloading is not enabled on the server
-			cls.state = CA_CONNECTED;
-
-			*clc.downloadTempName = *clc.downloadName = '\0';
-			Cvar_Set( "cl_downloadName", "" );
-
-			CL_NextDownload();
-			return;
-		}
-
-	}
-
-	CL_DownloadsComplete();
-}
-
 
 /*
 =================
@@ -2380,7 +2176,6 @@ void CL_Init( void ) {
 	rcon_client_password = Cvar_Get ("rconPassword", "", 0 );
 	cl_activeAction = Cvar_Get( "activeAction", "", 0 );
 	rconAddress = Cvar_Get ("rconAddress", "", 0);
-	cl_allowDownload = Cvar_Get( "cl_allowDownload", "1", CVAR_ARCHIVE );
 	cl_serverStatusResendTime = Cvar_Get ("cl_serverStatusResendTime", "750", 0);
 	cl_lanForcePackets = Cvar_Get( "cl_lanForcePackets", "1", CVAR_ARCHIVE );
 	Cvar_Get ("name", "Sandbox Player", CVAR_USERINFO | CVAR_ARCHIVE );

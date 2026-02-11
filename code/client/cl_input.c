@@ -212,7 +212,7 @@ static qboolean CL_ReadyToSendPacket( void ) {
 	int		delta;
 
 	// If we are downloading, we send no less than 50ms between packets
-	if ( *clc.downloadTempName && cls.realtime - clc.lastPacketSentTime < 50 ) {
+	if ( cls.realtime - clc.lastPacketSentTime < 50 ) { //IFDONTWORK
 		return qfalse;
 	}
 

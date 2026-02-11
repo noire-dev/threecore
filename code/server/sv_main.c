@@ -31,7 +31,6 @@ cvar_t	*sv_timeout;			// seconds without any message
 cvar_t	*sv_zombietime;			// seconds to sink messages after disconnect
 cvar_t	*sv_rconPassword;		// password for remote server commands
 cvar_t	*sv_privatePassword;	// password for the privateClient slots
-cvar_t	*sv_allowDownload;
 cvar_t	*sv_maxclientsPerIP;
 
 cvar_t	*sv_privateClients;		// number of clients reserved for password
@@ -44,7 +43,6 @@ cvar_t	*sv_referencedPakNames;
 cvar_t	*sv_serverid;
 cvar_t	*sv_minRate;
 cvar_t	*sv_maxRate;
-cvar_t	*sv_dlRate;
 cvar_t	*sv_gametype;
 cvar_t	*sv_floodProtect;
 cvar_t	*sv_lanForceRate; // dedicated 1 (LAN) server forces local client rates to 99999 (bug #491)
@@ -1260,82 +1258,14 @@ int SV_RateMsec( const client_t *client )
 		return rateMsec - rate;
 }
 
-
-/*
-====================
-SV_SendQueuedPackets
-
-Send download messages and queued packets in the time that we're idle, i.e.
-not computing a server frame or sending client snapshots.
-Return the time in msec until we expect to be called next
-====================
-*/
-int SV_SendQueuedPackets( void )
-{
-	int numBlocks;
-	int dlStart, deltaT, delayT;
-	static int dlNextRound = 0;
+int SV_SendQueuedPackets( void ) {
+	int delayT;
 	int timeVal = INT_MAX;
 
 	// Send out fragmented packets now that we're idle
 	delayT = SV_SendQueuedMessages();
 	if(delayT >= 0)
 		timeVal = delayT;
-
-	if(sv_dlRate->integer)
-	{
-		// Rate limiting. This is very imprecise for high
-		// download rates due to millisecond timedelta resolution
-		dlStart = Sys_Milliseconds();
-		deltaT = dlNextRound - dlStart;
-
-		if(deltaT > 0)
-		{
-			if(deltaT < timeVal)
-				timeVal = deltaT + 1;
-		}
-		else
-		{
-			numBlocks = SV_SendDownloadMessages();
-
-			if(numBlocks)
-			{
-				// There are active downloads
-				deltaT = Sys_Milliseconds() - dlStart;
-
-				delayT = 1000 * numBlocks * MAX_DOWNLOAD_BLKSIZE;
-				delayT /= sv_dlRate->integer * 1024;
-
-				if(delayT <= deltaT + 1)
-				{
-					// Sending the last round of download messages
-					// took too long for given rate, don't wait for
-					// next round, but always enforce a 1ms delay
-					// between DL message rounds so we don't hog
-					// all of the bandwidth. This will result in an
-					// effective maximum rate of 1MB/s per user, but the
-					// low download window size limits this anyways.
-					if(timeVal > 2)
-						timeVal = 2;
-
-					dlNextRound = dlStart + deltaT + 1;
-				}
-				else
-				{
-					dlNextRound = dlStart + delayT;
-					delayT -= deltaT;
-
-					if(delayT < timeVal)
-						timeVal = delayT;
-				}
-			}
-		}
-	}
-	else
-	{
-		if(SV_SendDownloadMessages())
-			timeVal = 0;
-	}
 
 	return timeVal;
 }

@@ -344,8 +344,6 @@ extern	cvar_t	*cl_shownet;
 
 extern	cvar_t	*cl_activeAction;
 
-extern	cvar_t	*cl_allowDownload;
-
 extern	cvar_t	*cl_lanForcePackets;
 
 extern	cvar_t	*com_maxfps;
@@ -366,9 +364,6 @@ void CL_AddReliableCommand( const char *cmd, qboolean isDisconnectCmd );
 void CL_StartHunkUsers( void );
 
 void CL_Disconnect_f( void );
-
-void CL_InitDownloads( void );
-void CL_NextDownload( void );
 
 void CL_GetPing( int n, char *buf, int buflen, int *pingtime );
 void CL_GetPingInfo( int n, char *buf, int buflen );
