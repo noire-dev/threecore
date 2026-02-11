@@ -528,7 +528,6 @@ void SV_Init( void )
 	sv_maxclientsPerIP = Cvar_Get( "sv_maxclientsPerIP", "3", CVAR_ARCHIVE );
 	sv_minRate = Cvar_Get( "sv_minRate", "0", CVAR_ARCHIVE );
 	sv_maxRate = Cvar_Get( "sv_maxRate", "0", CVAR_ARCHIVE );
-	sv_dlRate = Cvar_Get( "sv_dlRate", "100", CVAR_ARCHIVE );
 	sv_floodProtect = Cvar_Get( "sv_floodProtect", "1", CVAR_ARCHIVE | CVAR_SERVERINFO );
 	Cvar_Get( "sv_cheats", "0", CVAR_SYSTEMINFO);
 	sv_serverid = Cvar_Get( "sv_serverid", "0", CVAR_SYSTEMINFO );
