@@ -93,8 +93,6 @@ CDIR=$(MOUNT_DIR)/client
 SDIR=$(MOUNT_DIR)/server
 RCDIR=$(MOUNT_DIR)/renderercommon
 R1DIR=$(MOUNT_DIR)/renderer
-R2DIR=$(MOUNT_DIR)/renderer2
-RVDIR=$(MOUNT_DIR)/renderervk
 SDLDIR=$(MOUNT_DIR)/sdl
 SDLHDIR=$(MOUNT_DIR)/libsdl/include/SDL2
 
@@ -631,9 +629,9 @@ endif # !MINGW
 
 # client binary
 
-$(B)/$(TARGET_CLIENT): $(Q3OBJ)
+$(B)/$(TARGET_CLIENT): $(Q3OBJ) $(Q3REND1OBJ)
 	$(echo_cmd) "LD $@"
-	$(Q)$(CC) -o $@ $(Q3OBJ) $(CLIENT_LDFLAGS) \
+	$(Q)$(CC) -o $@ $(Q3OBJ) $(Q3REND1OBJ) $(CLIENT_LDFLAGS) \
 		$(LDFLAGS)
 
 #############################################################################
@@ -763,15 +761,6 @@ $(B)/rend1/%.o: $(RCDIR)/%.c
 	$(DO_REND_CC)
 
 $(B)/rend1/%.o: $(CMDIR)/%.c
-	$(DO_REND_CC)
-
-$(B)/rendv/%.o: $(RVDIR)/%.c
-	$(DO_REND_CC)
-
-$(B)/rendv/%.o: $(RCDIR)/%.c
-	$(DO_REND_CC)
-
-$(B)/rendv/%.o: $(CMDIR)/%.c
 	$(DO_REND_CC)
 
 $(B)/client/%.o: $(UDIR)/%.c
