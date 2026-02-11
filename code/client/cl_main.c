@@ -1585,10 +1585,6 @@ static void CL_InitRef( void ) {
 	rimp.Cvar_CheckGroup = Cvar_CheckGroup;
 	rimp.Cvar_ResetGroup = Cvar_ResetGroup;
 
-	rimp.CL_SaveJPGToBuffer = CL_SaveJPGToBuffer;
-	rimp.CL_SaveJPG = CL_SaveJPG;
-	rimp.CL_LoadJPG = CL_LoadJPG;
-
 	rimp.CL_IsMinimized = CL_IsMininized;
 
 	rimp.Sys_SetClipboardBitmap = Sys_SetClipboardBitmap;

@@ -429,14 +429,6 @@ void CL_Netchan_Transmit( netchan_t *chan, msg_t *msg );
 void CL_Netchan_Enqueue( netchan_t *chan, msg_t *msg, int times );
 qboolean CL_Netchan_Process( netchan_t *chan, msg_t *msg );
 
-//
-// cl_jpeg.c
-//
-size_t	CL_SaveJPGToBuffer( byte *buffer, size_t bufSize, int quality, int image_width, int image_height, byte *image_buffer, int padding );
-void	CL_SaveJPG( const char *filename, int quality, int image_width, int image_height, byte *image_buffer, int padding );
-void	CL_LoadJPG( const char *filename, unsigned char **pic, int *width, int *height );
-
-
 // base backend functions
 void	HandleEvents( void );
 
