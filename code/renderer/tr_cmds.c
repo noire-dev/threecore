@@ -37,12 +37,10 @@ static void R_IssueRenderCommands( void ) {
 	// clear it out, in case this is a sync and not a buffer flip
 	cmdList->used = 0;
 
-	if ( backEnd.screenshotNeed == qfalse ) {
-		if ( ri.CL_IsMinimized() )
-			return; // skip backend when minimized
-		if ( backEnd.throttle )
-			return; // or throttled on demand
-	}
+	if ( ri.CL_IsMinimized() )
+		return; // skip backend when minimized
+	if ( backEnd.throttle )
+		return; // or throttled on demand
 
 	// actually start the commands going
 	RB_ExecuteRenderCommands( cmdList->cmds );

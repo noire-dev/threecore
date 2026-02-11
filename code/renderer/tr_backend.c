@@ -1068,14 +1068,6 @@ static const void *RB_SwapBuffers( const void *data ) {
 		FBO_PostProcess();
 	}
 
-	if ( backEnd.screenshotNeed && tr.frameCount > 1 ) {
-		RB_TakeScreenshot( 0, 0, gls.captureWidth, gls.captureHeight, backEnd.screenshotJPG );
-		ri.Printf( PRINT_ALL, "Screenshot saved to %s\n", backEnd.screenshotJPG );
-
-		backEnd.screenshotJPG[0] = '\0';
-		backEnd.screenshotNeed = qfalse;
-	}
-
 	ri.GLimp_EndFrame();
 
 	FBO_BindMain();

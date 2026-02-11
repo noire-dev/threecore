@@ -907,10 +907,6 @@ typedef struct {
 	qboolean	doneBloom;		// done bloom this frame
 	qboolean	doneSurfaces;   // done any 3d surfaces already
 	trRefEntity_t	entity2D;	// currentEntity will point at this when doing 2D rendering
-
-	qboolean screenshotNeed;
-	char	screenshotJPG[ MAX_OSPATH ];
-	qboolean screenShotJPGsilent;
 	
 	qboolean throttle;
 	qboolean drawConsole;
@@ -1595,7 +1591,6 @@ extern	int		max_polyverts;
 extern	backEndData_t	*backEndData;
 
 void RB_ExecuteRenderCommands( const void *data );
-void RB_TakeScreenshot( int x, int y, int width, int height, const char *fileName );
 
 void R_IssuePendingRenderCommands( void );
 

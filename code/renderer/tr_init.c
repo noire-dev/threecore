@@ -113,8 +113,6 @@ cvar_t	*r_noportals;
 cvar_t	*r_subdivisions;
 cvar_t	*r_lodCurveError;
 
-cvar_t	*r_screenshotJpegQuality;
-
 int		max_polys;
 int		max_polyverts;
 
@@ -584,126 +582,6 @@ void GL_CheckErrors( void ) {
     ri.Error( ERR_FATAL, "GL_CheckErrors: %s", s );
 }
 
-
-/*
-==============================================================================
-
-						SCREEN SHOTS
-
-NOTE TTimo
-some thoughts about the screenshots system:
-screenshots get written in fs_homepath + fs_gamedir
-vanilla q3 .. baseq3/screenshots/ *.tga
-team arena .. missionpack/screenshots/ *.tga
-
-two commands: "screenshot" and "screenshotJPEG"
-we use statics to store a count and start writing the first screenshot/screenshot????.tga (.jpg) available
-(with FS_FileExists / FS_FOpenFileWrite calls)
-FIXME: the statics don't get a reinit between fs_game changes
-
-==============================================================================
-*/
-
-/*
-==================
-RB_ReadPixels
-
-Reads an image but takes care of alignment issues for reading RGB images.
-
-Reads a minimum offset for where the RGB data starts in the image from
-integer stored at pointer offset. When the function has returned the actual
-offset was written back to address offset. This address will always have an
-alignment of packAlign to ensure efficient copying.
-
-Stores the length of padding after a line of pixels to address padlen
-
-Return value must be freed with ri.Hunk_FreeTempMemory()
-==================
-*/
-static byte *RB_ReadPixels(int x, int y, int width, int height, size_t *offset, int *padlen, int lineAlign )
-{
-	byte *buffer, *bufstart;
-	int padwidth, linelen;
-	int	bufAlign;
-	GLint packAlign;
-
-	qglGetIntegerv(GL_PACK_ALIGNMENT, &packAlign);
-
-	linelen = width * 3;
-
-	if ( packAlign < lineAlign )
-		padwidth = PAD(linelen, lineAlign);
-	else
-		padwidth = PAD(linelen, packAlign);
-
-	bufAlign = MAX( packAlign, 16 ); // for SIMD
-
-	// Allocate a few more bytes so that we can choose an alignment we like
-	buffer = ri.Hunk_AllocateTempMemory(padwidth * height + *offset + bufAlign - 1);
-	bufstart = PADP((intptr_t) buffer + *offset, bufAlign);
-
-	qglReadPixels( x, y, width, height, GL_RGB, GL_UNSIGNED_BYTE, bufstart );
-
-	*offset = bufstart - buffer;
-	*padlen = PAD(linelen, packAlign) - linelen;
-
-	return buffer;
-}
-
-void RB_TakeScreenshot( int x, int y, int width, int height, const char *fileName )
-{
-	byte *buffer;
-	size_t offset = 0, memcount;
-	int padlen;
-
-	buffer = RB_ReadPixels(x, y, width, height, &offset, &padlen, 0);
-	memcount = (width * 3 + padlen) * height;
-
-	// gamma correction
-	R_GammaCorrect( buffer + offset, memcount );
-
-	ri.CL_SaveJPG( fileName, r_screenshotJpegQuality->integer, width, height, buffer + offset, padlen );
-	ri.Hunk_FreeTempMemory( buffer );
-}
-
-static void R_ScreenshotFilename( char *fileName ) {
-	qtime_t t;
-	int count;
-
-	count = 0;
-	ri.Com_RealTime( &t );
-
-	Com_sprintf( fileName, MAX_OSPATH, "screenshots/shot-%04d%02d%02d-%02d%02d%02d.jpg",
-			1900 + t.tm_year, 1 + t.tm_mon,	t.tm_mday,
-			t.tm_hour, t.tm_min, t.tm_sec );
-
-	while (	ri.FS_FileExists( fileName ) && ++count < 1000 ) {
-		Com_sprintf( fileName, MAX_OSPATH, "screenshots/shot-%04d%02d%02d-%02d%02d%02d-%d.jpg",
-				1900 + t.tm_year, 1 + t.tm_mon,	t.tm_mday,
-				t.tm_hour, t.tm_min, t.tm_sec, count );
-	}
-}
-
-static void R_ScreenShot_f( void ) {
-	char checkname[MAX_OSPATH];
-
-	if ( ri.CL_IsMinimized() && !RE_CanMinimize() ) {
-		ri.Printf( PRINT_WARNING, "WARNING: unable to take screenshot when minimized because FBO is not available/enabled.\n" );
-		return;
-	}
-
-	if (backEnd.screenshotNeed) return;
-
-	if ( ri.Cmd_Argc() == 2 ) {
-		Com_sprintf( checkname, MAX_OSPATH, "screenshots/%s.jpg", ri.Cmd_Argv( 1 ) );
-	} else {
-		R_ScreenshotFilename( checkname );
-	}
-
-	backEnd.screenshotNeed = qtrue;
-	Q_strncpyz( backEnd.screenshotJPG, checkname, sizeof( backEnd.screenshotJPG ) );
-}
-
 /*
 ** GL_SetDefaultState
 */
@@ -791,7 +669,6 @@ static void R_Register( void ) {
 	ri.Cmd_AddCommand( "shaderlist", R_ShaderList_f );
 	ri.Cmd_AddCommand( "skinlist", R_SkinList_f );
 	ri.Cmd_AddCommand( "modellist", R_Modellist_f );
-	ri.Cmd_AddCommand( "screenshot", R_ScreenShot_f );
 
 	r_picmip = ri.Cvar_Get( "r_picmip", "0", CVAR_ARCHIVE | CVAR_LATCH );
 	r_nomip = ri.Cvar_Get( "r_nomip", "1", CVAR_ARCHIVE | CVAR_LATCH );
@@ -871,8 +748,7 @@ static void R_Register( void ) {
 	r_showsky = ri.Cvar_Get( "r_showsky", "0", 0 );
 	r_lockpvs = ri.Cvar_Get ("r_lockpvs", "0", CVAR_CHEAT);
 	r_noportals = ri.Cvar_Get( "r_noportals", "0", 0 );
-	r_screenshotJpegQuality = ri.Cvar_Get( "r_screenshotJpegQuality", "100", CVAR_ARCHIVE );
-
+	
 	if (glConfig.vidWidth) return;
 
 	r_allowExtensions = ri.Cvar_Get( "r_allowExtensions", "1", CVAR_ARCHIVE | CVAR_LATCH );
@@ -990,7 +866,6 @@ static void RE_Shutdown( refShutdownCode_t code ) {
 	ri.Printf( PRINT_ALL, "RE_Shutdown( %i )\n", code );
 
 	ri.Cmd_RemoveCommand( "modellist" );
-	ri.Cmd_RemoveCommand( "screenshot" );
 	ri.Cmd_RemoveCommand( "imagelist" );
 	ri.Cmd_RemoveCommand( "shaderlist" );
 	ri.Cmd_RemoveCommand( "skinlist" );
