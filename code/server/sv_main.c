@@ -1268,4 +1268,4 @@ int SV_SendQueuedPackets( void ) {
 		timeVal = delayT;
 
 	return timeVal;
-}.
+}
