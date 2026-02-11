@@ -477,6 +477,16 @@ static void CL_ParseGamestate( msg_t *msg ) {
 	Cbuf_AddText( "exec maps/default.cfg \n" );				//load default map script on client
 	Cbuf_AddText( va("exec maps/%s.cfg \n", mapname) );		//load map script on client
 	Cvar_Set("cl_changeqvm", mapname);						//load map fs on client
+
+	cls.state = CA_LOADING;
+	Com_EventLoop();
+	
+	if ( cls.state != CA_LOADING ) return;
+	
+	CL_FlushMemory();
+	cls.cgameStarted = qtrue;
+	CL_InitCGame();
+	CL_WritePacket( 2 );
 }
 
 
