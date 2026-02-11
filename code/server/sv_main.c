@@ -1257,3 +1257,15 @@ int SV_RateMsec( const client_t *client )
 	else
 		return rateMsec - rate;
 }
+
+int SV_SendQueuedPackets( void ) {
+	int delayT;
+	int timeVal = INT_MAX;
+
+	// Send out fragmented packets now that we're idle
+	delayT = SV_SendQueuedMessages();
+	if(delayT >= 0)
+		timeVal = delayT;
+
+	return timeVal;
+}.
