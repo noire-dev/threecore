@@ -22,21 +22,6 @@ MOUNT_DIR           = code
 # General
 USE_LOCAL_HEADERS   = 1
 
-# Audio
-USE_OGG_VORBIS      = 1
-USE_CODEC_MP3       = 1
-USE_INTERNAL_MP3    = 1
-
-# Render
-USE_VULKAN          = 1
-USE_OPENGL          = 1
-USE_OPENGL2         = 0
-USE_OPENGL_API      = 1
-USE_VULKAN_API      = 1
-
-# valid options: opengl, vulkan
-RENDERER_DEFAULT = opengl
-
 CNAME            = sandbox
 DNAME            = sandbox.ded
 
@@ -99,31 +84,6 @@ ifndef BUILD_DIR
   BUILD_DIR=build
 endif
 
-ifeq ($(RENDERER_DEFAULT),opengl)
-  USE_OPENGL=1
-  USE_OPENGL2=0
-  USE_VULKAN=0
-  USE_OPENGL_API=1
-  USE_VULKAN_API=0
-endif
-ifeq ($(RENDERER_DEFAULT),opengl2)
-  USE_OPENGL=0
-  USE_OPENGL2=1
-  USE_VULKAN=0
-  USE_OPENGL_API=1
-  USE_VULKAN_API=0
-endif
-ifeq ($(RENDERER_DEFAULT),vulkan)
-  USE_OPENGL=0
-  USE_OPENGL2=0
-  USE_VULKAN=1
-  USE_OPENGL_API=0
-endif
-
-ifneq ($(USE_VULKAN),0)
-  USE_VULKAN_API=1
-endif
-
 #############################################################################
 
 BD=$(BUILD_DIR)/debug-$(PLATFORM)-$(ARCH)
@@ -142,10 +102,6 @@ CMDIR=$(MOUNT_DIR)/qcommon
 UDIR=$(MOUNT_DIR)/unix
 W32DIR=$(MOUNT_DIR)/win32
 BLIBDIR=$(MOUNT_DIR)/botlib
-JPDIR=$(MOUNT_DIR)/libjpeg
-OGGDIR=$(MOUNT_DIR)/libogg
-VORBISDIR=$(MOUNT_DIR)/libvorbis
-MADDIR=$(MOUNT_DIR)/libmad
 
 bin_path=$(shell which $(1) 2> /dev/null)
 
@@ -170,54 +126,13 @@ ifeq ($(SDL_LIBS),)
   SDL_LIBS = -lSDL2
 endif
 
-# supply some reasonable defaults for ogg/vorbis
-ifeq ($(OGG_FLAGS),)
-  OGG_FLAGS = -I$(OGGDIR)/include
-endif
-ifeq ($(VORBIS_FLAGS),)
-  VORBIS_FLAGS = -I$(VORBISDIR)/include -I$(VORBISDIR)/lib
-endif
-
 BASE_CFLAGS =
-
-ifeq ($(USE_CODEC_MP3),1)
-  BASE_CFLAGS += -DFPM_DEFAULT
-endif
 
 ifeq ($(USE_LOCAL_HEADERS),1)
   BASE_CFLAGS += -DUSE_LOCAL_HEADERS=1
 endif
 
-ifeq ($(USE_VULKAN_API),1)
-  BASE_CFLAGS += -DUSE_VULKAN_API
-endif
-
-ifeq ($(USE_OPENGL_API),1)
-  BASE_CFLAGS += -DUSE_OPENGL_API
-endif
-
-ifeq ($(USE_CODEC_MP3),1)
-  BASE_CFLAGS += -DUSE_CODEC_MP3
-
-  ifeq ($(USE_INTERNAL_MP3),1)
-    MAD_CFLAGS = -DUSE_INTERNAL_MP3 -I$(MADDIR)/include
-    ifeq ($(ARCH),x86)
-      MAD_CFLAGS += -DFPM_INTEL
-    else
-    ifeq ($(ARCH),x86_64)
-      MAD_CFLAGS += -DFPM_64BIT
-    else
-    ifeq ($(ARCH),arm)
-      MAD_CFLAGS += -DFPM_ARM
-    else
-      MAD_CFLAGS += -DFPM_DEFAULT
-    endif
-    endif
-    endif
-  endif
-
-  BASE_CFLAGS += $(MAD_CFLAGS)
-endif
+BASE_CFLAGS += -DUSE_OPENGL_API
 
 ARCHEXT=
 
@@ -313,11 +228,6 @@ ifdef MINGW
     CLIENT_EXTRA_FILES += $(MOUNT_DIR)/libsdl/windows/lib64/SDL2.dll
   endif
 
-  ifeq ($(USE_OGG_VORBIS),1)
-    BASE_CFLAGS += -DUSE_OGG_VORBIS $(OGG_FLAGS) $(VORBIS_FLAGS)
-    CLIENT_LDFLAGS += $(OGG_LIBS) $(VORBIS_LIBS)
-  endif
-
   DEBUG_CFLAGS = $(BASE_CFLAGS) -DDEBUG -D_DEBUG -g -O0
   RELEASE_CFLAGS = $(BASE_CFLAGS) -DNDEBUG $(OPTIMIZE)
 
@@ -369,11 +279,6 @@ ifeq ($(COMPILE_PLATFORM),darwin)
   endif
   endif
 
-  ifeq ($(USE_OGG_VORBIS),1)
-    BASE_CFLAGS += -DUSE_OGG_VORBIS $(OGG_FLAGS) $(VORBIS_FLAGS)
-    CLIENT_LDFLAGS += $(OGG_LIBS) $(VORBIS_LIBS)
-  endif
-
   DEBUG_CFLAGS = $(BASE_CFLAGS) -DDEBUG -D_DEBUG -g -O0
   RELEASE_CFLAGS = $(BASE_CFLAGS) -DNDEBUG $(OPTIMIZE)
 
@@ -417,11 +322,6 @@ else
 
   BASE_CFLAGS += $(SDL_INCLUDE)
   CLIENT_LDFLAGS = $(SDL_LIBS)
-
-  ifeq ($(USE_OGG_VORBIS),1)
-    BASE_CFLAGS += -DUSE_OGG_VORBIS $(OGG_FLAGS) $(VORBIS_FLAGS)
-    CLIENT_LDFLAGS += $(OGG_LIBS) $(VORBIS_LIBS)
-  endif
 
   ifeq ($(PLATFORM),linux)
     LDFLAGS += -ldl -Wl,--hash-style=both
@@ -556,12 +456,7 @@ makedirs:
 	@if [ ! -d $(BUILD_DIR) ];then $(MKDIR) $(BUILD_DIR);fi
 	@if [ ! -d $(B) ];then $(MKDIR) $(B);fi
 	@if [ ! -d $(B)/client ];then $(MKDIR) $(B)/client;fi
-	@if [ ! -d $(B)/client/jpeg ];then $(MKDIR) $(B)/client/jpeg;fi
-	@if [ ! -d $(B)/client/ogg ];then $(MKDIR) $(B)/client/ogg;fi
-	@if [ ! -d $(B)/client/vorbis ];then $(MKDIR) $(B)/client/vorbis;fi
-	@if [ ! -d $(B)/client/libmad ];then $(MKDIR) $(B)/client/libmad;fi
 	@if [ ! -d $(B)/rend1 ];then $(MKDIR) $(B)/rend1;fi
-	@if [ ! -d $(B)/rendv ];then $(MKDIR) $(B)/rendv;fi
 ifneq ($(BUILD_SERVER),0)
 	@if [ ! -d $(B)/ded ];then $(MKDIR) $(B)/ded;fi
 endif
@@ -578,10 +473,6 @@ Q3REND1OBJ = \
   $(B)/rend1/tr_curve.o \
   $(B)/rend1/tr_image.o \
   $(B)/rend1/tr_image_png.o \
-  $(B)/rend1/tr_image_jpg.o \
-  $(B)/rend1/tr_image_bmp.o \
-  $(B)/rend1/tr_image_tga.o \
-  $(B)/rend1/tr_image_pcx.o \
   $(B)/rend1/tr_init.o \
   $(B)/rend1/tr_light.o \
   $(B)/rend1/tr_main.o \
@@ -598,131 +489,8 @@ Q3REND1OBJ = \
   $(B)/rend1/tr_vbo.o \
   $(B)/rend1/tr_world.o
 
-Q3RENDVOBJ = \
-  $(B)/rendv/tr_backend.o \
-  $(B)/rendv/tr_bsp.o \
-  $(B)/rendv/tr_cmds.o \
-  $(B)/rendv/tr_curve.o \
-  $(B)/rendv/tr_image.o \
-  $(B)/rendv/tr_image_png.o \
-  $(B)/rendv/tr_image_jpg.o \
-  $(B)/rendv/tr_image_bmp.o \
-  $(B)/rendv/tr_image_tga.o \
-  $(B)/rendv/tr_image_pcx.o \
-  $(B)/rendv/tr_init.o \
-  $(B)/rendv/tr_light.o \
-  $(B)/rendv/tr_main.o \
-  $(B)/rendv/tr_marks.o \
-  $(B)/rendv/tr_mesh.o \
-  $(B)/rendv/tr_model.o \
-  $(B)/rendv/tr_noise.o \
-  $(B)/rendv/tr_scene.o \
-  $(B)/rendv/tr_shade.o \
-  $(B)/rendv/tr_shade_calc.o \
-  $(B)/rendv/tr_shader.o \
-  $(B)/rendv/tr_shadows.o \
-  $(B)/rendv/tr_sky.o \
-  $(B)/rendv/tr_surface.o \
-  $(B)/rendv/tr_world.o \
-  $(B)/rendv/vk.o \
-  $(B)/rendv/vk_flares.o \
-  $(B)/rendv/vk_vbo.o \
-
-JPGOBJ = \
-  $(B)/client/jpeg/jaricom.o \
-  $(B)/client/jpeg/jcapimin.o \
-  $(B)/client/jpeg/jcapistd.o \
-  $(B)/client/jpeg/jcarith.o \
-  $(B)/client/jpeg/jccoefct.o  \
-  $(B)/client/jpeg/jccolor.o \
-  $(B)/client/jpeg/jcdctmgr.o \
-  $(B)/client/jpeg/jchuff.o   \
-  $(B)/client/jpeg/jcinit.o \
-  $(B)/client/jpeg/jcmainct.o \
-  $(B)/client/jpeg/jcmarker.o \
-  $(B)/client/jpeg/jcmaster.o \
-  $(B)/client/jpeg/jcomapi.o \
-  $(B)/client/jpeg/jcparam.o \
-  $(B)/client/jpeg/jcprepct.o \
-  $(B)/client/jpeg/jcsample.o \
-  $(B)/client/jpeg/jctrans.o \
-  $(B)/client/jpeg/jdapimin.o \
-  $(B)/client/jpeg/jdapistd.o \
-  $(B)/client/jpeg/jdarith.o \
-  $(B)/client/jpeg/jdatadst.o \
-  $(B)/client/jpeg/jdatasrc.o \
-  $(B)/client/jpeg/jdcoefct.o \
-  $(B)/client/jpeg/jdcolor.o \
-  $(B)/client/jpeg/jddctmgr.o \
-  $(B)/client/jpeg/jdhuff.o \
-  $(B)/client/jpeg/jdinput.o \
-  $(B)/client/jpeg/jdmainct.o \
-  $(B)/client/jpeg/jdmarker.o \
-  $(B)/client/jpeg/jdmaster.o \
-  $(B)/client/jpeg/jdmerge.o \
-  $(B)/client/jpeg/jdpostct.o \
-  $(B)/client/jpeg/jdsample.o \
-  $(B)/client/jpeg/jdtrans.o \
-  $(B)/client/jpeg/jerror.o \
-  $(B)/client/jpeg/jfdctflt.o \
-  $(B)/client/jpeg/jfdctfst.o \
-  $(B)/client/jpeg/jfdctint.o \
-  $(B)/client/jpeg/jidctflt.o \
-  $(B)/client/jpeg/jidctfst.o \
-  $(B)/client/jpeg/jidctint.o \
-  $(B)/client/jpeg/jmemmgr.o \
-  $(B)/client/jpeg/jmemnobs.o \
-  $(B)/client/jpeg/jquant1.o \
-  $(B)/client/jpeg/jquant2.o \
-  $(B)/client/jpeg/jutils.o
-
-ifeq ($(USE_OGG_VORBIS),1)
-OGGOBJ = \
-  $(B)/client/ogg/bitwise.o \
-  $(B)/client/ogg/framing.o
-
-VORBISOBJ = \
-  $(B)/client/vorbis/analysis.o \
-  $(B)/client/vorbis/bitrate.o \
-  $(B)/client/vorbis/block.o \
-  $(B)/client/vorbis/codebook.o \
-  $(B)/client/vorbis/envelope.o \
-  $(B)/client/vorbis/floor0.o \
-  $(B)/client/vorbis/floor1.o \
-  $(B)/client/vorbis/info.o \
-  $(B)/client/vorbis/lookup.o \
-  $(B)/client/vorbis/lpc.o \
-  $(B)/client/vorbis/lsp.o \
-  $(B)/client/vorbis/mapping0.o \
-  $(B)/client/vorbis/mdct.o \
-  $(B)/client/vorbis/psy.o \
-  $(B)/client/vorbis/registry.o \
-  $(B)/client/vorbis/res0.o \
-  $(B)/client/vorbis/smallft.o \
-  $(B)/client/vorbis/sharedbook.o \
-  $(B)/client/vorbis/synthesis.o \
-  $(B)/client/vorbis/vorbisfile.o \
-  $(B)/client/vorbis/window.o
-endif
-
-ifeq ($(USE_CODEC_MP3),1)
-MADOBJ = \
-  $(B)/client/libmad/bit.o \
-  $(B)/client/libmad/decoder.o \
-  $(B)/client/libmad/fixed.o \
-  $(B)/client/libmad/frame.o \
-  $(B)/client/libmad/huffman.o \
-  $(B)/client/libmad/layer3.o \
-  $(B)/client/libmad/layer12.o \
-  $(B)/client/libmad/stream.o \
-  $(B)/client/libmad/synth.o \
-  $(B)/client/libmad/timer.o \
-  $(B)/client/libmad/version.o
-endif
-
 Q3OBJ = \
   $(B)/client/cl_cgame.o \
-  $(B)/client/cl_cin.o \
   $(B)/client/cl_console.o \
   $(B)/client/cl_input.o \
   $(B)/client/cl_keys.o \
@@ -731,8 +499,6 @@ Q3OBJ = \
   $(B)/client/cl_parse.o \
   $(B)/client/cl_scrn.o \
   $(B)/client/cl_ui.o \
-  $(B)/client/cl_avi.o \
-  $(B)/client/cl_jpeg.o \
   \
   $(B)/client/cm_load.o \
   $(B)/client/cm_patch.o \
@@ -805,22 +571,6 @@ Q3OBJ = \
   $(B)/client/l_precomp.o \
   $(B)/client/l_script.o \
   $(B)/client/l_struct.o
-
-ifeq ($(USE_OGG_VORBIS),1)
-  Q3OBJ += $(OGGOBJ) $(VORBISOBJ) \
-    $(B)/client/snd_codec_ogg.o
-endif
-
-ifeq ($(USE_CODEC_MP3),1)
-  Q3OBJ += $(MADOBJ) \
-    $(B)/client/snd_codec_mp3.o
-endif
-
-ifeq ($(USE_VULKAN),1)
-  Q3OBJ += $(Q3RENDVOBJ) $(JPGOBJ)
-else
-  Q3OBJ += $(Q3REND1OBJ) $(JPGOBJ)
-endif
 
 ifeq ($(ARCH),x86)
 ifndef MINGW
@@ -1002,18 +752,6 @@ $(B)/client/%.o: $(CMDIR)/%.c
 
 $(B)/client/%.o: $(BLIBDIR)/%.c
 	$(DO_BOT_CC)
-
-$(B)/client/jpeg/%.o: $(JPDIR)/%.c
-	$(DO_CC)
-
-$(B)/client/ogg/%.o: $(OGGDIR)/src/%.c
-	$(DO_CC)
-
-$(B)/client/vorbis/%.o: $(VORBISDIR)/lib/%.c
-	$(DO_CC)
-
-$(B)/client/libmad/%.o: $(MADDIR)/%.c
-	$(DO_CC)
 
 $(B)/client/%.o: $(SDLDIR)/%.c
 	$(DO_CC)
