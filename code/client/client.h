@@ -440,3 +440,5 @@ void	GLimp_Init( glconfig_t *config );
 void	GLimp_Shutdown( qboolean unloadDLL );
 void	GLimp_EndFrame( void );
 void	*GL_GetProcAddress( const char *name );
+
+refexport_t*GetRefAPI( int apiVersion, refimport_t *rimp );

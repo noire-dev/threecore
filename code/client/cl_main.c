@@ -22,7 +22,6 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 // cl_main.c  -- client main loop
 
 #include "client.h"
-#include "../renderercommon/tr_public.h"
 #include <limits.h>
 
 cvar_t	*cl_noprint;
@@ -1585,6 +1584,10 @@ static void CL_InitRef( void ) {
 	rimp.Cvar_SetGroup = Cvar_SetGroup;
 	rimp.Cvar_CheckGroup = Cvar_CheckGroup;
 	rimp.Cvar_ResetGroup = Cvar_ResetGroup;
+
+	rimp.CL_SaveJPGToBuffer = CL_SaveJPGToBuffer;
+	rimp.CL_SaveJPG = CL_SaveJPG;
+	rimp.CL_LoadJPG = CL_LoadJPG;
 
 	rimp.CL_IsMinimized = CL_IsMininized;
 
