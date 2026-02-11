@@ -1598,21 +1598,10 @@ static void CL_InitRef( void ) {
 	rimp.GLimp_InitGamma = GLimp_InitGamma;
 	rimp.GLimp_SetGamma = GLimp_SetGamma;
 
-	// OpenGL API
-#ifdef USE_OPENGL_API
 	rimp.GLimp_Init = GLimp_Init;
 	rimp.GLimp_Shutdown = GLimp_Shutdown;
 	rimp.GL_GetProcAddress = GL_GetProcAddress;
 	rimp.GLimp_EndFrame = GLimp_EndFrame;
-#endif
-
-	// Vulkan API
-#ifdef USE_VULKAN_API
-	rimp.VKimp_Init = VKimp_Init;
-	rimp.VKimp_Shutdown = VKimp_Shutdown;
-	rimp.VK_GetInstanceProcAddr = VK_GetInstanceProcAddr;
-	rimp.VK_CreateSurface = VK_CreateSurface;
-#endif
 
 	ret = GetRefAPI( REF_API_VERSION, &rimp );
 

@@ -21,9 +21,6 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
 #include <SDL.h>
-#ifdef USE_VULKAN_API
-#include <SDL_vulkan.h>
-#endif
 
 #include "../client/client.h"
 #include "../renderercommon/tr_public.h"
@@ -46,9 +43,6 @@ glwstate_t glw_state;
 
 SDL_Window *SDL_window = NULL;
 static SDL_GLContext SDL_glContext = NULL;
-#ifdef USE_VULKAN_API
-static PFN_vkGetInstanceProcAddr qvkGetInstanceProcAddr;
-#endif
 
 cvar_t *in_nograb;
 
@@ -191,14 +185,8 @@ static int GLW_SetMode( const char *resolution, int fullscreen ) {
 	int y;
 	Uint32 flags = SDL_WINDOW_SHOWN;
 
-#ifdef USE_VULKAN_API
-	flags |= SDL_WINDOW_VULKAN;
-	Com_Printf( "Initializing Vulkan display\n");
-#endif
-#ifdef USE_OPENGL_API
 	flags |= SDL_WINDOW_OPENGL;
 	Com_Printf( "Initializing OpenGL display\n");
-#endif
 
 	// If a window exists, note its display index
 	if ( SDL_window != NULL ) {
@@ -269,7 +257,6 @@ static int GLW_SetMode( const char *resolution, int fullscreen ) {
 	stencilBits = 8;
 	perChannelColorBits = 8;
 
-#ifndef USE_VULKAN_API
 	SDL_GL_SetAttribute( SDL_GL_RED_SIZE, perChannelColorBits );
 	SDL_GL_SetAttribute( SDL_GL_GREEN_SIZE, perChannelColorBits );
 	SDL_GL_SetAttribute( SDL_GL_BLUE_SIZE, perChannelColorBits );
@@ -279,7 +266,6 @@ static int GLW_SetMode( const char *resolution, int fullscreen ) {
 	SDL_GL_SetAttribute( SDL_GL_MULTISAMPLESAMPLES, 0 );
 	SDL_GL_SetAttribute( SDL_GL_STEREO, 0 );
 	SDL_GL_SetAttribute( SDL_GL_DOUBLEBUFFER, 1 );
-#endif
 
 	if ( ( SDL_window = SDL_CreateWindow( CLIENT_WINDOW_TITLE, x, y, config->vidWidth, config->vidHeight, flags ) ) == NULL ) {
 		Com_DPrintf( "SDL_CreateWindow failed: %s\n", SDL_GetError() );
@@ -338,12 +324,7 @@ static int GLW_SetMode( const char *resolution, int fullscreen ) {
 	if ( r_fullscreen->integer == 1 )
 		SDL_SetWindowHitTest( SDL_window, SDL_HITTEST_NORMAL, NULL );
 
-#ifdef USE_VULKAN_API
-		SDL_Vulkan_GetDrawableSize( SDL_window, &config->vidWidth, &config->vidHeight );
-#endif
-#ifdef USE_OPENGL_API
 		SDL_GL_GetDrawableSize( SDL_window, &config->vidWidth, &config->vidHeight );
-#endif
 
 	// save render dimensions as renderer may change it in advance
 	glw_state.window_width = config->vidWidth;
@@ -465,103 +446,6 @@ Used by opengl renderers to resolve all qgl* function pointers
 void *GL_GetProcAddress( const char *symbol ) {
 	return SDL_GL_GetProcAddress( symbol );
 }
-
-#ifdef USE_VULKAN_API
-/*
-===============
-VKimp_Init
-
-This routine is responsible for initializing the OS specific portions
-of Vulkan
-===============
-*/
-void VKimp_Init( glconfig_t *config ) {
-	rserr_t err;
-
-#ifndef _WIN32
-	InitSig();
-#endif
-
-	Com_DPrintf( "VKimp_Init()\n" );
-
-	in_nograb = Cvar_Get( "in_nograb", "0", CVAR_ARCHIVE );
-	r_swapInterval = Cvar_Get( "r_swapInterval", "0", CVAR_ARCHIVE | CVAR_LATCH );
-
-	// feedback to renderer configuration
-	glw_state.config = config;
-
-	// Create the window and set up the context
-	err = GLimp_StartDriverAndSetMode( r_resolution->string, r_fullscreen->integer, qtrue /* Vulkan */ );
-	if ( err != RSERR_OK ){
-		if ( err == RSERR_FATAL_ERROR ){
-			Com_Error( ERR_FATAL, "VKimp_Init() - could not load Vulkan subsystem" );
-			return;
-		}
-
-		Com_Printf( "Setting resolution %s failed, falling back on 640x480\n", r_resolution->string );
-
-		err = GLimp_StartDriverAndSetMode( "640x480", r_fullscreen->integer, qtrue /* Vulkan */ );
-		if( err != RSERR_OK ){
-			// Nothing worked, give up
-			Com_Error( ERR_FATAL, "VKimp_Init() - could not load Vulkan subsystem" );
-			return;
-		}
-	}
-
-	qvkGetInstanceProcAddr = SDL_Vulkan_GetVkGetInstanceProcAddr();
-
-	if ( qvkGetInstanceProcAddr == NULL ){
-		SDL_QuitSubSystem( SDL_INIT_VIDEO );
-		Com_Error( ERR_FATAL, "VKimp_Init: qvkGetInstanceProcAddr is NULL" );
-	}
-
-	// This depends on SDL_INIT_VIDEO, hence having it here
-	IN_Init();
-
-	HandleEvents();
-
-	Key_ClearStates();
-}
-
-/*
-===============
-VK_GetInstanceProcAddr
-===============
-*/
-void *VK_GetInstanceProcAddr( VkInstance instance, const char *name ) {
-	return qvkGetInstanceProcAddr( instance, name );
-}
-
-/*
-===============
-VK_CreateSurface
-===============
-*/
-qboolean VK_CreateSurface( VkInstance instance, VkSurfaceKHR *surface ) {
-	if ( SDL_Vulkan_CreateSurface( SDL_window, instance, surface ) == SDL_TRUE )
-		return qtrue;
-	else
-		return qfalse;
-}
-
-/*
-===============
-VKimp_Shutdown
-===============
-*/
-void VKimp_Shutdown( qboolean unloadDLL ) {
-	IN_Shutdown();
-
-	SDL_DestroyWindow( SDL_window );
-	SDL_window = NULL;
-
-	if ( glw_state.isFullscreen )
-		SDL_WarpMouseGlobal( glw_state.desktop_width / 2, glw_state.desktop_height / 2 );
-
-	if ( unloadDLL )
-		SDL_QuitSubSystem( SDL_INIT_VIDEO );
-}
-#endif // USE_VULKAN_API
 
 /*
 ================
