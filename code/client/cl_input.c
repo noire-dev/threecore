@@ -211,11 +211,6 @@ static qboolean CL_ReadyToSendPacket( void ) {
 	int		oldPacketNum;
 	int		delta;
 
-	// don't send anything if playing back a demo
-	if ( clc.demoplaying ) {
-		return qfalse;
-	}
-
 	// If we are downloading, we send no less than 50ms between packets
 	if ( *clc.downloadTempName && cls.realtime - clc.lastPacketSentTime < 50 ) {
 		return qfalse;
@@ -282,11 +277,6 @@ void CL_WritePacket( int repeat ) {
 	int			oldPacketNum;
 	int			count, key;
 
-	// don't send anything if playing back a demo
-	if ( clc.demoplaying ) {
-		return;
-	}
-
 	Com_Memset( &nullcmd, 0, sizeof(nullcmd) );
 	oldcmd = &nullcmd;
 
@@ -330,7 +320,7 @@ void CL_WritePacket( int repeat ) {
 		}
 
 		// begin a client move command
-		if ( !cl.snap.valid || clc.demowaiting || clc.serverMessageSequence != cl.snap.messageNum ) {
+		if ( !cl.snap.valid || clc.serverMessageSequence != cl.snap.messageNum ) {
 			MSG_WriteByte( &buf, clc_moveNoDelta );
 		} else {
 			MSG_WriteByte( &buf, clc_move );
@@ -404,7 +394,6 @@ void CL_SendCmd( void ) {
 		return;
 	}
 
-	// we create commands even if a demo is playing,
 	CL_CreateNewCommands();
 
 	// don't send a packet if the last packet was sent too recently

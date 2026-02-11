@@ -31,7 +31,6 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #define CONSOLE_WINDOW_TITLE  "SourceTech: Console"
 
 #define BASEGAME				"game"
-#define BASEDEMO				"game_t"
 #define BASETA					"game_c"
 
 #define MAX_TEAMNAME            32

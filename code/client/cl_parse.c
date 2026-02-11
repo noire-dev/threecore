@@ -235,7 +235,6 @@ static void CL_ParseSnapshot( msg_t *msg ) {
 	if ( newSnap.deltaNum <= 0 ) {
 		newSnap.valid = qtrue;		// uncompressed frame
 		old = NULL;
-		clc.demowaiting = qfalse;	// we can start recording now
 	} else {
 		old = &cl.snapshots[newSnap.deltaNum & PACKET_MASK];
 		if ( !old->valid ) {
@@ -345,11 +344,6 @@ void CL_SystemInfoChanged( qboolean onlyGame ) {
 	// https://zerowing.idsoftware.com/bugzilla/show_bug.cgi?id=475
 	// in some cases, outdated cp commands might get sent with this news serverId
 	cl.serverId = atoi( Info_ValueForKey( systemInfo, "sv_serverid" ) );
-
-	// don't set any vars when playing a demo
-	if ( clc.demoplaying ) {
-		return;
-	}
 
 	s = Info_ValueForKey( systemInfo, "sv_cheats" );
 	cl_connectedToCheatServer = atoi( s );
@@ -551,10 +545,6 @@ static void CL_ParseDownload( msg_t *msg ) {
 		return;
 	}
 
-	if ( clc.recordfile != FS_INVALID_HANDLE ) {
-		CL_StopRecord_f();
-	}
-
 	// read the data
 	block = MSG_ReadShort ( msg );
 
@@ -712,16 +702,10 @@ void CL_ParseServerMessage( msg_t *msg ) {
 	clc.reliableAcknowledge = MSG_ReadLong( msg );
 
 	if ( clc.reliableSequence - clc.reliableAcknowledge > MAX_RELIABLE_COMMANDS ) {
-		if ( !clc.demoplaying ) {
-			Com_Printf( S_COLOR_YELLOW "WARNING: dropping %i commands from server\n", clc.reliableSequence - clc.reliableAcknowledge );
-		}
+		Com_Printf( S_COLOR_YELLOW "WARNING: dropping %i commands from server\n", clc.reliableSequence - clc.reliableAcknowledge );
 		clc.reliableAcknowledge = clc.reliableSequence;
 	} else if ( clc.reliableSequence - clc.reliableAcknowledge < 0 ) {
-		if ( clc.demoplaying ) {
-			clc.reliableSequence = clc.reliableAcknowledge;
-		} else {
-			Com_Error( ERR_DROP, "%s: incorrect reliable sequence acknowledge number", __func__ );
-		}
+		Com_Error( ERR_DROP, "%s: incorrect reliable sequence acknowledge number", __func__ );
 	}
 
 	// parse the message
@@ -763,8 +747,6 @@ void CL_ParseServerMessage( msg_t *msg ) {
 			CL_ParseSnapshot( msg );
 			break;
 		case svc_download:
-			if ( clc.demofile != FS_INVALID_HANDLE )
-				return;
 			CL_ParseDownload( msg );
 			break;
 		}
