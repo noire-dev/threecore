@@ -220,6 +220,10 @@ qboolean	NET_Sleep( int timeout );
 #define	MAX_MSGLEN_BUF	(MAX_MSGLEN+8)	// real buffer size that we need to allocate
 										// to safely handle overflows
 
+#define MAX_DOWNLOAD_WINDOW		48	// ACK window of 48 download chunks. Cannot set this higher, or clients
+						// will overflow the reliable commands buffer
+#define MAX_DOWNLOAD_BLKSIZE		1024	// 896 byte block chunks
+
 #define NETCHAN_GENCHECKSUM(challenge, sequence) ((challenge) ^ ((sequence) * (challenge)))
 
 /*
@@ -305,6 +309,7 @@ enum svc_ops_e {
 	svc_configstring,			// [short] [string] only in gamestate messages
 	svc_baseline,				// only in gamestate messages
 	svc_serverCommand,			// [string] to be executed by client game module
+	svc_download,				// [short] size [size bytes]
 	svc_snapshot,
 	svc_EOF,
 };
@@ -1237,4 +1242,11 @@ int HuffmanGetSymbol( unsigned int* symbol, const byte* buffer, int bitIndex );
 #define	SV_DECODE_START		12
 #define	CL_ENCODE_START		12
 #define	CL_DECODE_START		4
+
+// flags for sv_allowDownload and cl_allowDownload
+#define	DLF_ENABLE		1
+#define	DLF_NO_REDIRECT	2
+#define	DLF_NO_UDP		4
+#define	DLF_NO_DISCONNECT 8
+
 #endif // _QCOMMON_H_

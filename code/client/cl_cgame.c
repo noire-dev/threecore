@@ -134,6 +134,12 @@ static qboolean CL_GetServerCommand(int serverCommandNumber) {
 
 	// if we have irretrievably lost a reliable command, drop the connection
 	if(clc.serverCommandSequence - serverCommandNumber >= MAX_RELIABLE_COMMANDS) {
+		// when a demo record was started after the client got a whole bunch of
+		// reliable commands then the client never got those first reliable commands
+		if(clc.demoplaying) {
+			Cmd_Clear();
+			return qfalse;
+		}
 		Com_Error(ERR_DROP, "CL_GetServerCommand: a reliable command was cycled out");
 		return qfalse;
 	}
@@ -290,7 +296,7 @@ void CL_InitCGame(void) {
 
 	VM_Call(cgvm, 3, CG_INIT, clc.serverMessageSequence, clc.lastExecutedServerCommand, clc.clientNum);
 
-	if(!cl_connectedToCheatServer) Cvar_SetCheatState();
+	if(!clc.demoplaying && !cl_connectedToCheatServer) Cvar_SetCheatState();
 
 	// we will send a usercmd this frame, which
 	// will cause the server to send us the first snapshot
@@ -314,7 +320,7 @@ qboolean CL_GameCommand(void) {
 	return bRes;
 }
 
-void CL_CGameRendering(void) { VM_Call(cgvm, 2, CG_DRAW_ACTIVE_FRAME, cl.serverTime); }
+void CL_CGameRendering(void) { VM_Call(cgvm, 2, CG_DRAW_ACTIVE_FRAME, cl.serverTime, clc.demoplaying); }
 
 #define RESET_TIME 500
 
@@ -323,6 +329,9 @@ static void CL_AdjustTimeDelta(void) {
 	int deltaDelta;
 
 	cl.newSnapshots = qfalse;
+
+	// the delta never drifts when replaying a demo
+	if(clc.demoplaying) return;
 
 	newDelta = cl.snap.serverTime - cls.realtime;
 	deltaDelta = abs(newDelta - cl.serverTimeDelta);
@@ -372,9 +381,20 @@ static void CL_FirstSnapshot(void) {
 }
 
 void CL_SetCGameTime(void) {
+	qboolean demoFreezed;
+
 	// getting a valid frame message ends the connection process
 	if(cls.state != CA_ACTIVE) {
 		if(cls.state != CA_PRIMED) return;
+		if(clc.demoplaying) {
+			// we shouldn't get the first snapshot on the same frame
+			// as the gamestate, because it causes a bad time skip
+			if(!clc.firstDemoFrameSkipped) {
+				clc.firstDemoFrameSkipped = qtrue;
+				return;
+			}
+			CL_ReadDemoMessage();
+		}
 		if(cl.newSnapshots) {
 			cl.newSnapshots = qfalse;
 			CL_FirstSnapshot();
@@ -396,22 +416,37 @@ void CL_SetCGameTime(void) {
 	cl.oldFrameServerTime = cl.snap.serverTime;
 
 	// get our current view of time
-	cl.serverTime = cls.realtime + cl.serverTimeDelta;
+	demoFreezed = clc.demoplaying && com_timescale->value == 0.0f;
+	if(demoFreezed) {
+		// \timescale 0 is used to lock a demo in place for single frame advances
+		cl.serverTimeDelta -= cls.frametime;
+	} else {
+		cl.serverTime = cls.realtime + cl.serverTimeDelta;
 
-	// guarantee that time will never flow backwards
-	if(cl.serverTime - cl.oldServerTime < 0) {
-		cl.serverTime = cl.oldServerTime;
-	}
-	cl.oldServerTime = cl.serverTime;
+		// guarantee that time will never flow backwards
+		if(cl.serverTime - cl.oldServerTime < 0) {
+			cl.serverTime = cl.oldServerTime;
+		}
+		cl.oldServerTime = cl.serverTime;
 
-	// note if we are almost past the latest frame (without timeNudge),
-	// so we will try and adjust back a bit when the next snapshot arrives
-	if(cls.realtime + cl.serverTimeDelta - cl.snap.serverTime >= -5) {
-		cl.extrapolatedSnapshot = qtrue;
+		// note if we are almost past the latest frame (without timeNudge),
+		// so we will try and adjust back a bit when the next snapshot arrives
+		if(cls.realtime + cl.serverTimeDelta - cl.snap.serverTime >= -5) {
+			cl.extrapolatedSnapshot = qtrue;
+		}
 	}
 
 	// if we have gotten new snapshots, drift serverTimeDelta
 	// don't do this every frame, or a period of packet loss would
 	// make a huge adjustment
 	if(cl.newSnapshots) CL_AdjustTimeDelta();
+
+	if(!clc.demoplaying) return;
+
+	while(cl.serverTime - cl.snap.serverTime >= 0) {
+		// feed another message, which should change
+		// the contents of cl.snap
+		CL_ReadDemoMessage();
+		if(cls.state != CA_ACTIVE) return;
+	}
 }

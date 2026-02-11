@@ -132,6 +132,7 @@ void SV_SetConfigstring (int index, const char *val) {
 		for (i = 0, client = svs.clients; i < sv.maxclients; i++, client++) {
 			if ( client->state < CS_ACTIVE ) {
 				if ( client->state == CS_PRIMED || client->state == CS_CONNECTED ) {
+					// track CS_CONNECTED clients as well to optimize gamestate acknowledge after downloading/retransmission
 					client->csUpdated[index] = qtrue;
 				}
 				continue;
@@ -467,6 +468,21 @@ void SV_SpawnServer( const char *mapname ) {
 	SV_BotFrame( sv.time );
 	svs.time += 100;
 
+	FS_TouchFileInPak( "qvm/cgame.qvm" );
+	FS_TouchFileInPak( "qvm/ui.qvm" );
+
+	// the server sends these to the clients so they can figure
+	// out which pk3s should be auto-downloaded
+	p = FS_ReferencedPakNames();
+	if ( FS_ExcludeReference() ) {
+		// \fs_excludeReference may mask our current ui/cgame qvms
+		FS_TouchFileInPak( "qvm/cgame.qvm" );
+		FS_TouchFileInPak( "qvm/ui.qvm" );
+		// rebuild referenced paks list
+		p = FS_ReferencedPakNames();
+	}
+	Cvar_Set( "sv_referencedPakNames", p );
+
 	// save systeminfo and serverinfo strings
 	SV_SetConfigstring( CS_SYSTEMINFO, Cvar_InfoString( CVAR_SYSTEMINFO, NULL ) );
 	cvar_modifiedFlags &= ~CVAR_SYSTEMINFO;
@@ -483,6 +499,8 @@ void SV_SpawnServer( const char *mapname ) {
 	SV_Heartbeat_f();
 
 	Hunk_SetMark();
+
+	Com_Printf ("-----------------------------------\n");
 
 	// suppress hitch warning
 	Com_FrameInit();
@@ -510,6 +528,7 @@ void SV_Init( void )
 	sv_maxclientsPerIP = Cvar_Get( "sv_maxclientsPerIP", "3", CVAR_ARCHIVE );
 	sv_minRate = Cvar_Get( "sv_minRate", "0", CVAR_ARCHIVE );
 	sv_maxRate = Cvar_Get( "sv_maxRate", "0", CVAR_ARCHIVE );
+	sv_dlRate = Cvar_Get( "sv_dlRate", "100", CVAR_ARCHIVE );
 	sv_floodProtect = Cvar_Get( "sv_floodProtect", "1", CVAR_ARCHIVE | CVAR_SERVERINFO );
 	Cvar_Get( "sv_cheats", "0", CVAR_SYSTEMINFO);
 	sv_serverid = Cvar_Get( "sv_serverid", "0", CVAR_SYSTEMINFO );
@@ -520,6 +539,8 @@ void SV_Init( void )
 	sv_timeout = Cvar_Get( "sv_timeout", "999999", 0 );
 	sv_zombietime = Cvar_Get( "sv_zombietime", "2", 0 );
 	Cvar_Get ("nextmap", "", 0 );
+	sv_allowDownload = Cvar_Get ("sv_allowDownload", "1", CVAR_SERVERINFO);
+	Cvar_Get ("sv_dlURL", "", CVAR_SERVERINFO | CVAR_ARCHIVE);
 
 	for ( index = 0; index < MAX_MASTER_SERVERS; index++ )
 		sv_master[ index ] = Cvar_Get( va( "sv_master%d", index + 1 ), "", CVAR_ARCHIVE );

@@ -141,6 +141,18 @@ extern	clientActive_t		cl;
 #define EM_SNAPSHOT  2
 #define EM_COMMAND   4
 
+/*
+=============================================================================
+
+the clientConnection_t structure is wiped when disconnecting from a server,
+either to go to a full screen console, play a demo, or connect to a different server
+
+A connection can be to either a server through the network layer or a
+demo through a file.
+
+=============================================================================
+*/
+
 typedef struct {
 
 	int			clientNum;
@@ -174,8 +186,40 @@ typedef struct {
 	char		serverCommands[MAX_RELIABLE_COMMANDS][MAX_STRING_CHARS];
 	qboolean	serverCommandsIgnore[MAX_RELIABLE_COMMANDS];
 
+	// file transfer from server
+	fileHandle_t download;
+	char		downloadName[MAX_OSPATH];
+	char		downloadTempName[MAX_OSPATH + 4]; // downloadName + ".tmp"
+	int			sv_allowDownload;
+	char		sv_dlURL[MAX_CVAR_STRING];
+	int			downloadNumber;
+	int			downloadBlock;	// block we are waiting for
+	int			downloadCount;	// how many bytes we got
+	int			downloadSize;	// how many bytes we got
+	char		downloadList[BIG_INFO_STRING]; // list of paks we need to download
+	qboolean	downloadRestart;	// if true, we need to do another FS_Restart because we downloaded a pak
+
+	// demo information
+	char		demoName[MAX_OSPATH];
+	char		recordName[MAX_OSPATH]; // without extension
+	qboolean	explicitRecordName;
+	char		recordNameShort[TRUNCATE_LENGTH]; // for recording message
+	qboolean	demorecording;
+	qboolean	demoplaying;
+	qboolean	demowaiting;	// don't record until a non-delta message is received
+	qboolean	firstDemoFrameSkipped;
+	fileHandle_t	demofile;
+	fileHandle_t	recordfile;
+
 	// big stuff at end of structure so most offsets are 15 bits or less
 	netchan_t	netchan;
+
+	// simultaneous demo playback and recording
+	int		eventMask;
+	int		demoCommandSequence;
+	int		demoDeltaNum;
+	int		demoMessageSequence;
+
 } clientConnection_t;
 
 extern	clientConnection_t clc;
@@ -300,6 +344,8 @@ extern	cvar_t	*cl_shownet;
 
 extern	cvar_t	*cl_activeAction;
 
+extern	cvar_t	*cl_allowDownload;
+
 extern	cvar_t	*cl_lanForcePackets;
 
 extern	cvar_t	*com_maxfps;
@@ -320,6 +366,11 @@ void CL_AddReliableCommand( const char *cmd, qboolean isDisconnectCmd );
 void CL_StartHunkUsers( void );
 
 void CL_Disconnect_f( void );
+void CL_ReadDemoMessage( void );
+void CL_StopRecord_f( void );
+
+void CL_InitDownloads( void );
+void CL_NextDownload( void );
 
 void CL_GetPing( int n, char *buf, int buflen, int *pingtime );
 void CL_GetPingInfo( int n, char *buf, int buflen );
