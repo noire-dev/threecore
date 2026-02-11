@@ -211,11 +211,6 @@ static qboolean CL_ReadyToSendPacket( void ) {
 	int		oldPacketNum;
 	int		delta;
 
-	// If we are downloading, we send no less than 50ms between packets
-	if ( cls.realtime - clc.lastPacketSentTime < 50 ) { //IFDONTWORK
-		return qfalse;
-	}
-
 	// if we don't have a valid gamestate yet, only send
 	// one packet a second
 	if ( cls.state != CA_ACTIVE &&

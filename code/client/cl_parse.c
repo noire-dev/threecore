@@ -538,22 +538,6 @@ static void CL_ParseCommandString( msg_t *msg ) {
 	Q_strncpyz( clc.serverCommands[ index ], s, sizeof( clc.serverCommands[ index ] ) );
 	clc.serverCommandsIgnore[ index ] = qfalse;
 
-	// -EC- : we may stuck on downloading because of non-working cgvm
-	// or in "awaiting snapshot..." state so handle "disconnect" here
-	if ( ( !cgvm && cls.state == CA_CONNECTED && 0 ) || ( cgvm && cls.state == CA_PRIMED ) ) { //IFDONTWORK
-		const char *text;
-		Cmd_TokenizeString( s );
-		if ( !Q_stricmp( Cmd_Argv(0), "disconnect" ) ) {
-			text = ( Cmd_Argc() > 1 ) ? va( "Server disconnected: %s", Cmd_Argv( 1 ) ) : "Server disconnected.";
-			Cvar_Set( "com_errorMessage", text );
-			Com_Printf( "%s\n", text );
-			if ( !CL_Disconnect( qtrue ) ) { // restart client if not done already
-				CL_FlushMemory();
-			}
-			return;
-		}
-	}
-
 	clc.eventMask |= EM_COMMAND;
 }
 
