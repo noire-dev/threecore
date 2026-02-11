@@ -315,6 +315,8 @@ void SV_DropClient( client_t *drop, const char *reason );
 qboolean SV_ExecuteClientCommand( client_t *cl, const char *s );
 void SV_ClientThink( client_t *cl, usercmd_t *cmd );
 
+int SV_SendQueuedMessages( void );
+
 //
 // sv_ccmds.c
 //
