@@ -2083,23 +2083,11 @@ from all search paths
 ===============
 */
 static char **FS_ListFilteredFiles( const char *path, const char *extension, const char *filter, int *numfiles, int flags ) {
-	int				nfiles;
-	char			**listCopy;
-	char			*list[MAX_FOUND_FILES];
-	const searchpath_t	*search;
-	int				i;
-	int				pathLength;
-	int				extLen;
-	int				length, pathDepth, temp;
-	pack_t			*pak;
-	fileInPack_t	*buildBuffer;
-	char			zpath[MAX_ZPATH];
-	qboolean		hasPatterns;
-	const char		*x;
-
-	if ( !fs_searchpaths ) {
-		Com_Error( ERR_FATAL, "Filesystem call made without initialization" );
-	}
+	char netpath[MAX_OSPATH];
+	char **sysFiles;
+	int numSysFiles;
+	char **listCopy;
+	int i;
 
 	if ( !path ) {
 		*numfiles = 0;
@@ -2110,119 +2098,50 @@ static char **FS_ListFilteredFiles( const char *path, const char *extension, con
 		extension = "";
 	}
 
-	extLen = (int)strlen( extension );
-	hasPatterns = Com_HasPatterns( extension );
-	if ( hasPatterns && extension[0] == '.' && extension[1] != '\0' ) {
-		extension++;
+	// Строим путь: <exe_dir>/<path>
+	Q_strncpyz( netpath, Sys_DefaultBasePath(), sizeof( netpath ) );
+	Q_strcat( netpath, sizeof( netpath ), "/" );
+	Q_strcat( netpath, sizeof( netpath ), path );
+
+	// Просим систему перечислить файлы
+	sysFiles = Sys_ListFiles( netpath, extension, filter, &numSysFiles, qfalse );
+
+	// Если fnamecallback задан — дополнительно фильтруем
+	if ( fnamecallback && sysFiles ) {
+		char **filtered = Z_Malloc( (numSysFiles + 1) * sizeof(char*) );
+		int outCount = 0;
+		for ( i = 0; i < numSysFiles; i++ ) {
+			int len = strlen( sysFiles[i] );
+			if ( fnamecallback( sysFiles[i], len ) ) {
+				filtered[outCount++] = sysFiles[i];
+			} else {
+				Z_Free( sysFiles[i] ); // освобождаем только отфильтрованные строки
+			}
+		}
+		// Освобождаем исходный массив, но не строки внутри — они либо перешли в filtered, либо уже удалены
+		Z_Free( sysFiles );
+		sysFiles = filtered;
+		numSysFiles = outCount;
 	}
 
-	pathLength = strlen( path );
-	if ( pathLength > 0 && ( path[pathLength-1] == '\\' || path[pathLength-1] == '/' ) ) {
-		pathLength--;
-	}
-	nfiles = 0;
-	FS_ReturnPath(path, zpath, &pathDepth);
+	*numfiles = numSysFiles;
 
-	//
-	// search through the path, one element at a time, adding to list
-	//
-	for (search = fs_searchpaths ; search ; search = search->next) {
-		// is the element a pak file?
-		if ( search->pack && ( flags & FS_MATCH_PK3s ) ) {
-
-			// look through all the pak file elements
-			pak = search->pack;
-			buildBuffer = pak->buildBuffer;
-			for (i = 0; i < pak->numfiles; i++) {
-				const char *name;
-				int zpathLen, depth;
-
-				// check for directory match
-				name = buildBuffer[i].name;
-				//
-				if ( filter ) {
-					// case insensitive
-					if ( !Com_FilterPath( filter, name ) )
-						continue;
-					// unique the match
-					nfiles = FS_AddFileToList( name, list, nfiles );
-				}
-				else {
-
-					zpathLen = FS_ReturnPath(name, zpath, &depth);
-
-					if ( (depth-pathDepth)>2 || pathLength > zpathLen || Q_stricmpn( name, path, pathLength ) ) {
-						continue;
-					}
-
-					// check for extension match
-					length = (int)strlen( name );
-
-					if ( fnamecallback ) {
-						// use custom filter
-						if ( !fnamecallback( name, length ) )
-							continue;
-					} else {
-						if ( length < extLen )
-							continue;
-						if ( *extension ) {
-							if ( hasPatterns ) {
-								x = strrchr( name, '.' );
-								if ( !x || !Com_FilterExt( extension, x+1 ) ) {
-									continue;
-								}
-							} else {
-								if ( Q_stricmp( name + length - extLen, extension ) ) {
-									continue;
-								}
-							}
-						}
-					}
-					// unique the match
-
-					temp = pathLength;
-					if (pathLength) {
-						temp++;		// include the '/'
-					}
-					nfiles = FS_AddFileToList( name + temp, list, nfiles );
-				}
-			}
-		} else if ( search->dir && ( flags & FS_MATCH_EXTERN ) && search->policy != DIR_DENY ) { // scan for files in the filesystem
-			const char *netpath;
-			int		numSysFiles;
-			char	**sysFiles;
-			const char *name;
-
-			netpath = FS_BuildOSPath( search->dir->path, search->dir->gamedir, path );
-			sysFiles = Sys_ListFiles( netpath, extension, filter, &numSysFiles, qfalse );
-			for ( i = 0 ; i < numSysFiles ; i++ ) {
-				// unique the match
-				name = sysFiles[ i ];
-				length = strlen( name );
-				if ( fnamecallback ) {
-					// use custom filter
-					if ( !fnamecallback( name, length ) )
-						continue;
-				} // else - should be already filtered by Sys_ListFiles
-
-				nfiles = FS_AddFileToList( name, list, nfiles );
-			}
+	if ( !numSysFiles ) {
+		if ( sysFiles ) {
 			Sys_FreeFileList( sysFiles );
-		}		
-	}
-
-	// return a copy of the list
-	*numfiles = nfiles;
-
-	if ( !nfiles ) {
+		}
 		return NULL;
 	}
 
-	listCopy = Z_Malloc( ( nfiles + 1 ) * sizeof( listCopy[0] ) );
-	for ( i = 0 ; i < nfiles ; i++ ) {
-		listCopy[i] = list[i];
+	// Возвращаем копию списка (Sys_ListFiles уже выделяет строки через Z_Malloc)
+	listCopy = Z_Malloc( (numSysFiles + 1) * sizeof(char*) );
+	for ( i = 0; i < numSysFiles; i++ ) {
+		listCopy[i] = sysFiles[i];
 	}
 	listCopy[i] = NULL;
+
+	// Освобождаем оболочку списка, но не строки — они теперь в listCopy
+	Z_Free( sysFiles );
 
 	return listCopy;
 }
@@ -2275,10 +2194,6 @@ int	FS_GetFileList( const char *path, const char *extension, char *listbuf, int 
 	*listbuf = '\0';
 	nFiles = 0;
 	nTotal = 0;
-
-	if (Q_stricmp(path, "$modlist") == 0) {
-		return FS_GetModList(listbuf, bufsize);
-	}
 
 	pFiles = FS_ListFiles(path, extension, &nFiles);
 
