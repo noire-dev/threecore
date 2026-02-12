@@ -1214,132 +1214,49 @@ separate file or a ZIP file.
 extern qboolean		com_fullyInitialized;
 
 int FS_FOpenFileRead( const char *filename, fileHandle_t *file, qboolean uniqueFILE ) {
-	const searchpath_t	*search;
-	char			*netpath;
-	pack_t			*pak;
-	fileInPack_t	*pakFile;
-	directory_t		*dir;
-	long			hash;
-	long			fullHash;
-	FILE			*temp;
-	int				length;
-	fileHandleData_t *f;
-
-	if ( !fs_searchpaths ) {
-		Com_Error( ERR_FATAL, "Filesystem call made without initialization" );
-	}
+	char netpath[MAX_OSPATH];
+	FILE *temp;
+	int length;
 
 	if ( !filename ) {
 		Com_Error( ERR_FATAL, "FS_FOpenFileRead: NULL 'filename' parameter passed\n" );
 	}
 
-	// qpaths are not supposed to have a leading slash
+	// Убираем начальный слэш, если есть
 	if ( filename[0] == '/' || filename[0] == '\\' ) {
 		filename++;
 	}
 
-	// make absolutely sure that it can't back up the path.
-	// The searchpaths do guarantee that something will always
-	// be prepended, so we don't need to worry about "c:" or "//limbo"
-	if ( FS_CheckDirTraversal( filename ) ) {
-		*file = FS_INVALID_HANDLE;
-		return -1;
-	}
+	// Строим путь: <exe_dir>/<filename>
+	Q_strncpyz( netpath, Sys_DefaultBasePath(), sizeof( netpath ) );
+	Q_strcat( netpath, sizeof( netpath ), "/" );
+	Q_strcat( netpath, sizeof( netpath ), filename );
 
-	// we will calculate full hash only once then just mask it by current pack->hashSize
-	// we can do that as long as we know properties of our hash function
-	fullHash = FS_HashFileName( filename, 0U );
-
-	if ( file == NULL ) {
-		// just wants to see if file is there
-		for ( search = fs_searchpaths ; search ; search = search->next ) {
-			// is the element a pak file?
-			if ( search->pack && search->pack->hashTable[ (hash = fullHash & (search->pack->hashSize-1)) ] ) {
-				// look through all the pak file elements
-				pak = search->pack;
-				pakFile = pak->hashTable[hash];
-				do {
-					// case and separator insensitive comparisons
-					if ( !FS_FilenameCompare( pakFile->name, filename ) ) {
-						// found it!
-						return pakFile->size; 
-					}
-					pakFile = pakFile->next;
-				} while ( pakFile != NULL );
-			} else if ( search->dir && search->policy != DIR_DENY ) {
-				dir = search->dir;
-				netpath = FS_BuildOSPath( dir->path, dir->gamedir, filename );
-				temp = Sys_FOpen( netpath, "rb" );
-				if ( temp ) {
-					length = FS_FileLength( temp );
-					fclose( temp );
-					return length;
-				}
-			}
+	// Открываем файл
+	temp = Sys_FOpen( netpath, "rb" );
+	if ( !temp ) {
+		if ( file ) {
+			*file = FS_INVALID_HANDLE;
 		}
 		return -1;
 	}
 
-	// make sure the q3key file is only readable by the quake3.exe at initialization
-	// any other time the key should only be accessed in memory using the provided functions
-	if ( com_fullyInitialized && strstr( filename, "q3key" ) ) {
-		*file = FS_INVALID_HANDLE;
-		return -1;
+	// Если запрашивали только длину — закрываем и возвращаем её
+	if ( !file ) {
+		length = FS_FileLength( temp );
+		fclose( temp );
+		return length;
 	}
 
-	//
-	// search through the path, one element at a time
-	//
-	for ( search = fs_searchpaths ; search ; search = search->next ) {
-		// is the element a pak file?
-		if ( search->pack && search->pack->hashTable[ (hash = fullHash & (search->pack->hashSize-1)) ] ) {
-			// look through all the pak file elements
-			pak = search->pack;
-			pakFile = pak->hashTable[hash];
-			do {
-				// case and separator insensitive comparisons
-				if ( !FS_FilenameCompare( pakFile->name, filename ) ) {
-					// found it!
-					return FS_OpenFileInPak( file, pak, pakFile, uniqueFILE );
-				}
-				pakFile = pakFile->next;
-			} while ( pakFile != NULL );
-		} else if ( search->dir && search->policy != DIR_DENY ) {
-			// check a file in the directory tree
-			dir = search->dir;
+	// Иначе выделяем хэндл и сохраняем FILE*
+	*file = FS_HandleForFile();
+	fileHandleData_t *f = &fsh[*file];
+	FS_InitHandle( f );
+	f->handleFiles.file.o = temp;
+	Q_strncpyz( f->name, filename, sizeof( f->name ) );
+	f->zipFile = qfalse;
 
-			netpath = FS_BuildOSPath( dir->path, dir->gamedir, filename );
-
-			temp = Sys_FOpen( netpath, "rb" );
-			if ( temp == NULL ) {
-				continue;
-			}
-
-			*file = FS_HandleForFile();
-			f = &fsh[ *file ];
-			FS_InitHandle( f );
-
-			f->handleFiles.file.o = temp;
-			Q_strncpyz( f->name, filename, sizeof( f->name ) );
-			f->zipFile = qfalse;
-
-			if ( fs_debug->integer ) {
-				Com_Printf( "FS_FOpenFileRead: %s (found in '%s/%s')\n", filename,
-					dir->path, dir->gamedir );
-			}
-
-			return FS_FileLength( f->handleFiles.file.o );
-		}
-	}
-
-#ifdef FS_MISSING
-	if ( missingFiles ) {
-		fprintf( missingFiles, "%s\n", filename );
-	}
-#endif
-
-	*file = FS_INVALID_HANDLE;
-	return -1;
+	return FS_FileLength( temp );
 }
 
 
