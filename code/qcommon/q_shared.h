@@ -26,9 +26,9 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 // q_shared.h -- included first by ALL program modules.
 // A user mod should never modify this file
 
-#define ENGINE_VERSION        "SourceTech 3"
-#define CLIENT_WINDOW_TITLE   "SourceTech: Engine"
-#define CONSOLE_WINDOW_TITLE  "SourceTech: Console"
+#define ENGINE_VERSION        "ThreeCore"
+#define CLIENT_WINDOW_TITLE   "ThreeCore: Engine"
+#define CONSOLE_WINDOW_TITLE  "ThreeCore: Console"
 
 #define BASEGAME				"game"
 #define BASETA					"game_c"
@@ -36,8 +36,8 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #define MAX_TEAMNAME            32
 #define MAX_MASTER_SERVERS      5	// number of supported master servers
 
-#define GAMENAME_FOR_MASTER		"OpenSandbox"
-#define HEARTBEAT_FOR_MASTER	"OpenSandbox"
+#define GAMENAME_FOR_MASTER		"threecore"
+#define HEARTBEAT_FOR_MASTER	"threecore"
 
 //===========================================================================
 #define USE_BSP_COLMODELS 1 	//server side

@@ -1,6 +1,6 @@
 // Copyright (C) 1999-2005 ID Software, Inc.
 // Copyright (C) 2023-2025 Noire.dev
-// SourceTech — GPLv2; see LICENSE for details.
+// ThreeCore — GPLv2; see LICENSE for details.
 
 #define	CMD_BACKUP			64	
 #define	CMD_MASK			(CMD_BACKUP - 1)

@@ -1,6 +1,6 @@
 // Copyright (C) 1999-2005 ID Software, Inc.
 // Copyright (C) 2023-2025 Noire.dev
-// SourceTech — GPLv2; see LICENSE for details.
+// ThreeCore — GPLv2; see LICENSE for details.
 
 #define	SVF_NOCLIENT			1	// don't send entity to clients, even if it has effects
 #define SVF_BOT					2	// set if the entity is a bot

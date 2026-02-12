@@ -382,7 +382,7 @@ static void SV_AddEntitiesVisibleFromPoint( const vec3_t origin, clientSnapshot_
 			}
 		}
 
-        // 2. SourceTech Draw Distance stage
+        // 2. ThreeCore Draw Distance stage
 		maxViewDistanceSquared = (viewDistance*SNAPSHOT_RECOVER_STEP) * (viewDistance*SNAPSHOT_RECOVER_STEP);
 		VectorSubtract(ent->r.currentOrigin, origin, dir);
 		distanceSquared = VectorLengthSquared(dir);
@@ -393,7 +393,7 @@ static void SV_AddEntitiesVisibleFromPoint( const vec3_t origin, clientSnapshot_
 			}
 		}
 
-		// 3. SourceTech Trace stage
+		// 3. ThreeCore Trace stage
 		if (sv_anticheatengine->integer && IsEntityVisibleType(ent)) {
 			trace_t trace;
 			vec3_t corners[8];

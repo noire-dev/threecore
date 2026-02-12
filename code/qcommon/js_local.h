@@ -1,6 +1,6 @@
 // Copyright (C) 1999-2005 ID Software, Inc.
 // Copyright (C) 2023-2026 Noire.dev
-// SourceTech — GPLv2; see LICENSE for details.
+// ThreeCore — GPLv2; see LICENSE for details.
 
 #define MAX_JS_ARGS 32
 #define MAX_JS_STRINGSIZE 4096
