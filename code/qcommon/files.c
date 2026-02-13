@@ -43,7 +43,6 @@ static	int			fs_packFiles;			// total number of files in all loaded packs
 
 typedef union qfile_gus {
 	FILE*		o;
-	unzFile		z;
 	void*		v;
 } qfile_gut;
 
@@ -133,11 +132,10 @@ static void FS_ReplaceSeparators( char *path ) {
 }
 
 char *FS_BuildPath( const char *qpath ) {
-	static char ospath[sizeof(temp)+MAX_OSPATH];
+	static char ospath[MAX_OSPATH*2];
 	
 	if(!qpath) Com_Error(ERR_FATAL, "FS_BuildPath NULL path!");
-	FS_ReplaceSeparators( temp );
-	Com_sprintf( ospath, sizeof(ospath), "%s%c%s", Sys_DefaultBasePath, PATH_SEP, qpath );
+	Com_sprintf( ospath, sizeof(ospath), "%s%c%s", Sys_DefaultBasePath(), PATH_SEP, qpath );
 	return ospath;
 }
 
