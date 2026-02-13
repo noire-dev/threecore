@@ -595,11 +595,6 @@ void FS_Reload( void )
 	FS_Restart( 0 );
 }
 
-qboolean FS_ConditionalRestart( int checksumFeed, qboolean clientRestart )
-{
-	return qfalse;
-}
-
 int	FS_FOpenFileByMode( const char *qpath, fileHandle_t *f, fsMode_t mode ) {
 	int		r;
 	qboolean	sync;

@@ -348,9 +348,6 @@ void SV_SpawnServer( const char *mapname ) {
 	// init client structures and svs.numSnapshotEntities
 	if ( !com_sv_running->integer ) SV_Startup();
 
-	// clear pak references
-	FS_ClearPakReferences( 0 );
-
 	// allocate the snapshot entities on the hunk
 	svs.snapshotEntities = Hunk_Alloc( sizeof(entityState_t)*svs.numSnapshotEntities );
 

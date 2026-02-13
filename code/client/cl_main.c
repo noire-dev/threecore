@@ -280,8 +280,6 @@ qboolean CL_Disconnect( qboolean showMainMenu ) {
 	//S_StopAllSounds();
 	Key_ClearStates();
 
-	FS_ClearPakReferences( FS_GENERAL_REF | FS_UI_REF | FS_CGAME_REF );
-
 	if ( cls.state >= CA_CONNECTED ) {
 		CL_AddReliableCommand( "disconnect", qtrue );
 		CL_WritePacket( 2 );
@@ -603,13 +601,7 @@ static void CL_Vid_Restart( refShutdownCode_t shutdownCode ) {
 
 	// shutdown the renderer and clear the renderer interface
 	CL_ShutdownRef( shutdownCode ); // REF_KEEP_CONTEXT, REF_KEEP_WINDOW, REF_DESTROY_WINDOW
-
-	// clear pak references
-	FS_ClearPakReferences( FS_UI_REF | FS_CGAME_REF );
-
-	// reinitialize the filesystem if the game directory or checksum has changed
-	FS_ConditionalRestart( clc.checksumFeed, qfalse );
-
+	
 	cls.soundRegistered = qfalse;
 
 	CL_ClearMemory();
