@@ -662,15 +662,6 @@ static void CL_Snd_Restart_f( void )
 
 /*
 ==================
-CL_PK3List_f
-==================
-*/
-void CL_OpenedPK3List_f( void ) {
-	Com_Printf("Opened PK3 Names: %s\n", FS_LoadedPakNames());
-}
-
-/*
-==================
 CL_Configstrings_f
 ==================
 */
@@ -2115,7 +2106,6 @@ void CL_Init( void ) {
 	Cmd_AddCommand ("ping", CL_Ping_f );
 	Cmd_AddCommand ("serverstatus", CL_ServerStatus_f );
 	Cmd_AddCommand ("showip", CL_ShowIP_f );
-	Cmd_AddCommand ("fs_openedList", CL_OpenedPK3List_f );
 	Cmd_AddCommand ("serverinfo", CL_Serverinfo_f );
 	Cmd_AddCommand ("systeminfo", CL_Systeminfo_f );
 

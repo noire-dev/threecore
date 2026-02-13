@@ -391,7 +391,6 @@ void CL_ParseServerMessage( msg_t *msg );
 //====================================================================
 
 qboolean CL_UpdateVisiblePings_f( int source );
-qboolean CL_ValidPakSignature( const byte *data, int len );
 
 //
 // cl_scrn.c

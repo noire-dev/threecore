@@ -513,7 +513,6 @@ void SV_Init( void )
 	sv_floodProtect = Cvar_Get( "sv_floodProtect", "1", CVAR_ARCHIVE | CVAR_SERVERINFO );
 	Cvar_Get( "sv_cheats", "0", CVAR_SYSTEMINFO);
 	sv_serverid = Cvar_Get( "sv_serverid", "0", CVAR_SYSTEMINFO );
-	sv_referencedPakNames = Cvar_Get( "sv_referencedPakNames", "", CVAR_SYSTEMINFO );
 	sv_rconPassword = Cvar_Get ("rconPassword", "", 0 );
 	sv_privatePassword = Cvar_Get ("sv_privatePassword", "", 0 );
 	sv_fps = Cvar_Get ("sv_fps", "60", 0 );
@@ -623,6 +622,5 @@ void SV_Shutdown( const char *finalmsg ) {
 	sv.time = 0;
 
 	Cvar_Set( "sv_running", "0" );
-	Cvar_Set( "sv_referencedPakNames", "" );
 	Cvar_Set( "sv_serverid", "0" );
 }

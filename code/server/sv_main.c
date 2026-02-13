@@ -39,7 +39,6 @@ cvar_t	*sv_master[MAX_MASTER_SERVERS];		// master server ip address
 cvar_t	*sv_reconnectlimit;		// minimum seconds between connect messages
 cvar_t	*sv_padPackets;			// add nop bytes to messages
 cvar_t	*sv_mapname;
-cvar_t	*sv_referencedPakNames;
 cvar_t	*sv_serverid;
 cvar_t	*sv_minRate;
 cvar_t	*sv_maxRate;

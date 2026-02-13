@@ -758,10 +758,6 @@ int		FS_FOpenFileByMode( const char *qpath, fileHandle_t *f, fsMode_t mode );
 int		FS_Seek( fileHandle_t f, long offset, fsOrigin_t origin );
 // seek on a file
 
-qboolean FS_InvalidGameDir( const char *gamedir );
-qboolean FS_idPak( const char *pak, const char *base, int numPaks );
-qboolean FS_ComparePaks( char *neededpaks, int len, qboolean dlstring );
-
 void FS_Rename( const char *from, const char *to );
 
 void FS_Remove( const char *osPath );

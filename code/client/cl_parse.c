@@ -356,7 +356,7 @@ void CL_SystemInfoChanged( qboolean onlyGame ) {
 		if ( key[0] == '\0' ) break;
 
 		// we don't really need any of these server cvars to be set on client-side
-		if ( !Q_stricmp( key, "sv_serverid" ) || !Q_stricmp( key, "sv_fps" ) || !Q_stricmp( key, "sv_referencedPakNames" ) ) continue;
+		if ( !Q_stricmp( key, "sv_serverid" ) || !Q_stricmp( key, "sv_fps" )) continue;
 
 		Cvar_Set( key, value );
 	}
@@ -487,36 +487,6 @@ static void CL_ParseGamestate( msg_t *msg ) {
 	cls.cgameStarted = qtrue;
 	CL_InitCGame();
 	CL_WritePacket( 2 );
-}
-
-
-/*
-=====================
-CL_ValidPakSignature
-
-checks for valid ZIP signature
-returns qtrue for normal and empty archives
-=====================
-*/
-qboolean CL_ValidPakSignature( const byte *data, int len )
-{
-	// maybe it is not 100% correct to check for file size here
-	// because we may receive more data in future packets
-	// but situation when server sends fragmented/shortened
-	// zip header in first packet - looks pretty suspicious
-	if ( len < 22 )
-		return qfalse; // minimal ZIP file length is 22 bytes
-
-	if ( data[0] != 'P' || data[1] != 'K' )
-		return qfalse;
-
-	if ( data[2] == 0x3 && data[3] == 0x4 )
-		return qtrue; // local file header
-
-	if ( data[2] == 0x5 && data[3] == 0x6 )
-		return qtrue; // EOCD
-
-	return qfalse;
 }
 
 /*
