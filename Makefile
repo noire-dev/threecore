@@ -279,7 +279,7 @@ ifeq ($(COMPILE_PLATFORM),darwin)
 
   DEBUG_CFLAGS = $(BASE_CFLAGS) -DDEBUG -D_DEBUG -g -O0
   RELEASE_CFLAGS = $(BASE_CFLAGS) -DNDEBUG $(OPTIMIZE)
-
+  BUILD_SERVER = 0
 else
 
 #############################################################################
