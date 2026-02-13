@@ -385,7 +385,7 @@ void CL_Disconnect_f( void ) {
 		    CL_FlushMemory();
 		    
 			if ( uivm ) {
-				VM_Call( uivm, 1, UI_SET_ACTIVE_MENU, UIMENU_MAIN );
+				VM_Call( uivm, 1, UI_SET_ACTIVE_MENU, UI_ENABLE );
 			}
 		}
 	}
@@ -1241,7 +1241,7 @@ static void CL_CheckTimeout( void ) {
 				CL_FlushMemory();
 			}
 			if ( uivm ) {
-				VM_Call( uivm, 1, UI_SET_ACTIVE_MENU, UIMENU_MAIN );
+				VM_Call( uivm, 1, UI_SET_ACTIVE_MENU, UI_ENABLE );
 			}
 			return;
 		}
@@ -1300,7 +1300,7 @@ void CL_Frame( int msec, int realMsec ) {
 		&& !com_sv_running->integer && uivm ) {
 		// if disconnected, bring up the menu
 		//S_StopAllSounds();
-		VM_Call( uivm, 1, UI_SET_ACTIVE_MENU, UIMENU_MAIN );
+		VM_Call( uivm, 1, UI_SET_ACTIVE_MENU, UI_ENABLE );
 	}
 
 	// decide the simulation time
