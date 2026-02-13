@@ -471,7 +471,7 @@ char *FS_CopyString( const char *in ) {
 	return out;
 }
 
-static char **FS_ListFiles( const char *path, const char *extension, int *numfiles ) {
+char **FS_ListFiles( const char *path, const char *extension, int *numfiles ) {
 	char netpath[MAX_OSPATH];
 	char **sysFiles;
 	int numSysFiles;
