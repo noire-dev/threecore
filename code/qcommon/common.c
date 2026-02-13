@@ -1572,9 +1572,6 @@ void Com_GameRestart( int checksumFeed, qboolean clientRestart )
 		if ( com_sv_running->integer )
 			SV_Shutdown( "Game directory changed" );
 
-		// Reset console command history
-		Con_ResetHistory();
-
 		// Shutdown FS early so Cvar_Restart will not reset old game cvars
 		FS_Shutdown( qtrue );
 
@@ -1723,7 +1720,7 @@ static void Com_WriteConfigToFile( const char *filename ) {
 
 	f = FS_FOpenFileWrite( filename );
 	if ( f == FS_INVALID_HANDLE ) {
-		if ( !FS_ResetReadOnlyAttribute( filename ) || ( f = FS_FOpenFileWrite( filename ) ) == FS_INVALID_HANDLE ) {
+		if ( ( f = FS_FOpenFileWrite( filename ) ) == FS_INVALID_HANDLE ) {
 			Com_Printf( "Couldn't write %s.\n", filename );
 			return;
 		}
@@ -2155,23 +2152,6 @@ static void Field_CompleteCvarValue( const char *value, const char *current )
 	completionField->cursor = vlen + blen;
 
 	Field_AddSpace();
-}
-
-
-/*
-===============
-Field_CompleteFilename
-===============
-*/
-void Field_CompleteFilename( const char *dir, const char *ext, qboolean stripExt, int flags )
-{
-	matchCount = 0;
-	shortestMatch[ 0 ] = '\0';
-
-	FS_FilenameCompletion( dir, ext, stripExt, FindMatches, flags );
-
-	if ( !Field_Complete() )
-		FS_FilenameCompletion( dir, ext, stripExt, PrintMatches, flags );
 }
 
 

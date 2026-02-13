@@ -504,17 +504,8 @@ void Cmd_ExecuteString(const char* text) {
 #endif
 }
 
-static void Cmd_CompleteCfgName(const char* args, int argNum) {
-	if(argNum == 2) Field_CompleteFilename("", "cfg", qfalse, FS_MATCH_ANY | FS_MATCH_STICK | FS_MATCH_SUBDIRS);
-}
-
-void Cmd_CompleteWriteCfgName(const char* args, int argNum) {
-	if(argNum == 2) Field_CompleteFilename("", "cfg", qfalse, FS_MATCH_EXTERN | FS_MATCH_STICK);
-}
-
 void Cmd_Init(void) {
 	Cmd_AddCommand("exec", Cmd_Exec_f);
-	Cmd_SetCommandCompletionFunc("exec", Cmd_CompleteCfgName);
 	Cmd_AddCommand("print", Cmd_Print_f);
 	Cmd_AddCommand("wait", Cmd_Wait_f);
 }

@@ -41,7 +41,7 @@ static void SCR_DrawScreenField( void ) {
 			Com_Error( ERR_FATAL, "SCR_DrawScreenField: bad cls.state" );
 			break;
 		case CA_DISCONNECTED:
-			VM_Call( uivm, 1, UI_SET_ACTIVE_MENU, UIMENU_MAIN );
+			VM_Call( uivm, 1, UI_SET_ACTIVE_MENU, UI_ENABLE );
 			break;
 		case CA_CONNECTING:
 		case CA_CHALLENGING:

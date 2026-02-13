@@ -29,9 +29,8 @@ typedef enum {
 } uiImport_t;
 
 typedef enum {
-	UIMENU_NONE,
-	UIMENU_MAIN,
-	UIMENU_INGAME
+	UI_DISABLE,
+	UI_ENABLE
 } uiMenuCommand_t;
 
 typedef enum {

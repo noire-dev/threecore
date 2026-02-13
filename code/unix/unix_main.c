@@ -410,39 +410,6 @@ char *Sys_ConsoleInput( void ) {
 					return NULL;
 				}
 
-				avail = read( STDIN_FILENO, &key, 1 );
-				if (avail != -1) {
-					// VT 100 keys
-					if (key == '[' || key == 'O') {
-						avail = read( STDIN_FILENO, &key, 1 );
-						if (avail != -1) {
-							switch (key) {
-							case 'A':
-								if ( Con_HistoryGetPrev( &history ) ) {
-									tty_Hide();
-									tty_con = history;
-									tty_Show();
-								}
-								tty_FlushIn();
-								return NULL;
-								break;
-							case 'B':
-								if ( Con_HistoryGetNext( &history ) ) {
-									tty_Hide();
-									tty_con = history;
-									tty_Show();
-								}
-								tty_FlushIn();
-								return NULL;
-								break;
-							case 'C': // right
-							case 'D': // left
-								return NULL;
-							}
-						}
-					}
-				}
-
 				if ( key == 12 ) {
 					write( STDOUT_FILENO, "\ec]", 3 );
 					if ( tty_con.cursor ) {

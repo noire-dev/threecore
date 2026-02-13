@@ -76,7 +76,7 @@ void Log_Open( const char *filename )
 		return;
 	} //end if
 
-	ospath = FS_BuildOSPath( Cvar_VariableString( "fs_homepath" ), "", filename );
+	ospath = FS_BuildPath( filename );
 	logfile.fp = Sys_FOpen( ospath, "wb" );
 	if ( !logfile.fp )
 	{

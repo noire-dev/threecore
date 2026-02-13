@@ -694,9 +694,7 @@ char	**FS_ListFiles( const char *directory, const char *extension, int *numfiles
 
 void	FS_FreeFileList( char **list );
 
-qboolean FS_FileExists( const char *file );
-
-char   *FS_BuildOSPath( const char *base, const char *game, const char *qpath );
+char   *FS_BuildPath( const char *base, const char *game, const char *qpath );
 
 qboolean FS_CompareZipChecksum( const char *zipfile );
 int		FS_GetZipChecksum( const char *zipfile );
@@ -711,29 +709,12 @@ fileHandle_t	FS_FOpenFileAppend( const char *filename );
 
 qboolean FS_ResetReadOnlyAttribute( const char *filename );
 
-qboolean FS_SV_FileExists( const char *file );
-
-fileHandle_t FS_SV_FOpenFileWrite( const char *filename );
-int		FS_SV_FOpenFileRead( const char *filename, fileHandle_t *fp );
-void	FS_SV_Rename( const char *from, const char *to );
 int		FS_FOpenFileRead( const char *qpath, fileHandle_t *file, qboolean uniqueFILE );
 // if uniqueFILE is true, then a new FILE will be fopened even if the file
 // is found in an already open pak file.  If uniqueFILE is false, you must call
 // FS_FCloseFile instead of fclose, otherwise the pak FILE would be improperly closed
 // It is generally safe to always set uniqueFILE to true, because the majority of
 // file IO goes through FS_ReadFile, which Does The Right Thing already.
-
-void FS_TouchFileInPak( const char *filename );
-
-int FS_Home_FOpenFileRead( const char *filename, fileHandle_t *file );
-
-qboolean FS_FileIsInPAK( const char *filename, char *pakName );
-// returns qtrue if a file is in the PAK file, otherwise qfalse
-
-int		FS_PakIndexForHandle( fileHandle_t f );
-
-// returns pak index or -1 if file is not in pak
-extern int fs_lastPakIndex;
 
 extern qboolean fs_reordered;
 
@@ -779,16 +760,6 @@ int		FS_FOpenFileByMode( const char *qpath, fileHandle_t *f, fsMode_t mode );
 int		FS_Seek( fileHandle_t f, long offset, fsOrigin_t origin );
 // seek on a file
 
-qboolean FS_FilenameCompare( const char *s1, const char *s2 );
-
-const char *FS_LoadedPakNames( void );
-
-qboolean FS_ExcludeReference( void );
-const char *FS_ReferencedPakNames( void );
-
-void FS_ClearPakReferences( int flags );
-// clears referenced booleans on loaded pk3s
-
 qboolean FS_InvalidGameDir( const char *gamedir );
 qboolean FS_idPak( const char *pak, const char *base, int numPaks );
 qboolean FS_ComparePaks( char *neededpaks, int len, qboolean dlstring );
@@ -796,7 +767,6 @@ qboolean FS_ComparePaks( char *neededpaks, int len, qboolean dlstring );
 void FS_Rename( const char *from, const char *to );
 
 void FS_Remove( const char *osPath );
-void FS_HomeRemove( const char *homePath );
 
 void	FS_FilenameCompletion( const char *dir, const char *ext, qboolean stripExt, void(*callback)(const char *s), int flags );
 
@@ -804,10 +774,6 @@ int FS_VM_OpenFile( const char *qpath, fileHandle_t *f, fsMode_t mode );
 int FS_VM_ReadFile( void *buffer, int len, fileHandle_t f );
 void FS_VM_WriteFile( void *buffer, int len, fileHandle_t f );
 void FS_VM_CloseFile( fileHandle_t f );
-
-const char *FS_GetBaseGameDir( void );
-
-const char *FS_GetHomePath( void );
 
 qboolean FS_StripExt( char *filename, const char *ext );
 qboolean FS_AllowedExtension( const char *fileName, qboolean allowPk3s, const char **ext );
@@ -847,13 +813,9 @@ void Field_Clear( field_t *edit );
 void Field_AutoComplete( field_t *edit );
 void Field_CompleteKeyname( void );
 void Field_CompleteKeyBind( int key );
-void Field_CompleteFilename( const char *dir, const char *ext, qboolean stripExt, int flags );
 void Field_CompleteCommand( const char *cmd, qboolean doCommands, qboolean doCvars );
 
-void Con_ResetHistory( void );
 void Con_SaveField( const field_t *field );
-qboolean Con_HistoryGetPrev( field_t *field );
-qboolean Con_HistoryGetNext( field_t *field );
 
 /*
 ==============================================================
@@ -901,7 +863,6 @@ unsigned	Com_BlockChecksum( const void *buffer, int length );
 
 // MD5 functions
 
-char		*Com_MD5File(const char *filename, int length, const char *prefix, int prefix_len);
 char		*Com_MD5Buf( const char *data, int length, const char *data2, int length2 );
 
 // stateless challenge functions

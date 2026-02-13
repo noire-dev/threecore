@@ -12,13 +12,11 @@ static void CL_KeyDownEvent(int key) {
 		}
 
 		if(!(Key_GetCatcher() & KEYCATCH_UI)) {
-			if(cls.state == CA_ACTIVE) {
-				VM_Call(uivm, 1, UI_SET_ACTIVE_MENU, UIMENU_INGAME);
-			} else if(cls.state != CA_DISCONNECTED) {
+			if(cls.state != CA_DISCONNECTED) {
 				Cmd_Clear();
 				if(!CL_Disconnect(qfalse)) CL_FlushMemory();
-				VM_Call(uivm, 1, UI_SET_ACTIVE_MENU, UIMENU_MAIN);
 			}
+			VM_Call(uivm, 1, UI_SET_ACTIVE_MENU, UI_ENABLE);
 			return;
 		}
 

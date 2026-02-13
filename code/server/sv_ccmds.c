@@ -643,17 +643,6 @@ static void SV_KillServer_f( void ) {
 
 /*
 ==================
-SV_CompleteMapName
-==================
-*/
-static void SV_CompleteMapName( const char *args, int argNum ) {
-	if ( argNum == 2 ) 	{
-		Field_CompleteFilename( "maps", "bsp", qtrue, FS_MATCH_ANY | FS_MATCH_STICK );
-	}
-}
-
-/*
-==================
 SV_AddOperatorCommands
 ==================
 */
@@ -675,7 +664,6 @@ void SV_AddOperatorCommands( void ) {
 	Cmd_AddCommand ("dumpuser", SV_DumpUser_f);
 	Cmd_AddCommand ("map_restart", SV_MapRestart_f);
 	Cmd_AddCommand ("map", SV_Map_f);
-	Cmd_SetCommandCompletionFunc( "map", SV_CompleteMapName );
 	Cmd_AddCommand ("killserver", SV_KillServer_f);
 	Cmd_AddCommand( "filter", SV_AddFilter_f );
 	Cmd_AddCommand( "filtercmd", SV_AddFilterCmd_f );

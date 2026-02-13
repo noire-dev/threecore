@@ -250,28 +250,6 @@ void CL_ClearState( void ) {
 }
 
 /*
-====================
-CL_UpdateGUID
-
-update cl_guid using QKEY_FILE and optional prefix
-====================
-*/
-static void CL_UpdateGUID( const char *prefix, int prefix_len )
-{
-	fileHandle_t f;
-	int len;
-
-	len = FS_SV_FOpenFileRead( QKEY_FILE, &f );
-	FS_FCloseFile( f );
-
-	if( len != QKEY_SIZE )
-		Cvar_Set( "cl_guid", "" );
-	else
-		Cvar_Set( "cl_guid", Com_MD5File( QKEY_FILE, QKEY_SIZE,
-			prefix, prefix_len ) );
-}
-
-/*
 =====================
 CL_Disconnect
 
@@ -315,8 +293,6 @@ qboolean CL_Disconnect( qboolean showMainMenu ) {
 	Com_Memset( &clc, 0, sizeof( clc ) );
 
 	cls.state = CA_DISCONNECTED;
-
-	CL_UpdateGUID( NULL, 0 );
 
 	cl_disconnecting = qfalse;
 
@@ -518,8 +494,6 @@ static void CL_Connect_f( void ) {
 	serverString = NET_AdrToStringwPort( &clc.serverAddress );
 
 	Com_Printf( "%s resolved to %s\n", cls.servername, serverString );
-
-	CL_UpdateGUID( NULL, 0 );
 
 	// if we aren't playing on a lan, we need to authenticate
 	// with the cd key
@@ -1574,7 +1548,6 @@ static void CL_InitRef( void ) {
 	rimp.FS_WriteFile = FS_WriteFile;
 	rimp.FS_FreeFileList = FS_FreeFileList;
 	rimp.FS_ListFiles = FS_ListFiles;
-	rimp.FS_FileExists = FS_FileExists;
 
 	rimp.Cvar_Get = Cvar_Get;
 	rimp.Cvar_Set = Cvar_Set;
@@ -1608,47 +1581,6 @@ static void CL_InitRef( void ) {
 	}
 
 	re = *ret;
-}
-
-/*
-===============
-CL_GenerateQKey
-
-test to see if a valid QKEY_FILE exists.  If one does not, try to generate
-it by filling it with 2048 bytes of random data.
-===============
-*/
-static void CL_GenerateQKey(void)
-{
-	int len = 0;
-	unsigned char buff[ QKEY_SIZE ];
-	fileHandle_t f;
-
-	len = FS_SV_FOpenFileRead( QKEY_FILE, &f );
-	FS_FCloseFile( f );
-	if( len == QKEY_SIZE ) {
-		Com_Printf( "QKEY found.\n" );
-		return;
-	}
-	else {
-		if( len > 0 ) {
-			Com_Printf( "QKEY file size != %d, regenerating\n",
-				QKEY_SIZE );
-		}
-
-		Com_Printf( "QKEY building random string\n" );
-		Com_RandomBytes( buff, sizeof(buff) );
-
-		f = FS_SV_FOpenFileWrite( QKEY_FILE );
-		if( !f ) {
-			Com_Printf( "QKEY could not open %s for write\n",
-				QKEY_FILE );
-			return;
-		}
-		FS_Write( buff, sizeof(buff), f );
-		FS_FCloseFile( f );
-		Com_Printf( "QKEY generated\n" );
-	}
 }
 
 /*
@@ -2198,11 +2130,6 @@ void CL_Init( void ) {
 	Cmd_AddCommand( "importOBJ", CL_ConvertOBJ );
 
 	Cvar_Set( "cl_running", "1" );
-
-	CL_GenerateQKey();
-
-	Cvar_Get( "cl_guid", "", CVAR_USERINFO );
-	CL_UpdateGUID( NULL, 0 );
 
 	Com_Printf( "----- Client Initialization Complete -----\n" );
 }

@@ -743,7 +743,7 @@ static void SV_ReloadFilters( const char *filename, filter_node_t *new_node )
 		qboolean reload;
 		qboolean dump;
 
-		ospath = FS_BuildOSPath( FS_GetHomePath(), FS_GetBaseGameDir(), filename );
+		ospath = FS_BuildPath( filename );
 		if ( strcmp( ospath, loaded_name ) )
 			reload = qtrue;
 		else if ( !Sys_GetFileStats( loaded_name, &curr_fsize, &curr_mtime, &curr_ctime ) )
@@ -800,7 +800,7 @@ static void SV_ReloadFilters( const char *filename, filter_node_t *new_node )
 		}
 	}
 
-	ospath = FS_BuildOSPath( FS_GetHomePath(), FS_GetBaseGameDir(), filename );
+	ospath = FS_BuildPath( filename );
 	if ( *filename && strcmp( ospath, loaded_name ) == 0 )
 	{
 		fileTime_t curr_ctime, curr_mtime;
