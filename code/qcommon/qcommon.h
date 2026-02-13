@@ -510,7 +510,6 @@ void	Cmd_CommandCompletion( void(*callback)(const char *s) );
 // callback with each valid string
 void	Cmd_SetCommandCompletionFunc( const char *command, completionFunc_t complete );
 qboolean Cmd_CompleteArgument( const char *command, const char *args, int argNum );
-void	Cmd_CompleteWriteCfgName( const char *args, int argNum );
 
 int		Cmd_Argc( void );
 void	Cmd_Clear( void );
@@ -808,8 +807,6 @@ void Field_AutoComplete( field_t *edit );
 void Field_CompleteKeyname( void );
 void Field_CompleteKeyBind( int key );
 void Field_CompleteCommand( const char *cmd, qboolean doCommands, qboolean doCvars );
-
-void Con_SaveField( const field_t *field );
 
 /*
 ==============================================================

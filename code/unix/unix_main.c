@@ -392,8 +392,6 @@ char *Sys_ConsoleInput( void ) {
 			// check if this is a control char
 			if (key && key < ' ') {
 				if (key == '\n') {
-					// push it in history
-					Con_SaveField( &tty_con );
 					s = tty_con.buffer;
 					while ( *s == '\\' || *s == '/' ) // skip leading slashes
 						s++;

@@ -1689,7 +1689,6 @@ void Com_Init( char *commandLine ) {
 
 	Cmd_AddCommand( "quit", Com_Quit_f );
 	Cmd_AddCommand( "writeconfig", Com_WriteConfig_f );
-	Cmd_SetCommandCompletionFunc( "writeconfig", Cmd_CompleteWriteCfgName );
 	Cmd_AddCommand( "game_restart", Com_GameRestart_f );
 
 	Sys_Init();
@@ -1766,11 +1765,6 @@ static void Com_WriteConfig_f( void ) {
 
 	Q_strncpyz( filename, Cmd_Argv(1), sizeof( filename ) );
 	COM_DefaultExtension( filename, sizeof( filename ), ".cfg" );
-
-	if ( !FS_AllowedExtension( filename, qfalse, &ext ) ) {
-		Com_Printf( "%s: Invalid filename extension: '%s'.\n", __func__, ext );
-		return;
-	}
 
 	Com_Printf( "Writing %s.\n", filename );
 	Com_WriteConfigToFile( filename );
