@@ -224,35 +224,12 @@ static intptr_t SV_GameSystemCalls(intptr_t* args) {
 			}
 		}
 #include "../q_sharedsyscalls.inc"
-		case BOTLIB_SETUP: return SV_BotLibSetup();
-		case BOTLIB_SHUTDOWN: return SV_BotLibShutdown();
-		case BOTLIB_START_FRAME: return botlib_export->BotLibStartFrame(VMF(1));
-		case BOTLIB_LOAD_MAP: return botlib_export->BotLibLoadMap(VMA(1));
 		case BOTLIB_GET_CONSOLE_MESSAGE: return SV_BotGetConsoleMessage(args[1], VMA(2), args[3]);
 		case BOTLIB_USER_COMMAND: {
 			unsigned clientNum = args[1];
-			if(clientNum < sv.maxclients) {
-				SV_ClientThink(&svs.clients[clientNum], VMA(2));
-			}
-		}
+			if(clientNum < sv.maxclients) SV_ClientThink(&svs.clients[clientNum], VMA(2));
 			return 0;
-		case BOTLIB_UPDATENTITY: return botlib_export->BotLibUpdateEntity(args[1], VMA(2));
-		case BOTLIB_AAS_INITIALIZED: return botlib_export->aas.AAS_Initialized();
-		case BOTLIB_AAS_TIME: return FloatAsInt(botlib_export->aas.AAS_Time());
-		case BOTLIB_AAS_POINT_AREA_NUM: return botlib_export->aas.AAS_PointAreaNum(VMA(1));
-		case BOTLIB_AAS_TRACE_AREAS: return botlib_export->aas.AAS_TraceAreas(VMA(1), VMA(2), VMA(3), VMA(4), args[5]);
-        case BOTLIB_EA_COMMAND: botlib_export->ea.EA_Command(args[1], VMA(2)); return 0;
-        case BOTLIB_EA_GESTURE: botlib_export->ea.EA_Gesture(args[1]); return 0;
-		case BOTLIB_EA_ATTACK: botlib_export->ea.EA_Attack(args[1]); return 0;
-		case BOTLIB_EA_USE: botlib_export->ea.EA_Use(args[1]); return 0;
-		case BOTLIB_EA_VIEW: botlib_export->ea.EA_View(args[1], VMA(2)); return 0;
-		case BOTLIB_EA_GET_INPUT: botlib_export->ea.EA_GetInput(args[1], VMF(2), VMA(3)); return 0;
-		case BOTLIB_EA_RESET_INPUT: botlib_export->ea.EA_ResetInput(args[1]); return 0;
-		case BOTLIB_AI_MOVE_TO_GOAL: botlib_export->ai.BotMoveToGoal(args[1], VMA(2), args[3]); return 0;
-		case BOTLIB_AI_RESET_MOVE_STATE: botlib_export->ai.BotResetMoveState(args[1]); return 0;
-		case BOTLIB_AI_ALLOC_MOVE_STATE: return botlib_export->ai.BotAllocMoveState();
-		case BOTLIB_AI_FREE_MOVE_STATE: botlib_export->ai.BotFreeMoveState(args[1]); return 0;
-		case BOTLIB_AI_INIT_MOVE_STATE: botlib_export->ai.BotInitMoveState(args[1], VMA(2)); return 0;
+		}
 		default: Com_Error(ERR_DROP, "Bad game.qvm system trap: %ld", (long int)args[0]);
 	}
 
