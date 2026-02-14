@@ -538,8 +538,6 @@ void SV_Init( void )
 	Cvar_SetGroup( sv_fps, CVG_SERVER );
 
 	SV_TrackCvarChanges();
-
-	SV_InitChallenger();
 }
 
 
@@ -603,7 +601,6 @@ void SV_Shutdown( const char *finalmsg ) {
 
 	SV_MasterShutdown();
 	SV_ShutdownGameProgs();
-	SV_InitChallenger();
 
 	// free current level
 	SV_ClearServer();

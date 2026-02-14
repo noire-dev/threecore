@@ -44,7 +44,7 @@ static int SV_CreateChallenge( int timestamp, const netadr_t *from ) {
 	// Use first 4 bytes of the HMAC digest as an int (client only deals with numeric challenges)
 	// The most-significant bit stores whether the timestamp is odd or even. This lets later verification code handle the
 	// case where the engine timestamp has incremented between the time this challenge is sent and the client replies.
-	challenge = Com_MD5Addr( from, timestamp );
+	challenge = from->port ^ (timestamp & 0xFFFF);
 	challenge &= 0x7FFFFFFF;
 	challenge |= (unsigned int)(timestamp & 0x1) << 31;
 
@@ -72,15 +72,6 @@ static qboolean SV_VerifyChallenge( int receivedChallenge, const netadr_t *from 
 	int expectedChallenge = SV_CreateChallenge( challengeTimestamp, from );
 
 	return (receivedChallenge == expectedChallenge) ? qtrue : qfalse;
-}
-
-/*
-=================
-SV_InitChallenger
-=================
-*/
-void SV_InitChallenger( void ) {
-	Com_MD5Init();
 }
 
 /*

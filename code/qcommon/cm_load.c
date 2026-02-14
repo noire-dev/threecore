@@ -689,7 +689,7 @@ void CM_LoadMap( const char *name, qboolean clientload, int *checksum ) {
 		Com_Error( ERR_DROP, "%s: %s has truncated header", __func__, name );
 	}
 
-	*checksum = cm.checksum = LittleLong( Com_BlockChecksum( buf, length ) );
+	*checksum = cm.checksum = 0;
 
 	header = *(dheader_t *)buf;
 	for ( i = 0; i < sizeof( dheader_t ) / sizeof( int32_t ); i++ ) {

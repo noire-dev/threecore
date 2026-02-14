@@ -849,17 +849,6 @@ void		Com_GameRestart( int checksumFeed, qboolean clientRestart );
 int			Com_EventLoop( void );
 int			Com_Milliseconds( void );	// will be journaled properly
 
-// MD4 functions
-unsigned	Com_BlockChecksum( const void *buffer, int length );
-
-// MD5 functions
-
-char		*Com_MD5Buf( const char *data, int length, const char *data2, int length2 );
-
-// stateless challenge functions
-void		Com_MD5Init( void );
-int			Com_MD5Addr( const netadr_t *addr, int timestamp );
-
 int			Com_Split( char *in, char **out, int outsz, int delim );
 
 int			Com_Filter( const char *filter, const char *name );

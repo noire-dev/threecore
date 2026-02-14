@@ -313,7 +313,6 @@ void SV_SpawnServer( const char *mapname );
 // sv_client.c
 //
 void SV_GetChallenge( const netadr_t *from );
-void SV_InitChallenger( void );
 
 void SV_DirectConnect( const netadr_t *from );
 void SV_PrintClientStateChange( const client_t *cl, clientState_t newState );
