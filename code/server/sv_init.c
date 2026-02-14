@@ -341,9 +341,6 @@ void SV_SpawnServer( const char *mapname ) {
 	// clear the whole hunk because we're (re)loading the server
 	Hunk_Clear();
 
-	// clear collision map data
-	CM_ClearMap();
-
 	// init client structures and svs.numSnapshotEntities
 	if ( !com_sv_running->integer ) SV_Startup();
 

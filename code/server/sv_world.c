@@ -398,11 +398,11 @@ void SV_ClipToEntity( trace_t *trace, const vec3_t start, const vec3_t mins, con
 
 /*
 ====================
-SV_ClipMoveToEntities
+
 
 ====================
 */
-static void SV_ClipMoveToEntities( moveclip_t *clip ) {
+static void ( moveclip_t *clip ) {
 	int			i, num;
 	int			touchlist[MAX_GENTITIES];
 	sharedEntity_t *touch;
@@ -501,26 +501,14 @@ void SV_Trace( trace_t *results, const vec3_t start, const vec3_t mins, const ve
 
 	Com_Memset ( &clip, 0, sizeof ( clip ) );
 
-	// clip to world
-	CM_BoxTrace( &clip.trace, start, end, mins, maxs, 0, contentmask );
-	clip.trace.entityNum = clip.trace.fraction != 1.0 ? ENTITYNUM_WORLD : ENTITYNUM_NONE;
-	if ( clip.trace.fraction == 0 ) {
-		*results = clip.trace;
-		return;		// blocked immediately by the world
-	}
-
 	clip.contentmask = contentmask;
 	clip.start = start;
-//	VectorCopy( clip.trace.endpos, clip.end );
 	VectorCopy( end, clip.end );
 	clip.mins = mins;
 	clip.maxs = maxs;
 	clip.passEntityNum = passEntityNum;
 
 	// create the bounding box of the entire move
-	// we can limit it to the part of the move not
-	// already clipped off by the world, which can be
-	// a significant savings for line of sight and shot traces
 	for ( i=0 ; i<3 ; i++ ) {
 		if ( end[i] > start[i] ) {
 			clip.boxmins[i] = clip.start[i] + clip.mins[i] - 1;
@@ -532,7 +520,7 @@ void SV_Trace( trace_t *results, const vec3_t start, const vec3_t mins, const ve
 	}
 
 	// clip to other solid entities
-	SV_ClipMoveToEntities ( &clip );
+	 ( &clip );
 
 	*results = clip.trace;
 }
@@ -543,34 +531,7 @@ SV_PointContents
 =============
 */
 int SV_PointContents( const vec3_t p, int passEntityNum ) {
-	int			touch[MAX_GENTITIES];
-	sharedEntity_t *hit;
-	int			i, num;
-	int			contents, c2;
-	clipHandle_t	clipHandle;
-	const float		*angles;
-
-	// get base contents from world
-	contents = CM_PointContents( p, 0 );
-
-	// or in contents from all the other entities
-	num = SV_AreaEntities( p, p, touch, MAX_GENTITIES );
-
-	for ( i=0 ; i<num ; i++ ) {
-		if ( touch[i] == passEntityNum ) {
-			continue;
-		}
-		hit = SV_GentityNum( touch[i] );
-		// might intersect, so do an exact clip
-		clipHandle = SV_ClipHandleForEntity( hit );
-		angles = hit->r.currentAngles;
-
-		c2 = CM_TransformedPointContents (p, clipHandle, hit->r.currentOrigin, angles);
-
-		contents |= c2;
-	}
-
-	return contents;
+	return 0;
 }
 
 
