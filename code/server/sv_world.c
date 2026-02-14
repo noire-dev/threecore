@@ -247,73 +247,7 @@ void SV_LinkEntity( sharedEntity_t *gEnt ) {
 	gEnt->r.absmax[1] += 1;
 	gEnt->r.absmax[2] += 1;
 
-	// link to PVS leafs
-	ent->numClusters = 0;
-	ent->lastCluster = 0;
-	ent->areanum = -1;
-	ent->areanum2 = -1;
-
-	//get all leafs, including solids
-	num_leafs = CM_BoxLeafnums( gEnt->r.absmin, gEnt->r.absmax,
-		leafs, MAX_TOTAL_ENT_LEAFS, &lastLeaf );
-
-	// if none of the leafs were inside the map, the
-	// entity is outside the world and can be considered unlinked
-	if ( !num_leafs ) {
-		return;
-	}
-
-	// set areas, even from clusters that don't fit in the entity array
-	for (i=0 ; i<num_leafs ; i++) {
-		area = CM_LeafArea (leafs[i]);
-		if (area != -1) {
-			// doors may legally straggle two areas,
-			// but nothing should ever need more than that
-			if (ent->areanum != -1 && ent->areanum != area) {
-				if (ent->areanum2 != -1 && ent->areanum2 != area && sv.state == SS_LOADING) {
-					Com_DPrintf ("Object %i touching 3 areas at %f %f %f\n",
-					gEnt->s.number,
-					gEnt->r.absmin[0], gEnt->r.absmin[1], gEnt->r.absmin[2]);
-				}
-				ent->areanum2 = area;
-			} else {
-				ent->areanum = area;
-			}
-		}
-	}
-
-	// store as many explicit clusters as we can
-	ent->numClusters = 0;
-	for (i=0 ; i < num_leafs ; i++) {
-		cluster = CM_LeafCluster( leafs[i] );
-		if ( cluster != -1 ) {
-			ent->clusternums[ent->numClusters++] = cluster;
-			if ( ent->numClusters == MAX_ENT_CLUSTERS ) {
-				break;
-			}
-		}
-	}
-
-	// store off a last cluster if we need to
-	if ( i != num_leafs ) {
-		ent->lastCluster = CM_LeafCluster( lastLeaf );
-	}
-
 	gEnt->r.linkcount++;
-
-	// find the first world sector node that the ent's box crosses
-	node = sv_worldSectors;
-	while (1)
-	{
-		if (node->axis == -1)
-			break;
-		if ( gEnt->r.absmin[node->axis] > node->dist)
-			node = node->children[0];
-		else if ( gEnt->r.absmax[node->axis] < node->dist)
-			node = node->children[1];
-		else
-			break;		// crosses the node
-	}
 	
 	// link it in
 	ent->worldSector = node;

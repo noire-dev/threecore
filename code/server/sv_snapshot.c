@@ -323,15 +323,6 @@ static void SV_AddEntitiesVisibleFromPoint( const vec3_t origin, clientSnapshot_
 
 	if ( sv.state == SS_DEAD ) return;
 
-    // 1. Q3 PVS stage
-	leafnum = CM_PointLeafnum (origin);
-	clientarea = CM_LeafArea (leafnum);
-	clientcluster = CM_LeafCluster (leafnum);
-
-	// calculate the visible areas
-	frame->areabytes = CM_WriteAreaBits( frame->areabits, clientarea );
-	clientpvs = CM_ClusterPVS (clientcluster);
-
 	for ( e = 0 ; e < svs.currFrame->count; e++ ) {
 		es = svs.currFrame->ents[ e ];
 		ent = SV_GentityNum( es->number );
@@ -341,45 +332,10 @@ static void SV_AddEntitiesVisibleFromPoint( const vec3_t origin, clientSnapshot_
 
 		svEnt = &sv.svEntities[ es->number ];
 
-		// don't double add an entity through portals
-		if ( svEnt->snapshotCounter == sv.snapshotCounter ) continue;
-
 		// broadcast entities are always sent
 		if ( ent->r.svFlags & SVF_BROADCAST ) {
 			SV_AddIndexToSnapshot( svEnt, e, eNums );
 			continue;
-		}
-
-		// doors portals
-		if ( !CM_AreasConnected( clientarea, svEnt->areanum ) ) {
-			if ( !CM_AreasConnected( clientarea, svEnt->areanum2 ) ) continue; // blocked by a door
-		}
-
-		bitvector = clientpvs;
-
-		// check individual leafs
-		if ( !svEnt->numClusters ) continue;
-		l = 0;
-		for ( i=0 ; i < svEnt->numClusters ; i++ ) {
-			l = svEnt->clusternums[i];
-			if ( bitvector[l >> 3] & (1 << (l&7) ) ) {
-				break;
-			}
-		}
-
-		// if we haven't found it to be visible,
-		// check overflow clusters that couldn't be stored
-		if ( i == svEnt->numClusters ) {
-			if ( svEnt->lastCluster ) {
-				for ( ; l <= svEnt->lastCluster ; l++ ) {
-					if ( bitvector[l >> 3] & (1 << (l&7) ) ) {
-						break;
-					}
-				}
-				if ( l == svEnt->lastCluster ) continue;	// not visible
-			} else {
-				continue;
-			}
 		}
 
         // 2. ThreeCore Draw Distance stage

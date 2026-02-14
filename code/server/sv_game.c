@@ -71,25 +71,6 @@ static void SV_SetBrushModel(sharedEntity_t* ent, const char* name) {
 	SV_LinkEntity(ent);  // FIXME: remove
 }
 
-qboolean SV_inPVS(const vec3_t p1, const vec3_t p2) {
-	int leafnum;
-	int cluster;
-	int area1, area2;
-	byte* mask;
-
-	leafnum = CM_PointLeafnum(p1);
-	cluster = CM_LeafCluster(leafnum);
-	area1 = CM_LeafArea(leafnum);
-	mask = CM_ClusterPVS(cluster);
-
-	leafnum = CM_PointLeafnum(p2);
-	cluster = CM_LeafCluster(leafnum);
-	area2 = CM_LeafArea(leafnum);
-	if(mask && (!(mask[cluster >> 3] & (1 << (cluster & 7))))) return qfalse;
-	if(!CM_AreasConnected(area1, area2)) return qfalse;  // a door blocks sight
-	return qtrue;
-}
-
 static void SV_AdjustAreaPortalState(sharedEntity_t* ent, qboolean open) {
 	svEntity_t* svEnt;
 
@@ -182,7 +163,7 @@ static intptr_t SV_GameSystemCalls(intptr_t* args) {
 		case G_TRACE: SV_Trace(VMA(1), VMA(2), VMA(3), VMA(4), VMA(5), args[6], args[7]); return 0;
 		case G_POINT_CONTENTS: return SV_PointContents(VMA(1), args[2]);
 		case G_SET_BRUSH_MODEL: SV_SetBrushModel(VMA(1), VMA(2)); return 0;
-		case G_IN_PVS: return SV_inPVS(VMA(1), VMA(2));
+		case G_IN_PVS: return qtrue;
 		case G_SET_CONFIGSTRING: SV_SetConfigstring(args[1], VMA(2)); return 0;
 		case G_GET_CONFIGSTRING: SV_GetConfigstring(args[1], VMA(2), args[3]); return 0;
 		case G_SET_USERINFO: SV_SetUserinfo(args[1], VMA(2)); return 0;
