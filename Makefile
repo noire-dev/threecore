@@ -14,7 +14,9 @@ ifeq ($(COMPILE_PLATFORM),mingw32)
 endif
 
 BUILD_CLIENT        = 1
-BUILD_SERVER        = 1
+ifeq ($(COMPILE_PLATFORM),linux)
+  BUILD_SERVER        = 1
+endif
 
 # Build
 MOUNT_DIR           = code
@@ -279,7 +281,7 @@ ifeq ($(COMPILE_PLATFORM),darwin)
 
   DEBUG_CFLAGS = $(BASE_CFLAGS) -DDEBUG -D_DEBUG -g -O0
   RELEASE_CFLAGS = $(BASE_CFLAGS) -DNDEBUG $(OPTIMIZE)
-  BUILD_SERVER = 0
+  
 else
 
 #############################################################################
