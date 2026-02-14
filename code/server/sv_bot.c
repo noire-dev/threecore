@@ -22,21 +22,6 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 // sv_bot.c
 
 #include "server.h"
-#include "../botlib/botlib.h"
-
-typedef struct bot_debugpoly_s
-{
-	int inuse;
-	int color;
-	int numPoints;
-	vec3_t points[128];
-} bot_debugpoly_t;
-
-static bot_debugpoly_t *debugpolygons;
-static int bot_maxdebugpolys;
-
-extern botlib_export_t	*botlib_export;
-int	bot_enable;
 
 int SV_BotAllocateClient( void ) {
 	int			i;

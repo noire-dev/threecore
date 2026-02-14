@@ -3,9 +3,6 @@
 // ThreeCore — GPLv2; see LICENSE for details.
 
 #include "client.h"
-#include "../botlib/botlib.h"
-
-extern botlib_export_t* botlib_export;
 
 static void CL_GetGameState(gameState_t* gs) { *gs = cl.gameState; }
 

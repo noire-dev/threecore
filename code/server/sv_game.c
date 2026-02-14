@@ -3,9 +3,6 @@
 // ThreeCore — GPLv2; see LICENSE for details.
 
 #include "server.h"
-#include "../botlib/botlib.h"
-
-botlib_export_t* botlib_export;
 
 int SV_NumForGentity(sharedEntity_t* ent) {
 	int num;
@@ -223,13 +220,14 @@ static intptr_t SV_GameSystemCalls(intptr_t* args) {
 				return qtrue;
 			}
 		}
-#include "../q_sharedsyscalls.inc"
 		case BOTLIB_GET_CONSOLE_MESSAGE: return SV_BotGetConsoleMessage(args[1], VMA(2), args[3]);
 		case BOTLIB_USER_COMMAND: {
 			unsigned clientNum = args[1];
 			if(clientNum < sv.maxclients) SV_ClientThink(&svs.clients[clientNum], VMA(2));
 			return 0;
 		}
+#include "../q_sharedsyscalls.inc"
+		
 		default: Com_Error(ERR_DROP, "Bad game.qvm system trap: %ld", (long int)args[0]);
 	}
 

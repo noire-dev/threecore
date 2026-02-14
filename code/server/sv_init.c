@@ -529,9 +529,6 @@ void SV_Init( void )
 	sv_ace_wallhack = Cvar_Get( "sv_ace_wallhack", "2", CVAR_ARCHIVE );
 	sv_filter = Cvar_Get( "sv_filter", "filter.txt", CVAR_ARCHIVE );
 
-	SV_BotInitCvars();
-	SV_BotInitBotLib();
-
 	Cvar_SetGroup( sv_lanForceRate, CVG_SERVER );
 	Cvar_SetGroup( sv_minRate, CVG_SERVER );
 	Cvar_SetGroup( sv_maxRate, CVG_SERVER );

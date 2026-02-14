@@ -3,9 +3,6 @@
 // ThreeCore — GPLv2; see LICENSE for details.
 
 #include "client.h"
-#include "../botlib/botlib.h"
-
-extern botlib_export_t* botlib_export;
 
 vm_t* uivm = NULL;
 
