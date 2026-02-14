@@ -327,8 +327,7 @@ void SV_SpawnServer( const char *mapname ) {
 	SV_ShutdownGameProgs();
 	JS_Restart();
 
-	Com_Printf( "------ Server Initialization ------\n" );
-	Com_Printf( "Server: %s\n", mapname );
+	Com_Printf( "Server Initialization\n" );
 
 #ifndef DEDICATED
 	// if not running a dedicated server CL_MapLoading will connect the client to the server

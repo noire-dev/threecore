@@ -14,7 +14,7 @@ ifeq ($(COMPILE_PLATFORM),mingw32)
 endif
 
 BUILD_CLIENT        = 1
-BUILD_SERVER        = 1
+BUILD_SERVER        = 0
 
 # Build
 MOUNT_DIR           = code
