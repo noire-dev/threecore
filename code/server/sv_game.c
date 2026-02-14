@@ -71,14 +71,6 @@ static void SV_SetBrushModel(sharedEntity_t* ent, const char* name) {
 	SV_LinkEntity(ent);  // FIXME: remove
 }
 
-static void SV_AdjustAreaPortalState(sharedEntity_t* ent, qboolean open) {
-	svEntity_t* svEnt;
-
-	svEnt = SV_SvEntityForGentity(ent);
-	if(svEnt->areanum2 == -1) return;
-	CM_AdjustAreaPortalState(svEnt->areanum, svEnt->areanum2, open);
-}
-
 static qboolean SV_EntityContact(const vec3_t mins, const vec3_t maxs, const sharedEntity_t* gEnt) {
 	const float *origin, *angles;
 	clipHandle_t ch;
@@ -169,7 +161,7 @@ static intptr_t SV_GameSystemCalls(intptr_t* args) {
 		case G_SET_USERINFO: SV_SetUserinfo(args[1], VMA(2)); return 0;
 		case G_GET_USERINFO: SV_GetUserinfo(args[1], VMA(2), args[3]); return 0;
 		case G_GET_SERVERINFO: SV_GetServerinfo(VMA(1), args[2]); return 0;
-		case G_ADJUST_AREA_PORTAL_STATE: SV_AdjustAreaPortalState(VMA(1), args[2]); return 0;
+		case G_ADJUST_AREA_PORTAL_STATE: return 0;
 		case G_BOT_ALLOCATE_CLIENT: return SV_BotAllocateClient();
 		case G_GET_USERCMD: SV_GetUsercmd(args[1], VMA(2)); return 0;
 		case G_GET_ENTITY_TOKEN: {
