@@ -14,9 +14,7 @@ ifeq ($(COMPILE_PLATFORM),mingw32)
 endif
 
 BUILD_CLIENT        = 1
-ifeq ($(COMPILE_PLATFORM),linux)
-  BUILD_SERVER        = 1
-endif
+BUILD_SERVER        = 1
 
 # Build
 MOUNT_DIR           = code
