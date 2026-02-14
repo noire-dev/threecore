@@ -538,9 +538,6 @@ int SV_PointContents( const vec3_t p, int passEntityNum ) {
 	clipHandle_t	clipHandle;
 	const float		*angles;
 
-	// get base contents from world
-	contents = CM_PointContents( p, 0 );
-
 	// or in contents from all the other entities
 	num = SV_AreaEntities( p, p, touch, MAX_GENTITIES );
 
