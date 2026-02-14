@@ -403,7 +403,7 @@ void SV_SpawnServer( const char *mapname ) {
 	Cvar_Set("sv_serverid", va("%i", sv.serverId));
 
 	// clear physics interaction links
-	SV_ClearWorld();
+	//SV_ClearWorld();
 
 	// media configstring setting should be done during
 	// the loading stage, so connected clients don't have

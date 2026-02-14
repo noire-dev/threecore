@@ -39,9 +39,6 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #define GAMENAME_FOR_MASTER		"threecore"
 #define HEARTBEAT_FOR_MASTER	"threecore"
 
-//===========================================================================
-#define USE_BSP_COLMODELS 1 	//server side
-
 #ifdef _MSC_VER
 
 #pragma warning(disable : 4018)     // signed/unsigned mismatch

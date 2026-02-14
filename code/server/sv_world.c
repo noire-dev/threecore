@@ -33,11 +33,6 @@ be returned, otherwise a custom box tree will be constructed.
 ================
 */
 clipHandle_t SV_ClipHandleForEntity( const sharedEntity_t *ent ) {
-	if ( ent->r.bmodel ) {
-		// explicit hulls in the BSP model
-		return CM_InlineModel( ent->s.modelindex );
-	}
-
 	// create a temp tree from bounding box sizes
 	return CM_TempBoxModel( ent->r.mins, ent->r.maxs );
 }

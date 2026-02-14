@@ -51,12 +51,7 @@ void SetPlaneSignbits( cplane_t *out ) {
 #define	LL(x) x=LittleLong(x)
 
 
-#ifdef USE_BSP_COLMODELS
-clipMap_t cmWorlds[MAX_NUM_MAPS];
-int       cmi = 0;
-#else
 clipMap_t	cm;
-#endif
 int			c_pointcontents;
 int			c_traces, c_brush_traces, c_patch_traces;
 
@@ -69,20 +64,9 @@ cvar_t		*cm_noCurves;
 cvar_t		*cm_playerCurveClip;
 #endif
 
-#ifdef USE_BSP_COLMODELS
-static cmodel_t	box_modelWorlds[MAX_NUM_MAPS];
-static cplane_t	*box_planesWorlds[MAX_NUM_MAPS];
-static cbrush_t	*box_brushWorlds[MAX_NUM_MAPS];
-#define box_model box_modelWorlds[cmi]
-#define box_planes box_planesWorlds[cmi]
-#define box_brush box_brushWorlds[cmi]
-#else
 static cmodel_t box_model;
 static cplane_t *box_planes;
 static cbrush_t *box_brush;
-#endif
-
-
 
 static void	CM_InitBoxHull (void);
 void	CM_FloodAreaConnections (void);
@@ -581,20 +565,6 @@ static void CMod_LoadPatches( const lump_t *surfs, const lump_t *verts ) {
 
 //==================================================================
 
-#ifdef USE_BSP_COLMODELS
-static void CM_MapList_f(void) {
-	int count = 0;
-	Com_Printf ("-----------------------\n");
-	for(int i = 0; i < MAX_NUM_MAPS; i++) {
-		if(!cmWorlds[i].name[0]) break;
-		count++;
-		Com_Printf("%s\n", cmWorlds[i].name);
-	}
-	Com_Printf ("%i total maps\n", count);
-	Com_Printf ("------------------\n");
-}
-#endif
-
 /*
 ==================
 CM_LoadMap
@@ -602,56 +572,23 @@ CM_LoadMap
 Loads in the map and all submodels
 ==================
 */
-#ifdef USE_BSP_COLMODELS
-int CM_LoadMap( const char *name, qboolean clientload, int *checksum ) {
-#else
 void CM_LoadMap( const char *name, qboolean clientload, int *checksum ) {
-#endif
 	void			*buf;
 	int				i;
 	dheader_t		header;
 	int				length;
-#ifdef USE_BSP_COLMODELS
-	int outModel = 0;
-#endif
 
 	if ( !name || !name[0] ) {
 		Com_Error( ERR_DROP, "%s: NULL name", __func__ );
 	}
-#ifdef USE_BSP_COLMODELS
-	int				j, empty = -1;
-	for(j = 0; j < MAX_NUM_MAPS; j++) {
-		if ( !strcmp( cmWorlds[j].name, name ) /* && clientload */ ) {
-			*checksum = cmWorlds[j].checksum;
-			cmi = 0;
-			return cmWorlds[j].brushIndex;
-		} else if (cmWorlds[j].name[0] == '\0' && empty == -1) {
-			// fill the next empty clipmap slot
-			empty = j;
-		}
-	}
-	cmi = empty;
-  Com_DPrintf( "%s( '%s', %i )\n", __func__, name, clientload );
-
-	if(cmi == 0) {
-#endif
-
 #ifndef BSPC
 	cm_noAreas = Cvar_Get( "cm_noAreas", "0", CVAR_CHEAT );
 	cm_noCurves = Cvar_Get( "cm_noCurves", "0", CVAR_CHEAT );
 	cm_playerCurveClip = Cvar_Get( "cm_playerCurveClip", "1", CVAR_ARCHIVE | CVAR_CHEAT );
 #endif
-#ifdef USE_BSP_COLMODELS
-	Cmd_AddCommand("cmlist", CM_MapList_f);
-#endif
-
-#ifdef USE_BSP_COLMODELS
-	}
-#endif
 
 	Com_DPrintf( "%s( '%s', %i )\n", __func__, name, clientload );
 
-#ifndef USE_BSP_COLMODELS
 	if ( !strcmp( cm.name, name ) && clientload ) {
 		*checksum = cm.checksum;
 		return;
@@ -659,13 +596,6 @@ void CM_LoadMap( const char *name, qboolean clientload, int *checksum ) {
 
 	// free old stuff
 	CM_ClearMap();
-#endif
-
-#ifdef USE_BSP_COLMODELS
-	for(i = 0; i < MAX_NUM_MAPS && i < empty; i++) {
-		outModel += cmWorlds[i].numSubModels;
-	}
-#endif
 
 	//
 	// load the file
@@ -676,12 +606,6 @@ void CM_LoadMap( const char *name, qboolean clientload, int *checksum ) {
 	length = LoadQuakeFile( (quakefile_t *) name, &buf );
 #endif
 
-#ifdef USE_BSP_COLMODELS
-	if( !buf /*&& empty > 0*/ ) {
-		cmi = 0;
-		return 0;
-	} else
-#endif
 	if ( !buf ) {
 		Com_Error( ERR_DROP, "%s: couldn't load %s", __func__, name );
 	}
@@ -737,11 +661,6 @@ void CM_LoadMap( const char *name, qboolean clientload, int *checksum ) {
 	if ( !clientload ) {
 		Q_strncpyz( cm.name, name, sizeof( cm.name ) );
 	}
-#ifdef USE_BSP_COLMODELS
-	cm.brushIndex = outModel;
-	cmi = 0;
-	return outModel;
-#endif
 }
 
 
@@ -751,11 +670,7 @@ CM_ClearMap
 ==================
 */
 void CM_ClearMap( void ) {
-#ifdef USE_BSP_COLMODELS
-  Com_Memset( &cmWorlds, 0, sizeof( cmWorlds ) );
-#else
 	Com_Memset( &cm, 0, sizeof( cm ) );
-#endif
 	CM_ClearLevelPatches();
 }
 
@@ -769,19 +684,6 @@ cmodel_t *CM_ClipHandleToModel( clipHandle_t handle ) {
 	if ( handle < 0 ) {
 		Com_Error( ERR_DROP, "CM_ClipHandleToModel: bad handle %i", handle );
 	}
-#ifdef USE_BSP_COLMODELS
-	
-	if(handle >= cm.numSubModels) {
-		int i;
-		int modifiedHandle = (int)handle;
-		for(i = 0; i < MAX_NUM_MAPS; i++) {
-			if ( modifiedHandle < cmWorlds[i].numSubModels ) {
-				return &cmWorlds[i].cmodels[modifiedHandle];
-			}
-			modifiedHandle -= cmWorlds[i].numSubModels;
-		}
-	}
-#endif
 	if ( handle < cm.numSubModels ) {
 		return &cm.cmodels[handle];
 	}
@@ -803,31 +705,12 @@ cmodel_t *CM_ClipHandleToModel( clipHandle_t handle ) {
 CM_InlineModel
 ==================
 */
-#ifdef USE_BSP_COLMODELS
-clipHandle_t CM_InlineModel( int index ) 
-{
-	int i;
-	int modifiedIndex = index;
-	for(i = 0; i < MAX_NUM_MAPS; i++) {
-		if ( modifiedIndex >= 0 && modifiedIndex < cmWorlds[i].numSubModels ) {
-			return index;
-		}
-		modifiedIndex -= cmWorlds[i].numSubModels;
-	}
-	if ( index < 0 || index >= cm.numSubModels ) {
-		Com_Error (ERR_DROP, "CM_InlineModel: bad number %i >= %i", index, cm.numSubModels);
-	}
-	return index;
-}
-#else
 clipHandle_t CM_InlineModel( int index ) {
 	if ( index < 0 || index >= cm.numSubModels ) {
 		Com_Error (ERR_DROP, "CM_InlineModel: bad number");
 	}
 	return index;
 }
-#endif
-
 
 int CM_NumClusters( void ) {
 	return cm.numClusters;

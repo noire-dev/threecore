@@ -57,23 +57,10 @@ static void SV_SetBrushModel(sharedEntity_t* ent, const char* name) {
 	vec3_t mins, maxs;
 
 	if(!name) Com_Error(ERR_DROP, "SV_SetBrushModel: NULL");
+	if(name[0] != '*') Com_Error(ERR_DROP, "SV_SetBrushModel: %s isn't a brush model", name);
 
-#ifdef USE_BSP_COLMODELS
-	if(Q_stristr(name, ".bsp")) {
-		int chechsum, index;
-
-		//index = CM_LoadMap(name, qfalse, &chechsum);
-		ent->s.modelindex = index;
-	} else {
-#endif
-		if(name[0] != '*') Com_Error(ERR_DROP, "SV_SetBrushModel: %s isn't a brush model", name);
-
-		ent->s.modelindex = atoi(name + 1);
-#ifdef USE_BSP_COLMODELS
-	}
-#endif
-
-	h = CM_InlineModel(ent->s.modelindex);
+	ent->s.modelindex = atoi(name + 1);
+	//h = CM_InlineModel(ent->s.modelindex);
 	CM_ModelBounds(h, mins, maxs);
 	VectorCopy(mins, ent->r.mins);
 	VectorCopy(maxs, ent->r.maxs);
