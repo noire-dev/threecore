@@ -22,6 +22,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 #include "cm_local.h"
 
+static cmodel_t box_model;
 static cplane_t *box_planes;
 static cbrush_t *box_brush;
 
