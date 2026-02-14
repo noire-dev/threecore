@@ -208,7 +208,7 @@ rescan:
 static void CL_CM_LoadMap(const char* mapname) {
 	int checksum;
 
-	CM_LoadMap(mapname, qtrue, &checksum);
+	//CM_LoadMap(mapname, qtrue, &checksum);
 }
 
 void CL_ShutdownCGame(void) {

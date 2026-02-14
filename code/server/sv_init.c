@@ -392,7 +392,7 @@ void SV_SpawnServer( const char *mapname ) {
 	Com_RandomBytes( (byte*)&sv.checksumFeed, sizeof( sv.checksumFeed ) );
 	FS_Restart( sv.checksumFeed );
 
-	CM_LoadMap( va( "maps/%s.bsp", mapname ), qfalse, &checksum );
+	//CM_LoadMap( va( "maps/%s.bsp", mapname ), qfalse, &checksum );
 
 	// set serverinfo visible name
 	Cvar_Set( "sv_mapname", mapname );

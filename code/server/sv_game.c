@@ -62,7 +62,7 @@ static void SV_SetBrushModel(sharedEntity_t* ent, const char* name) {
 	if(Q_stristr(name, ".bsp")) {
 		int chechsum, index;
 
-		index = CM_LoadMap(name, qfalse, &chechsum);
+		//index = CM_LoadMap(name, qfalse, &chechsum);
 		ent->s.modelindex = index;
 	} else {
 #endif
