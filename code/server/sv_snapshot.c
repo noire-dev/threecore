@@ -279,9 +279,6 @@ SV_AddIndexToSnapshot
 ===============
 */
 static void SV_AddIndexToSnapshot( svEntity_t *svEnt, int index, snapshotEntityNumbers_t *eNums ) {
-
-	svEnt->snapshotCounter = sv.snapshotCounter;
-
 	// if we are full, silently discard entities
 	if ( eNums->numSnapshotEntities >= MAX_SNAPSHOT_ENTITIES ) {
 		return;
@@ -496,11 +493,8 @@ static void SV_BuildCommonSnapshot( void )
 			}
 
 			list[ count++ ] = ent;
-			sv.svEntities[ num ].snapshotCounter = -1;
 		}
 	}
-
-	sv.snapshotCounter = -1;
 
 	sf = &svs.snapFrames[ svs.snapshotFrame % NUM_SNAPSHOT_FRAMES ];
 	
@@ -605,9 +599,6 @@ static void SV_BuildClientSnapshot( client_t *client ) {
 		SV_BuildCommonSnapshot();
 	}
 
-	// bump the counter used to prevent double adding
-	sv.snapshotCounter++;
-
 	// empty entities before visibility check
 	entityNumbers.numSnapshotEntities = 0;
 
@@ -616,7 +607,6 @@ static void SV_BuildClientSnapshot( client_t *client ) {
 	// never send client's own entity, because it can
 	// be regenerated from the playerstate
 	svEnt = &sv.svEntities[ clientNum ];
-	svEnt->snapshotCounter = sv.snapshotCounter;
 
 	// find the client's viewpoint
 	VectorCopy( ps->origin, org );
