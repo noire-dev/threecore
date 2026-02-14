@@ -22,6 +22,9 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 #include "cm_local.h"
 
+static cplane_t *box_planes;
+static cbrush_t *box_brush;
+
 clipHandle_t CM_TempBoxModel( const vec3_t mins, const vec3_t maxs ) {
 
 	VectorCopy( mins, box_model.mins );
