@@ -324,13 +324,13 @@ static void SV_AddEntitiesVisibleFromPoint( const vec3_t origin, clientSnapshot_
 	if ( sv.state == SS_DEAD ) return;
 
     // 1. Q3 PVS stage
-	leafnum = CM_PointLeafnum (origin);
+/*	leafnum = CM_PointLeafnum (origin);
 	clientarea = CM_LeafArea (leafnum);
 	clientcluster = CM_LeafCluster (leafnum);
 
 	// calculate the visible areas
 	frame->areabytes = CM_WriteAreaBits( frame->areabits, clientarea );
-	clientpvs = CM_ClusterPVS (clientcluster);
+	clientpvs = CM_ClusterPVS (clientcluster);*/
 
 	for ( e = 0 ; e < svs.currFrame->count; e++ ) {
 		es = svs.currFrame->ents[ e ];
@@ -351,7 +351,7 @@ static void SV_AddEntitiesVisibleFromPoint( const vec3_t origin, clientSnapshot_
 		}
 
 		// doors portals
-		if ( !CM_AreasConnected( clientarea, svEnt->areanum ) ) {
+		/*if ( !CM_AreasConnected( clientarea, svEnt->areanum ) ) {
 			if ( !CM_AreasConnected( clientarea, svEnt->areanum2 ) ) continue; // blocked by a door
 		}
 
@@ -380,7 +380,7 @@ static void SV_AddEntitiesVisibleFromPoint( const vec3_t origin, clientSnapshot_
 			} else {
 				continue;
 			}
-		}
+		}*/
 
         // 2. ThreeCore Draw Distance stage
 		maxViewDistanceSquared = (viewDistance*SNAPSHOT_RECOVER_STEP) * (viewDistance*SNAPSHOT_RECOVER_STEP);
