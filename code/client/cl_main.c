@@ -169,6 +169,8 @@ void CL_ClearMemory( void ) {
 	if ( !com_sv_running->integer ) {
 		// clear the whole hunk
 		Hunk_Clear();
+		// clear collision map data
+		CM_ClearMap();
 	} else {
 		// clear all the client data on the hunk
 		Hunk_ClearToMark();
@@ -1521,6 +1523,8 @@ static void CL_InitRef( void ) {
 	rimp.Hunk_Alloc = Hunk_Alloc;
 	rimp.Hunk_AllocateTempMemory = Hunk_AllocateTempMemory;
 	rimp.Hunk_FreeTempMemory = Hunk_FreeTempMemory;
+
+	rimp.CM_ClusterPVS = CM_ClusterPVS;
 
 	rimp.FS_ReadFile = FS_ReadFile;
 	rimp.FS_FreeFile = FS_FreeFile;

@@ -57,10 +57,23 @@ static void SV_SetBrushModel(sharedEntity_t* ent, const char* name) {
 	vec3_t mins, maxs;
 
 	if(!name) Com_Error(ERR_DROP, "SV_SetBrushModel: NULL");
-	if(name[0] != '*') Com_Error(ERR_DROP, "SV_SetBrushModel: %s isn't a brush model", name);
 
-	ent->s.modelindex = atoi(name + 1);
-	//h = CM_InlineModel(ent->s.modelindex);
+#ifdef USE_BSP_COLMODELS
+	if(Q_stristr(name, ".bsp")) {
+		int chechsum, index;
+
+		index = CM_LoadMap(name, qfalse, &chechsum);
+		ent->s.modelindex = index;
+	} else {
+#endif
+		if(name[0] != '*') Com_Error(ERR_DROP, "SV_SetBrushModel: %s isn't a brush model", name);
+
+		ent->s.modelindex = atoi(name + 1);
+#ifdef USE_BSP_COLMODELS
+	}
+#endif
+
+	h = CM_InlineModel(ent->s.modelindex);
 	CM_ModelBounds(h, mins, maxs);
 	VectorCopy(mins, ent->r.mins);
 	VectorCopy(maxs, ent->r.maxs);
@@ -69,6 +82,33 @@ static void SV_SetBrushModel(sharedEntity_t* ent, const char* name) {
 	ent->r.contents = -1;  // we don't know exactly what is in the brushes
 
 	SV_LinkEntity(ent);  // FIXME: remove
+}
+
+qboolean SV_inPVS(const vec3_t p1, const vec3_t p2) {
+	int leafnum;
+	int cluster;
+	int area1, area2;
+	byte* mask;
+
+	leafnum = CM_PointLeafnum(p1);
+	cluster = CM_LeafCluster(leafnum);
+	area1 = CM_LeafArea(leafnum);
+	mask = CM_ClusterPVS(cluster);
+
+	leafnum = CM_PointLeafnum(p2);
+	cluster = CM_LeafCluster(leafnum);
+	area2 = CM_LeafArea(leafnum);
+	if(mask && (!(mask[cluster >> 3] & (1 << (cluster & 7))))) return qfalse;
+	if(!CM_AreasConnected(area1, area2)) return qfalse;  // a door blocks sight
+	return qtrue;
+}
+
+static void SV_AdjustAreaPortalState(sharedEntity_t* ent, qboolean open) {
+	svEntity_t* svEnt;
+
+	svEnt = SV_SvEntityForGentity(ent);
+	if(svEnt->areanum2 == -1) return;
+	CM_AdjustAreaPortalState(svEnt->areanum, svEnt->areanum2, open);
 }
 
 static qboolean SV_EntityContact(const vec3_t mins, const vec3_t maxs, const sharedEntity_t* gEnt) {
@@ -155,13 +195,13 @@ static intptr_t SV_GameSystemCalls(intptr_t* args) {
 		case G_TRACE: SV_Trace(VMA(1), VMA(2), VMA(3), VMA(4), VMA(5), args[6], args[7]); return 0;
 		case G_POINT_CONTENTS: return SV_PointContents(VMA(1), args[2]);
 		case G_SET_BRUSH_MODEL: SV_SetBrushModel(VMA(1), VMA(2)); return 0;
-		case G_IN_PVS: return qtrue;
+		case G_IN_PVS: return SV_inPVS(VMA(1), VMA(2));
 		case G_SET_CONFIGSTRING: SV_SetConfigstring(args[1], VMA(2)); return 0;
 		case G_GET_CONFIGSTRING: SV_GetConfigstring(args[1], VMA(2), args[3]); return 0;
 		case G_SET_USERINFO: SV_SetUserinfo(args[1], VMA(2)); return 0;
 		case G_GET_USERINFO: SV_GetUserinfo(args[1], VMA(2), args[3]); return 0;
 		case G_GET_SERVERINFO: SV_GetServerinfo(VMA(1), args[2]); return 0;
-		case G_ADJUST_AREA_PORTAL_STATE: return 0;
+		case G_ADJUST_AREA_PORTAL_STATE: SV_AdjustAreaPortalState(VMA(1), args[2]); return 0;
 		case G_BOT_ALLOCATE_CLIENT: return SV_BotAllocateClient();
 		case G_GET_USERCMD: SV_GetUsercmd(args[1], VMA(2)); return 0;
 		case G_GET_ENTITY_TOKEN: {

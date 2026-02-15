@@ -39,6 +39,11 @@ typedef struct svEntity_s {
 	struct svEntity_s *nextEntityInWorldSector;
 
 	entityState_t	baseline;		// for delta compression of initial sighting
+	int			numClusters;		// if -1, use headnode instead
+	int			clusternums[MAX_ENT_CLUSTERS];
+	int			lastCluster;		// if all the clusters don't fit in clusternums
+	int			areanum, areanum2;
+	int			snapshotCounter;	// used to prevent double adding from portal views
 } svEntity_t;
 
 typedef enum {
@@ -357,6 +362,7 @@ sharedEntity_t *SV_GEntityForSvEntity( svEntity_t *svEnt );
 void		SV_InitGameProgs ( void );
 void		SV_ShutdownGameProgs ( void );
 void		SV_RestartGameProgs( void );
+qboolean	SV_inPVS (const vec3_t p1, const vec3_t p2);
 
 //
 // sv_bot.c

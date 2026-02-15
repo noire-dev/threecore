@@ -33,6 +33,11 @@ be returned, otherwise a custom box tree will be constructed.
 ================
 */
 clipHandle_t SV_ClipHandleForEntity( const sharedEntity_t *ent ) {
+	if ( ent->r.bmodel ) {
+		// explicit hulls in the BSP model
+		return CM_InlineModel( ent->s.modelindex );
+	}
+
 	// create a temp tree from bounding box sizes
 	return CM_TempBoxModel( ent->r.mins, ent->r.maxs );
 }
@@ -247,7 +252,73 @@ void SV_LinkEntity( sharedEntity_t *gEnt ) {
 	gEnt->r.absmax[1] += 1;
 	gEnt->r.absmax[2] += 1;
 
+	// link to PVS leafs
+	ent->numClusters = 0;
+	ent->lastCluster = 0;
+	ent->areanum = -1;
+	ent->areanum2 = -1;
+
+	//get all leafs, including solids
+	num_leafs = CM_BoxLeafnums( gEnt->r.absmin, gEnt->r.absmax,
+		leafs, MAX_TOTAL_ENT_LEAFS, &lastLeaf );
+
+	// if none of the leafs were inside the map, the
+	// entity is outside the world and can be considered unlinked
+	if ( !num_leafs ) {
+		return;
+	}
+
+	// set areas, even from clusters that don't fit in the entity array
+	for (i=0 ; i<num_leafs ; i++) {
+		area = CM_LeafArea (leafs[i]);
+		if (area != -1) {
+			// doors may legally straggle two areas,
+			// but nothing should ever need more than that
+			if (ent->areanum != -1 && ent->areanum != area) {
+				if (ent->areanum2 != -1 && ent->areanum2 != area && sv.state == SS_LOADING) {
+					Com_DPrintf ("Object %i touching 3 areas at %f %f %f\n",
+					gEnt->s.number,
+					gEnt->r.absmin[0], gEnt->r.absmin[1], gEnt->r.absmin[2]);
+				}
+				ent->areanum2 = area;
+			} else {
+				ent->areanum = area;
+			}
+		}
+	}
+
+	// store as many explicit clusters as we can
+	ent->numClusters = 0;
+	for (i=0 ; i < num_leafs ; i++) {
+		cluster = CM_LeafCluster( leafs[i] );
+		if ( cluster != -1 ) {
+			ent->clusternums[ent->numClusters++] = cluster;
+			if ( ent->numClusters == MAX_ENT_CLUSTERS ) {
+				break;
+			}
+		}
+	}
+
+	// store off a last cluster if we need to
+	if ( i != num_leafs ) {
+		ent->lastCluster = CM_LeafCluster( lastLeaf );
+	}
+
 	gEnt->r.linkcount++;
+
+	// find the first world sector node that the ent's box crosses
+	node = sv_worldSectors;
+	while (1)
+	{
+		if (node->axis == -1)
+			break;
+		if ( gEnt->r.absmin[node->axis] > node->dist)
+			node = node->children[0];
+		else if ( gEnt->r.absmax[node->axis] < node->dist)
+			node = node->children[1];
+		else
+			break;		// crosses the node
+	}
 	
 	// link it in
 	ent->worldSector = node;
@@ -501,14 +572,26 @@ void SV_Trace( trace_t *results, const vec3_t start, const vec3_t mins, const ve
 
 	Com_Memset ( &clip, 0, sizeof ( clip ) );
 
+	// clip to world
+	CM_BoxTrace( &clip.trace, start, end, mins, maxs, 0, contentmask );
+	clip.trace.entityNum = clip.trace.fraction != 1.0 ? ENTITYNUM_WORLD : ENTITYNUM_NONE;
+	if ( clip.trace.fraction == 0 ) {
+		*results = clip.trace;
+		return;		// blocked immediately by the world
+	}
+
 	clip.contentmask = contentmask;
 	clip.start = start;
+//	VectorCopy( clip.trace.endpos, clip.end );
 	VectorCopy( end, clip.end );
 	clip.mins = mins;
 	clip.maxs = maxs;
 	clip.passEntityNum = passEntityNum;
 
 	// create the bounding box of the entire move
+	// we can limit it to the part of the move not
+	// already clipped off by the world, which can be
+	// a significant savings for line of sight and shot traces
 	for ( i=0 ; i<3 ; i++ ) {
 		if ( end[i] > start[i] ) {
 			clip.boxmins[i] = clip.start[i] + clip.mins[i] - 1;
@@ -538,6 +621,9 @@ int SV_PointContents( const vec3_t p, int passEntityNum ) {
 	clipHandle_t	clipHandle;
 	const float		*angles;
 
+	// get base contents from world
+	contents = CM_PointContents( p, 0 );
+
 	// or in contents from all the other entities
 	num = SV_AreaEntities( p, p, touch, MAX_GENTITIES );
 
@@ -555,7 +641,7 @@ int SV_PointContents( const vec3_t p, int passEntityNum ) {
 		contents |= c2;
 	}
 
-	return 0;
+	return contents;
 }
 
 
