@@ -342,7 +342,7 @@ void SV_SpawnServer( const char *mapname ) {
 	Hunk_Clear();
 
 	// clear collision map data
-	CM_ClearMap();
+//	CM_ClearMap();
 
 	// init client structures and svs.numSnapshotEntities
 	if ( !com_sv_running->integer ) SV_Startup();
@@ -392,7 +392,7 @@ void SV_SpawnServer( const char *mapname ) {
 	Com_RandomBytes( (byte*)&sv.checksumFeed, sizeof( sv.checksumFeed ) );
 	FS_Restart( sv.checksumFeed );
 
-	CM_LoadMap( va( "maps/%s.bsp", mapname ), qfalse, &checksum );
+//	CM_LoadMap( va( "maps/%s.bsp", mapname ), qfalse, &checksum );
 
 	// set serverinfo visible name
 	Cvar_Set( "sv_mapname", mapname );
@@ -403,7 +403,7 @@ void SV_SpawnServer( const char *mapname ) {
 	Cvar_Set("sv_serverid", va("%i", sv.serverId));
 
 	// clear physics interaction links
-	SV_ClearWorld();
+//	SV_ClearWorld();
 
 	// media configstring setting should be done during
 	// the loading stage, so connected clients don't have
