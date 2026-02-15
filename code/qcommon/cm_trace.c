@@ -559,11 +559,11 @@ void CM_Trace( trace_t *results, const vec3_t start, const vec3_t end, const vec
 	tw.trace.fraction = 1;	// assume it goes the entire distance until shown otherwise
 	VectorCopy(origin, tw.modelOrigin);
 
-	if (!cm.numNodes) {
+//	if (!cm.numNodes) {
 		*results = tw.trace;
 
 		return;	// map not loaded, shouldn't happen
-	}
+//	}
 
 	// allow NULL to be passed in for 0,0,0
 	if ( !mins ) {

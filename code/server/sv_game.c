@@ -181,7 +181,7 @@ static intptr_t SV_GameSystemCalls(intptr_t* args) {
 		case G_ENTITIES_IN_BOX: return SV_AreaEntities(VMA(1), VMA(2), VMA(3), args[4]);
 		case G_ENTITY_CONTACT: return 0; //SV_EntityContact(VMA(1), VMA(2), VMA(3));
 		case G_TRACE: SV_Trace(VMA(1), VMA(2), VMA(3), VMA(4), VMA(5), args[6], args[7]); return 0;
-		case G_POINT_CONTENTS: return SV_PointContents(VMA(1), args[2]);
+		case G_POINT_CONTENTS: return 0; SV_PointContents(VMA(1), args[2]);
 		case G_SET_BRUSH_MODEL: SV_SetBrushModel(VMA(1), VMA(2)); return 0;
 		case G_IN_PVS: return SV_inPVS(VMA(1), VMA(2));
 		case G_SET_CONFIGSTRING: SV_SetConfigstring(args[1], VMA(2)); return 0;
