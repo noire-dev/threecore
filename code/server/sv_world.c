@@ -349,7 +349,6 @@ typedef struct {
 /*
 ====================
 SV_AreaEntities_r
-
 ====================
 */
 static void SV_AreaEntities_r( worldSector_t *node, areaParms_t *ap ) {
@@ -573,12 +572,12 @@ void SV_Trace( trace_t *results, const vec3_t start, const vec3_t mins, const ve
 	Com_Memset ( &clip, 0, sizeof ( clip ) );
 
 	// clip to world
-	CM_BoxTrace( &clip.trace, start, end, mins, maxs, 0, contentmask );
+/*	CM_BoxTrace( &clip.trace, start, end, mins, maxs, 0, contentmask );
 	clip.trace.entityNum = clip.trace.fraction != 1.0 ? ENTITYNUM_WORLD : ENTITYNUM_NONE;
 	if ( clip.trace.fraction == 0 ) {
 		*results = clip.trace;
 		return;		// blocked immediately by the world
-	}
+	}*/
 
 	clip.contentmask = contentmask;
 	clip.start = start;
