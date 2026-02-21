@@ -349,6 +349,7 @@ typedef struct {
 /*
 ====================
 SV_AreaEntities_r
+
 ====================
 */
 static void SV_AreaEntities_r( worldSector_t *node, areaParms_t *ap ) {

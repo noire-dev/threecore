@@ -559,11 +559,11 @@ void CM_Trace( trace_t *results, const vec3_t start, const vec3_t end, const vec
 	tw.trace.fraction = 1;	// assume it goes the entire distance until shown otherwise
 	VectorCopy(origin, tw.modelOrigin);
 
-//	if (!cm.numNodes) {
+	if (!cm.numNodes) {
 		*results = tw.trace;
 
 		return;	// map not loaded, shouldn't happen
-//	}
+	}
 
 	// allow NULL to be passed in for 0,0,0
 	if ( !mins ) {
@@ -724,6 +724,32 @@ void CM_TransformedBoxTrace( trace_t *results, const vec3_t start, const vec3_t 
 		maxs = vec3_origin;
 	}
 
+#ifdef USE_BSP_COLMODELS
+		int j, numInlines, indexAdjusted;
+
+		// set the right map before entering trace
+		cmi = 0;
+		if(model < CM_NumInlineModels() || model == BOX_MODEL_HANDLE) {
+			indexAdjusted = model;
+		} else {
+			// might intersect, so do an exact clip
+			indexAdjusted = CM_InlineModel (model);
+
+			for(j = 0; j < 64; j++) {
+				cmi = j;
+				numInlines = CM_NumInlineModels();
+				if(numInlines == 0) {
+					continue;
+				}
+				if(indexAdjusted >= numInlines) {
+					indexAdjusted -= numInlines;
+				} else {
+					break;
+				}
+			}
+		}
+
+#endif
 	// adjust so that mins and maxs are always symmetric, which
 	// avoids some complications with plane expanding of rotated
 	// bmodels
@@ -753,7 +779,11 @@ void CM_TransformedBoxTrace( trace_t *results, const vec3_t start, const vec3_t 
 	}
 
 	// sweep the box through the model
+#ifdef USE_BSP_COLMODELS
+	CM_Trace( &trace, start_l, end_l, symetricSize[0], symetricSize[1], indexAdjusted, origin, brushmask );
+#else
 	CM_Trace( &trace, start_l, end_l, symetricSize[0], symetricSize[1], model, origin, brushmask );
+#endif
 
 	// if the bmodel was rotated and there was a collision
 	if ( rotated && trace.fraction != 1.0 ) {
@@ -769,4 +799,7 @@ void CM_TransformedBoxTrace( trace_t *results, const vec3_t start, const vec3_t 
 	trace.endpos[2] = start[2] + trace.fraction * (end[2] - start[2]);
 
 	*results = trace;
+#ifdef USE_BSP_COLMODELS
+	cmi = 0;
+#endif
 }

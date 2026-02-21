@@ -99,6 +99,7 @@ SDLHDIR=$(MOUNT_DIR)/libsdl/include/SDL2
 CMDIR=$(MOUNT_DIR)/qcommon
 UDIR=$(MOUNT_DIR)/unix
 W32DIR=$(MOUNT_DIR)/win32
+BLIBDIR=$(MOUNT_DIR)/botlib
 
 bin_path=$(shell which $(1) 2> /dev/null)
 
@@ -364,6 +365,11 @@ $(echo_cmd) "REND_CC $<"
 $(Q)$(CC) $(CFLAGS) $(RENDCFLAGS) -o $@ -c $<
 endef
 
+define DO_BOT_CC
+$(echo_cmd) "BOT_CC $<"
+$(Q)$(CC) $(CFLAGS) $(BOTCFLAGS) -DBOTLIB -o $@ -c $<
+endef
+
 define DO_AS
 $(echo_cmd) "AS $<"
 $(Q)$(CC) $(CFLAGS) -DELF -x assembler-with-cpp -o $@ -c $<
@@ -541,7 +547,28 @@ Q3OBJ = \
   $(B)/client/vm.o \
   $(B)/client/vm_interpreted.o \
   $(B)/client/duktape.o \
-  $(B)/client/js_main.o
+  $(B)/client/js_main.o \
+  \
+  $(B)/client/be_aas_bspq3.o \
+  $(B)/client/be_aas_cluster.o \
+  $(B)/client/be_aas_entity.o \
+  $(B)/client/be_aas_file.o \
+  $(B)/client/be_aas_main.o \
+  $(B)/client/be_aas_move.o \
+  $(B)/client/be_aas_reach.o \
+  $(B)/client/be_aas_route.o \
+  $(B)/client/be_aas_routealt.o \
+  $(B)/client/be_aas_sample.o \
+  $(B)/client/be_ai_move.o \
+  $(B)/client/be_ea.o \
+  $(B)/client/be_interface.o \
+  $(B)/client/l_crc.o \
+  $(B)/client/l_libvar.o \
+  $(B)/client/l_log.o \
+  $(B)/client/l_memory.o \
+  $(B)/client/l_precomp.o \
+  $(B)/client/l_script.o \
+  $(B)/client/l_struct.o
 
 ifeq ($(ARCH),x86)
 ifndef MINGW
@@ -649,7 +676,28 @@ Q3DOBJ = \
   $(B)/ded/vm.o \
   $(B)/ded/vm_interpreted.o \
   $(B)/ded/duktape.o \
-  $(B)/ded/js_main.o
+  $(B)/ded/js_main.o \
+  \
+  $(B)/ded/be_aas_bspq3.o \
+  $(B)/ded/be_aas_cluster.o \
+  $(B)/ded/be_aas_entity.o \
+  $(B)/ded/be_aas_file.o \
+  $(B)/ded/be_aas_main.o \
+  $(B)/ded/be_aas_move.o \
+  $(B)/ded/be_aas_reach.o \
+  $(B)/ded/be_aas_route.o \
+  $(B)/ded/be_aas_routealt.o \
+  $(B)/ded/be_aas_sample.o \
+  $(B)/ded/be_ai_move.o \
+  $(B)/ded/be_ea.o \
+  $(B)/ded/be_interface.o \
+  $(B)/ded/l_crc.o \
+  $(B)/ded/l_libvar.o \
+  $(B)/ded/l_log.o \
+  $(B)/ded/l_memory.o \
+  $(B)/ded/l_precomp.o \
+  $(B)/ded/l_script.o \
+  $(B)/ded/l_struct.o
 
 ifdef MINGW
   Q3DOBJ += \
@@ -700,6 +748,9 @@ $(B)/client/%.o: $(SDIR)/%.c
 $(B)/client/%.o: $(CMDIR)/%.c
 	$(DO_CC)
 
+$(B)/client/%.o: $(BLIBDIR)/%.c
+	$(DO_BOT_CC)
+
 $(B)/client/%.o: $(SDLDIR)/%.c
 	$(DO_CC)
 
@@ -729,6 +780,9 @@ $(B)/ded/%.o: $(SDIR)/%.c
 
 $(B)/ded/%.o: $(CMDIR)/%.c
 	$(DO_DED_CC)
+
+$(B)/ded/%.o: $(BLIBDIR)/%.c
+	$(DO_BOT_CC)
 
 $(B)/ded/%.o: $(UDIR)/%.c
 	$(DO_DED_CC)
