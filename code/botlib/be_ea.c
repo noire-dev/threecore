@@ -22,7 +22,7 @@ void EA_Command(int client, const char *command) {
 	botimport.BotClientCommand( client, command );
 }
 
-void EA_Move(int client, vec3_t dir, float speed) {
+void EA_Move(int client, vec3_t dir) {
 	bot_input_t *bi;
 	vec3_t forwardvec, rightvec;
 	float forward, right;

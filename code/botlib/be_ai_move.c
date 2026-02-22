@@ -51,8 +51,6 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 //#define DEBUG_GRAPPLE
 
 //movement state
-//NOTE: the moveflags MFL_ONGROUND, MFL_TELEPORTED, MFL_WATERJUMP and
-//		MFL_GRAPPLEPULL must be set outside the movement code
 typedef struct bot_movestate_s
 {
 	//input vars (all set outside the movement code)
@@ -197,10 +195,6 @@ void BotInitMoveState(int handle, bot_initmove_t *initmove)
 	if (initmove->or_moveflags & MFL_TELEPORTED) ms->moveflags |= MFL_TELEPORTED;
 	ms->moveflags &= ~MFL_WATERJUMP;
 	if (initmove->or_moveflags & MFL_WATERJUMP) ms->moveflags |= MFL_WATERJUMP;
-	ms->moveflags &= ~MFL_WALK;
-	if (initmove->or_moveflags & MFL_WALK) ms->moveflags |= MFL_WALK;
-	ms->moveflags &= ~MFL_GRAPPLEPULL;
-	if (initmove->or_moveflags & MFL_GRAPPLEPULL) ms->moveflags |= MFL_GRAPPLEPULL;
 } //end of the function BotInitMoveState
 //========================================================================
 //
@@ -1500,7 +1494,7 @@ static bot_moveresult_t BotTravel_Elevator(bot_movestate_t *ms, aas_reachability
 	bot_moveresult_t_cleared( result );
 
 	//if standing on the plat
-	if (BotOnMover(ms->origin, ms->entitynum, reach){
+	if (BotOnMover(ms->origin, ms->entitynum, reach)) {
 		//if vertically not too far from the end point
 		if (fabs(ms->origin[2] - reach->end[2]) < sv_maxbarrier->value) {
 			//move to the end point
@@ -1736,7 +1730,7 @@ static bot_moveresult_t BotTravel_FuncBobbing(bot_movestate_t *ms, aas_reachabil
 				botimport.Print(PRT_MESSAGE, "bot moving to func_bobbing center\n");
 #endif
 				//move to the center of the func_bobbing
-				if (dist > 100) dist = 100
+				if (dist > 100) dist = 100;
 				//
 				EA_Move(ms->client, hordir);
 				VectorCopy(hordir, result.movedir);
@@ -2227,7 +2221,6 @@ void BotMoveToGoal(int movestate, bot_goal_t *goal, int travelflags)
 			ms->reachareanum = ms->areanum;
 			//reset some state variables
 			ms->jumpreach = 0;						//for TRAVEL_JUMP
-			ms->moveflags &= ~MFL_GRAPPLERESET;	//for TRAVEL_GRAPPLEHOOK
 			//if there is a reachability to the goal
 			if (reachnum)
 			{
