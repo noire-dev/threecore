@@ -244,22 +244,10 @@ typedef struct aas_export_s
 											int stopevent, int stopareanum, int visualize);
 } aas_export_t;
 
-typedef struct ea_export_s
-{
-	//ClientCommand elementary actions
+typedef struct ea_export_s {
+	void	(*EA_Button)(int client, int button);
 	void	(*EA_Command)(int client, const char *command);
-	void	(*EA_Say)(int client, const char *str);
-	void	(*EA_SayTeam)(int client, const char *str);
-	//
-	void	(*EA_Action)(int client, int action);
-	void	(*EA_Gesture)(int client);
-	void	(*EA_Talk)(int client);
-	void	(*EA_Attack)(int client);
-	void	(*EA_Use)(int client);
-	void	(*EA_Respawn)(int client);
-	void	(*EA_Crouch)(int client);
 	void	(*EA_View)(int client, vec3_t viewangles);
-	//send regular input to the server
 	void	(*EA_GetInput)(int client, float thinktime, bot_input_t *input);
 	void	(*EA_ResetInput)(int client);
 } ea_export_t;
