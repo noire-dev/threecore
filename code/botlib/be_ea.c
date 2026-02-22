@@ -29,7 +29,7 @@ void EA_Move(int client, vec3_t dir) {
 	vec3_t angles;
 
 	bi = &botinputs[client];
-	bi->actionflags &= ~(BMOVE_W | BMOVE_S | BMOVE_L | BMOVE_R);
+	bi->actionflags &= ~(BMOVE_W | BMOVE_S | BMOVE_A | BMOVE_D);
 
 	VectorCopy(bi->viewangles, angles);
 	AngleVectors(angles, forwardvec, rightvec, NULL);
