@@ -324,18 +324,8 @@ Init_EA_Export
 ============
 */
 static void Init_EA_Export( ea_export_t *ea ) {
-	//ClientCommand elementary actions
+	ea->EA_Button = EA_Button;
 	ea->EA_Command = EA_Command;
-	ea->EA_Say = EA_Say;
-	ea->EA_SayTeam = EA_SayTeam;
-
-	ea->EA_Action = EA_Action;
-	ea->EA_Gesture = EA_Gesture;
-	ea->EA_Talk = EA_Talk;
-	ea->EA_Attack = EA_Attack;
-	ea->EA_Use = EA_Use;
-	ea->EA_Respawn = EA_Respawn;
-	ea->EA_Crouch = EA_Crouch;
 	ea->EA_View = EA_View;
 	ea->EA_GetInput = EA_GetInput;
 	ea->EA_ResetInput = EA_ResetInput;

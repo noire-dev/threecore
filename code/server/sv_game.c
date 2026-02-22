@@ -241,10 +241,8 @@ static intptr_t SV_GameSystemCalls(intptr_t* args) {
 		case BOTLIB_AAS_TIME: return FloatAsInt(botlib_export->aas.AAS_Time());
 		case BOTLIB_AAS_POINT_AREA_NUM: return botlib_export->aas.AAS_PointAreaNum(VMA(1));
 		case BOTLIB_AAS_TRACE_AREAS: return botlib_export->aas.AAS_TraceAreas(VMA(1), VMA(2), VMA(3), VMA(4), args[5]);
+        case BOTLIB_EA_BUTTON: botlib_export->ea.EA_Button(args[1], args[2]); return 0;
         case BOTLIB_EA_COMMAND: botlib_export->ea.EA_Command(args[1], VMA(2)); return 0;
-        case BOTLIB_EA_GESTURE: botlib_export->ea.EA_Gesture(args[1]); return 0;
-		case BOTLIB_EA_ATTACK: botlib_export->ea.EA_Attack(args[1]); return 0;
-		case BOTLIB_EA_USE: botlib_export->ea.EA_Use(args[1]); return 0;
 		case BOTLIB_EA_VIEW: botlib_export->ea.EA_View(args[1], VMA(2)); return 0;
 		case BOTLIB_EA_GET_INPUT: botlib_export->ea.EA_GetInput(args[1], VMF(2), VMA(3)); return 0;
 		case BOTLIB_EA_RESET_INPUT: botlib_export->ea.EA_ResetInput(args[1]); return 0;
