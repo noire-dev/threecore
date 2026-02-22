@@ -61,9 +61,7 @@ int AAS_AgainstLadder(vec3_t origin);
 float AAS_RocketJumpZVelocity(vec3_t origin);
 //bfg jump Z velocity when bfg-jumping at origin
 float AAS_BFGJumpZVelocity(vec3_t origin);
-//calculates the horizontal velocity needed for a jump and returns true this velocity could be calculated
-int AAS_HorizontalVelocityForJump(float zvel, vec3_t start, vec3_t end, float *velocity);
-//
+
 void AAS_SetMovedir(vec3_t angles, vec3_t movedir);
 //
 int AAS_DropToFloor(vec3_t origin, vec3_t mins, vec3_t maxs);

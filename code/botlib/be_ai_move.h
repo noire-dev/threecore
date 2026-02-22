@@ -19,24 +19,10 @@ along with Quake III Arena source code; if not, write to the Free Software
 Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 ===========================================================================
 */
-//
-
-/*****************************************************************************
- * name:		be_ai_move.h
- *
- * desc:		movement AI
- *
- * $Archive: /source/code/botlib/be_ai_move.h $
- *
- *****************************************************************************/
 
 //movement types
-#define MOVE_WALK						1
-#define MOVE_CROUCH						2
-#define MOVE_JUMP						4
-#define MOVE_GRAPPLE					8
-#define MOVE_ROCKETJUMP					16
-#define MOVE_BFGJUMP					32
+#define MOVE_CROUCH						1
+#define MOVE_JUMP						2
 //move flags
 #define MFL_BARRIERJUMP					1		//bot is performing a barrier jump
 #define MFL_ONGROUND					2		//bot is in the ground
@@ -44,10 +30,6 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #define MFL_AGAINSTLADDER				8		//bot is against a ladder
 #define MFL_WATERJUMP					16		//bot is waterjumping
 #define MFL_TELEPORTED					32		//bot is being teleported
-#define MFL_GRAPPLEPULL					64		//bot is being pulled by the grapple
-#define MFL_ACTIVEGRAPPLE				128		//bot is using the grapple hook
-#define MFL_GRAPPLERESET				256		//bot has reset the grapple
-#define MFL_WALK						512		//bot should walk slowly
 // move result flags
 #define MOVERESULT_MOVEMENTVIEW			1		//bot uses view for movement
 #define MOVERESULT_SWIMVIEW				2		//bot uses view for swimming
@@ -113,8 +95,6 @@ typedef struct bot_avoidspot_s
 void BotResetMoveState(int movestate);
 //moves the bot to the given goal
 void BotMoveToGoal(int movestate, bot_goal_t *goal, int travelflags);
-//moves the bot in the specified direction using the specified type of movement
-int BotMoveInDirection(int movestate, vec3_t dir, float speed, int type);
 //reset avoid reachability
 void BotResetAvoidReach(int movestate);
 //resets the last avoid reachability

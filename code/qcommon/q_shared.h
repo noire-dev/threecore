@@ -1169,8 +1169,12 @@ typedef struct playerState_s {
 	int			entityEventSequence;
 } playerState_t;
 
-#define	BUTTON_ATTACK		1
-#define	BUTTON_GESTURE		2
+#define BMOVE_W 1
+#define BMOVE_A 2
+#define BMOVE_S 4
+#define BMOVE_D 8
+#define BMOVE_J 16
+#define BMOVE_C 32
 
 #define	MAX_BUTTONS	        32
 

@@ -2128,28 +2128,12 @@ static int AAS_Reachability_Jump(int area1num, int area2num)
 			speed = 400;
 			traveltype = TRAVEL_WALKOFFLEDGE;
 		} //end if
-		else if (AAS_HorizontalVelocityForJump(0, beststart, bestend, &speed))
+		else
 		{
 			//FIXME: why multiply with 1.2???
 			speed *= 1.2f;
 			traveltype = TRAVEL_WALKOFFLEDGE;
-		} //end else if
-		else
-		{
-			//get the horizontal speed for the jump, if it isn't possible to calculate this
-			//speed (the jump is not possible) then there's no jump reachability created
-			if (!AAS_HorizontalVelocityForJump(phys_jumpvel, beststart, bestend, &speed))
-				return qfalse;
-			speed *= 1.05f;
-			traveltype = TRAVEL_JUMP;
-			//
-			//NOTE: test if the horizontal distance isn't too small
-			VectorSubtract(bestend, beststart, dir);
-			dir[2] = 0;
-			if (VectorLength(dir) < 10)
-				return qfalse;
-		} //end if
-		//
+		}
 		VectorSubtract(bestend, beststart, dir);
 		VectorNormalize(dir);
 		VectorMA(beststart, 1, dir, teststart);
@@ -3162,12 +3146,6 @@ static aas_lreachability_t *AAS_FindFaceReachabilities(vec3_t *facepoints, int n
 		if (bestend[2] - 32 > beststart[2]) continue;
 		//don't fall down too far
 		if (bestend[2] < beststart[2] - 128) continue;
-		//the distance should not be too far
-		if (hordist > 32)
-		{
-			//check for walk off ledge
-			if (!AAS_HorizontalVelocityForJump(0, beststart, bestend, &speed)) continue;
-		} //end if
 		//
 		beststart[2] += 1;
 		bestend[2] += 1;
@@ -3626,8 +3604,7 @@ static void AAS_Reachability_JumpPad(void)
 				zvel = velocity[2];
 				//get the horizontal speed for the jump, if it isn't possible to calculate this
 				//speed
-				ret = AAS_HorizontalVelocityForJump(zvel, areastart, facecenter, &speed);
-				if (ret && speed < 150)
+				if (speed < 150)
 				{
 					//direction towards the face center
 					VectorSubtract(facecenter, areastart, dir);
@@ -3970,8 +3947,7 @@ int AAS_Reachability_WeaponJump(int area1num, int area2num)
 			else zvel = AAS_RocketJumpZVelocity(areastart);
 			//get the horizontal speed for the jump, if it isn't possible to calculate this
 			//speed (the jump is not possible) then there's no jump reachability created
-			ret = AAS_HorizontalVelocityForJump(zvel, areastart, facecenter, &speed);
-			if (ret && speed < 300)
+			if (speed < 300)
 			{
 				//direction towards the face center
 				VectorSubtract(facecenter, areastart, dir);

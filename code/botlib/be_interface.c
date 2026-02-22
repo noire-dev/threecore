@@ -353,7 +353,6 @@ static void Init_AI_Export( ai_export_t *ai ) {
 	//-----------------------------------
 	ai->BotResetMoveState = BotResetMoveState;
 	ai->BotMoveToGoal = BotMoveToGoal;
-	ai->BotMoveInDirection = BotMoveInDirection;
 	ai->BotResetAvoidReach = BotResetAvoidReach;
 	ai->BotResetLastAvoidReach = BotResetLastAvoidReach;
 	ai->BotMovementViewTarget = BotMovementViewTarget;

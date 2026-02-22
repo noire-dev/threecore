@@ -78,30 +78,6 @@ struct weaponinfo_s;
 #define BLERR_CANNOTLOADWEAPONWEIGHTS	11	//cannot load weapon weights
 #define BLERR_CANNOTLOADWEAPONCONFIG	12	//cannot load weapon config
 
-//action flags
-#define ACTION_ATTACK			0x00000001
-#define ACTION_USE			0x00000002
-#define ACTION_RESPAWN			0x00000008
-#define ACTION_JUMP			0x00000010
-#define ACTION_MOVEUP			0x00000020
-#define ACTION_CROUCH			0x00000080
-#define ACTION_MOVEDOWN			0x00000100
-#define ACTION_MOVEFORWARD		0x00000200
-#define ACTION_MOVEBACK			0x00000800
-#define ACTION_MOVELEFT			0x00001000
-#define ACTION_MOVERIGHT		0x00002000
-#define ACTION_DELAYEDJUMP		0x00008000
-#define ACTION_TALK			0x00010000
-#define ACTION_GESTURE			0x00020000
-#define ACTION_WALK			0x00080000
-#define ACTION_AFFIRMATIVE		0x00100000
-#define ACTION_NEGATIVE			0x00200000
-#define ACTION_GETFLAG			0x00800000
-#define ACTION_GUARDBASE		0x01000000
-#define ACTION_PATROL			0x02000000
-#define ACTION_FOLLOWME			0x08000000
-#define ACTION_JUMPEDLASTFRAME		0x10000000
-
 //the bot input, will be converted to a usercmd_t
 typedef struct bot_input_s
 {
@@ -295,7 +271,6 @@ typedef struct ai_export_s
 	//-----------------------------------
 	void	(*BotResetMoveState)(int movestate);
 	void	(*BotMoveToGoal)(int movestate, struct bot_goal_s *goal, int travelflags);
-	int		(*BotMoveInDirection)(int movestate, vec3_t dir, float speed, int type);
 	void	(*BotResetAvoidReach)(int movestate);
 	void	(*BotResetLastAvoidReach)(int movestate);
 	int		(*BotMovementViewTarget)(int movestate, struct bot_goal_s *goal, int travelflags, float lookahead, vec3_t target);
