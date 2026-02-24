@@ -314,6 +314,7 @@ void Com_Quit_f( void ) {
 #endif
 		VM_Forced_Unload_Done();
 		Com_Shutdown();
+		Com_WriteConfiguration();
 		FS_Shutdown( qtrue );
 	}
 	Sys_Quit();

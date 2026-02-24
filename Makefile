@@ -22,8 +22,8 @@ MOUNT_DIR           = code
 # General
 USE_LOCAL_HEADERS   = 1
 
-CNAME            = threecore
-DNAME            = threecore.ded
+CNAME            = sandbox
+DNAME            = sandbox.ded
 
 ifeq ($(V),1)
   echo_cmd=@:
@@ -339,9 +339,9 @@ endif # *NIX platforms
 
 endif # !MINGW
 
-TARGET_CLIENT = $(CNAME)$(ARCHEXT)$(BINEXT)
+TARGET_CLIENT = $(CNAME)$(BINEXT)
 
-TARGET_SERVER = $(DNAME)$(ARCHEXT)$(BINEXT)
+TARGET_SERVER = $(DNAME)$(BINEXT)
 
 TARGETS =
 
