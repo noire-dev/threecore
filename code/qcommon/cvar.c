@@ -88,10 +88,7 @@ cvar_t* Cvar_Get(const char* var_name, const char* var_value, int flags) {
 
 	if(!var_name || !var_value) Com_Error(ERR_FATAL, "Cvar_Get: NULL parameter");
 
-	if(!Cvar_ValidateName(var_name)) {
-		Com_Printf("invalid cvar name string: %s\n", var_name);
-		var_name = "BADNAME";
-	}
+	if(!Cvar_ValidateName(var_name)) var_name = "cvar.error";
 
 	var = Cvar_FindVar(var_name);
 
@@ -166,10 +163,7 @@ static void Cvar_Print(const cvar_t* v) {
 cvar_t* Cvar_Set(const char* var_name, const char* value) {
 	cvar_t* var;
 
-	if(!Cvar_ValidateName(var_name)) {
-		Com_Printf("invalid cvar name string: %s\n", var_name);
-		var_name = "BADNAME";
-	}
+	if(!Cvar_ValidateName(var_name)) var_name = "cvar.error";
 
 	var = Cvar_FindVar(var_name);
 	if(!var) {
