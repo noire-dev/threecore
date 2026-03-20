@@ -16,12 +16,12 @@ static void CL_KeyDownEvent(int key) {
 			return;
 		}
 
-		VM_Call(uivm, 2, UI_KEY_EVENT, key, qtrue, qfalse);
+		VM_Call(uivm, 2, UI_KEY_EVENT, key, 1, 0);
 		return;
 	}
 
 	if(Key_GetCatcher() & KEYCATCH_UI) {
-		if(uivm) VM_Call(uivm, 2, UI_KEY_EVENT, key, qtrue, qfalse);
+		if(uivm) VM_Call(uivm, 2, UI_KEY_EVENT, key, 1, 0);
 	} else {
 		Key_ParseBinding(key, qtrue);
 	}
@@ -29,7 +29,7 @@ static void CL_KeyDownEvent(int key) {
 
 static void CL_KeyUpEvent(int key) {
 	if(cls.state != CA_DISCONNECTED) Key_ParseBinding(key, qfalse);
-	if(Key_GetCatcher() & KEYCATCH_UI && uivm) VM_Call(uivm, 2, UI_KEY_EVENT, key, qfalse, qfalse);
+	if(Key_GetCatcher() & KEYCATCH_UI && uivm) VM_Call(uivm, 2, UI_KEY_EVENT, key, 0, 0);
 }
 
 void CL_KeyEvent(int key, qboolean down) {
@@ -39,7 +39,7 @@ void CL_KeyEvent(int key, qboolean down) {
 
 void CL_CharEvent(int key) {
 	if(key == 127) return;
-	if(Key_GetCatcher() & KEYCATCH_UI) VM_Call(uivm, 2, UI_KEY_EVENT, key, qtrue, qtrue);
+	if(Key_GetCatcher() & KEYCATCH_UI) VM_Call(uivm, 2, UI_KEY_EVENT, key, 1, 1);
 }
 
 void Key_ClearStates(void) {
