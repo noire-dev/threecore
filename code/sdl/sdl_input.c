@@ -381,7 +381,6 @@ HandleEvents
 void HandleEvents( void ) {
 	SDL_Event e;
 	keyNum_t key = 0;
-	char *c;
 
 	if ( !SDL_WasInit( SDL_INIT_VIDEO ) )
 			return;
@@ -445,7 +444,7 @@ void HandleEvents( void ) {
 						c++;
 					}
 
-					if(utf32 != 0) Com_QueueEvent(in_eventTime, SE_CHAR, utf32, 0, 0, NULL);
+					if(utf32 != 0) Sys_QueEvent( SE_CHAR, utf32, 0, 0, NULL );
 				}
 				break;
 
