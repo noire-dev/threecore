@@ -1614,7 +1614,7 @@ void Com_Init( char *commandLine ) {
 	// get the initial time base
 	Sys_Milliseconds();
 
-	Com_Printf( "^5%s %s\n", ENGINE_VERSION, __DATE__ );
+	Com_Printf( "#5ff%s %s\n", ENGINE_VERSION, __DATE__ );
 
 	if (Q_setjmp( abortframe )) Sys_Error ("Error during initialization");
 
@@ -1710,7 +1710,7 @@ void Com_Init( char *commandLine ) {
 
 	com_fullyInitialized = qtrue;
 
-	Com_Printf( "^2Common initialization complete\n" );
+	Com_Printf( "#5f5Common initialization complete\n" );
 
 	NET_Init();
 }

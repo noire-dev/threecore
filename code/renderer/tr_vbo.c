@@ -876,9 +876,6 @@ void R_BuildWorldVBO( msurface_t *surf, int surfCount )
 	ri.Printf( PRINT_ALL, "...found %i VBO surfaces (%i vertexes, %i indexes)\n",
 		numStaticSurfaces, numStaticVertexes, numStaticIndexes );
 	
-	//Com_Printf( S_COLOR_CYAN "VBO size: %i\n", vbo_size );
-	//Com_Printf( S_COLOR_CYAN "IBO size: %i\n", ibo_size );
-
 	// vertex buffer
 	vbo->vbo_buffer = ri.Hunk_AllocateTempMemory( vbo_size );
 	vbo->vbo_offset = 0;

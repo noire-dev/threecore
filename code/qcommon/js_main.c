@@ -39,13 +39,13 @@ void JSLoadScripts(const char* path, const char* name) {
     int numfiles = FS_GetFileList(path, ".js", filelist, sizeof(filelist));
     char *file;
     
-    Com_Printf("^5Loading %d JS %s scripts...\n", numfiles, name);
+    Com_Printf("#5ffLoading %d JS %s scripts...\n", numfiles, name);
     
     file = filelist;
     for(int i = 0; i < numfiles; i++) {
         char fullpath[MAX_QPATH];
         Com_sprintf(fullpath, sizeof(fullpath), "%s/%s", path, file);
-        Com_Printf("^5[%d/%d] %s\n", i+1, numfiles, file);
+        Com_Printf("#5ff[%d/%d] %s\n", i+1, numfiles, file);
         
         JSOpenFile(fullpath, qfalse);
         file += strlen(file) + 1;
@@ -98,7 +98,7 @@ static duk_ret_t jsexport_file_open(duk_context *ctx) {
 	} f;
     
     if(!filename) {
-        Com_Printf("^1Calling file.open without filename\n");
+        Com_Printf("#f55Calling file.open without filename\n");
         duk_push_null(ctx);
         return 1;
     }
@@ -106,7 +106,7 @@ static duk_ret_t jsexport_file_open(duk_context *ctx) {
     FS_ReadFile(filename, &f.v);
     
     if(f.v == NULL) {
-        Com_Printf("^1Could not open file '%s'\n", filename);
+        Com_Printf("#f55Could not open file '%s'\n", filename);
         FS_FreeFile(f.v);
         duk_push_null(ctx);
         return 1;
@@ -123,7 +123,7 @@ static duk_ret_t jsexport_file_save(duk_context *ctx) {
     const char *buffer = duk_safe_to_string(ctx, 1);
     
     if(!filename) {
-        Com_Printf("^1Calling file.save without filename\n");
+        Com_Printf("#f55Calling file.save without filename\n");
         return 0;
     }
     
@@ -136,7 +136,7 @@ static duk_ret_t jsexport_cvar_int(duk_context *ctx) {
     const char *cvar_name = duk_safe_to_string(ctx, 0);
     
     if(!cvar_name) {
-        Com_Printf("^1Calling cvar.int without name\n");
+        Com_Printf("#f55Calling cvar.int without name\n");
         duk_push_null(ctx);
         return 1;
     }
@@ -152,7 +152,7 @@ static duk_ret_t jsexport_cvar_float(duk_context *ctx) {
     const char *cvar_name = duk_safe_to_string(ctx, 0);
     
     if(!cvar_name) {
-        Com_Printf("^1Calling cvar.float without name\n");
+        Com_Printf("#f55Calling cvar.float without name\n");
         duk_push_null(ctx);
         return 1;
     }
@@ -168,7 +168,7 @@ static duk_ret_t jsexport_cvar_string(duk_context *ctx) {
     const char *cvar_name = duk_safe_to_string(ctx, 0);
     
     if(!cvar_name) {
-        Com_Printf("^1Calling cvar.string without name\n");
+        Com_Printf("#f55Calling cvar.string without name\n");
         duk_push_null(ctx);
         return 1;
     }
@@ -186,12 +186,12 @@ static duk_ret_t jsexport_cvar_register(duk_context *ctx) {
     int flags = duk_get_number(ctx, 2);
     
     if(!cvar_name) {
-        Com_Printf("^1Calling cvar.register without name\n");
+        Com_Printf("#f55Calling cvar.register without name\n");
         return 0;
     }
     
     if(!cvar_value) {
-        Com_Printf("^1Calling cvar.register without value\n");
+        Com_Printf("#f55Calling cvar.register without value\n");
         return 0;
     }
     
@@ -204,12 +204,12 @@ static duk_ret_t jsexport_cvar_set(duk_context *ctx) {
     const char *cvar_value = duk_safe_to_string(ctx, 1);
     
     if(!cvar_name) {
-        Com_Printf("^1Calling cvar.set without name\n");
+        Com_Printf("#f55Calling cvar.set without name\n");
         return 0;
     }
     
     if(!cvar_value) {
-        Com_Printf("^1Calling cvar.set without value\n");
+        Com_Printf("#f55Calling cvar.set without value\n");
         return 0;
     }
     
@@ -221,12 +221,12 @@ static duk_ret_t jsexport_vmcall(duk_context* ctx) {
     duk_idx_t nargs = duk_get_top(ctx);
     
     if(nargs < 2) {
-        duk_push_error_object(ctx, DUK_ERR_TYPE_ERROR, "^1qvm.call requires at least func_id and qvm_id");
+        duk_push_error_object(ctx, DUK_ERR_TYPE_ERROR, "#f55qvm.call requires at least func_id and qvm_id");
         return duk_throw(ctx);
     }
     
     if(qvmcall_using) {
-        duk_push_error_object(ctx, DUK_ERR_ERROR, "^1Recursive qvm.call detected");
+        duk_push_error_object(ctx, DUK_ERR_ERROR, "#f55Recursive qvm.call detected");
         return duk_throw(ctx);
     }
     
@@ -236,18 +236,18 @@ static duk_ret_t jsexport_vmcall(duk_context* ctx) {
     int qvm_id = duk_require_int(ctx, 1);
     
     if(qvm_id == VM_GAME && !gvm) {
-        duk_push_error_object(ctx, DUK_ERR_ERROR, "^1game.qvm not initialized");
+        duk_push_error_object(ctx, DUK_ERR_ERROR, "#f55game.qvm not initialized");
         qvmcall_using = qfalse;
         return duk_throw(ctx);
     }
 #ifndef DEDICATED
     if(qvm_id == VM_CGAME && !cgvm) {
-        duk_push_error_object(ctx, DUK_ERR_ERROR, "^1cgame.qvm not initialized");
+        duk_push_error_object(ctx, DUK_ERR_ERROR, "#f55cgame.qvm not initialized");
         qvmcall_using = qfalse;
         return duk_throw(ctx);
     }
     if(qvm_id == VM_UI && !uivm) {
-        duk_push_error_object(ctx, DUK_ERR_ERROR, "^1ui.qvm not initialized");
+        duk_push_error_object(ctx, DUK_ERR_ERROR, "#f55ui.qvm not initialized");
         qvmcall_using = qfalse;
         return duk_throw(ctx);
     }
@@ -307,15 +307,15 @@ qboolean JSOpenFile(const char* filename, int notify) {
 	FS_ReadFile(fullpath, &f.v);
         
     if(f.v == NULL) {
-        Com_Printf("^3Could not load script '%s'\n", fullpath);
+        Com_Printf("#ff5Could not load script '%s'\n", fullpath);
         return qfalse;
     }
     
-    if(notify) Com_Printf("^5Loading %s JS script...\n", filename);
+    if(notify) Com_Printf("#5ffLoading %s JS script...\n", filename);
     
     if(duk_peval_string(js_ctx, f.c) != 0) {
         const char* error = duk_safe_to_string(js_ctx, -1);
-        Com_Printf("^1%s: %s\n", filename, error);
+        Com_Printf("#f55%s: %s\n", filename, error);
         Cvar_Set("js_error", va("%s: %s", filename, error));
         duk_pop(js_ctx);
         FS_FreeFile(f.v);
@@ -342,7 +342,7 @@ static void Cmd_JSOpenFile_f(void) {
 qboolean JSEval(const char* code, qboolean doPrint, qboolean doResult, js_result_t* result) {
     if(duk_peval_string(js_ctx, code) != 0) {
         const char* error = duk_safe_to_string(js_ctx, -1);
-        Com_Printf("^1%s\n", error);
+        Com_Printf("#f55%s\n", error);
         Cvar_Set("js_error", va("%s", error));
         duk_pop(js_ctx);
         return qfalse;
@@ -375,7 +375,7 @@ qboolean JSCall(int func_id, js_args_t* args, js_result_t* result) {
     if(JSCall_compiled) {
         duk_push_heapptr(js_ctx, JSCall_ref);
     } else {
-        Com_Printf("^1JavaScript JSCall not compiled\n");
+        Com_Printf("#f55JavaScript JSCall not compiled\n");
         return qfalse;
     }
     
@@ -403,7 +403,7 @@ qboolean JSCall(int func_id, js_args_t* args, js_result_t* result) {
     
     if(duk_pcall(js_ctx, arg_count) != DUK_EXEC_SUCCESS) {
         const char* error = duk_safe_to_string(js_ctx, -1);
-        Com_Printf("^1%s\n", error);
+        Com_Printf("#f55%s\n", error);
         Cvar_Set("js_error", va("%s", error));
         duk_set_top(js_ctx, top);
         return qfalse;
@@ -416,7 +416,7 @@ qboolean JSCall(int func_id, js_args_t* args, js_result_t* result) {
 }
 
 void JS_Restart(void) {
-    Com_Printf("^5Restarting JavaScript VM...\n");
+    Com_Printf("#5ffRestarting JavaScript VM...\n");
     
     Cmd_RemoveCommand("js.open");
     Cmd_RemoveCommand("js.eval");
@@ -441,10 +441,10 @@ static void Cmd_JSRestart_f(void) { JS_Restart(); }
 
 void JS_Init(void) {
     if(!js_ctx) {
-        Com_Printf("^5Creating JavaScript context...\n");
+        Com_Printf("#5ffCreating JavaScript context...\n");
         js_ctx = duk_create_heap_default();
         if(!js_ctx) {
-            Com_Error(ERR_FATAL, "^1Failed to create JavaScript VM");
+            Com_Error(ERR_FATAL, "#f55Failed to create JavaScript VM");
             return;
         }
         
@@ -504,7 +504,7 @@ void JS_Init(void) {
         
         duk_pop(js_ctx);
         
-        Com_Printf("^2JavaScript VM initialized!\n");
+        Com_Printf("#5f5JavaScript VM initialized!\n");
         Cmd_AddCommand("js.open", Cmd_JSOpenFile_f);
         Cmd_AddCommand("js.eval", Cmd_JSEval_f);
         Cmd_AddCommand("js.restart", Cmd_JSRestart_f);

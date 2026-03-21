@@ -441,14 +441,10 @@ extern	vec4_t		colorDkGrey;
 #define COLOR_WHITE		'7'
 #define ColorIndex(c)	( ( (c) - '0' ) & 7 )
 
-#define S_COLOR_BLACK	"^0"
-#define S_COLOR_RED		"^1"
-#define S_COLOR_GREEN	"^2"
-#define S_COLOR_YELLOW	"^3"
-#define S_COLOR_BLUE	"^4"
-#define S_COLOR_CYAN	"^5"
-#define S_COLOR_MAGENTA	"^6"
-#define S_COLOR_WHITE	"^7"
+#define S_COLOR_RED		"#f55"
+#define S_COLOR_YELLOW	"#ff5"
+#define S_COLOR_CYAN	"#5ff"
+#define S_COLOR_WHITE	"&r"
 
 extern const vec4_t	g_color_table[ 64 ];
 extern int ColorIndexFromChar( char ccode );
