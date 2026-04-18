@@ -3,7 +3,7 @@
 // ThreeCore — GPLv2; see LICENSE for details.
 
 #define MAX_JS_ARGS 16
-#define MAX_JS_STRINGSIZE 1048576
+#define MAX_JS_STRINGSIZE 256
 
 typedef enum { JS_TYPE_NONE, JS_TYPE_INT, JS_TYPE_FLOAT, JS_TYPE_STRING } js_type_t;
 
