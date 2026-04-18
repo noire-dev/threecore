@@ -59,39 +59,39 @@ static void ParseDuktapeResult(duk_context* ctx, js_result_t* result) {
         else result->t = JS_TYPE_FLOAT;
         result->v.i = (int)val;
         result->v.f = (float)val;
-    } else {
+    } else if(duk_is_string(ctx, -1)) {
         result->t = JS_TYPE_STRING;
-        Q_strncpyz(result->v.s, duk_safe_to_string(ctx, -1), MAX_JS_STRINGSIZE);
+        Q_strncpyz(result->v.s, duk_get_string(ctx, -1), MAX_JS_STRINGSIZE);
     }
 }
 
 static duk_ret_t jsexport_console_log(duk_context *ctx) {
-    const char *str = duk_safe_to_string(ctx, 0);
+    const char *str = duk_get_string(ctx, 0);
     Com_Printf("%s\n", str);
     return 0;
 }
 
 static duk_ret_t jsexport_console_cmd(duk_context *ctx) {
-    const char *str = duk_safe_to_string(ctx, 0);
+    const char *str = duk_get_string(ctx, 0);
     Cmd_ExecuteString(str);
     return 0;
 }
 
 static duk_ret_t jsexport_openjs_file(duk_context *ctx) {
-    const char *str = duk_safe_to_string(ctx, 0);
+    const char *str = duk_get_string(ctx, 0);
     JSOpenFile(str, qtrue);
     return 0;
 }
 
 static duk_ret_t jsexport_openjs_folder(duk_context *ctx) {
-    const char *str = duk_safe_to_string(ctx, 0);
-    const char *name = duk_safe_to_string(ctx, 1);
+    const char *str = duk_get_string(ctx, 0);
+    const char *name = duk_get_string(ctx, 1);
     JSLoadScripts(str, name);
     return 0;
 }
 
 static duk_ret_t jsexport_file_open(duk_context *ctx) {
-    const char *filename = duk_safe_to_string(ctx, 0);
+    const char *filename = duk_get_string(ctx, 0);
     union {
 		char* c;
 		void* v;
@@ -119,21 +119,21 @@ static duk_ret_t jsexport_file_open(duk_context *ctx) {
 }
 
 static duk_ret_t jsexport_file_save(duk_context *ctx) {
-    const char *filename = duk_safe_to_string(ctx, 0);
-    const char *buffer = duk_safe_to_string(ctx, 1);
+    const char *filename = duk_get_string(ctx, 0);
+    const char *buffer = duk_get_string(ctx, 1);
     
     if(!filename) {
         Com_Printf("#f55Calling file.save without filename\n");
         return 0;
     }
     
-    FS_WriteFile(filename, buffer, sizeof(buffer));
+    FS_WriteFile(filename, buffer, strlen(buffer));
     
     return 0;
 }
 
 static duk_ret_t jsexport_cvar_int(duk_context *ctx) {
-    const char *cvar_name = duk_safe_to_string(ctx, 0);
+    const char *cvar_name = duk_get_string(ctx, 0);
     
     if(!cvar_name) {
         Com_Printf("#f55Calling cvar.int without name\n");
@@ -149,7 +149,7 @@ static duk_ret_t jsexport_cvar_int(duk_context *ctx) {
 }
 
 static duk_ret_t jsexport_cvar_float(duk_context *ctx) {
-    const char *cvar_name = duk_safe_to_string(ctx, 0);
+    const char *cvar_name = duk_get_string(ctx, 0);
     
     if(!cvar_name) {
         Com_Printf("#f55Calling cvar.float without name\n");
@@ -165,7 +165,7 @@ static duk_ret_t jsexport_cvar_float(duk_context *ctx) {
 }
 
 static duk_ret_t jsexport_cvar_string(duk_context *ctx) {
-    const char *cvar_name = duk_safe_to_string(ctx, 0);
+    const char *cvar_name = duk_get_string(ctx, 0);
     
     if(!cvar_name) {
         Com_Printf("#f55Calling cvar.string without name\n");
@@ -181,8 +181,8 @@ static duk_ret_t jsexport_cvar_string(duk_context *ctx) {
 }
 
 static duk_ret_t jsexport_cvar_register(duk_context *ctx) {
-    const char *cvar_name = duk_safe_to_string(ctx, 0);
-    const char *cvar_value = duk_safe_to_string(ctx, 1);
+    const char *cvar_name = duk_get_string(ctx, 0);
+    const char *cvar_value = duk_get_string(ctx, 1);
     int flags = duk_get_number(ctx, 2);
     
     if(!cvar_name) {
@@ -200,8 +200,8 @@ static duk_ret_t jsexport_cvar_register(duk_context *ctx) {
 }
 
 static duk_ret_t jsexport_cvar_set(duk_context *ctx) {
-    const char *cvar_name = duk_safe_to_string(ctx, 0);
-    const char *cvar_value = duk_safe_to_string(ctx, 1);
+    const char *cvar_name = duk_get_string(ctx, 0);
+    const char *cvar_value = duk_get_string(ctx, 1);
     
     if(!cvar_name) {
         Com_Printf("#f55Calling cvar.set without name\n");
@@ -270,7 +270,7 @@ static duk_ret_t jsexport_vmcall(duk_context* ctx) {
             vmargs->v[i].f = (float)val;
         } else if(duk_is_string(ctx, arg_idx)) {
             vmargs->t[i] = JS_TYPE_STRING;
-            const char* str = duk_safe_to_string(ctx, arg_idx);
+            const char* str = duk_get_string(ctx, arg_idx);
             Q_strncpyz(vmargs->v[i].s, str, MAX_JS_STRINGSIZE);
         } else if(duk_is_null_or_undefined(ctx, arg_idx)) {
             vmargs->t[i] = JS_TYPE_NONE;
@@ -314,7 +314,7 @@ qboolean JSOpenFile(const char* filename, int notify) {
     if(notify) Com_Printf("#5ffLoading %s JS script...\n", filename);
     
     if(duk_peval_string(js_ctx, f.c) != 0) {
-        const char* error = duk_safe_to_string(js_ctx, -1);
+        const char* error = duk_get_string(js_ctx, -1);
         Com_Printf("#f55%s: %s\n", filename, error);
         Cvar_Set("js_error", va("%s: %s", filename, error));
         duk_pop(js_ctx);
@@ -341,7 +341,7 @@ static void Cmd_JSOpenFile_f(void) {
 
 qboolean JSEval(const char* code, qboolean doPrint, qboolean doResult, js_result_t* result) {
     if(duk_peval_string(js_ctx, code) != 0) {
-        const char* error = duk_safe_to_string(js_ctx, -1);
+        const char* error = duk_get_string(js_ctx, -1);
         Com_Printf("#f55%s\n", error);
         Cvar_Set("js_error", va("%s", error));
         duk_pop(js_ctx);
@@ -349,7 +349,7 @@ qboolean JSEval(const char* code, qboolean doPrint, qboolean doResult, js_result
     }
 
     if(doPrint) {
-        const char* text = duk_safe_to_string(js_ctx, -1);
+        const char* text = duk_get_string(js_ctx, -1);
         Com_Printf("%s\n", text);
     }
 
@@ -402,7 +402,7 @@ qboolean JSCall(int func_id, js_args_t* args, js_result_t* result) {
     }
     
     if(duk_pcall(js_ctx, arg_count) != DUK_EXEC_SUCCESS) {
-        const char* error = duk_safe_to_string(js_ctx, -1);
+        const char* error = duk_get_string(js_ctx, -1);
         Com_Printf("#f55%s\n", error);
         Cvar_Set("js_error", va("%s", error));
         duk_set_top(js_ctx, top);

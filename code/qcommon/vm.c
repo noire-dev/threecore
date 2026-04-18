@@ -1316,8 +1316,8 @@ void VM_Free( vm_t *vm ) {
 
 	if ( vm->callLevel ) {
 		if ( !forced_unload ) {
-			//Com_Error( ERR_FATAL, "VM_Free(%s) on running vm", vm->name );
-			//return;
+			Com_Error( ERR_FATAL, "VM_Free(%s) on running vm", vm->name );
+			return;
 		} else {
 			Com_Printf( "forcefully unloading %s vm\n", vm->name );
 		}
