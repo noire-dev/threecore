@@ -402,7 +402,7 @@ qboolean JSCall(int func_id, js_args_t* args, js_result_t* result) {
     }
     
     if(duk_pcall(js_ctx, arg_count) != DUK_EXEC_SUCCESS) {
-        const char* error = duk_get_string(js_ctx, -1);
+        const char* error = duk_safe_to_string(js_ctx, -1);
         Com_Printf("#f55%s\n", error);
         Cvar_Set("js_error", va("%s", error));
         duk_set_top(js_ctx, top);
