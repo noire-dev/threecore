@@ -66,13 +66,13 @@ static void ParseDuktapeResult(duk_context* ctx, js_result_t* result) {
 }
 
 static duk_ret_t jsexport_console_log(duk_context *ctx) {
-    const char *str = duk_get_string(ctx, 0);
+    const char *str = duk_safe_to_string(ctx, 0);
     Com_Printf("%s\n", str);
     return 0;
 }
 
 static duk_ret_t jsexport_console_cmd(duk_context *ctx) {
-    const char *str = duk_get_string(ctx, 0);
+    const char *str = duk_safe_to_string(ctx, 0);
     Cmd_ExecuteString(str);
     return 0;
 }
@@ -120,7 +120,7 @@ static duk_ret_t jsexport_file_open(duk_context *ctx) {
 
 static duk_ret_t jsexport_file_save(duk_context *ctx) {
     const char *filename = duk_get_string(ctx, 0);
-    const char *buffer = duk_get_string(ctx, 1);
+    const char *buffer = duk_safe_to_string(ctx, 1);
     
     if(!filename) {
         Com_Printf("#f55Calling file.save without filename\n");
@@ -201,7 +201,7 @@ static duk_ret_t jsexport_cvar_register(duk_context *ctx) {
 
 static duk_ret_t jsexport_cvar_set(duk_context *ctx) {
     const char *cvar_name = duk_get_string(ctx, 0);
-    const char *cvar_value = duk_get_string(ctx, 1);
+    const char *cvar_value = duk_safe_to_string(ctx, 1);
     
     if(!cvar_name) {
         Com_Printf("#f55Calling cvar.set without name\n");
@@ -314,7 +314,7 @@ qboolean JSOpenFile(const char* filename, int notify) {
     if(notify) Com_Printf("#5ffLoading %s JS script...\n", filename);
     
     if(duk_peval_string(js_ctx, f.c) != 0) {
-        const char* error = duk_get_string(js_ctx, -1);
+        const char* error = duk_safe_to_string(js_ctx, -1);
         Com_Printf("#f55%s: %s\n", filename, error);
         Cvar_Set("js_error", va("%s: %s", filename, error));
         duk_pop(js_ctx);
@@ -341,7 +341,7 @@ static void Cmd_JSOpenFile_f(void) {
 
 qboolean JSEval(const char* code, qboolean doPrint, qboolean doResult, js_result_t* result) {
     if(duk_peval_string(js_ctx, code) != 0) {
-        const char* error = duk_get_string(js_ctx, -1);
+        const char* error = duk_safe_to_string(js_ctx, -1);
         Com_Printf("#f55%s\n", error);
         Cvar_Set("js_error", va("%s", error));
         duk_pop(js_ctx);
@@ -349,7 +349,7 @@ qboolean JSEval(const char* code, qboolean doPrint, qboolean doResult, js_result
     }
 
     if(doPrint) {
-        const char* text = duk_get_string(js_ctx, -1);
+        const char* text = duk_safe_to_string(js_ctx, -1);
         Com_Printf("%s\n", text);
     }
 
