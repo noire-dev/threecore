@@ -512,7 +512,6 @@ void JS_Init(void) {
         js_error = Cvar_Get("js_error", "", 0);
         
         JSOpenFile("js/init.js", qtrue);
-        JSLoadScripts("js/framework", "framework");
         JSOpenFile("js/main.js", qtrue);
         JS_InitCompiler();
     }
