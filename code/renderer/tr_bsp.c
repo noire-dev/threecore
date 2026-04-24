@@ -1460,7 +1460,7 @@ static void R_LoadSurfaces( const lump_t *surfs, const lump_t *verts, const lump
 			ParseFlare( in, dv, out, indexes );
 			break;
 		default:
-			ri.Error( ERR_DROP, "Bad surfaceType %i", LittleLong( in->surfaceType ) );
+			//ri.Error( ERR_DROP, "Bad surfaceType %i", LittleLong( in->surfaceType ) );
 		}
 	}
 

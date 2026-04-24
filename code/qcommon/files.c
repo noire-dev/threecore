@@ -483,9 +483,7 @@ char **FS_ListFiles( const char *path, const char *extension, int *numfiles ) {
 		return NULL;
 	}
 
-	if ( !extension ) {
-		extension = "";
-	}
+	if (!extension) extension = "";
 
 	// Строим путь: <exe_dir>/<path>
 	Q_strncpyz( netpath, Sys_DefaultBasePath(), sizeof( netpath ) );
