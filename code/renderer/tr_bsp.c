@@ -1461,6 +1461,7 @@ static void R_LoadSurfaces( const lump_t *surfs, const lump_t *verts, const lump
 			break;
 		default:
 			//ri.Error( ERR_DROP, "Bad surfaceType %i", LittleLong( in->surfaceType ) );
+			break;
 		}
 	}
 
