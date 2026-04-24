@@ -5,21 +5,6 @@
 #include "client.h"
 
 static void CL_KeyDownEvent(int key) {
-	if(key == K_ESCAPE) {
-		if(Key_GetCatcher() & KEYCATCH_CGAME) {
-			Key_SetCatcher(Key_GetCatcher() & ~KEYCATCH_CGAME);
-			return;
-		}
-
-		if(!(Key_GetCatcher() & KEYCATCH_UI)) {
-			VM_Call(uivm, 1, UI_SET_ACTIVE_MENU, UI_ENABLE);
-			return;
-		}
-
-		VM_Call(uivm, 3, UI_KEY_EVENT, key, qtrue, qfalse);
-		return;
-	}
-
 	if(Key_GetCatcher() & KEYCATCH_UI) {
 		if(uivm) VM_Call(uivm, 3, UI_KEY_EVENT, key, qtrue, qfalse);
 	} else {
