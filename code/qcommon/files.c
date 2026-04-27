@@ -436,53 +436,46 @@ char *FS_CopyString( const char *in ) {
 }
 
 char **FS_ListFiles( const char *path, const char *extension, int *numfiles ) {
-    char netpath[MAX_OSPATH];
-    char **result = NULL;
-    int resultCount = 0;
-    
-    if ( !path ) {
-        *numfiles = 0;
-        return NULL;
-    }
-    
-    if ( !extension ) extension = "";
-    
-    // Проходим по всем аддонам и корневой папке
-    for ( int i = 0; i <= addon_count->integer; i++ ) {
-        // Строим путь
-        Q_strncpyz( netpath, Sys_DefaultBasePath(), sizeof( netpath ) );
-        if ( i == addon_count->integer ) {
-            Q_strcat( netpath, sizeof( netpath ), "/" );
-        } else {
-            Q_strcat( netpath, sizeof( netpath ), va("/addons/%s/", addon_name[i]->string) );
-        }
-        Q_strcat( netpath, sizeof( netpath ), path );
-        
-        // Получаем список файлов из этого источника
-        int num;
-        char **files = Sys_ListFiles( netpath, extension, NULL, &num, qfalse );
-        
-        if ( files && num > 0 ) {
-            // Обрабатываем каждый файл
-            for ( int j = 0; j < num; j++ ) {
-                // Добавляем копию строки
-                result = realloc( result, (resultCount + 1) * sizeof(char*) );
-                result[resultCount] = FS_CopyString( files[j] );
-                resultCount++;
-            }
-            // Освобождаем временный список (строки и массив)
-            Sys_FreeFileList( files );
-        }
-    }
-    
-    // Завершающий NULL
-    if ( result ) {
-        result = realloc( result, (resultCount + 1) * sizeof(char*) );
-        result[resultCount] = NULL;
-    }
-    
-    *numfiles = resultCount;
-    return result;
+	char netpath[MAX_OSPATH];
+	char **sysFiles;
+	int numSysFiles;
+	char **listCopy;
+	int i;
+
+	if ( !path ) {
+		*numfiles = 0;
+		return NULL;
+	}
+
+	if (!extension) extension = "";
+
+	// Строим путь: <exe_dir>/<path>
+	Q_strncpyz( netpath, Sys_DefaultBasePath(), sizeof( netpath ) );
+	Q_strcat( netpath, sizeof( netpath ), "/" );
+	Q_strcat( netpath, sizeof( netpath ), path );
+
+	// Просим систему перечислить файлы
+	sysFiles = Sys_ListFiles( netpath, extension, NULL, &numSysFiles, qfalse );
+	*numfiles = numSysFiles;
+
+	if ( !numSysFiles ) {
+		if ( sysFiles ) {
+			Sys_FreeFileList( sysFiles );
+		}
+		return NULL;
+	}
+
+	// Возвращаем копию списка (Sys_ListFiles уже выделяет строки через Z_Malloc)
+	listCopy = Z_Malloc( (numSysFiles + 1) * sizeof(char*) );
+	for ( i = 0; i < numSysFiles; i++ ) {
+		listCopy[i] = sysFiles[i];
+	}
+	listCopy[i] = NULL;
+
+	// Освобождаем оболочку списка, но не строки — они теперь в listCopy
+	Z_Free( sysFiles );
+
+	return listCopy;
 }
 
 void FS_FreeFileList( char **list ) {
