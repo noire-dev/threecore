@@ -440,40 +440,71 @@ char **FS_ListFiles( const char *path, const char *extension, int *numfiles ) {
 	char **sysFiles;
 	int numSysFiles;
 	char **listCopy;
-	int i;
+	int totalFiles = 0;
+	int listPos = 0;
+	int i, j;
 
 	if ( !path ) {
 		*numfiles = 0;
 		return NULL;
 	}
 
-	if (!extension) extension = "";
+	if ( !extension ) {
+		extension = "";
+	}
 
-	// Строим путь: <exe_dir>/<path>
-	Q_strncpyz( netpath, Sys_DefaultBasePath(), sizeof( netpath ) );
-	Q_strcat( netpath, sizeof( netpath ), "/" );
-	Q_strcat( netpath, sizeof( netpath ), path );
+	// Первый проход: считаем общее количество файлов во всех директориях
+	for ( i = 0; i <= addon_count->integer; i++ ) {
+		Q_strncpyz( netpath, Sys_DefaultBasePath(), sizeof( netpath ) );
+		if ( i == addon_count->integer ) {
+			Q_strcat( netpath, sizeof( netpath ), "/" );
+		} else {
+			Q_strcat( netpath, sizeof( netpath ), va( "/addons/%s/", addon_name[i]->string ) );
+		}
+		Q_strcat( netpath, sizeof( netpath ), path );
 
-	// Просим систему перечислить файлы
-	sysFiles = Sys_ListFiles( netpath, extension, NULL, &numSysFiles, qfalse );
-	*numfiles = numSysFiles;
-
-	if ( !numSysFiles ) {
+		sysFiles = Sys_ListFiles( netpath, extension, NULL, &numSysFiles, qfalse );
+		if ( numSysFiles > 0 ) {
+			totalFiles += numSysFiles;
+		}
 		if ( sysFiles ) {
 			Sys_FreeFileList( sysFiles );
 		}
+	}
+
+	if ( totalFiles == 0 ) {
+		*numfiles = 0;
 		return NULL;
 	}
 
-	// Возвращаем копию списка (Sys_ListFiles уже выделяет строки через Z_Malloc)
-	listCopy = Z_Malloc( (numSysFiles + 1) * sizeof(char*) );
-	for ( i = 0; i < numSysFiles; i++ ) {
-		listCopy[i] = sysFiles[i];
-	}
-	listCopy[i] = NULL;
+	// Выделяем результирующий массив указателей на строки (+1 для NULL-терминатора)
+	listCopy = Z_Malloc( ( totalFiles + 1 ) * sizeof( char * ) );
 
-	// Освобождаем оболочку списка, но не строки — они теперь в listCopy
-	Z_Free( sysFiles );
+	// Второй проход: собираем все строки в порядке аддонов, затем база
+	for ( i = 0; i <= addon_count->integer; i++ ) {
+		Q_strncpyz( netpath, Sys_DefaultBasePath(), sizeof( netpath ) );
+		if ( i == addon_count->integer ) {
+			Q_strcat( netpath, sizeof( netpath ), "/" );
+		} else {
+			Q_strcat( netpath, sizeof( netpath ), va( "/addons/%s/", addon_name[i]->string ) );
+		}
+		Q_strcat( netpath, sizeof( netpath ), path );
+
+		sysFiles = Sys_ListFiles( netpath, extension, NULL, &numSysFiles, qfalse );
+		if ( numSysFiles > 0 ) {
+			// Копируем указатели на строки (сами строки остаются в Z_Malloc)
+			for ( j = 0; j < numSysFiles; j++ ) {
+				listCopy[listPos++] = sysFiles[j];
+			}
+		}
+		// Освобождаем только массив указателей, но не сами строки
+		if ( sysFiles ) {
+			Z_Free( sysFiles );
+		}
+	}
+
+	listCopy[listPos] = NULL;
+	*numfiles = totalFiles;
 
 	return listCopy;
 }
