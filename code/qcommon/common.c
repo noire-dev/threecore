@@ -1579,7 +1579,7 @@ void Com_GameRestart( int checksumFeed, qboolean clientRestart )
 		// Clean out any user and VM created cvars
 		Cvar_Restart();
 
-		FS_Restart( checksumFeed );
+		FS_StartCFG();
 
 		// Load new configuration
 		Com_ExecuteCfg();

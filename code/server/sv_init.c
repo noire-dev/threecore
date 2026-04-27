@@ -390,7 +390,7 @@ void SV_SpawnServer( const char *mapname ) {
 	// get a new checksum feed and restart the file system
 	srand( Com_Milliseconds() );
 	Com_RandomBytes( (byte*)&sv.checksumFeed, sizeof( sv.checksumFeed ) );
-	FS_Restart( sv.checksumFeed );
+	FS_StartCFG();
 
 	CM_LoadMap( va( "maps/%s.bsp", mapname ), qfalse, &checksum );
 

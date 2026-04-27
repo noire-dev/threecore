@@ -1429,8 +1429,6 @@ void CL_StartHunkUsers( void ) {
 	if ( !com_cl_running || !com_cl_running->integer ) {
 		return;
 	}
-	
-	FS_Reload();
 
 	if ( !cls.rendererStarted ) {
 		cls.rendererStarted = qtrue;

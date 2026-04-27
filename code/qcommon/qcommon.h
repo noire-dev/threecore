@@ -679,10 +679,8 @@ qboolean FS_Initialized( void );
 void	FS_InitFilesystem ( void );
 void	FS_Shutdown( qboolean closemfp );
 
-void	FS_Restart( int checksumFeed );
+void	FS_StartCFG(void);
 // shutdown and restart the filesystem so changes to fs_gamedir can take effect
-
-void	FS_Reload( void );
 
 char	**FS_ListFiles( const char *path, const char *extension, int *numfiles );
 // directory should not have either a leading or trailing /

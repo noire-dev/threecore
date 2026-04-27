@@ -1,45 +1,11 @@
-/*
-===========================================================================
-Copyright (C) 1999-2005 Id Software, Inc.
-
-This file is part of Quake III Arena source code.
-
-Quake III Arena source code is free software; you can redistribute it
-and/or modify it under the terms of the GNU General Public License as
-published by the Free Software Foundation; either version 2 of the License,
-or (at your option) any later version.
-
-Quake III Arena source code is distributed in the hope that it will be
-useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with Quake III Arena source code; if not, write to the Free Software
-Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-===========================================================================
-*/
-
 #include "q_shared.h"
 #include "qcommon.h"
 
 #define MAX_ZPATH			256
 
-typedef struct {
-	char		*path;		// c:\quake3
-	char		*gamedir;	// baseq3
-} directory_t;
-
-typedef enum {
-	DIR_STATIC = 0,	// always allowed, never changes
-	DIR_ALLOW,
-	DIR_DENY
-} dirPolicy_t;
-
 static	int			fs_readCount;			// total bytes read
 static	int			fs_loadCount;			// total files read
 static	int			fs_loadStack;			// total files in memory
-static	int			fs_packFiles;			// total number of files in all loaded packs
 
 typedef union qfile_gus {
 	FILE*		o;
@@ -58,8 +24,6 @@ typedef struct {
 } fileHandleData_t;
 
 static fileHandleData_t	fsh[MAX_FILE_HANDLES];
-
-void FS_Reload( void );
 
 qboolean FS_Initialized( void ) {
 	return qtrue;
@@ -114,13 +78,6 @@ static int FS_FileLength( FILE* h )
 	return end;
 }
 
-/*
-====================
-FS_ReplaceSeparators
-
-Fix things up differently for win/unix/mac
-====================
-*/
 static void FS_ReplaceSeparators( char *path ) {
 	char	*s;
 
@@ -224,7 +181,6 @@ fileHandle_t FS_FOpenFileAppend( const char *filename ) {
 
 	fd->handleFiles.file.o = Sys_FOpen( ospath, "ab" );
 	if ( fd->handleFiles.file.o == NULL ) {
-		// Попробуем создать путь (включая подкаталоги)
 		if ( FS_CreatePath( ospath ) ) {
 			return FS_INVALID_HANDLE;
 		}
@@ -578,17 +534,12 @@ void FS_InitFilesystem( void ) {
  	_setmaxstdio( 2048 );
 #endif
 
-	FS_Restart(0);
+	FS_StartCFG();
 }
 
-void FS_Restart( int checksumFeed ) {
+void FS_StartCFG(void) {
 	if(FS_ReadFile("default.cfg", NULL) <= 0) Com_Error(ERR_FATAL, "Couldn't load default.cfg");
 	Cbuf_AddText("exec " CONFIG_CFG "\n");
-}
-
-void FS_Reload( void ) 
-{
-	FS_Restart( 0 );
 }
 
 int	FS_FOpenFileByMode( const char *qpath, fileHandle_t *f, fsMode_t mode ) {
