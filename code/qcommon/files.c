@@ -2,6 +2,9 @@
 #include "qcommon.h"
 
 #define MAX_ZPATH			256
+#define MAX_ADDONS_FOLDERS 4096
+cvar_t	*addon_count;
+cvar_t	*addon_name[MAX_ADDONS_FOLDERS];
 
 static	int			fs_readCount;			// total bytes read
 static	int			fs_loadCount;			// total files read
@@ -196,48 +199,54 @@ fileHandle_t FS_FOpenFileAppend( const char *filename ) {
 	return f;
 }
 
-int FS_FOpenFileRead( const char *filename, fileHandle_t *file, qboolean uniqueFILE ) {
-	char netpath[MAX_OSPATH];
-	FILE *temp;
-	int length;
-
-	if ( !filename ) {
-		Com_Error( ERR_FATAL, "FS_FOpenFileRead: NULL 'filename' parameter passed\n" );
-	}
-
-	// Убираем начальный слэш, если есть
-	if ( filename[0] == '/' || filename[0] == '\\' ) {
-		filename++;
-	}
-
-	// Строим путь: <exe_dir>/<filename>
-	Q_strncpyz( netpath, Sys_DefaultBasePath(), sizeof( netpath ) );
-	Q_strcat( netpath, sizeof( netpath ), "/" );
-	Q_strcat( netpath, sizeof( netpath ), filename );
-
-	// Открываем файл
-	temp = Sys_FOpen( netpath, "rb" );
-	if ( !temp ) {
-		if ( file ) {
-			*file = FS_INVALID_HANDLE;
-		}
-		return -1;
-	}
-
-	// Если запрашивали только длину — закрываем и возвращаем её
-	if ( !file ) {
-		length = FS_FileLength( temp );
-		fclose( temp );
-		return length;
-	}
-
-	// Иначе выделяем хэндл и сохраняем FILE*
-	*file = FS_HandleForFile();
-	fileHandleData_t *f = &fsh[*file];
-	f->handleFiles.file.o = temp;
-	Q_strncpyz( f->name, filename, sizeof( f->name ) );
-
-	return FS_FileLength( temp );
+char **FS_ListFiles( const char *path, const char *extension, int *numfiles ) {
+    char netpath[MAX_OSPATH];
+    char **result = NULL;
+    int resultCount = 0;
+    
+    if ( !path ) {
+        *numfiles = 0;
+        return NULL;
+    }
+    
+    if ( !extension ) extension = "";
+    
+    // Проходим по всем аддонам и корневой папке
+    for ( int i = 0; i <= addon_count->integer; i++ ) {
+        // Строим путь
+        Q_strncpyz( netpath, Sys_DefaultBasePath(), sizeof( netpath ) );
+        if ( i == addon_count->integer ) {
+            Q_strcat( netpath, sizeof( netpath ), "/" );
+        } else {
+            Q_strcat( netpath, sizeof( netpath ), va("/addons/%s/", addon_name[i]->string) );
+        }
+        Q_strcat( netpath, sizeof( netpath ), path );
+        
+        // Получаем список файлов из этого источника
+        int num;
+        char **files = Sys_ListFiles( netpath, extension, NULL, &num, qfalse );
+        
+        if ( files && num > 0 ) {
+            // Обрабатываем каждый файл
+            for ( int j = 0; j < num; j++ ) {
+                // Добавляем копию строки
+                result = realloc( result, (resultCount + 1) * sizeof(char*) );
+                result[resultCount] = FS_CopyString( files[j] );
+                resultCount++;
+            }
+            // Освобождаем временный список (строки и массив)
+            Sys_FreeFileList( files );
+        }
+    }
+    
+    // Завершающий NULL
+    if ( result ) {
+        result = realloc( result, (resultCount + 1) * sizeof(char*) );
+        result[resultCount] = NULL;
+    }
+    
+    *numfiles = resultCount;
+    return result;
 }
 
 int FS_Read( void *buffer, int len, fileHandle_t f ) {
@@ -534,6 +543,8 @@ void FS_InitFilesystem( void ) {
  	_setmaxstdio( 2048 );
 #endif
 
+    addon_count = Cvar_Get( "addon.count", "0", CVAR_ARCHIVE );
+    for(int i = 0; i < MAX_ADDONS_FOLDERS; i++) addon_name[i] = Cvar_Get( va("addon.name.%i", i), "", CVAR_ARCHIVE );
 	FS_StartCFG();
 }
 
